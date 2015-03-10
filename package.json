@@ -19,7 +19,9 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "d3": "latest"
+  },
   "devDependencies": {
     "asyncmachine": "latest",
     "babel-runtime": "^4.7.4",
