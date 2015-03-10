@@ -7,20 +7,49 @@ var buffer = require('vinyl-buffer');
 var watchify = require('watchify');
 var browserify = require('browserify');
 
-var bundler = watchify(browserify('./src/visualizer.js', {
-    detectGlobals: false
+var source_bundler = watchify(browserify('./src/visualizer.js', {
+    debug: true,
+    insertGlobals: true,
+    builtins: ['assert', '_process', 'buffer']
 }));
-bundler.transform(babelify);
+source_bundler.transform(babelify.configure({
+    experimental: true
+}))
 
 gulp.task('watch', bundle); // so you can run `gulp js` to build the file
-bundler.on('update', bundle); // on any dep update, runs the bundler
-bundler.on('log', gutil.log.bind(gutil))
+source_bundler.on('update', bundle); // on any dep update, runs the bundler
+source_bundler.on('log', gutil.log.bind(gutil))
 
 function bundle() {
-    return bundler.bundle()
+    return source_bundler.bundle()
         // log errors if they happen
         .on('error', swallowError)
-        .pipe(source('build.js'))
+        .pipe(source('visualizer.js'))
+        // optional, remove if you dont want sourcemaps
+        .pipe(buffer())
+        .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
+        .pipe(sourcemaps.write('./')) // writes .map file
+        .pipe(gulp.dest('./build'));
+}
+
+var test_bundler = watchify(browserify('./test/visualizer.js', {
+    debug: true,
+    insertGlobals: true,
+    builtins: ['assert', '_process', 'buffer']
+}))
+test_bundler.transform(babelify.configure({
+    experimental: true
+}))
+
+gulp.task('watch-test', bundle); // so you can run `gulp js` to build the file
+test_bundler.on('update', bundle); // on any dep update, runs the bundler
+test_bundler.on('log', gutil.log.bind(gutil))
+
+function bundle() {
+    return test_bundler.bundle()
+        // log errors if they happen
+        .on('error', swallowError)
+        .pipe(source('test.js'))
         // optional, remove if you dont want sourcemaps
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file

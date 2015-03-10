@@ -3,8 +3,18 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script>mocha.setup('bdd')</script>
+    <script src="../build/test.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mocha.checkLeaks();
+            mocha.run();
+        })
+    </script>
 </head>
 <body>
-
+    <div id="mocha"/>
 </body>
 </html>

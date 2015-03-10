@@ -1,22 +1,24 @@
-asyncmachine = require '../build/asyncmachine'
-AM = asyncmachine.AsyncMachine
-chai = require 'chai'
-expect = chai.expect
-import Visualizer from '../build/visualizer/visualizer'
+import { AsyncMachine } from 'asyncmachine'
+import { expect } from 'chai'
+import { Visualizer } from '../src/visualizer'
 
 
-describe "Single machine graph", ->
+describe("Single machine graph", function() {
 
-  beforeEach ->
-    @machine = new AM.factory ['A', 'B', 'C', 'D']
-    @machine.A = requires: ['B']
-    @machine.C = drops: ['B']
-    @machine.D = requires: ['C']
+  beforeEach( function() {
+    this.machine = new AsyncMachine.factory(['A', 'B', 'C', 'D'])
+    this.machine.A = {requires: ['B']}
+    this.machine.C = {drops: ['B']}
+    this.machine.D = {requires: ['C']}
 
-    @vis = new Visualizer
-    @vis.addMachine @machine
+    this.vis = new Visualizer
+    this.vis.addMachine(this.machine)
+  })
 
-  it 'should get all states as nodes', ->
-    console.dir @vis.graph.edges()
+  it('should get all states as nodes', function() {
+    console.dir(this.vis.graph.edges())
+    debugger
+  })
 
-  it 'should get all relations as edges'
+  it('should get all relations as edges')
+})

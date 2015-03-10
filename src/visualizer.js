@@ -1,7 +1,7 @@
 import am from 'asyncmachine'
-import 'babelify/polyfill'
-import * as Graph from 'graphlib/lib/graph'
+import Graph from 'graphlib/lib/graph'
 import uuid from 'node-uuid'
+import assert from 'assert'
 
 export class Node {
 
@@ -12,7 +12,7 @@ export class Node {
   }
 
   get() {
-    this.machine.get(this.name)
+    return this.machine.get(this.name)
   }
 }
 
@@ -52,25 +52,31 @@ export class Visualizer {
     }
 
     // get edges from relations
-    for (node of new_nodes)
+    for (let node of new_nodes)
       this.getRelationsFromNode(node, machine)
   }
 
   getRelationsFromNode(node, machine) {
     // TODO limit to 'requires' and 'drops' ?
-    for (let [relation, targets] of node.get()) {
+    let state = node.get()
+    assert(state)
+    for (let relation in state) {
       if (relation == 'auto')
-        return
+        continue
+
+      let targets = state[relation]
 
       for (let target_name of targets) {
-        target = this.getNodeByName(target_name, machine)
+        let target = this.getNodeByName(target_name, machine)
+        assert(target)
         this.graph.setEdge(node.id, target.id, relation)
       }
     }
   }
 
   getNodeByName(name, machine) {
-    for (let [id, node] of this.nodes) {
+    for (let id in this.nodes) {
+      let node = this.nodes[id]
       if (node.name === name && node.machine === machine)
         return node
     }

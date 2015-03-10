@@ -7,8 +7,7 @@
     "type": "git",
     "url": "https://github.com/TobiaszCudnik/asyncmachine-visualizer"
   },
-  "keywords": [
-  ],
+  "keywords": [],
   "bugs": {
     "url": "https://github.com/TobiaszCudnik/asyncmachineVisualizer/issues"
   },
@@ -19,20 +18,21 @@
   "license": "MIT",
   "engines": {
     "node": ">=0.10.0"
-
   },
   "dependencies": {},
   "devDependencies": {
     "asyncmachine": "latest",
-    "chai": "latest",
+    "babel-runtime": "^4.7.4",
     "browserify": "latest",
-    "gulp": "latest",
-    "vinyl-source-stream": "latest",
+    "chai": "latest",
     "graphlib": "latest",
-    "node-uuid": "latest",
+    "gulp": "latest",
+    "gulp-sourcemaps": "latest",
     "gulp-util": "latest",
+    "mocha": "latest",
+    "node-uuid": "latest",
     "vinyl-buffer": "latest",
-    "watchify": "latest",
-    "gulp-sourcemaps": "latest"
+    "vinyl-source-stream": "latest",
+    "watchify": "latest"
   }
 }
