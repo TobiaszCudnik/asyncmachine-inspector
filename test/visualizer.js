@@ -1,5 +1,6 @@
 import { AsyncMachine } from 'asyncmachine'
 import { expect } from 'chai'
+import _ from 'underscore'
 import { Visualizer } from '../src/visualizer'
 
 
@@ -16,9 +17,18 @@ describe("Single machine graph", function() {
   })
 
   it('should get all states as nodes', function() {
-    console.dir(this.vis.graph.edges())
-    debugger
+    expect(this.vis.graph.nodes().length).to.be.eql(5)
   })
 
-  it('should get all relations as edges')
+  it('should get all relations as edges', function() {
+    var nodes = this.vis.nodes
+    let edges = _.map(this.vis.graph.edges(), edge => {
+      return `${nodes[edge.v].name} ${nodes[edge.w].name}`
+    })
+    expect(edges).to.eql([
+      'A B',
+      'C B',
+      'D C'
+    ])
+  })
 })

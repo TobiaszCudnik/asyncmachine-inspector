@@ -31,6 +31,7 @@
     "gulp-util": "latest",
     "mocha": "latest",
     "node-uuid": "latest",
+    "underscore": "^1.8.2",
     "vinyl-buffer": "latest",
     "vinyl-source-stream": "latest",
     "watchify": "latest"
