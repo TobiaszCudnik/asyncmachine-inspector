@@ -84,7 +84,10 @@ export class Network {
   }
 }
 
-
+/**
+ * TODO consume a stream of events
+ * TODO support an initialization without a reference to other instances
+ */
 export class VisualizerUi {
 
 	constructor(network) {
@@ -132,6 +135,11 @@ export class VisualizerUi {
           .links(links)
           .start()
 
+        var bubble = d3.layout.pack()
+            .sort(null)
+            .size([this.width, this.height])
+            .padding(1.5)
+
         var link = this.container.selectAll(".link")
             .data(links)
             .enter().append("line")
@@ -141,12 +149,19 @@ export class VisualizerUi {
         })
 
         var node = this.container.selectAll(".node")
-            .data(nodes)
+            //.data(nodes)
+            .data(bubble.nodes(nodes.map( item => {
+                return {
+                    packageName: name,
+                    className: node.name,
+                    value: 10
+            }})))
             .enter().append("g")
             .attr("class", "node")
             .call(this.force.drag)
 
         node.append("circle").attr("r", 4.5)
+            .style("fill", function(d) { return color(d.packageName); });
         node.append("text")
             .attr("dx", 12)
             .attr("dy", ".35em")
