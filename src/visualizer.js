@@ -112,6 +112,12 @@ export class VisualizerUi {
             .linkDistance(30)
             .size([this.width, this.height])
 
+        this.bubble = d3.layout.pack()
+            .value( (d) => { return d.children || 5 } )
+            .sort(null)
+            .size([this.width, this.height])
+            .padding(1.5)
+
         this.container = d3.select("body").append("svg")
             .attr("width", this.width)
             .attr("height", this.height)
@@ -140,40 +146,50 @@ export class VisualizerUi {
         var links = this.links
         var color = d3.scale.category20c();
 
+        let bubble_nodes = []
+        let network = this.network
+        for (let machine_id of this.network.machines.values()) {
+            bubble_nodes.push({
+                name: machine_id,
+                children: _.values(network.nodes).filter( node => {
+                    return node.machine_id == machine_id
+                })
+            })
+        }
+
+        var bubble = this.container.selectAll(".bubble")
+            //.data(nodes)
+            .data(this.bubble.nodes(bubble_nodes))
+            .enter().append("g")
+            .attr("class", "bubble")
+            .attr("transform", function(d) {
+                console.log(d)
+                return "translate(" + d.x + "," + d.y + ")"; })
+        bubble.append('circle').attr("r", function(d) { return d.r; });
+
         this.layout
             // TODO support the ID getter
             .nodes(nodes, (d) => { return d.id })
             .links(links)
             .start()
 
-        let bubble = d3.layout.pack()
-            .sort(null)
-            .size([this.width, this.height])
-            .padding(1.5)
-
-        let link = this.container.selectAll(".link")
+        var link = this.container.selectAll(".link")
             .data(links)
             .enter().append("line")
                 .attr("class", "link")
                 .style("stroke-width", d => {
                     return d.value
                 })
-        //bubble.nodes({children:
-        //    nodes.map( node => {
-        //        return {
-        //            packageName: node.machine_id,
-        //            className: node.name,
-        //            value: 10
-        //        }})})
-        let node = this.container.selectAll(".node")
+
+        var node = this.container.selectAll(".node")
             //.data(nodes)
             .data(nodes)
             .enter().append("g")
             .attr("class", "node")
-            //.call(this.layout.drag)
+            .call(this.layout.drag)
 
         node.append("circle").attr("r", 4.5)
-            .style("fill", function(d) { return color(d.packageName); });
+            .style("fill", function(d) { return color(d.machine_id); });
 
         node.append("text")
             .attr("dx", 12)
