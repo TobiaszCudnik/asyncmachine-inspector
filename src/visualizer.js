@@ -3,17 +3,23 @@ import Graph from 'graphlib/lib/graph'
 import uuid from 'node-uuid'
 import assert from 'assert'
 import d3 from 'd3'
+import _ from 'underscore'
 
 export class Node {
 
-  constructor(name, machine) {
+  constructor(name, machine, machines) {
 	this.id = uuid.v4()
+	this.machines = machines
 	this.machine = machine
 	this.name = name
   }
 
   get() {
 	return this.machine.get(this.name)
+  }
+
+  get machine_id() {
+	return this.machines.get(this.machine)
   }
 }
 
@@ -23,10 +29,12 @@ export class Network {
   constructor() {
 	this.graph = new Graph
 	this.nodes = {}
+	this.machines = new Map()
 	this.events = []
   }
 
   addMachine(machine) {
+    this.machines.set(machine, uuid.v4())
 	this.getNodesFromMachine(machine)
 	this.bindToMachine(machine)
 	this.scanReferences()
@@ -42,7 +50,7 @@ export class Network {
 	// scan states
 	let new_nodes = []
 	for (let name of machine.states_all) {
-	  let node = new Node(name, machine)
+	  let node = new Node(name, machine, this.machines)
 	  this.nodes[node.id] = node
 	  this.graph.setNode(node.id, node)
 	  new_nodes.push(node)
@@ -99,7 +107,7 @@ export class VisualizerUi {
 
         this.color = d3.scale.category20()
 
-        this.force = d3.layout.force()
+        this.layout = d3.layout.force()
             .charge(-120)
             .linkDistance(30)
             .size([this.width, this.height])
@@ -117,10 +125,11 @@ export class VisualizerUi {
 
     get links() {
         var nodes = this.network.graph.nodes()
+        var network = this.network
         return this.network.graph.edges().map( edge => {
             return {
-                source: nodes.indexOf(edge.v),
-                target: nodes.indexOf(edge.w),
+                source: network.nodes[edge.v],
+                target: network.nodes[edge.w],
                 value: 1
             }
         })
@@ -129,39 +138,43 @@ export class VisualizerUi {
 	render() {
         var nodes = this.nodes
         var links = this.links
+        var color = d3.scale.category20c();
 
-        this.force
-          .nodes(nodes)
-          .links(links)
-          .start()
+        this.layout
+            // TODO support the ID getter
+            .nodes(nodes, (d) => { return d.id })
+            .links(links)
+            .start()
 
-        var bubble = d3.layout.pack()
+        let bubble = d3.layout.pack()
             .sort(null)
             .size([this.width, this.height])
             .padding(1.5)
 
-        var link = this.container.selectAll(".link")
+        let link = this.container.selectAll(".link")
             .data(links)
             .enter().append("line")
-            .attr("class", "link")
-            .style("stroke-width", d => {
-                return d.value
-        })
-
-        var node = this.container.selectAll(".node")
+                .attr("class", "link")
+                .style("stroke-width", d => {
+                    return d.value
+                })
+        //bubble.nodes({children:
+        //    nodes.map( node => {
+        //        return {
+        //            packageName: node.machine_id,
+        //            className: node.name,
+        //            value: 10
+        //        }})})
+        let node = this.container.selectAll(".node")
             //.data(nodes)
-            .data(bubble.nodes(nodes.map( item => {
-                return {
-                    packageName: name,
-                    className: node.name,
-                    value: 10
-            }})))
+            .data(nodes)
             .enter().append("g")
             .attr("class", "node")
-            .call(this.force.drag)
+            //.call(this.layout.drag)
 
         node.append("circle").attr("r", 4.5)
             .style("fill", function(d) { return color(d.packageName); });
+
         node.append("text")
             .attr("dx", 12)
             .attr("dy", ".35em")
@@ -170,7 +183,7 @@ export class VisualizerUi {
         node.append("title")
           .text( d => { return d.name; });
 
-        this.force.on("tick", () => {
+        this.layout.on("tick", () => {
             link.attr("x1",  d => { return d.source.x; })
                 .attr("y1",  d => { return d.source.y; })
                 .attr("x2",  d => { return d.target.x; })

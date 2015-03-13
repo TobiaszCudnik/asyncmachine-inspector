@@ -27,6 +27,7 @@
   "devDependencies": {
     "babel-runtime": "latest",
     "browserify": "latest",
+    "babelify": "latest",
     "chai": "latest",
     "graphlib": "latest",
     "gulp": "latest",
