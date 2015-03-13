@@ -20,11 +20,12 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "node-uuid": "latest",
+    "asyncmachine": "latest",
     "d3": "latest"
   },
   "devDependencies": {
-    "asyncmachine": "latest",
-    "babel-runtime": "^4.7.4",
+    "babel-runtime": "latest",
     "browserify": "latest",
     "chai": "latest",
     "graphlib": "latest",
@@ -32,8 +33,7 @@
     "gulp-sourcemaps": "latest",
     "gulp-util": "latest",
     "mocha": "latest",
-    "node-uuid": "latest",
-    "underscore": "^1.8.2",
+    "underscore": "latest",
     "vinyl-buffer": "latest",
     "vinyl-source-stream": "latest",
     "watchify": "latest"
