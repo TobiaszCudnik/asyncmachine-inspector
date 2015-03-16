@@ -22,7 +22,9 @@
   "dependencies": {
     "node-uuid": "latest",
     "asyncmachine": "latest",
-    "d3": "latest"
+    "d3": "latest",
+    "graphs": "latest",
+    "lodash": "latest"
   },
   "devDependencies": {
     "babel-runtime": "latest",

@@ -1,6 +1,6 @@
 import { AsyncMachine } from 'asyncmachine'
 import { expect } from 'chai'
-import _ from 'underscore'
+import _ from 'lodash'
 import { Network, VisualizerUi } from '../src/visualizer'
 
 
