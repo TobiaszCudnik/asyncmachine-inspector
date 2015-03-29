@@ -13,6 +13,7 @@ export class Node {
 		this.machines = machines
 		this.machine = machine
 		this.name = name
+		this.externals = []
 	}
 
 	get() {
@@ -44,12 +45,23 @@ export class Network {
 	addMachine(machine) {
 		this.machines.set(machine, uuid.v4())
 		this.getNodesFromMachine(machine)
-		this.bindToMachine(machine)
+		for (let [machine, id] of this.machines) {
+			this.bindToMachine(machine)
+		}
 		this.scanReferences()
 	}
 
 	bindToMachine(machine) {
 		// TODO override event triggers to apply them on the UI immediate
+		for (let state in machine.piped) {
+			var data = machine.piped[state]
+
+			let source_state = this.getNodeByName(state, machine)
+			let target_state = this.getNodeByName(data.state, data.machine)
+			if (!target_state)
+				continue
+			this.graph.link(source_state, target_state)
+		}
 	}
 
 	getNodesFromMachine(machine) {
@@ -118,7 +130,7 @@ export class VisualizerUi {
 
 		this.layout = d3.layout.force()
 			.charge(-120)
-			.linkDistance(30)
+			.linkDistance(220)
 			.size([this.width, this.height])
 
 		this.node_layouts = new Map
@@ -127,7 +139,7 @@ export class VisualizerUi {
 			this.node_layouts.set(machine,
 				d3.layout.force()
 					.charge(-120)
-					.linkDistance(30)
+					.linkDistance(50)
 					.size([size, size])
 			)
 		}
@@ -141,10 +153,35 @@ export class VisualizerUi {
 		return _.chain(this.network.nodes).pluck('machine').uniq().value()
 	}
 
-	nodes(machines) {
+	nodes(machine) {
 		var nodes = []
 
-		this.network.graph.forEach( node => nodes.push(node) )
+		this.network.graph.forEach( node => {
+			if (node.machine !== machine)
+				return
+
+			nodes.push(node)
+			// Collect external nodes to which the current node points to
+			var links_from = this.network.graph.from(node)
+			for (let target of links_from) {
+				if (target.machine !== machine) {
+					node.externals.push({
+						node: target,
+						machine: node.machine
+					})
+				}
+			}
+			// Collect external nodes pointing to this one
+			for (let source of this.network.graph.to(node)) {
+				if (source.machine !== machine && !links_from.has(source)) {
+					node.externals.push({
+						node: source,
+						machine: node.machine
+					})
+				}
+			}
+			nodes.push.apply(nodes, node.externals)
+		})
 
 		return nodes
 	}
@@ -171,12 +208,35 @@ export class VisualizerUi {
 		var links = []
 
 		this.network.graph.traverse( (from, to) => {
-			if (from.machine !== machine || to.machine !== machine)
+			if (to.machine !== from.machine && to.machine === machine) {
+				for (let external of to.externals) {
+					if (external.node == to || external.node == from) {
+						links.push({
+							source: to,
+							target: external,
+							value: 1
+						})
+					}
+				}
+			}			
+
+			if (from.machine !== machine)
 				return
+
+			if (to.machine !== from.machine) {
+				for (let external of from.externals) {
+					if (external.node == to || external.node == from) {
+						var target = external
+						// TODO support more
+						break
+					}
+				}
+			} else
+				var target = to
 
 			links.push({
 				source: from,
-				target: to,
+				target: target,
 				value: 1
 			})
 		})
@@ -200,53 +260,39 @@ export class VisualizerUi {
 			.links(links)
 			.start()
 
-		var node = this.container.selectAll(".node.machine")
+		this.machine_node = this.container.selectAll(".node.machine")
 				.data(machines)
 				.enter().append("g")
 					.attr("class", "node machine")
 					.attr("id", d => { return this.network.machine_id(d) })
 					.call(this.layout.drag)
 
-		var link = this.container.selectAll(".link.machine")
-			.data(links)
-			.enter().append("line")
-				.attr("class", "link machine")
-				.style("stroke-width", d => {
-					return d.value
-				})
+		//var link = this.container.selectAll(".link.machine")
+		//	.data(links)
+		//	.enter().append("line")
+		//		.attr("class", "link machine")
+		//		.style("stroke-width", d => {
+		//			return d.value
+		//		})
 
-		node.append("circle")
+		this.machine_node.append("circle")
 			.attr("r", d => d.states_all.length * 20)
 			.style("fill", d => { return color(this.network.machine_id(d)) });
 
-		node.append("text")
+		this.machine_node.append("text")
 			.attr("dx", 12)
 			.attr("dy", ".35em")
 			.text(function(d) { return d.name });
 
-		node.append("title")
+		this.machine_node.append("title")
 			.text( d => { return d.name; });
-
-		this.layout.on("tick", () => {
-			link.attr("x1",  d => { return d.source.x; })
-				.attr("y1",  d => { return d.source.y; })
-				.attr("x2",  d => { return d.target.x; })
-				.attr("y2",  d => { return d.target.y; });
-
-			//
-			//node.attr("cx",  d => { return d.x; })
-			//    .attr("cy",  d => { return d.y; })
-			node.attr("transform", (d) => {
-				return "translate(" + d.x + "," + d.y + ")"
-			})
-		})
 	}
 
 
 	renderNodes() {
 		var machines = this.machines
 
-		for (let machine of machines) {
+		machines.forEach( machine => {
 			var nodes = this.nodes(machine)
 			var node_links = this.node_links(machine)
 			var layout = this.node_layouts.get(machine)
@@ -256,14 +302,14 @@ export class VisualizerUi {
 				.links(node_links)
 				.start()
 
-			let node = this.container.select("#" + this.network.machine_id(machine))
+			var node = this.container.select("#" + this.network.machine_id(machine))
 				.selectAll('.nodes')
 				.data(nodes)
 				.enter().append("g")
 					.attr("class", "node")
 					.call(this.layout.drag)
 
-			let link = this.container.select("#" + this.network.machine_id(machine))
+			var link = this.container.select("#" + this.network.machine_id(machine))
 					.selectAll(".link")
 					.data(node_links)
 					.enter().append("line")
@@ -271,7 +317,9 @@ export class VisualizerUi {
 						.style("stroke-width", d => { return d.value } )
 
 			node.append("circle")
-				.attr("r", 3.5)
+				.attr("r", d => { return d.node ? 2 : 7 } )
+				.style("fill", d => { return d.node ? 'red' : 'transparent' })
+				.style("stroke", d => { return d.node ? 'red' : 'black' });
 
 			node.append("text")
 				.attr("dx", 12)
@@ -281,22 +329,100 @@ export class VisualizerUi {
 			node.append("title")
 				.text( d => { return d.name; });
 
-			layout.on("tick", (link, node) => {
+			let updateLayout = () => {
 
 				node.attr("transform", (d) => {
-					return "translate(" + (d.x - d.machine.states_all.length * 10) + "," + (d.y - d.machine.states_all.length * 10) + ")"
+					return "translate(" + (d.x - machine.states_all.length * 15) + "," +
+						(d.y - machine.states_all.length * 15) + ")"
 				})
 
-				link.attr("x1",  d => { 
-						return d.source.x - d.source.machine.states_all.length * 10 })
-					.attr("y1",  d => { 
-						return d.source.y - d.source.machine.states_all.length * 10 })
-					.attr("x2",  d => {
-						return d.target.x - d.target.machine.states_all.length * 10 })
-					.attr("y2",  d => {
-						return d.target.y - d.target.machine.states_all.length * 10 })
+				link
+					.attr("x1", this.linkCoords.bind(null, 'x1'))
+					.attr("x2", this.linkCoords.bind(null, 'x2'))
+					.attr("y1", this.linkCoords.bind(null, 'y1'))
+					.attr("y2", this.linkCoords.bind(null, 'y2'))
 					
-			}.bind(null, link, node))
+				var machine_layout = this.node_layouts.get(machine)
+				this.machine_node.attr("transform", (d) => {
+					machine_layout.alpha(.1)
+					return "translate(" + d.x + "," + d.y + ")"
+				})
+			}
+
+			layout.on("tick", updateLayout)
+			this.layout.on("tick", updateLayout)
+		})
+	}
+
+	linkCoords(coord, d) {
+		var circle_correction = d.source.machine.states_all.length * 15
+
+		if (d.source.node) {
+			var external = d.source.node
+			var external_circle_correction = external.machine.states_all.length * 15
+
+			var x2 = -d.source.machine.x + external.machine.x + external.x - external_circle_correction
+			var y2 = -d.source.machine.y + external.machine.y + external.y - external_circle_correction
+
+			d.source.x = Math.max(-circle_correction,
+				Math.min(circle_correction, x2)) + circle_correction
+			d.source.y = Math.max(-circle_correction,
+				Math.min(circle_correction, y2)) + circle_correction
+
+			return
 		}
+		
+		if (!d.target.node) {
+			switch(coord) {
+				case 'x1':
+					return d.source.x - circle_correction
+					break;
+				case 'y1':
+					return d.source.y - circle_correction
+					break;
+				case 'x2':
+					return d.target.x - circle_correction
+					break;
+				case 'y2':
+					return d.target.y - circle_correction
+					break;
+			}
+		}
+
+		var external = d.target.node
+		var external_circle_correction = external.machine.states_all.length * 15
+
+		var x2 = -d.source.machine.x + external.machine.x + external.x - external_circle_correction
+		var y2 = -d.source.machine.y + external.machine.y + external.y - external_circle_correction
+
+// 		var fn = function(x, x1, y1, x2, y2) {
+// 			return y1 + ( (y2 - y1) / (x2 - x1) ) * (x - x1)
+// 		}
+
+		var range = 50
+
+		d.target.x = Math.max(-circle_correction,
+			Math.min(circle_correction, x2)) + circle_correction
+		d.target.y = Math.max(-circle_correction,
+			Math.min(circle_correction, y2)) + circle_correction
+// 		d.target.y = fn(d.source.machine.y + circle_correction, d.source.machine.x, d.source.machine.y, x2, y2)
+
+		switch(coord) {
+			case 'x1':
+				return d.source.x - circle_correction
+				break;
+			case 'y1':
+				return d.source.y - circle_correction
+				break;
+			case 'x2':
+				return x2
+				break;
+			case 'y2':
+				return y2
+				break;
+		}
+
+		this.node_layouts.get(external.machine).tick()
+		// TODO position the fake node on the circle boundry
 	}
 }
