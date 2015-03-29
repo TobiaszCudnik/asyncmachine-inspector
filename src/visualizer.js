@@ -130,7 +130,7 @@ export class VisualizerUi {
 
 		this.layout = d3.layout.force()
 			.charge(-120)
-			.linkDistance(220)
+			.linkDistance(200)
 			.size([this.width, this.height])
 
 		this.node_layouts = new Map
@@ -329,7 +329,14 @@ export class VisualizerUi {
 			node.append("title")
 				.text( d => { return d.name; });
 
+			var machines = this.machines
 			let updateLayout = () => {
+
+				var q = d3.geom.quadtree(machines),
+						i = 0,
+						n = machines.length;
+
+				while (++i < n) q.visit(collide(machines[i]));
 
 				node.attr("transform", (d) => {
 					return "translate(" + (d.x - machine.states_all.length * 15) + "," +
@@ -342,9 +349,9 @@ export class VisualizerUi {
 					.attr("y1", this.linkCoords.bind(null, 'y1'))
 					.attr("y2", this.linkCoords.bind(null, 'y2'))
 					
-				var machine_layout = this.node_layouts.get(machine)
+				//var machine_layout = this.node_layouts.get(machine)
+				this.node_layouts.get(machine).alpha(.1)
 				this.machine_node.attr("transform", (d) => {
-					machine_layout.alpha(.1)
 					return "translate(" + d.x + "," + d.y + ")"
 				})
 			}
@@ -425,4 +432,30 @@ export class VisualizerUi {
 		this.node_layouts.get(external.machine).tick()
 		// TODO position the fake node on the circle boundry
 	}
+}
+
+
+function collide(node) {
+	// TODO radius calc
+	var r = node.states_all.length * 25 + 16,
+			nx1 = node.x - r,
+			nx2 = node.x + r,
+			ny1 = node.y - r,
+			ny2 = node.y + r;
+	return function(quad, x1, y1, x2, y2) {
+		if (quad.point && (quad.point !== node)) {
+			var x = node.x - quad.point.x,
+					y = node.y - quad.point.y,
+					l = Math.sqrt(x * x + y * y),
+					r = node.states_all.length * 25 + quad.point.states_all.length * 25;
+			if (l < r) {
+				l = (l - r) / l * .5;
+				node.x -= x *= l;
+				node.y -= y *= l;
+				quad.point.x += x;
+				quad.point.y += y;
+			}
+		}
+		return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+	};
 }
