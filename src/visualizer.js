@@ -136,7 +136,7 @@ export class VisualizerUi {
 
 		this.node_layouts = new Map
 		for (let machine of this.machines) {
-			let size = machine.states_all.length * 15
+			let size = machine.states_all.length * 11
 			this.node_layouts.set(machine,
 				d3.layout.force()
 					.charge(-60)
@@ -278,7 +278,7 @@ export class VisualizerUi {
 
 		this.machine_node.append("circle")
 			.attr("r", d => d.states_all.length * 20)
-			.style("fill", d => { return color(this.network.machine_id(d)) });
+			.style("fill", d => { return color(this.network.machine_id(d)) })
 
 		this.machine_node.append("text")
 			.attr("dx", 12)
@@ -320,7 +320,7 @@ export class VisualizerUi {
 			node.append("circle")
 				.attr("r", d => { return d.node ? 2 : 7 } )
 				.style("fill", d => { return d.node ? 'transparent' : this.node_color(d.name) })
-				.style("stroke", d => { return d.node ? 'transparent' : this.node_color(d.name) });
+				.style("stroke", d => { return d.node ? 'transparent' : 'white' })
 
 			node.append("text")
 				.attr("dx", (d) => {
