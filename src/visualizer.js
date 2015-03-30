@@ -136,7 +136,7 @@ export class VisualizerUi {
 
 		this.node_layouts = new Map
 		for (let machine of this.machines) {
-			let size = machine.states_all.length * 11
+			let size = machine.states_all.length * 8
 			this.node_layouts.set(machine,
 				d3.layout.force()
 					.charge(-60)
@@ -343,8 +343,8 @@ export class VisualizerUi {
 				while (++i < n) q.visit(collide(machines[i]));
 
 				node.attr("transform", (d) => {
-					return "translate(" + (d.x - machine.states_all.length * 15) + "," +
-						(d.y - machine.states_all.length * 15) + ")"
+					return "translate(" + (d.x - machine.states_all.length * 4) + "," +
+						(d.y - machine.states_all.length * 4) + ")"
 				})
 
 				var that = this
@@ -373,11 +373,11 @@ export class VisualizerUi {
 	}
 
 	linkCoords(coord, d) {
-		var circle_correction = d.source.machine.states_all.length * 15
+		var circle_correction = d.source.machine.states_all.length * 4
 
 		if (d.source.node) {
 			var external = d.source.node
-			var external_circle_correction = external.machine.states_all.length * 15
+			var external_circle_correction = external.machine.states_all.length * 4
 
 			var x2 = -d.source.machine.x + external.machine.x + external.x - external_circle_correction
 			var y2 = -d.source.machine.y + external.machine.y + external.y - external_circle_correction
@@ -408,7 +408,7 @@ export class VisualizerUi {
 		}
 
 		var external = d.target.node
-		var external_circle_correction = external.machine.states_all.length * 15
+		var external_circle_correction = external.machine.states_all.length * 4
 
 		var x2 = -d.source.machine.x + external.machine.x + external.x - external_circle_correction
 		var y2 = -d.source.machine.y + external.machine.y + external.y - external_circle_correction
