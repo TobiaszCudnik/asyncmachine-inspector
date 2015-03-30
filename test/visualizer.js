@@ -54,6 +54,7 @@ describe("Multi machine graph", function() {
     this.machine5.E = {drops: ['F']}
 
     this.machine1.pipe('A', this.machine2, 'E')
+    this.machine2.pipe('E', this.machine1, 'B')
     this.machine2.pipe('F', this.machine1, 'B')
     this.machine2.pipe('E', this.machine3, 'F')
     this.machine2.pipe('G', this.machine4, 'F')

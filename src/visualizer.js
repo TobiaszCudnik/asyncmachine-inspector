@@ -382,10 +382,10 @@ export class VisualizerUi {
 			var x2 = -d.source.machine.x + external.machine.x + external.x - external_circle_correction
 			var y2 = -d.source.machine.y + external.machine.y + external.y - external_circle_correction
 
-			d.source.x = Math.max(-circle_correction,
-				Math.min(circle_correction, x2)) + circle_correction
-			d.source.y = Math.max(-circle_correction,
-				Math.min(circle_correction, y2)) + circle_correction
+			d.source.x = Math.max(-circle_correction*5,
+				Math.min(circle_correction*5, x2)) + circle_correction
+			d.source.y = Math.max(-circle_correction*5,
+				Math.min(circle_correction*5, y2)) + circle_correction
 
 			return
 		}
@@ -419,10 +419,10 @@ export class VisualizerUi {
 
 		var range = 50
 
-		d.target.x = Math.max(-circle_correction,
-			Math.min(circle_correction, x2)) + circle_correction
-		d.target.y = Math.max(-circle_correction,
-			Math.min(circle_correction, y2)) + circle_correction
+		d.target.x = Math.max(-circle_correction*5,
+			Math.min(circle_correction*5, x2)) + circle_correction
+		d.target.y = Math.max(-circle_correction*5,
+			Math.min(circle_correction*5, y2)) + circle_correction
 // 		d.target.y = fn(d.source.machine.y + circle_correction, d.source.machine.x, d.source.machine.y, x2, y2)
 
 		switch(coord) {
