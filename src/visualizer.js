@@ -132,13 +132,14 @@ export class VisualizerUi {
 			.charge(-120)
 			.linkDistance(200)
 			.size([this.width, this.height])
+		this.node_color = d3.scale.category20c();
 
 		this.node_layouts = new Map
 		for (let machine of this.machines) {
 			let size = machine.states_all.length * 15
 			this.node_layouts.set(machine,
 				d3.layout.force()
-					.charge(-120)
+					.charge(-60)
 					.linkDistance(50)
 					.size([size, size])
 			)
@@ -212,8 +213,8 @@ export class VisualizerUi {
 				for (let external of to.externals) {
 					if (external.node == to || external.node == from) {
 						links.push({
-							source: to,
-							target: external,
+							source: external,
+							target: to,
 							value: 1
 						})
 					}
@@ -252,7 +253,7 @@ export class VisualizerUi {
 	renderMachines() {
 		var machines = this.machines
 		var links = this.machine_links
-		var color = d3.scale.category20c();
+		var color = d3.scale.category20();
 
 		this.layout
 			// TODO support the ID getter
@@ -318,12 +319,15 @@ export class VisualizerUi {
 
 			node.append("circle")
 				.attr("r", d => { return d.node ? 2 : 7 } )
-				.style("fill", d => { return d.node ? 'red' : 'transparent' })
-				.style("stroke", d => { return d.node ? 'red' : 'black' });
+				.style("fill", d => { return d.node ? 'transparent' : this.node_color(d.name) })
+				.style("stroke", d => { return d.node ? 'transparent' : this.node_color(d.name) });
 
 			node.append("text")
-				.attr("dx", 12)
-				.attr("dy", ".35em")
+				.attr("dx", (d) => {
+					var name = d.node ? d.node.name : d.name
+					return `-${name.length / 5}em`
+				})
+				.attr("dy", 25)
 				.text(function(d) { return d.name });
 
 			node.append("title")
@@ -343,11 +347,18 @@ export class VisualizerUi {
 						(d.y - machine.states_all.length * 15) + ")"
 				})
 
+				var that = this
+
 				link
 					.attr("x1", this.linkCoords.bind(null, 'x1'))
 					.attr("x2", this.linkCoords.bind(null, 'x2'))
 					.attr("y1", this.linkCoords.bind(null, 'y1'))
 					.attr("y2", this.linkCoords.bind(null, 'y2'))
+					.attr("opacity", (d) => {
+						if (d.source.node && this.style) {
+							this.style.setProperty('opacity', 0)
+						}
+					})
 					
 				//var machine_layout = this.node_layouts.get(machine)
 				this.node_layouts.get(machine).alpha(.1)
