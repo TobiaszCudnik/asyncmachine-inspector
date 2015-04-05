@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "outDir": "build/", 
+        "sourceMap": true, 
+        "target": "es6"
+    }, 
+    "files": [
+        "src/visualizer.ts"
+    ]
+}
