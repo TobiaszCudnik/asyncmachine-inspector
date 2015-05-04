@@ -7,7 +7,7 @@ var buffer = require('vinyl-buffer');
 var watchify = require('watchify');
 var browserify = require('browserify');
 
-var source_bundler = watchify(browserify('./src/visualizer.js', {
+var source_bundler = watchify(browserify('./build-es6/visualizer.js', {
     debug: true,
     insertGlobals: true,
     builtins: ['assert', '_process', 'buffer']
@@ -24,15 +24,15 @@ function bundle() {
     return source_bundler.bundle()
         // log errors if they happen
         .on('error', swallowError)
-        .pipe(source('visualizer.js'))
+        .pipe(source('**.js'))
         // optional, remove if you dont want sourcemaps
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
         .pipe(sourcemaps.write('./')) // writes .map file
-        .pipe(gulp.dest('./build'));
+        .pipe(gulp.dest('./build-bundles'));
 }
 
-var test_bundler = watchify(browserify('./test/visualizer.js', {
+var test_bundler = watchify(browserify('./build-es6/test/visualizer.js', {
     debug: true,
     insertGlobals: true,
     builtins: ['assert', '_process', 'buffer']
@@ -49,12 +49,12 @@ function bundle() {
     return test_bundler.bundle()
         // log errors if they happen
         .on('error', swallowError)
-        .pipe(source('test.js'))
+        .pipe(source('**.js'))
         // optional, remove if you dont want sourcemaps
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
         .pipe(sourcemaps.write('./')) // writes .map file
-        .pipe(gulp.dest('./build'));
+        .pipe(gulp.dest('./build-bundles'));
 }
 
 function swallowError(error) {

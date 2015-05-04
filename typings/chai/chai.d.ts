@@ -281,5 +281,5 @@ declare module chai {
 }
 
 declare module "chai" {
-    export = chai;
+    export default chai;
 }

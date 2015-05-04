@@ -1,7 +1,7 @@
 import { AsyncMachine } from 'asyncmachine'
 import { expect } from 'chai'
 import _ from 'lodash'
-import { Network, VisualizerUi } from '../src/visualizer'
+import { Network, VisualizerUi } from '../visualizer'
 
 
 // describe("Single machine graph", function() {

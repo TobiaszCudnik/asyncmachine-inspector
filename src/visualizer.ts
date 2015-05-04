@@ -1,14 +1,33 @@
-/* @flow */
+/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../node_modules/graphs/index.d.ts" />
+/// <reference path="../node_modules/asyncmachine/lib/asyncmachine.d.ts" />
 
-import am from 'asyncmachine'
+import * as am from 'asyncmachine'
 import Graph from 'graphs'
 import uuid from 'node-uuid'
 import assert from 'assert'
 import d3 from 'd3'
-import {map, uniq, pluck} from './lib/lodash-oo'
+// import {map, uniq, pluck} from './lib/lodash-oo'
 import _ from 'lodash'
 
+interface MachinesMap
+	extends Map<am.AsyncMachine, string> {}
+
+interface NodeGraph
+	extends Graph<Node> {}
+
+interface ExternalNode {
+	node: Node;
+	machine: am.AsyncMachine;
+}
+
 export class Node {
+
+	externals: ExternalNode[];
+	machines: MachinesMap;
+	id: string;
+	machine: am.AsyncMachine;
+	name: string;
 
 	constructor(name, machine, machines) {
 		this.id = uuid.v4()
@@ -30,26 +49,30 @@ export class Node {
 
 export class Network {
 
+	graph: NodeGraph;
+	machines: MachinesMap;
+	events: string[];
+
 	constructor() {
-		this.graph = new Graph
-		this.machines = new Map()
+		this.graph = <NodeGraph>new Graph();
+		this.machines = <MachinesMap>new Map()
 		this.events = []
 	}
 
 	get nodes() {
 		var nodes = []
-		this.graph.forEach( node => {
-      nodes.push(node)
-    })
+		for (let node of this.graph.set) {
+			nodes.push(node)
+		}
 		return nodes
 	}
 
 	addMachine(machine) {
 		this.machines.set(machine, uuid.v4())
 		this.getNodesFromMachine(machine)
-		this.machines.forEach( machine, id => {
+		for (let [machine, id] of this.machines) {
 			this.bindToMachine(machine)
-		})
+		}
 		this.scanReferences()
 	}
 
@@ -69,17 +92,16 @@ export class Network {
 	getNodesFromMachine(machine) {
 		// scan states
 		let new_nodes = []
-		machine.states_all.forEach( name => {
+		for (let name of machine.states_all) {
 			let node = new Node(name, machine, this.machines)
 			this.graph.add(node)
 			new_nodes.push(node)
-		})
+		}
 
 		// get edges from relations
-		new_nodes.forEach( node => {
+		for (let node of new_nodes)
 			this.getRelationsFromNode(node, machine)
-		})
-	}
+		}
 
 	// TODO support piping
 	getRelationsFromNode(node, machine) {
@@ -92,19 +114,19 @@ export class Network {
 
 			let targets = state[relation]
 
-			targets.forEach( target_name => {
+			for (let target_name of targets) {
 				let target = this.getNodeByName(target_name, machine)
 				assert(target)
 				this.graph.link(node, target)
-			})
+			}
 		}
 	}
 
 	getNodeByName(name, machine) {
-		this.graph.forEach( node => {
+		for (let node of this.graph.set) {
 			if (node.name === name && node.machine === machine)
 				return node
-		})
+		}
 	}
 
 	scanReferences() {
@@ -122,6 +144,17 @@ export class Network {
  */
 export class VisualizerUi {
 
+	network: Network;
+	color: D3.Scale.OrdinalScale;
+	node_color: D3.Scale.OrdinalScale;
+	width: number;
+	height: number;
+	layout: D3.Layout.ForceLayout;
+	node_layouts: Map<am.AsyncMachine, D3.Layout.ForceLayout>;
+	container: D3.Selection;
+	links: D3.Layout.GraphLinkForce[];
+	machine_node: D3.Selection;
+
 	constructor(network) {
 
 		this.network = network
@@ -137,8 +170,9 @@ export class VisualizerUi {
 			.size([this.width, this.height])
 		this.node_color = d3.scale.category20c();
 
-		this.node_layouts = new Map
-		this.machines.forEach( machine => {
+		this.node_layouts = new Map<am.AsyncMachine,
+			D3.Layout.ForceLayout>();
+		for (let machine of this.machines) {
 			let size = machine.states_all.length * 8
 			this.node_layouts.set(machine,
 				d3.layout.force()
@@ -146,19 +180,20 @@ export class VisualizerUi {
 					.linkDistance(50)
 					.size([size, size])
 			)
-		})
+		}
 
 		this.container = d3.select("body").append("svg")
 			.attr("width", this.width)
 			.attr("height", this.height)
 	}
 
-	get machines() {
-		return _.chain(this.network.nodes).pluck('machine').uniq().value()
+	get machines(): am.AsyncMachine[] {
+		return <am.AsyncMachine[]>
+			_.chain(this.network.nodes).pluck('machine').uniq().value()
 	}
 
 	nodes(machine) {
-		var nodes = []
+		var nodes = [];
 
 		this.network.graph.forEach( node => {
 			if (node.machine !== machine)
@@ -167,31 +202,33 @@ export class VisualizerUi {
 			nodes.push(node)
 			// Collect external nodes to which the current node points to
 			var links_from = this.network.graph.from(node)
-			links_from.forEach( target => {
+			for (let target of links_from) {
 				if (target.machine !== machine) {
 					node.externals.push({
 						node: target,
 						machine: node.machine
 					})
 				}
-			})
+			}
+
 			// Collect external nodes pointing to this one
-			this.network.graph.to(node).forEach( source => {
+			for (let source of this.network.graph.to(node)) {
 				if (source.machine !== machine && !links_from.has(source)) {
 					node.externals.push({
 						node: source,
 						machine: node.machine
 					})
 				}
-			})
+			}
+
 			nodes.push.apply(nodes, node.externals)
 		})
 
-		return nodes
+		return nodes;
 	}
 
-	get machine_links() {
-		var links = []
+	get machine_links(): D3.Layout.GraphLinkForce[] {
+		var links = [];
 
 		this.network.graph.traverse( (from, to) => {
 			if (from.machine == to.machine)
@@ -213,7 +250,7 @@ export class VisualizerUi {
 
 		this.network.graph.traverse( (from, to) => {
 			if (to.machine !== from.machine && to.machine === machine) {
-				to.externals.forEach( external => {
+				for (let external of to.externals) {
 					if (external.node == to || external.node == from) {
 						links.push({
 							source: external,
@@ -221,20 +258,20 @@ export class VisualizerUi {
 							value: 1
 						})
 					}
-				})
-			}
+				}
+			}			
 
 			if (from.machine !== machine)
 				return
 
 			if (to.machine !== from.machine) {
-				from.externals.forEach( external => {
+				for (let external of from.externals) {
 					if (external.node == to || external.node == from) {
 						var target = external
 						// TODO support more
-						return
+						break
 					}
-				})
+				}
 			} else
 				var target = to
 
@@ -357,12 +394,12 @@ export class VisualizerUi {
 					.attr("x2", this.linkCoords.bind(null, 'x2'))
 					.attr("y1", this.linkCoords.bind(null, 'y1'))
 					.attr("y2", this.linkCoords.bind(null, 'y2'))
-					.attr("opacity", (d) => {
+					.attr("opacity", function(d) {
 						if (d.source.node && this.style) {
 							this.style.setProperty('opacity', 0)
 						}
 					})
-
+					
 				//var machine_layout = this.node_layouts.get(machine)
 				this.node_layouts.get(machine).alpha(.1)
 				this.machine_node.attr("transform", (d) => {
@@ -392,7 +429,7 @@ export class VisualizerUi {
 
 			return
 		}
-
+		
 		if (!d.target.node) {
 			switch(coord) {
 				case 'x1':
