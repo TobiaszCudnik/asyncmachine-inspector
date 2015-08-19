@@ -48,6 +48,7 @@ export default class Ui {
 	container: D3.Selection;
 	links: D3.Layout.GraphLinkForce[];
 	machine_nodes: D3.Selection;
+	ticksPerRender = 3;
 
 	constructor(stateGraph: D3StateGraph) {
 
@@ -181,11 +182,11 @@ export default class Ui {
 	}
 
 	render() {
-		this.renderMachines()
-		this.renderNodes()
+		this.renderMachineNodes()
+		this.renderStateNodes()
 	}
 
-	renderMachines() {
+	renderMachineNodes() {
 		var machines = this.machines
 		var links = this.machine_links
 		var color = d3.scale.category20();
@@ -194,7 +195,9 @@ export default class Ui {
 			// TODO support the ID getter
 			.nodes(machines)
 			.links(links)
-			.start()
+			.on('start', () => {
+				requestAnimationFrame(this.redrawMachineNodes.bind(this))
+			})
 
 		this.machine_nodes = this.container.selectAll(".node.machine")
 				.data(machines)
@@ -222,56 +225,62 @@ export default class Ui {
 
 		this.machine_nodes.append("title")
 			.text( d => { return d.name; });
+		this.layout.start()
+		//this.layout.on("tick", () => {
+		//})
 	}
 
-
-	renderNodes() {
-		var machines = this.machines
-
-		machines.forEach(this.renderMachineNodes, this);
+	redrawMachineNodes() {
+		for (var i = 0; i < this.ticksPerRender; i++) {
+			this.layout.tick();
+		}
+		this.machine_nodes.attr("transform", (d) => {
+			return "translate(" + d.x + "," + d.y + ")"
+		})
+		requestAnimationFrame(this.redrawMachineNodes.bind(this))
 	}
 
+	renderStateNodes() {
+		this.machines.forEach( (machine: am.AsyncMachine) => {
+			var nodes = this.nodes(machine)
+			var node_links = this.node_links(machine)
+			var layout = this.node_layouts.get(machine)
 
-	renderMachineNodes(machine: am.AsyncMachine) {
-		var nodes = this.nodes(machine)
-		var node_links = this.node_links(machine)
-		var layout = this.node_layouts.get(machine)
+			layout
+				.nodes(nodes)
+				.links(node_links)
+				.start()
 
-		layout
-			.nodes(nodes)
-			.links(node_links)
-			.start()
+			var node = this.container.select("#" + this.stateGraph.machine_id(machine))
+				.selectAll('.nodes')
+				.data(nodes)
+				.enter().append("g")
+				.attr("class", "node")
+				.call(this.layout.drag)
 
-		var node = this.container.select("#" + this.stateGraph.machine_id(machine))
-			.selectAll('.nodes')
-			.data(nodes)
-			.enter().append("g")
-			.attr("class", "node")
-			.call(this.layout.drag)
+			var link = this.container.select("#" + this.stateGraph.machine_id(machine))
+				.selectAll(".link")
+				.data(node_links)
+				.enter().append("line")
+				.attr("class", "link")
+				.style("stroke-width", d => { return d.value } )
 
-		var link = this.container.select("#" + this.stateGraph.machine_id(machine))
-			.selectAll(".link")
-			.data(node_links)
-			.enter().append("line")
-			.attr("class", "link")
-			.style("stroke-width", d => { return d.value } )
+			node.append("text")
+				.attr("dx", (d) => {
+					var name = d.node ? d.node.name : d.name
+					return `-${name.length / 5}em`
+				})
+				.attr("dy", 25)
+				.text(function(d) { return d.name });
 
-		node.append("text")
-			.attr("dx", (d) => {
-				var name = d.node ? d.node.name : d.name
-				return `-${name.length / 5}em`
-			})
-			.attr("dy", 25)
-			.text(function(d) { return d.name });
+			node.append("title")
+				.text( d => { return d.name; });
 
-		node.append("title")
-			.text( d => { return d.name; });
-
-		layout.on("tick", this.redrawMachineNode.bind(this, machine, node, link))
-		this.layout.on("tick", this.redrawMachineNode.bind(this, machine, node, link))
+			layout.on("tick", this.redrawStateNodes.bind(this, machine, node, link))
+		})
 	}
 
-	redrawMachineNode(machine, node, link) {
+	redrawStateNodes(machine, node, link) {
 
 		var q = d3.geom.quadtree(this.machines),
 			i = 0,
@@ -305,9 +314,6 @@ export default class Ui {
 
 		//var machine_layout = node_layouts.get(machine)
 		this.node_layouts.get(machine).alpha(.1)
-		this.machine_nodes.attr("transform", (d) => {
-			return "translate(" + d.x + "," + d.y + ")"
-		})
 	}
 
 	linkCoords(coord, d: {
