@@ -68,7 +68,7 @@ export default class Ui {
 		this.node_layouts = new Map<am.AsyncMachine,
 			D3.Layout.ForceLayout>();
 			
-		for (let machine of this.machines) {
+		this.machines.forEach( (machine) => {
 			let size = machine.states_all.length * 8
 			var layout = d3.layout.force()
 				.charge(-60)
@@ -78,7 +78,7 @@ export default class Ui {
 			// redraw on changes
 			machine.on('change', layout.tick.bind(layout))
 			this.node_layouts.set(machine, layout)
-		}
+		})
 
 		this.container = d3.select("body").append("svg")
 			.attr("width", this.width)
@@ -195,24 +195,16 @@ export default class Ui {
 			// TODO support the ID getter
 			.nodes(machines)
 			.links(links)
-			.on('start', () => {
-				requestAnimationFrame(this.redrawMachineNodes.bind(this))
-			})
+			//.on('start', () => {
+			//	requestAnimationFrame(this.redrawMachineNodes.bind(this))
+			//})
 
 		this.machine_nodes = this.container.selectAll(".node.machine")
-				.data(machines)
-				.enter().append("g")
-					.attr("class", "node machine")
-					.attr("id", d => { return this.stateGraph.machine_id(d) })
-					.call(this.layout.drag)
-
-		//var link = this.container.selectAll(".link.machine")
-		//	.data(links)
-		//	.enter().append("line")
-		//		.attr("class", "link machine")
-		//		.style("stroke-width", d => {
-		//			return d.value
-		//		})
+			.data(machines)
+			.enter().append("g")
+				.attr("class", "node machine")
+				.attr("id", d => { return this.stateGraph.machine_id(d) })
+				.call(this.layout.drag)
 
 		this.machine_nodes.append("circle")
 			.attr("r", d => d.states_all.length * 20)
@@ -225,19 +217,17 @@ export default class Ui {
 
 		this.machine_nodes.append("title")
 			.text( d => { return d.name; });
+
 		this.layout.start()
-		//this.layout.on("tick", () => {
-		//})
+			.on('tick', () => {
+				requestAnimationFrame(this.redrawMachineNodes.bind(this))
+			})
 	}
 
 	redrawMachineNodes() {
-		for (var i = 0; i < this.ticksPerRender; i++) {
-			this.layout.tick();
-		}
 		this.machine_nodes.attr("transform", (d) => {
 			return "translate(" + d.x + "," + d.y + ")"
 		})
-		requestAnimationFrame(this.redrawMachineNodes.bind(this))
 	}
 
 	renderStateNodes() {
@@ -249,19 +239,26 @@ export default class Ui {
 			layout
 				.nodes(nodes)
 				.links(node_links)
-				.start()
+				//.on('start', () => {
+				//	requestAnimationFrame(this.redrawStateNodes.bind(this, machine, node, link))
+				//})
 
 			var node = this.container.select("#" + this.stateGraph.machine_id(machine))
 				.selectAll('.nodes')
 				.data(nodes)
 				.enter().append("g")
 				.attr("class", "node")
-				.call(this.layout.drag)
+				//.call(this.layout.drag)
+
+			var circle = node.append("circle")
+				.attr("r", d => { return d.node ? 2 : 7 } )
+				.style("stroke", d => { return d.node ? 'transparent' : 'white' })
 
 			var link = this.container.select("#" + this.stateGraph.machine_id(machine))
 				.selectAll(".link")
 				.data(node_links)
 				.enter().append("line")
+				// TODO use a separate color per relation
 				.attr("class", "link")
 				.style("stroke-width", d => { return d.value } )
 
@@ -276,11 +273,17 @@ export default class Ui {
 			node.append("title")
 				.text( d => { return d.name; });
 
-			layout.on("tick", this.redrawStateNodes.bind(this, machine, node, link))
+			layout.start()
+				.on('tick', () => {
+					requestAnimationFrame(this.redrawStateNodes.bind(this, machine, node, link, circle))
+				})
 		})
 	}
 
-	redrawStateNodes(machine, node, link) {
+	redrawStateNodes(machine, node, link, circle) {
+		//for (var i = 0; i < this.ticksPerRender; i++) {
+		//	this.node_layouts.get(machine).tick();
+		//}
 
 		var q = d3.geom.quadtree(this.machines),
 			i = 0,
@@ -289,18 +292,18 @@ export default class Ui {
 		while (++i < n)
 			q.visit(collide(this.machines[i]));
 
+		// update the position
 		node.attr("transform", (d) => {
 			return "translate(" + (d.x - machine.states_all.length * 4) + "," +
 				(d.y - machine.states_all.length * 4) + ")"
 		})
 
-		node.append("circle")
-			.attr("r", d => { return d.node ? 2 : 7 } )
-			.style("fill", d => {
-				return d.node ? 'transparent' : (d.state ? 'red' : 'blue')
-			})
-			.style("stroke", d => { return d.node ? 'transparent' : 'white' })
+		// update the color
+		circle.style("fill", d => {
+			return d.node ? 'transparent' : (d.state ? 'red' : 'blue')
+		})
 
+		// update the edge coordinates
 		link
 			.attr("x1", this.linkCoords.bind(null, 'x1'))
 			.attr("x2", this.linkCoords.bind(null, 'x2'))
@@ -312,7 +315,6 @@ export default class Ui {
 				}
 			})
 
-		//var machine_layout = node_layouts.get(machine)
 		this.node_layouts.get(machine).alpha(.1)
 	}
 
@@ -387,8 +389,7 @@ export default class Ui {
 					return y2
 					break;
 			}
-	
-			this.node_layouts.get(external.machine).tick()
+
 			// TODO position the fake node on the circle boundry
 		}
 	}
