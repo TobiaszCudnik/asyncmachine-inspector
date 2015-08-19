@@ -1,8 +1,0 @@
-[include]
-./src
-
-[ignore]
-./build/*
-
-[libs]
-./typings

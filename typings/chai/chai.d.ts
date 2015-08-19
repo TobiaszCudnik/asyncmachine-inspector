@@ -3,7 +3,7 @@
 // Definitions by: Jed Hunsaker <https://github.com/jedhunsaker/>, Bart van der Schoor <https://github.com/Bartvds>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-declare module chai {
+declare module "chai" {
     export class AssertionError {
         constructor(message: string, _props?: any, ssf?: Function);
         name: string;
@@ -280,6 +280,6 @@ declare module chai {
     }
 }
 
-declare module "chai" {
-    export default chai;
-}
+// declare module "chai" {
+//     export default chai;
+// }
