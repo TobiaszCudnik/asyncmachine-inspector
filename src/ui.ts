@@ -339,7 +339,7 @@ export default class Ui {
 			return
 		}
 		
-		if (d.target instanceof D3Node && d.source instanceof D3Node) {
+		if (d.target instanceof Node && d.source instanceof Node) {
 			switch(coord) {
 				case 'x1':
 					return d.source.x - circle_correction
