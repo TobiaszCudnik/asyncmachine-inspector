@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <!--<link rel="stylesheet" href="../../node_modules/mocha/mocha.css" />-->
+    <style>
+        svg {
+            border: 1px solid #ccc;
+        }
+        body {
+            font: 10px Monospace;
+        }
+        svg {
+            width: 100%;
+        }
+        circle.node {
+            fill: lightsteelblue;
+            stroke: #555;
+            stroke-width: 3px;
+            padding: 5px;
+        }
+        circle.leaf {
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        circle.link-expanded {
+            stroke: #555;
+            stroke-width: 3px;
+            stroke-dasharray: 2px 4px;
+        }
+        circle.helper {
+            stroke-width: 0;
+            fill: #333;
+            opacity: 0.6;
+        }
+        circle.center-of-mass {
+            fill: white;
+            stroke: red;
+            stroke-width: 5px;
+        }
+        path.hull {
+            fill: lightsteelblue;
+            fill-opacity: 0.3;
+        }
+        path.hlink {
+            stroke: #333;
+            stroke-opacity: 0.5;
+            fill: none;
+            pointer-events: none;
+        }
+        line.link {
+            stroke: red;
+            stroke-opacity: 0.7;
+            pointer-events: none;
+        }
+        .group {
+            opacity: 0.5;
+        }
+        .node {
+            opacity: 0.8;
+        }
+    </style>
+    <script>
+var json = {"nodes":[{"object_type":1,"name":"Exception","machine_id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b","negotiating":false,"is_set":false,"index":0},{"object_type":1,"name":"A","machine_id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b","negotiating":false,"is_set":false,"index":1},{"object_type":1,"name":"B","machine_id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b","negotiating":false,"is_set":true,"index":2},{"object_type":1,"name":"C","machine_id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b","negotiating":false,"is_set":false,"index":3},{"object_type":1,"name":"D","machine_id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b","negotiating":false,"is_set":false,"index":4},{"object_type":1,"name":"Exception","machine_id":"7c70132b-a10d-4178-8ca6-c1ed318e118b","negotiating":false,"is_set":false,"index":5},{"object_type":1,"name":"E","machine_id":"7c70132b-a10d-4178-8ca6-c1ed318e118b","negotiating":false,"is_set":false,"index":6},{"object_type":1,"name":"F","machine_id":"7c70132b-a10d-4178-8ca6-c1ed318e118b","negotiating":false,"is_set":false,"index":7},{"object_type":1,"name":"G","machine_id":"7c70132b-a10d-4178-8ca6-c1ed318e118b","negotiating":false,"is_set":false,"index":8},{"object_type":1,"name":"Exception","machine_id":"346cc995-1d19-4b99-aaeb-6ed3db8e32b3","negotiating":false,"is_set":false,"index":9},{"object_type":1,"name":"E","machine_id":"346cc995-1d19-4b99-aaeb-6ed3db8e32b3","negotiating":false,"is_set":false,"index":10},{"object_type":1,"name":"F","machine_id":"346cc995-1d19-4b99-aaeb-6ed3db8e32b3","negotiating":false,"is_set":false,"index":11},{"object_type":1,"name":"Exception","machine_id":"1a8a4d6a-6ffe-45c0-90d3-de557008ee0e","negotiating":false,"is_set":false,"index":12},{"object_type":1,"name":"E","machine_id":"1a8a4d6a-6ffe-45c0-90d3-de557008ee0e","negotiating":false,"is_set":false,"index":13},{"object_type":1,"name":"F","machine_id":"1a8a4d6a-6ffe-45c0-90d3-de557008ee0e","negotiating":false,"is_set":false,"index":14},{"object_type":1,"name":"Exception","machine_id":"c945a9c9-8564-4d26-97bd-e4d35da9f063","negotiating":false,"is_set":false,"index":15},{"object_type":1,"name":"E","machine_id":"c945a9c9-8564-4d26-97bd-e4d35da9f063","negotiating":false,"is_set":false,"index":16},{"object_type":1,"name":"F","machine_id":"c945a9c9-8564-4d26-97bd-e4d35da9f063","negotiating":false,"is_set":false,"index":17}],"links":[{"object_type":2,"source_name":"A","target_name":"B","source":1,"target":2,"type":0,"active":false},{"object_type":2,"source_name":"A","target_name":"E","source":1,"target":6,"type":4,"active":false},{"object_type":2,"source_name":"C","target_name":"B","source":3,"target":2,"active":false},{"object_type":2,"source_name":"D","target_name":"C","source":4,"target":3,"type":0,"active":false},{"object_type":2,"source_name":"E","target_name":"F","source":6,"target":7,"active":false},{"object_type":2,"source_name":"E","target_name":"F","source":6,"target":11,"active":false},{"object_type":2,"source_name":"F","target_name":"B","source":7,"target":2,"type":4,"active":false},{"object_type":2,"source_name":"E","target_name":"F","source":10,"target":11,"active":false},{"object_type":2,"source_name":"E","target_name":"F","source":13,"target":14,"active":false},{"object_type":2,"source_name":"G","target_name":"F","source":8,"target":14,"type":4,"active":false},{"object_type":2,"source_name":"E","target_name":"F","source":16,"target":17,"active":false},{"object_type":2,"source_name":"F","target_name":"E","source":17,"target":10,"type":4,"active":false}],"groups":[{"object_type":0,"name":"[1]","leaves":[0,1,2,3,4],"id":"e31bced0-6cb5-4741-9db3-f4ea4c00195b"},{"object_type":0,"name":"","leaves":[5,6,7,8],"id":"7c70132b-a10d-4178-8ca6-c1ed318e118b"},{"object_type":0,"name":"","leaves":[9,10,11],"id":"346cc995-1d19-4b99-aaeb-6ed3db8e32b3"},{"object_type":0,"name":"","leaves":[12,13,14],"id":"1a8a4d6a-6ffe-45c0-90d3-de557008ee0e"},{"object_type":0,"name":"","leaves":[15,16,17],"id":"c945a9c9-8564-4d26-97bd-e4d35da9f063"}]}
+    </script>
+    <!--<script src="../../node_modules/d3/d3.js"></script>-->
+    <script src="../../dist/visualizer.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new amvis.Ui(json).render()
+        })
+    </script>
+</head>
+<body>
+    <div id="graph" />
+</body>
+</html>

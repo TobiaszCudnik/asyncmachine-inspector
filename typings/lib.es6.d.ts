@@ -1,1 +1,0 @@
-/usr/lib/node_modules/typescript/bin/lib.es6.d.ts

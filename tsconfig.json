@@ -1,13 +1,12 @@
 {
     "compilerOptions": {
-        "outDir": "build/", 
-        "sourceMap": true, 
+        "outDir": "build/",
+        "sourceMap": true,
         "target": "es6",
-		"noLib": true
+        "module": "es6"
     }, 
     "files": [
         "typings/tsd.d.ts",
-        "src/visualizer.ts",
-        "src/test/visualizer-test.ts"
+        "src/d3stategraph.ts"
     ]
 }

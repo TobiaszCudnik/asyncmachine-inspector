@@ -2,12 +2,10 @@ import * as am from 'asyncmachine'
 import Graph from 'graphs'
 import uuid from 'node-uuid'
 import assert from 'assert'
+import EventEmitter from 'eventemitter3'
 
-interface MachinesMap
-        extends Map<am.AsyncMachine, string> {}
-    
-interface NodeGraph
-        extends Graph<Node> {}
+type MachinesMap = Map<am.AsyncMachine, string>;
+type NodeGraph = Graph<Node>
 
 export interface ExternalNode {
     node: Node;
@@ -16,95 +14,86 @@ export interface ExternalNode {
 
 export class Node {
 
-    externals: ExternalNode[];
-    machines: MachinesMap;
-    id: string;
-    machine: am.AsyncMachine;
-    name: string;
-    state: boolean;
-
-    constructor(name, machine, machines) {
-        this.id = uuid.v4()
-        this.machines = machines
-        this.machine = machine
-        this.name = name
-        this.externals = []
-        this.state = machine.is(name)
-    }
-
-    get() {
+    /**
+     * Get the original state definition.
+     */
+    get state(): am.IState {
         return this.machine.get(this.name)
     }
 
-    duringNegotiation() {
-        // TODO
+    /**
+     * Is the state currently set?
+     */
+    get is_set(): boolean {
+        return this.machine.is(this.name)
     }
 
-    duringTransition() {
-        // TODO
+    constructor(
+        public name: string,
+        public machine: am.AsyncMachine,
+        public machine_id: string) {
     }
 
-    get machine_id() {
-        return this.machines.get(this.machine)
+    relations(node: Node | string): string[] {
+        var name = node instanceof Node
+            ? node.name : node.toString()
+        return this.machine.getRelations(this.name, name)
     }
 }
 
 
-export default class StateGraph {
-
-    // TODO this cant be extended
+/**
+ * TODO inherit from Graph
+ */
+export default class StateGraph extends EventEmitter {
     graph: NodeGraph;
     machines: MachinesMap;
-    events: string[];
+    machine_ids: { [index: string]: am.AsyncMachine };
 
-    get nodes() {
-        var nodes = []
-        for (let node of this.graph.set) {
-            nodes.push(node)
-        }
-        return nodes
+    get states() {
+        return [...this.graph.set]
     }
 
     constructor() {
-        this.graph = <NodeGraph>new Graph();
+        super()
+        this.graph = <NodeGraph>new Graph()
         this.machines = <MachinesMap>new Map()
-        this.events = []
+        this.machine_ids = {}
     }
 
-    addMachine(machine) {
-        this.machines.set(machine, uuid.v4())
-        this.statesToNodes(machine)
+    addMachine(machine: am.AsyncMachine) {
+        // TODO check for duplicates first
+        var id = uuid.v4()
+        this.machines.set(machine, id)
+        this.machine_ids[id] = machine
+        this.statesToNodes(machine.states_all, id)
+
         for (let [machine, id] of this.machines) {
             this.bindToMachine(machine)
-            // TODO support dynamic piping/unpiping
-            this.scanReferences(machine)
+            this.linkPipedStates(machine)
         }
     }
 
     private bindToMachine(machine: am.AsyncMachine) {
         // bind to the state change
-        machine.on('change', previous => {
-            for (let state of machine.diffStates(previous, machine.is())) {
-                var node = this.getNodeByName(state, machine)
-                node.state = false;
-            }
-            for (let state of machine.diffStates(machine.is(), previous)) {
-                var node = this.getNodeByName(state, machine)
-                node.state = true;
-            }
-        })
+        // TODO bind to:
+        // - piping (new and removed ones)
+        // - transition start
+        // - transition end / cancel
+        // TODO unbind on dispose
+        machine.on('change', () => this.emit('change'))
     }
 
     dispose() {
         // TODO unbind listeners
-
     }
 
-    private statesToNodes(machine) {
+    private statesToNodes(names: string[], machine_id: string) {
         // scan states
         let new_nodes = []
-        for (let name of machine.states_all) {
-            let node = new Node(name, machine, this.machines)
+        let machine = this.machine_ids[machine_id]
+        for (let name of names) {
+            let node = new Node(name, machine, machine_id)
             this.graph.add(node)
             new_nodes.push(node)
         }
@@ -112,12 +101,13 @@ export default class StateGraph {
         // get edges from relations
         // all the nodes have to be parsed prior to this
         for (let node of new_nodes)
-            this.getRelationsFromNode(node, machine)
+            this.getRelationsFromNode(node, machine_id)
     }
 
-    private getRelationsFromNode(node: Node, machine: am.AsyncMachine) {
+    private getRelationsFromNode(node: Node, machine_id: string) {
         // TODO limit to 'requires' and 'drops' ?
-        let state = node.get()
+        let machine = this.machine_ids[machine_id]
+        let state = node.state
         assert(state)
         for (let relation in state) {
             if (relation == 'auto')
@@ -126,33 +116,30 @@ export default class StateGraph {
             let targets = state[relation]
 
             for (let target_name of targets) {
-                let target = this.getNodeByName(target_name, machine)
+                let target = this.getNodeByName(target_name, machine_id)
                 assert(target)
                 this.graph.link(node, target)
             }
         }
     }
 
-    getNodeByName(name, machine) {
+    getNodeByName(name: string, machine_id: string) {
         for (let node of this.graph.set) {
-            if (node.name === name && node.machine === machine)
+            if (node.name === name && node.machine_id === machine_id)
                 return node
         }
     }
 
-    private scanReferences(machine: am.AsyncMachine) {
+    protected linkPipedStates(machine: am.AsyncMachine) {
         for (let state in machine.piped) {
             var data = machine.piped[state]
 
-            let source_state = this.getNodeByName(state, machine)
-            let target_state = this.getNodeByName(data.state, data.machine)
+            let source_state = this.getNodeByName(state, this.machines.get(machine))
+            let target_state = this.getNodeByName(data.state,
+                this.machines.get(data.machine))
             if (!target_state)
                 continue
             this.graph.link(source_state, target_state)
         }
-    }
-
-    machine_id(machine) {
-        return `machine-${this.machines.get(machine)}`
     }
 }

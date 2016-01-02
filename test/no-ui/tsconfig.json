@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "outDir": "../../build-test/no-ui/",
+    "target": "es6",
+    "module": "es6",
+    "inlineSourceMap": true
+  },
+  "files": [
+    "../../typings/tsd.d.ts",
+    "../../typings/mocha/mocha.d.ts",
+    "../../typings/chai/chai.d.ts",
+    "../../typings/node/node.d.ts",
+    "../../typings/sinon/sinon.d.ts",
+    "./test.ts"
+  ]
+}

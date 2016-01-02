@@ -11,6 +11,8 @@ export default class Server extends EventEmitter {
 
     constructor(
             public port?: number = 3000) {
+        super()
+
         this.server = rpc(this.port)
 
         this.server('connection', this.states.addLater('Uis'))
