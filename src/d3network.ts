@@ -1,15 +1,15 @@
 import * as jsondiffpatch from 'jsondiffpatch'
-import StateGraph, {
+import Network, {
     Node as GraphNode
-} from "./stategraph";
-import assert from 'assert'
+} from "./network";
+import * as assert from 'assert'
 
 
 
 /**
- * Produce JSON from StateGraph, ready to be consumed by the D3 UI layer.
+ * Produce JSON from Network, ready to be consumed by the D3 UI layer.
  */
-export default class D3GraphJson {
+export default class D3NetworkJson {
     // list of created machine nodes
     machine_ids: Set<MachineId>;
     // map of machine IDs to machine nodes
@@ -22,7 +22,7 @@ export default class D3GraphJson {
     // also used for creating links between machine nodes
     externals: Map<GraphNode, Set<GraphNode>>;
 
-    json: ID3GraphJson;
+    json: ID3NetworkJson;
 
     // TODO use enum for the source relations
     relations_map = {
@@ -34,11 +34,11 @@ export default class D3GraphJson {
     }
     
     constructor(
-            public graph: StateGraph) {
-        assert(graph)
+            public network: Network) {
+        assert(network)
     }
 
-    generateJson(): ID3GraphJson {
+    generateJson(): ID3NetworkJson {
         // TODO cleanup at the end
         this.json = {
             nodes: [],
@@ -51,8 +51,10 @@ export default class D3GraphJson {
         this.externals = new Map
 
         // process nodes
-        this.graph.graph.forEach( node => this.parseNode(node) )
-        this.graph.graph.traverseAll( (from, to) => this.parseLink(from, to) )
+        this.network.graph.forEach(
+            node => this.parseNode(node) )
+        this.network.graph.traverseAll(
+            (from, to) => this.parseLink(from, to) )
 
         return this.json;
     }
@@ -80,7 +82,7 @@ export default class D3GraphJson {
             object_type: OBJECT_TYPE.STATE,
             name: graph_node.name,
             machine_id: graph_node.machine_id,
-            auto: graph_node.state.auto,
+            auto: Boolean(graph_node.state.auto),
             negotiating: false, // TODO
             is_set: graph_node.is_set,
             index: this.json.nodes.length
@@ -97,14 +99,16 @@ export default class D3GraphJson {
     parseLink(from: GraphNode, to: GraphNode) {
         // create a link for every relation
         var relations = from.relations(to)
-        for (let relation of from.relations(to)) {
+        for (let relation of relations) {
+            let relation_type = this.relations_map[relation]
+            assert(relation_type !== undefined)
             this.json.links.push({
                 object_type: OBJECT_TYPE.LINK,
                 source_name: from.name,
                 target_name: to.name,
                 source: this.nodes.get(from).index,
                 target: this.nodes.get(to).index,
-                type: this.relations_map[relation],
+                type: relation_type,
                 active: false   // TODO
             })
         }
@@ -133,10 +137,11 @@ export default class D3GraphJson {
  */
 export class D3JsonDiffFactory {
     diffpatcher: jsondiffpatch;
-    previous_json: ID3GraphJson;
+    previous_json: ID3NetworkJson;
     
     constructor(
-            public graph: D3GraphJson) {
+            public network: D3NetworkJson) {
+        assert(network)
         this.diffpatcher = jsondiffpatch.create({
             objectHash: this.objectHash()
         })
@@ -148,10 +153,10 @@ export class D3JsonDiffFactory {
 
     generateJson() {
         // generate a new json and keep it as the last one
-        this.previous_json = this.graph.generateJson()
+        this.previous_json = this.network.generateJson()
     }
 
-    generateDiff(base_json?: ID3GraphJson) {
+    generateDiff(base_json?: ID3NetworkJson) {
         base_json = base_json || this.previous_json
 
         assert(base_json, "Base JSON required to create a diff")
@@ -169,9 +174,7 @@ export function objectHash(obj) {
             return obj.id
             break;
         case OBJECT_TYPE.STATE:
-            return `${obj.name}`
-            break;
-            return `${obj.source_id}:${obj.target_id}`
+            return `${obj.machine_id}:${obj.name}`
             break;
         case OBJECT_TYPE.LINK:
             return `${obj.source_name}:${obj.target_name}`
@@ -228,7 +231,7 @@ export type Link = {
     type: NODE_LINK_TYPE
 }
 
-export interface ID3GraphJson {
+export interface ID3NetworkJson {
     nodes: Array<State>,
     links: Array<Link>,
     groups: Array<Machine>

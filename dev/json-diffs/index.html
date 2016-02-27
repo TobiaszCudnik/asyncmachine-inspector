@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <!--<link rel="stylesheet" href="../../node_modules/mocha/mocha.css" />-->
+    <style>
+        svg {
+            border: 1px solid #ccc;
+        }
+        body {
+            font: 10px Monospace;
+        }
+        svg {
+            width: 100%;
+        }
+        circle.node {
+            fill: lightsteelblue;
+            stroke: #555;
+            stroke-width: 3px;
+            padding: 5px;
+        }
+        circle.leaf {
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        circle.link-expanded {
+            stroke: #555;
+            stroke-width: 3px;
+            stroke-dasharray: 2px 4px;
+        }
+        circle.helper {
+            stroke-width: 0;
+            fill: #333;
+            opacity: 0.6;
+        }
+        circle.center-of-mass {
+            fill: white;
+            stroke: red;
+            stroke-width: 5px;
+        }
+        path.hull {
+            fill: lightsteelblue;
+            fill-opacity: 0.3;
+        }
+        path.hlink {
+            stroke: #333;
+            stroke-opacity: 0.5;
+            fill: none;
+            pointer-events: none;
+        }
+        line.link {
+            stroke: red;
+            stroke-opacity: 0.7;
+            pointer-events: none;
+        }
+        .group {
+            opacity: 0.5;
+        }
+        .node {
+            opacity: 0.8;
+        }
+    </style>
+    <script src="../../node_modules/socket.io-client/socket.io.js"></script>
+    <script src="../../dist/visualizer.js"></script>
+    <script>
+var socket = io('http://localhost:3030/client');
+var ui;
+
+document.addEventListener('DOMContentLoaded', function() {
+    socket.once('loggers', function(ids) {
+        socket.emit('join', ids[0])
+    })
+    socket.once('full-sync', function(data) {
+        ui = new amv.Ui(data).render()
+    })
+    socket.once('diff-sync', function(diff) {
+        amv.jsondiffpatch.patch(ui.data, diff)
+    })
+})
+// socket.on('connect', function() {
+//     console.log('client:connected')
+// });
+// socket.on('test', function(data){
+//     console.log('test event', data)
+// });
+// socket.on('disconnect', function(){});
+    </script>
+</head>
+<body>
+    <div id="graph" />
+</body>
+</html>

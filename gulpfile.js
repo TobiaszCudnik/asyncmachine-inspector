@@ -90,8 +90,7 @@ var source_bundler = browserify({
     packageCache: {},
     entries: ['./build/visualizer.js'],
     debug: true,
-    insertGlobals: false,
-    standalone: 'amvis'
+    standalone: 'amv'
 }).transform("babelify", {
     presets: ["es2015"],
     sourceMapRelative: path.resolve(__dirname, 'src'),
@@ -214,6 +213,13 @@ gulp.task('tests:run:watch', 'Run already BUILT unit tests and watch for changes
 //gulp.task('tests:compile:watch')
 
 gulp.task('test', 'Run the test suite', ['tests:build', 'tests:run'])
+
+//----- MISC
+
+// shows the counter of infered "any" types
+gulp.task('server', 'Start the web server', shell.task([
+    'httpserver'
+]))
 
 //----- MISC
 

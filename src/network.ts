@@ -1,8 +1,10 @@
 import * as am from 'asyncmachine'
 import Graph from 'graphs'
-import uuid from 'node-uuid'
-import assert from 'assert'
-import EventEmitter from 'eventemitter3'
+import * as uuid from 'node-uuid'
+import * as assert from 'assert'
+// TODO fix the declaration
+// import * as EventEmitter from 'eventemitter3'
+import * as EventEmitter from 'eventemitter3'
 
 type MachinesMap = Map<am.AsyncMachine, string>;
 type NodeGraph = Graph<Node>
@@ -45,7 +47,8 @@ export class Node {
 /**
  * TODO inherit from Graph
  */
-export default class StateGraph extends EventEmitter {
+export default class Network extends EventEmitter {
+    id: string;
     graph: NodeGraph;
     machines: MachinesMap;
     machine_ids: { [index: string]: am.AsyncMachine };
@@ -59,17 +62,20 @@ export default class StateGraph extends EventEmitter {
         this.graph = <NodeGraph>new Graph()
         this.machines = <MachinesMap>new Map()
         this.machine_ids = {}
+        this.id = uuid.v4()
     }
 
     addMachine(machine: am.AsyncMachine) {
         // TODO check for duplicates first
-        var id = uuid.v4()
+        // TODO deterministic IDs!!!
+        var id = machine.debug_prefix || uuid.v4()
         this.machines.set(machine, id)
         this.machine_ids[id] = machine
         this.statesToNodes(machine.states_all, id)
+        this.bindToMachine(machine)
 
+        // TODO this is required, but should be checked
         for (let [machine, id] of this.machines) {
-            this.bindToMachine(machine)
             this.linkPipedStates(machine)
         }
     }
@@ -81,6 +87,7 @@ export default class StateGraph extends EventEmitter {
         // - transition start
         // - transition end / cancel
         // TODO unbind on dispose
+        // TODO group the same changes emitted by couple of machines
         machine.on('change', () => this.emit('change'))
     }
 
@@ -124,10 +131,13 @@ export default class StateGraph extends EventEmitter {
     }
 
     getNodeByName(name: string, machine_id: string) {
-        for (let node of this.graph.set) {
+        // for (let node of this.graph.set) {
+        var ret
+        this.graph.set.forEach( node => {
             if (node.name === name && node.machine_id === machine_id)
-                return node
-        }
+                ret = node
+        })
+        return ret
     }
 
     protected linkPipedStates(machine: am.AsyncMachine) {

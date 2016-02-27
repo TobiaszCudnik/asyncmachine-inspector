@@ -1,18 +1,20 @@
 import 'source-map-support/register'
-import * as am from 'asyncmachine'
+import { AsyncMachine } from 'asyncmachine'
 import { expect } from 'chai'
-import assert from 'assert'
-import StateGraph from '../../src/stategraph'
+import * as assert from 'assert'
+import Network from '../../src/network'
 import D3GraphJson, {
     D3JsonDiffFactory
-} from '../../src/d3stategraph'
+} from '../../src/d3network'
+import * as fs from 'fs'
+import * as path from 'path'
 
 // describe("Single machine graph", function() {
 
 //   beforeEach( function() {
 //     this.machine = new AsyncMachine.factory(['A', 'B', 'C', 'D'])
 //     this.machine.A = {requires: ['B']}
-//     this.machine.C = {drops: ['B']}
+//     this.machine.C = {blocks: ['B']}
 //     this.machine.D = {requires: ['C']}
 
 //     this.stateGraph = new Network
@@ -36,27 +38,32 @@ import D3GraphJson, {
 //   })
 // })
 
-describe("Multi machine graph", function() {
+describe("Network", function() {
 
     var stateGraph;
 
     before( function() {
-        this.machine1 = am.AsyncMachine.factory(['A', 'B', 'C', 'D'])
-        this.machine1.C = {drops: ['B']}
+        this.machine1 = AsyncMachine.factory(['A', 'B', 'C', 'D'])
+        this.machine1.debug_prefix = 'machine1'
+        this.machine1.C = {blocks: ['B']}
         this.machine1.A = {requires: ['B']}
         this.machine1.D = {requires: ['C']}
 
-        this.machine2 = am.AsyncMachine.factory(['E', 'F', 'G'])
-        this.machine2.E = {drops: ['F']}
+        this.machine2 = AsyncMachine.factory(['E', 'F', 'G'])
+        this.machine2.debug_prefix = 'machine2'
+        this.machine2.E = {blocks: ['F']}
 
-        this.machine3 = am.AsyncMachine.factory(['E', 'F'])
-        this.machine3.E = {drops: ['F']}
+        this.machine3 = AsyncMachine.factory(['E', 'F'])
+        this.machine3.debug_prefix = 'machine3'
+        this.machine3.E = {blocks: ['F']}
 
-        this.machine4 = am.AsyncMachine.factory(['E', 'F'])
-        this.machine4.E = {drops: ['F']}
+        this.machine4 = AsyncMachine.factory(['E', 'F'])
+        this.machine4.debug_prefix = 'machine4'
+        this.machine4.E = {blocks: ['F']}
 
-        this.machine5 = am.AsyncMachine.factory(['E', 'F'])
-        this.machine5.E = {drops: ['F']}
+        this.machine5 = AsyncMachine.factory(['E', 'F'])
+        this.machine5.debug_prefix = 'machine5'
+        this.machine5.E = {blocks: ['F']}
 
         this.machine1.pipe('A', this.machine2, 'E')
         this.machine2.pipe('E', this.machine1, 'B')
@@ -68,7 +75,7 @@ describe("Multi machine graph", function() {
         this.machine1.debug('[1]', 2)
         //window.foo = this.machine1
 
-        stateGraph = new StateGraph
+        stateGraph = new Network
         stateGraph.addMachine(this.machine1)
         stateGraph.addMachine(this.machine2)
         stateGraph.addMachine(this.machine3)
@@ -77,36 +84,41 @@ describe("Multi machine graph", function() {
 
     })
 
-    describe('json', function() {
+    describe('json factory', function() {
         var json;
         before(function() {
             this.jsonGenerator = new D3GraphJson(stateGraph)
             json = this.jsonGenerator.generateJson();
         })
-        it('should create json', function () {
-            console.dir(JSON.stringify(json))
-            expect(json.nodes.length).to.be.greaterThan(0)
+        
+        it('should produce json', function () {
+            expect(json).to.eql(JSON.parse(
+                fs.readFileSync('test/fixtures/1.json')))
         })
 
-        describe('diffs', function() {
-            var json2;
-            before(function() {
-                var differ = new D3JsonDiffFactory(this.jsonGenerator)
-                differ.generateJson()
-                debugger;
-                assert(differ.previous_json)
-                this.machine1.add('C')
-                this.machine2.pipe('E', this.machine1, 'C')
-                
-                this.diff = differ.generateDiff()
-            })
-            it('should produce diffs', function() {
-                console.log(this.diff)
-                expect(this.diff).to.be.greaterThan(0)
-            })
+    })
+    
+    describe('diffs factory', function() {
+        var json2;
+        before(function() {
+            let jsonGenerator = new D3GraphJson(stateGraph)
+            var differ = new D3JsonDiffFactory(jsonGenerator)
+            
+            differ.generateJson()
+            assert(differ.previous_json)
+            
+            this.machine1.add('C')
+            this.machine2.pipe('E', this.machine1, 'C')
+            
+            this.diff = differ.generateDiff()
         })
         
+        it('should produce diffs', function() {
+            console.log(this.diff)
+            throw new Error('not implemented')
+        })
     })
+        
 
     //describe('ui', function() {
     //    it('should render', function() {

@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "outDir": "../../build-test/no-ui/",
-    "target": "es6",
-    "module": "es6",
+    "target": "es5",
+    "module": "commonjs",
     "inlineSourceMap": true
   },
   "files": [

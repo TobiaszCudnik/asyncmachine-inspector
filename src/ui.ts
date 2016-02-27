@@ -1,10 +1,10 @@
-import d3 from 'd3'
-import cola from 'webcola'
+import * as d3 from 'd3'
+import * as cola from 'webcola'
 import * as am from 'asyncmachine'
 import Graph from 'graphs'
 import {
-	ID3GraphJson
-} from './d3stategraph'
+	ID3NetworkJson
+} from './d3network'
 
 // TODO this is so bad
 window.d3 = d3
@@ -30,7 +30,7 @@ export default class Ui {
 	height = 600;
 
 	constructor(
-			public data: ID3GraphJson) {
+			public data: ID3NetworkJson) {
 
 		this.machine_color = d3.scale.category10()
 		this.state_color = d3.scale.category20c()

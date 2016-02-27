@@ -8,4 +8,6 @@
 /// <reference path="../node_modules/asyncmachine/lib/asyncmachine.d.ts" />
 /// <reference path="../node_modules/graphs/index.d.ts" />
 /// <reference path="socket.io/socket.io.d.ts" />
+/// <reference path="socket.io-client/socket.io-client.d.ts" />
 /// <reference path="eventemitter3/eventemitter3.d.ts" />
+/// <reference path="underscore/underscore.d.ts" />

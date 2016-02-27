@@ -1,5 +1,9 @@
-import StateGraph from './stategraph';
+import Network from './network';
 import Ui from './ui';
+import Logger from './logger';
+import * as jsondiffpatch from 'jsondiffpatch'
 
-export {StateGraph as StateGraph};
-export {Ui as Ui};
+export { Network };
+export { Ui };
+export { Logger };
+export { jsondiffpatch }
