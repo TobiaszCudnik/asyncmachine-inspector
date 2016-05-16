@@ -81,21 +81,24 @@ describe("Network", function() {
         stateGraph.addMachine(this.machine3)
         stateGraph.addMachine(this.machine4)
         stateGraph.addMachine(this.machine5)
-
     })
 
-    describe('json factory', function() {
+    describe('json factory', () => {
         var json;
-        before(function() {
+        before(() => {
             this.jsonGenerator = new D3GraphJson(stateGraph)
             json = this.jsonGenerator.generateJson();
         })
         
-        it('should produce json', function () {
+        it('should produce json', () => {
+            // console.log(JSON.stringify(json))
             expect(json).to.eql(JSON.parse(
-                fs.readFileSync('test/fixtures/1.json')))
+                fs.readFileSync('test/fixtures/1.json').toString()))
         })
-
+        
+        it('should support cross-machine connections', () => {
+            throw new Error
+        })
     })
     
     describe('diffs factory', function() {
@@ -105,17 +108,22 @@ describe("Network", function() {
             var differ = new D3JsonDiffFactory(jsonGenerator)
             
             differ.generateJson()
+            var prev = differ.previous_json
             assert(differ.previous_json)
+            // console.log(differ.previous_json)
             
             this.machine1.add('C')
             this.machine2.pipe('E', this.machine1, 'C')
             
             this.diff = differ.generateDiff()
+            // console.log(differ.previous_json)
+            // expect(prev).to.eql(differ.previous_json)
         })
         
         it('should produce diffs', function() {
-            console.log(this.diff)
-            throw new Error('not implemented')
+            let expected_diff = 
+                {nodes:{ '3': { is_set: [ false, true ] }, _t: 'a' }}
+            expect(this.diff).to.eql(expected_diff)
         })
     })
         

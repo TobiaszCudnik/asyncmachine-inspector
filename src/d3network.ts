@@ -104,8 +104,8 @@ export default class D3NetworkJson {
             assert(relation_type !== undefined)
             this.json.links.push({
                 object_type: OBJECT_TYPE.LINK,
-                source_name: from.name,
-                target_name: to.name,
+                source_name: from.full_name,
+                target_name: to.full_name,
                 source: this.nodes.get(from).index,
                 target: this.nodes.get(to).index,
                 type: relation_type,
@@ -116,8 +116,8 @@ export default class D3NetworkJson {
         if (!relations.length) {
             this.json.links.push({
                 object_type: OBJECT_TYPE.LINK,
-                source_name: from.name,
-                target_name: to.name,
+                source_name: from.full_name,
+                target_name: to.full_name,
                 source: this.nodes.get(from).index,
                 target: this.nodes.get(to).index,
                 type: this.relations_map.piped,
@@ -168,18 +168,24 @@ export class D3JsonDiffFactory {
     }
 }
 
-export function objectHash(obj) {
-    switch(obj.type) {
+
+// TODO type obj
+export function objectHash(obj: State | Link | Machine) {
+    let key
+    switch(obj.object_type) {
         case OBJECT_TYPE.MACHINE:
-            return obj.id
-            break;
+            key = obj.id
+            break
         case OBJECT_TYPE.STATE:
-            return `${obj.machine_id}:${obj.name}`
-            break;
+            key = `${obj.machine_id}:${obj.name}`
+            break
         case OBJECT_TYPE.LINK:
-            return `${obj.source_name}:${obj.target_name}`
-            break;
+            key = `${obj.source_name}:${obj.target_name}`
+            break
+        default:
+            throw new Error('unknown object type')
     }
+    return key
 }
 
 /* ---------- TYPES ---------- */

@@ -166,8 +166,8 @@
     "links": [
         {
             "object_type": 2,
-            "source_name": "A",
-            "target_name": "B",
+            "source_name": "[1]:A",
+            "target_name": "[1]:B",
             "source": 1,
             "target": 2,
             "type": 0,
@@ -175,8 +175,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "C",
-            "target_name": "B",
+            "source_name": "[1]:C",
+            "target_name": "[1]:B",
             "source": 3,
             "target": 2,
             "type": 1,
@@ -184,8 +184,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "D",
-            "target_name": "C",
+            "source_name": "[1]:D",
+            "target_name": "[1]:C",
             "source": 4,
             "target": 3,
             "type": 0,
@@ -193,8 +193,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "E",
-            "target_name": "F",
+            "source_name": "machine2:E",
+            "target_name": "machine2:F",
             "source": 6,
             "target": 7,
             "type": 1,
@@ -202,8 +202,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "E",
-            "target_name": "F",
+            "source_name": "machine3:E",
+            "target_name": "machine3:F",
             "source": 10,
             "target": 11,
             "type": 1,
@@ -211,8 +211,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "E",
-            "target_name": "F",
+            "source_name": "machine4:E",
+            "target_name": "machine4:F",
             "source": 13,
             "target": 14,
             "type": 1,
@@ -220,8 +220,8 @@
         },
         {
             "object_type": 2,
-            "source_name": "E",
-            "target_name": "F",
+            "source_name": "machine5:E",
+            "target_name": "machine5:F",
             "source": 16,
             "target": 17,
             "type": 1,

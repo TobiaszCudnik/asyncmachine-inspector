@@ -75,6 +75,7 @@ loggerEndpoint.on('connection', function(socket: loggerSocket) {
         loggerSockets = _.without(loggerSockets, socket)
     })
     socket.on('diff-sync', function(diff) {
+        console.log(socket.loggerId)
         server.to(socket.loggerId).emit('diff-sync', diff)
     })
     // store the ID    
@@ -127,3 +128,4 @@ server.listen(3030)
 interface IJoinEvent {
     loggerId: string;
 }
+    

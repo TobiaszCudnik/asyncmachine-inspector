@@ -1,5 +1,5 @@
 import * as am from 'asyncmachine'
-import Graph from 'graphs'
+import * as Graph from 'graphs'
 import * as uuid from 'node-uuid'
 import * as assert from 'assert'
 // TODO fix the declaration
@@ -28,6 +28,10 @@ export class Node {
      */
     get is_set(): boolean {
         return this.machine.is(this.name)
+    }
+    
+    get full_name(): string {
+        return `${this.machine_id}:${this.name}`
     }
 
     constructor(
