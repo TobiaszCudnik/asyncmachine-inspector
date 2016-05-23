@@ -1,5 +1,5 @@
 import * as am from 'asyncmachine'
-import * as Graph from 'graphs'
+import Graph from 'graphs'
 import * as uuid from 'node-uuid'
 import * as assert from 'assert'
 // TODO fix the declaration

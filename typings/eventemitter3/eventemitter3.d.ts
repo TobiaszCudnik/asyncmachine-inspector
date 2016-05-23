@@ -98,5 +98,6 @@ declare module 'eventemitter3' {
     // Expose the module.
     //
     class EventEmitter extends EventEmitter3.EventEmitter {}
-    export default EventEmitter;
+    namespace EventEmitter {}
+    export = EventEmitter;
 }

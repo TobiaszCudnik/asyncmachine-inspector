@@ -1,13 +1,12 @@
-"use strict";
-// import * as io from 'socket.io'
-// import * as _ from 'underscore'
-// import assert from 'assert'
-// import { AsyncMachine } from 'asyncmachine'
+import * as io from 'socket.io'
+import * as _ from 'underscore'
+import * as assert from 'assert'
+import AsyncMachine from 'asyncmachine'
 
 
-const io = require('socket.io')
-const _ = require('underscore')
-const assert = require('assert')
+// const io = require('socket.io')
+// const _ = require('underscore')
+// const assert = require('assert')
 
 const server = io()
 

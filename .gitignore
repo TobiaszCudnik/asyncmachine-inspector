@@ -1,0 +1,6 @@
+/.vscode/
+/npm-debug.log
+/.idea/
+/build/
+/build*/
+/node_modules/asyncmachine/

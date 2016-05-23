@@ -6,8 +6,8 @@ import {
 	ID3NetworkJson
 } from './d3network'
 
-// TODO this is so bad
-window.d3 = d3
+// TODO this is bad
+window['d3'] = d3
 
 /**
  * TODO consume a stream of events

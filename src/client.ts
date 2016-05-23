@@ -1,1 +1,1 @@
-import Ui from 'ui'
+import Ui from './ui'

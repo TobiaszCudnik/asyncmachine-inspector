@@ -136,7 +136,7 @@ export default class D3NetworkJson {
  * TODO make it a steram
  */
 export class D3JsonDiffFactory {
-    diffpatcher: jsondiffpatch;
+    diffpatcher: jsondiffpatch.IDiffPatch;
     previous_json: ID3NetworkJson;
     
     constructor(
