@@ -1,13 +1,20 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.amv = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
+"use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var jsondiffpatch = require('jsondiffpatch');
 var assert = require('assert');
 /**
  * Produce JSON from Network, ready to be consumed by the D3 UI layer.
  */
+
 var D3NetworkJson = (function () {
     function D3NetworkJson(network) {
+        _classCallCheck(this, D3NetworkJson);
+
         this.network = network;
         // TODO use enum for the source relations
         this.relations_map = {
@@ -19,143 +26,185 @@ var D3NetworkJson = (function () {
         };
         assert(network);
     }
-    D3NetworkJson.prototype.generateJson = function () {
-        var _this = this;
-        // TODO cleanup at the end
-        this.json = {
-            nodes: [],
-            links: [],
-            groups: []
-        };
-        this.machine_ids = new Set();
-        this.nodes = new Map();
-        this.machine_nodes = {};
-        this.externals = new Map();
-        // process nodes
-        this.network.graph.forEach(function (node) {
-            return _this.parseNode(node);
-        });
-        this.network.graph.traverseAll(function (from, to) {
-            return _this.parseLink(from, to);
-        });
-        return this.json;
-    };
-    D3NetworkJson.prototype.parseNode = function (graph_node) {
-        var machine = graph_node.machine;
-        var machine_node;
-        // handle a machine node TODO extract
-        if (!this.machine_ids.has(graph_node.machine_id)) {
-            machine_node = {
-                object_type: OBJECT_TYPE.MACHINE,
-                name: this.getMachineName(machine),
-                leaves: [],
-                id: graph_node.machine_id
+
+    _createClass(D3NetworkJson, [{
+        key: 'generateJson',
+        value: function generateJson() {
+            var _this = this;
+
+            // TODO cleanup at the end
+            this.json = {
+                nodes: [],
+                links: [],
+                groups: []
             };
-            this.json.groups.push(machine_node);
-            this.machine_ids.add(graph_node.machine_id);
-            this.machine_nodes[graph_node.machine_id] = machine_node;
-        } else {
-            machine_node = this.machine_nodes[graph_node.machine_id];
-        }
-        var node = {
-            object_type: OBJECT_TYPE.STATE,
-            name: graph_node.name,
-            machine_id: graph_node.machine_id,
-            auto: Boolean(graph_node.state.auto),
-            negotiating: false,
-            is_set: graph_node.is_set,
-            index: this.json.nodes.length
-        };
-        // add to json
-        this.json.nodes.push(node);
-        machine_node.leaves.push(node.index);
-        // index the reference
-        this.nodes.set(graph_node, node);
-    };
-    D3NetworkJson.prototype.parseLink = function (from, to) {
-        // create a link for every relation
-        var relations = from.relations(to);
-        for (var _i = 0; _i < relations.length; _i++) {
-            var relation = relations[_i];
-            var relation_type = this.relations_map[relation];
-            assert(relation_type !== undefined);
-            this.json.links.push({
-                object_type: OBJECT_TYPE.LINK,
-                source_name: from.full_name,
-                target_name: to.full_name,
-                source: this.nodes.get(from).index,
-                target: this.nodes.get(to).index,
-                type: relation_type,
-                active: false // TODO
+            this.machine_ids = new Set();
+            this.nodes = new Map();
+            this.machine_nodes = {};
+            this.externals = new Map();
+            // process nodes
+            this.network.graph.forEach(function (node) {
+                return _this.parseNode(node);
             });
-        }
-        // TODO support piping properly, distinguish types
-        if (!relations.length) {
-            this.json.links.push({
-                object_type: OBJECT_TYPE.LINK,
-                source_name: from.full_name,
-                target_name: to.full_name,
-                source: this.nodes.get(from).index,
-                target: this.nodes.get(to).index,
-                type: this.relations_map.piped,
-                active: false // TODO
+            this.network.graph.traverseAll(function (from, to) {
+                return _this.parseLink(from, to);
             });
+            return this.json;
         }
-    };
-    D3NetworkJson.prototype.getMachineName = function (machine) {
-        return (machine.debug_prefix || '').replace(['[', ']', ' '], '');
-    };
+    }, {
+        key: 'parseNode',
+        value: function parseNode(graph_node) {
+            var machine = graph_node.machine;
+            var machine_node;
+            // handle a machine node TODO extract
+            if (!this.machine_ids.has(graph_node.machine_id)) {
+                machine_node = {
+                    object_type: OBJECT_TYPE.MACHINE,
+                    name: this.getMachineName(machine),
+                    leaves: [],
+                    id: graph_node.machine_id
+                };
+                this.json.groups.push(machine_node);
+                this.machine_ids.add(graph_node.machine_id);
+                this.machine_nodes[graph_node.machine_id] = machine_node;
+            } else {
+                machine_node = this.machine_nodes[graph_node.machine_id];
+            }
+            var node = {
+                object_type: OBJECT_TYPE.STATE,
+                name: graph_node.name,
+                machine_id: graph_node.machine_id,
+                auto: Boolean(graph_node.state.auto),
+                negotiating: false,
+                is_set: graph_node.is_set,
+                index: this.json.nodes.length
+            };
+            // add to json
+            this.json.nodes.push(node);
+            machine_node.leaves.push(node.index);
+            // index the reference
+            this.nodes.set(graph_node, node);
+        }
+    }, {
+        key: 'parseLink',
+        value: function parseLink(from, to) {
+            // create a link for every relation
+            var relations = from.relations(to);
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = relations[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var relation = _step.value;
+
+                    var relation_type = this.relations_map[relation];
+                    assert(relation_type !== undefined);
+                    this.json.links.push({
+                        object_type: OBJECT_TYPE.LINK,
+                        source_name: from.full_name,
+                        target_name: to.full_name,
+                        source: this.nodes.get(from).index,
+                        target: this.nodes.get(to).index,
+                        type: relation_type,
+                        active: false // TODO
+                    });
+                }
+                // TODO support piping properly, distinguish types
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            if (!relations.length) {
+                this.json.links.push({
+                    object_type: OBJECT_TYPE.LINK,
+                    source_name: from.full_name,
+                    target_name: to.full_name,
+                    source: this.nodes.get(from).index,
+                    target: this.nodes.get(to).index,
+                    type: this.relations_map.piped,
+                    active: false // TODO
+                });
+            }
+        }
+    }, {
+        key: 'getMachineName',
+        value: function getMachineName(machine) {
+            return (machine.debug_prefix || '').replace(['[', ']', ' '], '');
+        }
+    }]);
+
     return D3NetworkJson;
 })();
+
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = D3NetworkJson;
 /**
  * TODO make it a steram
  */
+
 var D3JsonDiffFactory = (function () {
     function D3JsonDiffFactory(network) {
+        _classCallCheck(this, D3JsonDiffFactory);
+
         this.network = network;
         assert(network);
         this.diffpatcher = jsondiffpatch.create({
             objectHash: this.objectHash()
         });
     }
-    D3JsonDiffFactory.prototype.objectHash = function () {
-        return objectHash;
-    };
-    D3JsonDiffFactory.prototype.generateJson = function () {
-        // generate a new json and keep it as the last one
-        this.previous_json = this.network.generateJson();
-    };
-    D3JsonDiffFactory.prototype.generateDiff = function (base_json) {
-        base_json = base_json || this.previous_json;
-        assert(base_json, "Base JSON required to create a diff");
-        this.generateJson();
-        // generate the diff
-        return this.diffpatcher.diff(base_json, this.previous_json);
-    };
+
+    _createClass(D3JsonDiffFactory, [{
+        key: 'objectHash',
+        value: function objectHash() {
+            return _objectHash;
+        }
+    }, {
+        key: 'generateJson',
+        value: function generateJson() {
+            // generate a new json and keep it as the last one
+            this.previous_json = this.network.generateJson();
+        }
+    }, {
+        key: 'generateDiff',
+        value: function generateDiff(base_json) {
+            base_json = base_json || this.previous_json;
+            assert(base_json, "Base JSON required to create a diff");
+            this.generateJson();
+            // generate the diff
+            return this.diffpatcher.diff(base_json, this.previous_json);
+        }
+    }]);
+
     return D3JsonDiffFactory;
 })();
+
 exports.D3JsonDiffFactory = D3JsonDiffFactory;
-// TODO type obj
-function objectHash(obj) {
-    var key;
-    switch (obj.object_type) {
-        case OBJECT_TYPE.MACHINE:
-            key = obj.id;
-            break;
-        case OBJECT_TYPE.STATE:
-            key = obj.machine_id + ":" + obj.name;
-            break;
-        case OBJECT_TYPE.LINK:
-            key = obj.source_name + ":" + obj.target_name;
-            break;
-        default:
-            throw new Error('unknown object type');
-    }
-    return key;
+function _objectHash(obj) {
+    var key = undefined;
+    if (isTypeMachine(obj)) return obj.id;else if (isTypeState(obj)) return obj.machine_id + ':' + obj.name;else if (isTypeLink(obj)) return obj.source_name + ':' + obj.target_name;else throw new Error('unknown object type');
 }
-exports.objectHash = objectHash;
+exports.objectHash = _objectHash;
+function isTypeMachine(obj) {
+    return obj.object_type == OBJECT_TYPE.MACHINE;
+}
+function isTypeState(obj) {
+    return obj.object_type == OBJECT_TYPE.STATE;
+}
+function isTypeLink(obj) {
+    return obj.object_type == OBJECT_TYPE.LINK;
+}
 /* ---------- TYPES ---------- */
 (function (NODE_LINK_TYPE) {
     NODE_LINK_TYPE[NODE_LINK_TYPE["REQUIRES"] = 0] = "REQUIRES";
@@ -176,14 +225,22 @@ var NODE_LINK_TYPE = exports.NODE_LINK_TYPE;
 var OBJECT_TYPE = exports.OBJECT_TYPE;
 
 
-},{"assert":22,"jsondiffpatch":140}],2:[function(require,module,exports){
+},{"assert":23,"jsondiffpatch":144}],2:[function(require,module,exports){
 "use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var io = require('socket.io-client');
 var d3network_1 = require("./d3network");
+
 var Logger = (function () {
     function Logger(network, serverHost) {
         var _this = this;
+
+        _classCallCheck(this, Logger);
+
         this.network = network;
         this.serverHost = serverHost;
         this.io = io(serverHost, {
@@ -202,275 +259,436 @@ var Logger = (function () {
             console.log('connected');
         });
     }
-    Logger.prototype.onFullSync = function () {
-        this.io.emit('full-sync', this.diff.previous_json);
-    };
-    Logger.prototype.onGraphChange = function () {
-        this.io.emit('diff-sync', this.diff.generateDiff());
-    };
+
+    _createClass(Logger, [{
+        key: "onFullSync",
+        value: function onFullSync() {
+            this.io.emit('full-sync', this.diff.previous_json);
+        }
+    }, {
+        key: "onGraphChange",
+        value: function onGraphChange() {
+            this.io.emit('diff-sync', this.diff.generateDiff());
+        }
+    }]);
+
     return Logger;
 })();
+
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Logger;
 
 
-},{"./d3network":1,"socket.io-client":183}],3:[function(require,module,exports){
-'use strict';
+},{"./d3network":1,"socket.io-client":189}],3:[function(require,module,exports){
+"use strict";
 
-var __extends = undefined && undefined.__extends || function (d, b) {
-    for (var p in b) {
-        if (b.hasOwnProperty(p)) d[p] = b[p];
-    }function __() {
-        this.constructor = d;
-    }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var Graph = require('graphs');
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var graphs_1 = require('graphs');
 var uuid = require('node-uuid');
 var assert = require('assert');
 // TODO fix the declaration
 // import * as EventEmitter from 'eventemitter3'
 var EventEmitter = require('eventemitter3');
+
 var Node = (function () {
     function Node(name, machine, machine_id) {
+        _classCallCheck(this, Node);
+
         this.name = name;
         this.machine = machine;
         this.machine_id = machine_id;
     }
-    Object.defineProperty(Node.prototype, "state", {
-        /**
-         * Get the original state definition.
-         */
+    /**
+     * Get the original state definition.
+     */
+
+    _createClass(Node, [{
+        key: 'relations',
+        value: function relations(node) {
+            var name = node instanceof Node ? node.name : node.toString();
+            return this.machine.getRelations(this.name, name);
+        }
+    }, {
+        key: 'state',
         get: function get() {
             return this.machine.get(this.name);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Node.prototype, "is_set", {
+        }
         /**
          * Is the state currently set?
          */
+
+    }, {
+        key: 'is_set',
         get: function get() {
             return this.machine.is(this.name);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Node.prototype, "full_name", {
+        }
+    }, {
+        key: 'full_name',
         get: function get() {
-            return this.machine_id + ":" + this.name;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Node.prototype.relations = function (node) {
-        var name = node instanceof Node ? node.name : node.toString();
-        return this.machine.getRelations(this.name, name);
-    };
+            return this.machine_id + ':' + this.name;
+        }
+    }]);
+
     return Node;
 })();
+
 exports.Node = Node;
 /**
  * TODO inherit from Graph
  */
-var Network = (function (_super) {
-    __extends(Network, _super);
+
+var Network = (function (_EventEmitter) {
+    _inherits(Network, _EventEmitter);
+
     function Network() {
-        _super.call(this);
-        this.graph = new Graph();
-        this.machines = new Map();
-        this.machine_ids = {};
-        this.id = uuid.v4();
+        _classCallCheck(this, Network);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Network).call(this));
+
+        _this.graph = new graphs_1.default();
+        _this.machines = new Map();
+        _this.machine_ids = {};
+        _this.id = uuid.v4();
+        return _this;
     }
-    Object.defineProperty(Network.prototype, "states", {
-        get: function get() {
-            return this.graph.set.slice();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Network.prototype.addMachine = function (machine) {
-        // TODO check for duplicates first
-        // TODO deterministic IDs!!!
-        var id = machine.debug_prefix || uuid.v4();
-        this.machines.set(machine, id);
-        this.machine_ids[id] = machine;
-        this.statesToNodes(machine.states_all, id);
-        this.bindToMachine(machine);
-        // TODO this is required, but should be checked
-        for (var _i = 0, _a = this.machines; _i < _a.length; _i++) {
-            var _b = _a[_i],
-                machine_1 = _b[0],
-                id_1 = _b[1];
-            this.linkPipedStates(machine_1);
-        }
-    };
-    Network.prototype.bindToMachine = function (machine) {
-        var _this = this;
-        // bind to the state change
-        // TODO bind to:
-        // - piping (new and removed ones)
-        // - transition start
-        // - transition end / cancel
-        // TODO unbind on dispose
-        // TODO group the same changes emitted by couple of machines
-        machine.on('change', function () {
-            return _this.emit('change');
-        });
-    };
-    Network.prototype.dispose = function () {
-        // TODO unbind listeners
-    };
-    Network.prototype.statesToNodes = function (names, machine_id) {
-        // scan states
-        var new_nodes = [];
-        var machine = this.machine_ids[machine_id];
-        for (var _i = 0; _i < names.length; _i++) {
-            var name = names[_i];
-            var node = new Node(name, machine, machine_id);
-            this.graph.add(node);
-            new_nodes.push(node);
-        }
-        // get edges from relations
-        // all the nodes have to be parsed prior to this
-        for (var _a = 0; _a < new_nodes.length; _a++) {
-            var node = new_nodes[_a];
-            this.getRelationsFromNode(node, machine_id);
-        }
-    };
-    Network.prototype.getRelationsFromNode = function (node, machine_id) {
-        // TODO limit to 'requires' and 'drops' ?
-        var machine = this.machine_ids[machine_id];
-        var state = node.state;
-        assert(state);
-        for (var relation in state) {
-            if (relation == 'auto') continue;
-            var targets = state[relation];
-            for (var _i = 0; _i < targets.length; _i++) {
-                var target_name = targets[_i];
-                var target = this.getNodeByName(target_name, machine_id);
-                assert(target);
-                this.graph.link(node, target);
+
+    _createClass(Network, [{
+        key: 'addMachine',
+        value: function addMachine(machine) {
+            // TODO check for duplicates first
+            // TODO deterministic IDs!!!
+            var id = machine.log_prefix || uuid.v4();
+            this.machines.set(machine, id);
+            this.machine_ids[id] = machine;
+            this.statesToNodes(machine.states_all, id);
+            this.bindToMachine(machine);
+            // TODO this is required, but should be checked
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = this.machines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var _step$value = _slicedToArray(_step.value, 2);
+
+                    var _machine = _step$value[0];
+                    var _id = _step$value[1];
+
+                    this.linkPipedStates(_machine);
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
             }
         }
-    };
-    Network.prototype.getNodeByName = function (name, machine_id) {
-        // for (let node of this.graph.set) {
-        var ret;
-        this.graph.set.forEach(function (node) {
-            if (node.name === name && node.machine_id === machine_id) ret = node;
-        });
-        return ret;
-    };
-    Network.prototype.linkPipedStates = function (machine) {
-        for (var state in machine.piped) {
-            var data = machine.piped[state];
-            var source_state = this.getNodeByName(state, this.machines.get(machine));
-            var target_state = this.getNodeByName(data.state, this.machines.get(data.machine));
-            if (!target_state) continue;
-            this.graph.link(source_state, target_state);
+    }, {
+        key: 'bindToMachine',
+        value: function bindToMachine(machine) {
+            var _this2 = this;
+
+            // bind to the state change
+            // TODO bind to:
+            // - piping (new and removed ones)
+            // - transition start
+            // - transition end / cancel
+            // TODO unbind on dispose
+            // TODO group the same changes emitted by couple of machines
+            machine.on('change', function () {
+                return _this2.emit('change');
+            });
         }
-    };
+    }, {
+        key: 'dispose',
+        value: function dispose() {
+            // TODO unbind listeners
+        }
+    }, {
+        key: 'statesToNodes',
+        value: function statesToNodes(names, machine_id) {
+            // scan states
+            var new_nodes = [];
+            var machine = this.machine_ids[machine_id];
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = names[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var name = _step2.value;
+
+                    var node = new Node(name, machine, machine_id);
+                    this.graph.add(node);
+                    new_nodes.push(node);
+                }
+                // get edges from relations
+                // all the nodes have to be parsed prior to this
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            var _iteratorNormalCompletion3 = true;
+            var _didIteratorError3 = false;
+            var _iteratorError3 = undefined;
+
+            try {
+                for (var _iterator3 = new_nodes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                    var node = _step3.value;
+
+                    this.getRelationsFromNode(node, machine_id);
+                }
+            } catch (err) {
+                _didIteratorError3 = true;
+                _iteratorError3 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                        _iterator3.return();
+                    }
+                } finally {
+                    if (_didIteratorError3) {
+                        throw _iteratorError3;
+                    }
+                }
+            }
+        }
+    }, {
+        key: 'getRelationsFromNode',
+        value: function getRelationsFromNode(node, machine_id) {
+            // TODO limit to 'requires' and 'drops' ?
+            var machine = this.machine_ids[machine_id];
+            var state = node.state;
+            assert(state);
+            for (var relation in state) {
+                if (relation == 'auto') continue;
+                var targets = state[relation];
+                var _iteratorNormalCompletion4 = true;
+                var _didIteratorError4 = false;
+                var _iteratorError4 = undefined;
+
+                try {
+                    for (var _iterator4 = targets[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                        var target_name = _step4.value;
+
+                        var target = this.getNodeByName(target_name, machine_id);
+                        assert(target);
+                        this.graph.link(node, target);
+                    }
+                } catch (err) {
+                    _didIteratorError4 = true;
+                    _iteratorError4 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                            _iterator4.return();
+                        }
+                    } finally {
+                        if (_didIteratorError4) {
+                            throw _iteratorError4;
+                        }
+                    }
+                }
+            }
+        }
+    }, {
+        key: 'getNodeByName',
+        value: function getNodeByName(name, machine_id) {
+            // for (let node of this.graph.set) {
+            var ret;
+            this.graph.set.forEach(function (node) {
+                if (node.name === name && node.machine_id === machine_id) ret = node;
+            });
+            return ret;
+        }
+    }, {
+        key: 'linkPipedStates',
+        value: function linkPipedStates(machine) {
+            for (var state in machine.piped) {
+                var data = machine.piped[state];
+                var source_state = this.getNodeByName(state, this.machines.get(machine));
+                var target_state = this.getNodeByName(data.state, this.machines.get(data.machine));
+                if (!target_state) continue;
+                this.graph.link(source_state, target_state);
+            }
+        }
+    }, {
+        key: 'states',
+        get: function get() {
+            return [].concat(_toConsumableArray(this.graph.set));
+        }
+    }]);
+
     return Network;
 })(EventEmitter);
+
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Network;
 
 
-},{"assert":22,"eventemitter3":110,"graphs":203,"node-uuid":146}],4:[function(require,module,exports){
-'use strict';
+},{"assert":23,"eventemitter3":112,"graphs":115,"node-uuid":150}],4:[function(require,module,exports){
+"use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var d3 = require('d3');
 var cola = require('webcola');
-// TODO this is so bad
-window.d3 = d3;
+// TODO this is bad
+window['d3'] = d3;
 /**
  * TODO consume a stream of events
  * TODO support an initialization without a reference to other instances
  */
+
 var Ui = (function () {
     function Ui(data) {
+        _classCallCheck(this, Ui);
+
         this.data = data;
         this.pad = 3;
         this.width = 800;
         this.height = 600;
         this.machine_color = d3.scale.category10();
         this.state_color = d3.scale.category20c();
-        for (var _i = 0, _a = this.data.nodes; _i < _a.length; _i++) {
-            var node = _a[_i];
-            node.width = node.name.length * 20;
-            node.height = 25;
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+            for (var _iterator = this.data.nodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var node = _step.value;
+
+                node.width = node.name.length * 20;
+                node.height = 25;
+            }
+        } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                }
+            } finally {
+                if (_didIteratorError) {
+                    throw _iteratorError;
+                }
+            }
         }
+
         this.layout = cola.d3adaptor().linkDistance(100).avoidOverlaps(true).handleDisconnected(false).nodes(this.data.nodes).links(this.data.links).groups(this.data.groups).size([this.width, this.height]);
     }
-    Ui.prototype.render = function () {
-        // TODO customizable container
-        this.container = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.layout.start();
-        this.renderNodes();
-    };
-    Ui.prototype.renderNodes = function () {
-        var _this = this;
-        this.group = this.container.selectAll(".group").data(this.data.groups).enter().append("rect").attr("rx", 8).attr("ry", 8).attr("class", "group").style("fill", function (d) {
-            return _this.machine_color(d.id);
-        }).call(this.layout.drag);
-        this.link = this.container.selectAll(".link").data(this.data.links).enter().append("line").attr("class", "link");
-        this.node = this.container.selectAll(".node").data(this.data.nodes).enter().append("rect").attr("class", "node").attr("width", function (d) {
-            return d.width - 2 * _this.pad;
-        }).attr("height", function (d) {
-            return d.height - 2 * _this.pad;
-        }).attr("rx", 5).attr("ry", 5).style("fill", function (d) {
-            return _this.state_color(d.name);
-        }).call(this.layout.drag);
-        this.label = this.container.selectAll(".label").data(this.data.nodes).enter().append("text").attr("class", "label").text(function (d) {
-            return d.name;
-        }).call(this.layout.drag);
-        this.node.append("title").text(function (d) {
-            return d.name;
-        });
-        this.layout.on("tick", this.redrawNodes.bind(this));
-    };
-    Ui.prototype.redrawNodes = function () {
-        var _this = this;
-        this.link.attr("x1", function (d) {
-            return d.source.x;
-        }).attr("y1", function (d) {
-            return d.source.y;
-        }).attr("x2", function (d) {
-            return d.target.x;
-        }).attr("y2", function (d) {
-            return d.target.y;
-        });
-        this.node.attr("x", function (d) {
-            return d.x - d.width / 2 + _this.pad;
-        }).attr("y", function (d) {
-            return d.y - d.height / 2 + _this.pad;
-        });
-        this.group.attr("x", function (d) {
-            return d.bounds.x;
-        }).attr("y", function (d) {
-            return d.bounds.y;
-        }).attr("width", function (d) {
-            return d.bounds.width();
-        }).attr("height", function (d) {
-            return d.bounds.height();
-        });
-        this.label.attr("x", function (d) {
-            return d.x;
-        }).attr("y", function (d) {
-            var h = this.getBBox().height;
-            return d.y + h / 4;
-        });
-    };
+
+    _createClass(Ui, [{
+        key: 'render',
+        value: function render() {
+            // TODO customizable container
+            this.container = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
+            this.layout.start();
+            this.renderNodes();
+        }
+    }, {
+        key: 'renderNodes',
+        value: function renderNodes() {
+            var _this = this;
+
+            this.group = this.container.selectAll(".group").data(this.data.groups).enter().append("rect").attr("rx", 8).attr("ry", 8).attr("class", "group").style("fill", function (d) {
+                return _this.machine_color(d.id);
+            }).call(this.layout.drag);
+            this.link = this.container.selectAll(".link").data(this.data.links).enter().append("line").attr("class", "link");
+            this.node = this.container.selectAll(".node").data(this.data.nodes).enter().append("rect").attr("class", "node").attr("width", function (d) {
+                return d.width - 2 * _this.pad;
+            }).attr("height", function (d) {
+                return d.height - 2 * _this.pad;
+            }).attr("rx", 5).attr("ry", 5).style("fill", function (d) {
+                return _this.state_color(d.name);
+            }).call(this.layout.drag);
+            this.label = this.container.selectAll(".label").data(this.data.nodes).enter().append("text").attr("class", "label").text(function (d) {
+                return d.name;
+            }).call(this.layout.drag);
+            this.node.append("title").text(function (d) {
+                return d.name;
+            });
+            this.layout.on("tick", this.redrawNodes.bind(this));
+        }
+    }, {
+        key: 'redrawNodes',
+        value: function redrawNodes() {
+            var _this2 = this;
+
+            this.link.attr("x1", function (d) {
+                return d.source.x;
+            }).attr("y1", function (d) {
+                return d.source.y;
+            }).attr("x2", function (d) {
+                return d.target.x;
+            }).attr("y2", function (d) {
+                return d.target.y;
+            });
+            this.node.attr("x", function (d) {
+                return d.x - d.width / 2 + _this2.pad;
+            }).attr("y", function (d) {
+                return d.y - d.height / 2 + _this2.pad;
+            });
+            this.group.attr("x", function (d) {
+                return d.bounds.x;
+            }).attr("y", function (d) {
+                return d.bounds.y;
+            }).attr("width", function (d) {
+                return d.bounds.width();
+            }).attr("height", function (d) {
+                return d.bounds.height();
+            });
+            this.label.attr("x", function (d) {
+                return d.x;
+            }).attr("y", function (d) {
+                var h = this.getBBox().height;
+                return d.y + h / 4;
+            });
+        }
+    }]);
+
     return Ui;
 })();
+
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Ui;
 
 
-},{"d3":67,"webcola":201}],5:[function(require,module,exports){
-'use strict';
+},{"d3":69,"webcola":207}],5:[function(require,module,exports){
+"use strict";
 
 var network_1 = require('./network');
 exports.Network = network_1.default;
@@ -482,7 +700,7 @@ var jsondiffpatch = require('jsondiffpatch');
 exports.jsondiffpatch = jsondiffpatch;
 
 
-},{"./logger":2,"./network":3,"./ui":4,"jsondiffpatch":140}],6:[function(require,module,exports){
+},{"./logger":2,"./network":3,"./ui":4,"jsondiffpatch":144}],6:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -513,6 +731,61 @@ function after(count, callback, err_cb) {
 function noop() {}
 
 },{}],7:[function(require,module,exports){
+"use strict"
+
+var slice = require('sliced')
+module.exports = afterQueue
+
+function afterQueue(fn, doAfter) {
+  after.__proto__ = fn
+  after.prototype = fn.prototype
+  function after() {
+    var result = fn.apply(this, arguments)
+
+    var valueBefore = doAfter.value
+    var fnBefore = doAfter.fn
+    var argsBefore = doAfter.args
+
+    doAfter.value = result
+    doAfter.fn = fn
+    doAfter.args = slice(arguments)
+    doAfter.apply(this, doAfter.args)
+    result = doAfter.value
+    doAfter.value = valueBefore
+    doAfter.args = argsBefore
+    doAfter.fn = fnBefore
+    return result
+  }
+  return after
+}
+
+afterQueue.return = function afterQueueValue(fn, doAfter) {
+  after.__proto__ = fn
+  after.prototype = fn.prototype
+  function after() {
+
+    var valueBefore = doAfter.value
+    var fnBefore = doAfter.fn
+    var argsBefore = doAfter.args
+
+    var result = fn.apply(this, arguments)
+
+    doAfter.value = result
+    doAfter.fn = fn
+    doAfter.args = slice(arguments)
+
+    result = doAfter.call(this, doAfter.value, doAfter.args, doAfter.fn)
+
+    doAfter.value = valueBefore
+    doAfter.args = argsBefore
+    doAfter.fn = fnBefore
+    return result
+  }
+  return after
+}
+
+
+},{"sliced":187}],8:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -543,7 +816,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -554,7 +827,7 @@ asn1.constants = require('./asn1/constants');
 asn1.decoders = require('./asn1/decoders');
 asn1.encoders = require('./asn1/encoders');
 
-},{"./asn1/api":9,"./asn1/base":11,"./asn1/constants":15,"./asn1/decoders":17,"./asn1/encoders":20,"bn.js":27}],9:[function(require,module,exports){
+},{"./asn1/api":10,"./asn1/base":12,"./asn1/constants":16,"./asn1/decoders":18,"./asn1/encoders":21,"bn.js":29}],10:[function(require,module,exports){
 var asn1 = require('../asn1');
 var inherits = require('inherits');
 
@@ -615,7 +888,7 @@ Entity.prototype.encode = function encode(data, enc, /* internal */ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":8,"inherits":123,"vm":200}],10:[function(require,module,exports){
+},{"../asn1":9,"inherits":127,"vm":206}],11:[function(require,module,exports){
 var inherits = require('inherits');
 var Reporter = require('../base').Reporter;
 var Buffer = require('buffer').Buffer;
@@ -733,7 +1006,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
   return out;
 };
 
-},{"../base":11,"buffer":55,"inherits":123}],11:[function(require,module,exports){
+},{"../base":12,"buffer":57,"inherits":127}],12:[function(require,module,exports){
 var base = exports;
 
 base.Reporter = require('./reporter').Reporter;
@@ -741,7 +1014,7 @@ base.DecoderBuffer = require('./buffer').DecoderBuffer;
 base.EncoderBuffer = require('./buffer').EncoderBuffer;
 base.Node = require('./node');
 
-},{"./buffer":10,"./node":12,"./reporter":13}],12:[function(require,module,exports){
+},{"./buffer":11,"./node":13,"./reporter":14}],13:[function(require,module,exports){
 var Reporter = require('../base').Reporter;
 var EncoderBuffer = require('../base').EncoderBuffer;
 var assert = require('minimalistic-assert');
@@ -1341,7 +1614,7 @@ Node.prototype._encodePrimitive = function encodePrimitive(tag, data) {
     throw new Error('Unsupported tag: ' + tag);
 };
 
-},{"../base":11,"minimalistic-assert":144}],13:[function(require,module,exports){
+},{"../base":12,"minimalistic-assert":148}],14:[function(require,module,exports){
 var inherits = require('inherits');
 
 function Reporter(options) {
@@ -1445,7 +1718,7 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
   return this;
 };
 
-},{"inherits":123}],14:[function(require,module,exports){
+},{"inherits":127}],15:[function(require,module,exports){
 var constants = require('../constants');
 
 exports.tagClass = {
@@ -1489,7 +1762,7 @@ exports.tag = {
 };
 exports.tagByName = constants._reverse(exports.tag);
 
-},{"../constants":15}],15:[function(require,module,exports){
+},{"../constants":16}],16:[function(require,module,exports){
 var constants = exports;
 
 // Helper
@@ -1510,7 +1783,7 @@ constants._reverse = function reverse(map) {
 
 constants.der = require('./der');
 
-},{"./der":14}],16:[function(require,module,exports){
+},{"./der":15}],17:[function(require,module,exports){
 var inherits = require('inherits');
 
 var asn1 = require('../../asn1');
@@ -1813,13 +2086,13 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-},{"../../asn1":8,"inherits":123}],17:[function(require,module,exports){
+},{"../../asn1":9,"inherits":127}],18:[function(require,module,exports){
 var decoders = exports;
 
 decoders.der = require('./der');
 decoders.pem = require('./pem');
 
-},{"./der":16,"./pem":18}],18:[function(require,module,exports){
+},{"./der":17,"./pem":19}],19:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -1871,7 +2144,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   return DERDecoder.prototype.decode.call(this, input, options);
 };
 
-},{"../../asn1":8,"./der":16,"buffer":55,"inherits":123}],19:[function(require,module,exports){
+},{"../../asn1":9,"./der":17,"buffer":57,"inherits":127}],20:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -2152,13 +2425,13 @@ function encodeTag(tag, primitive, cls, reporter) {
   return res;
 }
 
-},{"../../asn1":8,"buffer":55,"inherits":123}],20:[function(require,module,exports){
+},{"../../asn1":9,"buffer":57,"inherits":127}],21:[function(require,module,exports){
 var encoders = exports;
 
 encoders.der = require('./der');
 encoders.pem = require('./pem');
 
-},{"./der":19,"./pem":21}],21:[function(require,module,exports){
+},{"./der":20,"./pem":22}],22:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -2183,7 +2456,7 @@ PEMEncoder.prototype.encode = function encode(data, options) {
   return out.join('\n');
 };
 
-},{"../../asn1":8,"./der":19,"buffer":55,"inherits":123}],22:[function(require,module,exports){
+},{"../../asn1":9,"./der":20,"buffer":57,"inherits":127}],23:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -2544,7 +2817,7 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":199}],23:[function(require,module,exports){
+},{"util/":205}],24:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -2631,7 +2904,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -2692,7 +2965,7 @@ Backoff.prototype.setJitter = function(jitter){
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -2818,7 +3091,71 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
+"use strict"
+
+var slice = require('sliced')
+
+module.exports = beforeQueue
+
+function beforeQueue(fn, beforeFn, overrideContext) {
+  if (overrideContext) beforeFn.__context = overrideContext
+  if (fn.__beforeFns) {
+    fn.__beforeFns.push(beforeFn)
+    return fn
+  }
+
+  before.__beforeFns = [beforeFn]
+  before.__proto__ = fn
+  before.prototype = fn.prototype
+  function before() {
+    var self = this
+
+    var fns = before.__beforeFns
+    var fnArgs = slice(arguments)
+    var fnContext = undefined
+
+    // for loop because performance
+    for (var i = 0; i < fns.length; i++) {
+      var doBefore = fns[i]
+      var args = fnArgs
+
+      var context = self
+      if (fnContext) context = fnContext
+      else if (doBefore.__context) context = doBefore.__context
+      var oldArgs = doBefore.args
+      var oldContext = doBefore.context
+      var oldFn = doBefore.fn
+      // execution information is stored on doBefore function itself
+      doBefore.args = args
+      doBefore.fn = fn
+      doBefore.context = context
+
+      doBefore.apply(doBefore.context, doBefore.args)
+
+      // extract args/context which may have changed during execution of doBefore
+      if (doBefore.args !== args) {
+        fnArgs = doBefore.args
+        if (Array.isArray(fnArgs)) {}
+        else fnArgs = slice(fnArgs || [])
+      }
+
+      // if we have a new context
+      fnContext = (doBefore.context !== context) ? doBefore.context : undefined
+
+      // for good measure remove properties we added on doBefore
+      doBefore.args = oldArgs
+      doBefore.fn = oldFn
+      doBefore.context = oldContext
+    }
+
+    var finalContext = fnContext ? fnContext : self
+    return fn.apply(finalContext, fnArgs)
+  }
+  return before
+}
+
+},{"sliced":187}],28:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -2919,7 +3256,7 @@ module.exports = (function() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (module, exports) {
 
 'use strict';
@@ -6769,7 +7106,7 @@ Mont.prototype.invm = function invm(a) {
 
 })(typeof module === 'undefined' || module, this);
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var r;
 
 module.exports = function rand(len) {
@@ -6828,9 +7165,9 @@ if (typeof window === 'object') {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 
-},{}],30:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (Buffer){
 // based on the aes implimentation in triple sec
 // https://github.com/keybase/triplesec
@@ -7012,7 +7349,7 @@ exports.AES = AES
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],31:[function(require,module,exports){
+},{"buffer":57}],33:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -7114,7 +7451,7 @@ function xorTest (a, b) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./aes":30,"./ghash":35,"buffer":55,"buffer-xor":54,"cipher-base":56,"inherits":123}],32:[function(require,module,exports){
+},{"./aes":32,"./ghash":37,"buffer":57,"buffer-xor":56,"cipher-base":58,"inherits":127}],34:[function(require,module,exports){
 var ciphers = require('./encrypter')
 exports.createCipher = exports.Cipher = ciphers.createCipher
 exports.createCipheriv = exports.Cipheriv = ciphers.createCipheriv
@@ -7127,7 +7464,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"./decrypter":33,"./encrypter":34,"./modes":36}],33:[function(require,module,exports){
+},{"./decrypter":35,"./encrypter":36,"./modes":38}],35:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -7268,7 +7605,7 @@ exports.createDecipheriv = createDecipheriv
 
 }).call(this,require("buffer").Buffer)
 
-},{"./aes":30,"./authCipher":31,"./modes":36,"./modes/cbc":37,"./modes/cfb":38,"./modes/cfb1":39,"./modes/cfb8":40,"./modes/ctr":41,"./modes/ecb":42,"./modes/ofb":43,"./streamCipher":44,"buffer":55,"cipher-base":56,"evp_bytestokey":112,"inherits":123}],34:[function(require,module,exports){
+},{"./aes":32,"./authCipher":33,"./modes":38,"./modes/cbc":39,"./modes/cfb":40,"./modes/cfb1":41,"./modes/cfb8":42,"./modes/ctr":43,"./modes/ecb":44,"./modes/ofb":45,"./streamCipher":46,"buffer":57,"cipher-base":58,"evp_bytestokey":114,"inherits":127}],36:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -7394,7 +7731,7 @@ exports.createCipher = createCipher
 
 }).call(this,require("buffer").Buffer)
 
-},{"./aes":30,"./authCipher":31,"./modes":36,"./modes/cbc":37,"./modes/cfb":38,"./modes/cfb1":39,"./modes/cfb8":40,"./modes/ctr":41,"./modes/ecb":42,"./modes/ofb":43,"./streamCipher":44,"buffer":55,"cipher-base":56,"evp_bytestokey":112,"inherits":123}],35:[function(require,module,exports){
+},{"./aes":32,"./authCipher":33,"./modes":38,"./modes/cbc":39,"./modes/cfb":40,"./modes/cfb1":41,"./modes/cfb8":42,"./modes/ctr":43,"./modes/ecb":44,"./modes/ofb":45,"./streamCipher":46,"buffer":57,"cipher-base":58,"evp_bytestokey":114,"inherits":127}],37:[function(require,module,exports){
 (function (Buffer){
 var zeros = new Buffer(16)
 zeros.fill(0)
@@ -7497,7 +7834,7 @@ function xor (a, b) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],36:[function(require,module,exports){
+},{"buffer":57}],38:[function(require,module,exports){
 exports['aes-128-ecb'] = {
   cipher: 'AES',
   key: 128,
@@ -7670,7 +8007,7 @@ exports['aes-256-gcm'] = {
   type: 'auth'
 }
 
-},{}],37:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 var xor = require('buffer-xor')
 
 exports.encrypt = function (self, block) {
@@ -7689,7 +8026,7 @@ exports.decrypt = function (self, block) {
   return xor(out, pad)
 }
 
-},{"buffer-xor":54}],38:[function(require,module,exports){
+},{"buffer-xor":56}],40:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -7725,7 +8062,7 @@ function encryptStart (self, data, decrypt) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"buffer-xor":54}],39:[function(require,module,exports){
+},{"buffer":57,"buffer-xor":56}],41:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad
@@ -7764,7 +8101,7 @@ function shiftIn (buffer, value) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],40:[function(require,module,exports){
+},{"buffer":57}],42:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad = self._cipher.encryptBlock(self._prev)
@@ -7784,7 +8121,7 @@ exports.encrypt = function (self, chunk, decrypt) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],41:[function(require,module,exports){
+},{"buffer":57}],43:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -7820,7 +8157,7 @@ exports.encrypt = function (self, chunk) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"buffer-xor":54}],42:[function(require,module,exports){
+},{"buffer":57,"buffer-xor":56}],44:[function(require,module,exports){
 exports.encrypt = function (self, block) {
   return self._cipher.encryptBlock(block)
 }
@@ -7828,7 +8165,7 @@ exports.decrypt = function (self, block) {
   return self._cipher.decryptBlock(block)
 }
 
-},{}],43:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -7849,7 +8186,7 @@ exports.encrypt = function (self, chunk) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"buffer-xor":54}],44:[function(require,module,exports){
+},{"buffer":57,"buffer-xor":56}],46:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -7879,7 +8216,7 @@ StreamCipher.prototype._final = function () {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./aes":30,"buffer":55,"cipher-base":56,"inherits":123}],45:[function(require,module,exports){
+},{"./aes":32,"buffer":57,"cipher-base":58,"inherits":127}],47:[function(require,module,exports){
 var ebtk = require('evp_bytestokey')
 var aes = require('browserify-aes/browser')
 var DES = require('browserify-des')
@@ -7954,7 +8291,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"browserify-aes/browser":32,"browserify-aes/modes":36,"browserify-des":46,"browserify-des/modes":47,"evp_bytestokey":112}],46:[function(require,module,exports){
+},{"browserify-aes/browser":34,"browserify-aes/modes":38,"browserify-des":48,"browserify-des/modes":49,"evp_bytestokey":114}],48:[function(require,module,exports){
 (function (Buffer){
 var CipherBase = require('cipher-base')
 var des = require('des.js')
@@ -8002,7 +8339,7 @@ DES.prototype._final = function () {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"cipher-base":56,"des.js":70,"inherits":123}],47:[function(require,module,exports){
+},{"buffer":57,"cipher-base":58,"des.js":72,"inherits":127}],49:[function(require,module,exports){
 exports['des-ecb'] = {
   key: 8,
   iv: 0
@@ -8028,7 +8365,7 @@ exports['des-ede'] = {
   iv: 0
 }
 
-},{}],48:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 var randomBytes = require('randombytes');
@@ -8073,7 +8410,7 @@ function getr(priv) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"bn.js":27,"buffer":55,"randombytes":163}],49:[function(require,module,exports){
+},{"bn.js":29,"buffer":57,"randombytes":167}],51:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 exports['RSA-SHA224'] = exports.sha224WithRSAEncryption = {
@@ -8150,7 +8487,7 @@ exports['RSA-MD5'] = exports.md5WithRSAEncryption = {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],50:[function(require,module,exports){
+},{"buffer":57}],52:[function(require,module,exports){
 (function (Buffer){
 var _algos = require('./algos')
 var createHash = require('create-hash')
@@ -8258,7 +8595,7 @@ module.exports = {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./algos":49,"./sign":52,"./verify":53,"buffer":55,"create-hash":62,"inherits":123,"stream":193}],51:[function(require,module,exports){
+},{"./algos":51,"./sign":54,"./verify":55,"buffer":57,"create-hash":64,"inherits":127,"stream":199}],53:[function(require,module,exports){
 'use strict'
 exports['1.3.132.0.10'] = 'secp256k1'
 
@@ -8272,7 +8609,7 @@ exports['1.3.132.0.34'] = 'p384'
 
 exports['1.3.132.0.35'] = 'p521'
 
-},{}],52:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var createHmac = require('create-hmac')
@@ -8462,7 +8799,7 @@ module.exports.makeKey = makeKey
 
 }).call(this,require("buffer").Buffer)
 
-},{"./curves":51,"bn.js":27,"browserify-rsa":48,"buffer":55,"create-hmac":65,"elliptic":80,"parse-asn1":150}],53:[function(require,module,exports){
+},{"./curves":53,"bn.js":29,"browserify-rsa":50,"buffer":57,"create-hmac":67,"elliptic":82,"parse-asn1":154}],55:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var curves = require('./curves')
@@ -8570,7 +8907,7 @@ module.exports = verify
 
 }).call(this,require("buffer").Buffer)
 
-},{"./curves":51,"bn.js":27,"buffer":55,"elliptic":80,"parse-asn1":150}],54:[function(require,module,exports){
+},{"./curves":53,"bn.js":29,"buffer":57,"elliptic":82,"parse-asn1":154}],56:[function(require,module,exports){
 (function (Buffer){
 module.exports = function xor (a, b) {
   var length = Math.min(a.length, b.length)
@@ -8585,7 +8922,7 @@ module.exports = function xor (a, b) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],55:[function(require,module,exports){
+},{"buffer":57}],57:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -10134,7 +10471,7 @@ function blitBuffer (src, dst, offset, length) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"base64-js":25,"ieee754":121,"is-array":124}],56:[function(require,module,exports){
+},{"base64-js":26,"ieee754":125,"is-array":128}],58:[function(require,module,exports){
 (function (Buffer){
 var Transform = require('stream').Transform
 var inherits = require('inherits')
@@ -10229,7 +10566,7 @@ CipherBase.prototype._toString = function (value, enc, final) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"inherits":123,"stream":193,"string_decoder":194}],57:[function(require,module,exports){
+},{"buffer":57,"inherits":127,"stream":199,"string_decoder":200}],59:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -10254,7 +10591,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],58:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -10420,7 +10757,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],59:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -10428,7 +10765,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],60:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10540,7 +10877,7 @@ function objectToString(o) {
 
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
 
-},{"../../is-buffer/index.js":125}],61:[function(require,module,exports){
+},{"../../is-buffer/index.js":129}],63:[function(require,module,exports){
 (function (Buffer){
 var elliptic = require('elliptic');
 var BN = require('bn.js');
@@ -10667,7 +11004,7 @@ function formatReturnValue(bn, enc, len) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"bn.js":27,"buffer":55,"elliptic":80}],62:[function(require,module,exports){
+},{"bn.js":29,"buffer":57,"elliptic":82}],64:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var inherits = require('inherits')
@@ -10724,7 +11061,7 @@ module.exports = function createHash (alg) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./md5":64,"buffer":55,"cipher-base":56,"inherits":123,"ripemd160":174,"sha.js":176}],63:[function(require,module,exports){
+},{"./md5":66,"buffer":57,"cipher-base":58,"inherits":127,"ripemd160":178,"sha.js":180}],65:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var intSize = 4;
@@ -10762,7 +11099,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 exports.hash = hash;
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],64:[function(require,module,exports){
+},{"buffer":57}],66:[function(require,module,exports){
 'use strict';
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
@@ -10919,7 +11256,7 @@ function bit_rol(num, cnt)
 module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
-},{"./helpers":63}],65:[function(require,module,exports){
+},{"./helpers":65}],67:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var createHash = require('create-hash/browser');
@@ -10992,7 +11329,7 @@ module.exports = function createHmac(alg, key) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"create-hash/browser":62,"inherits":123,"stream":193}],66:[function(require,module,exports){
+},{"buffer":57,"create-hash/browser":64,"inherits":127,"stream":199}],68:[function(require,module,exports){
 'use strict'
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = require('randombytes')
@@ -11071,7 +11408,7 @@ var publicEncrypt = require('public-encrypt')
   }
 })
 
-},{"browserify-cipher":45,"browserify-sign":50,"browserify-sign/algos":49,"create-ecdh":61,"create-hash":62,"create-hmac":65,"diffie-hellman":76,"pbkdf2":154,"public-encrypt":157,"randombytes":163}],67:[function(require,module,exports){
+},{"browserify-cipher":47,"browserify-sign":52,"browserify-sign/algos":51,"create-ecdh":63,"create-hash":64,"create-hmac":67,"diffie-hellman":78,"pbkdf2":158,"public-encrypt":161,"randombytes":167}],69:[function(require,module,exports){
 !function() {
   var d3 = {
     version: "3.5.9"
@@ -20622,7 +20959,7 @@ var publicEncrypt = require('public-encrypt')
   });
   if (typeof define === "function" && define.amd) this.d3 = d3, define(d3); else if (typeof module === "object" && module.exports) module.exports = d3; else this.d3 = d3;
 }();
-},{}],68:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -20792,7 +21129,7 @@ function localstorage(){
   } catch (e) {}
 }
 
-},{"./debug":69}],69:[function(require,module,exports){
+},{"./debug":71}],71:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -20991,7 +21328,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":145}],70:[function(require,module,exports){
+},{"ms":149}],72:[function(require,module,exports){
 'use strict';
 
 exports.utils = require('./des/utils');
@@ -21000,7 +21337,7 @@ exports.DES = require('./des/des');
 exports.CBC = require('./des/cbc');
 exports.EDE = require('./des/ede');
 
-},{"./des/cbc":71,"./des/cipher":72,"./des/des":73,"./des/ede":74,"./des/utils":75}],71:[function(require,module,exports){
+},{"./des/cbc":73,"./des/cipher":74,"./des/des":75,"./des/ede":76,"./des/utils":77}],73:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -21067,7 +21404,7 @@ proto._update = function _update(inp, inOff, out, outOff) {
   }
 };
 
-},{"inherits":123,"minimalistic-assert":144}],72:[function(require,module,exports){
+},{"inherits":127,"minimalistic-assert":148}],74:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -21210,7 +21547,7 @@ Cipher.prototype._finalDecrypt = function _finalDecrypt() {
   return this._unpad(out);
 };
 
-},{"minimalistic-assert":144}],73:[function(require,module,exports){
+},{"minimalistic-assert":148}],75:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -21355,7 +21692,7 @@ DES.prototype._decrypt = function _decrypt(state, lStart, rStart, out, off) {
   utils.rip(l, r, out, off);
 };
 
-},{"../des":70,"inherits":123,"minimalistic-assert":144}],74:[function(require,module,exports){
+},{"../des":72,"inherits":127,"minimalistic-assert":148}],76:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -21412,7 +21749,7 @@ EDE.prototype._update = function _update(inp, inOff, out, outOff) {
 EDE.prototype._pad = DES.prototype._pad;
 EDE.prototype._unpad = DES.prototype._unpad;
 
-},{"../des":70,"inherits":123,"minimalistic-assert":144}],75:[function(require,module,exports){
+},{"../des":72,"inherits":127,"minimalistic-assert":148}],77:[function(require,module,exports){
 'use strict';
 
 exports.readUInt32BE = function readUInt32BE(bytes, off) {
@@ -21670,7 +22007,7 @@ exports.padSplit = function padSplit(num, size, group) {
   return out.join(' ');
 };
 
-},{}],76:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 (function (Buffer){
 var generatePrime = require('./lib/generatePrime');
 var primes = require('./lib/primes');
@@ -21715,7 +22052,7 @@ exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman;
 
 }).call(this,require("buffer").Buffer)
 
-},{"./lib/dh":77,"./lib/generatePrime":78,"./lib/primes":79,"buffer":55}],77:[function(require,module,exports){
+},{"./lib/dh":79,"./lib/generatePrime":80,"./lib/primes":81,"buffer":57}],79:[function(require,module,exports){
 (function (Buffer){
 var BN = require('bn.js');
 var MillerRabin = require('miller-rabin');
@@ -21884,7 +22221,7 @@ function formatReturnValue(bn, enc) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./generatePrime":78,"bn.js":27,"buffer":55,"miller-rabin":143,"randombytes":163}],78:[function(require,module,exports){
+},{"./generatePrime":80,"bn.js":29,"buffer":57,"miller-rabin":147,"randombytes":167}],80:[function(require,module,exports){
 var randomBytes = require('randombytes');
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
@@ -21991,7 +22328,7 @@ function findPrime(bits, gen) {
 
 }
 
-},{"bn.js":27,"miller-rabin":143,"randombytes":163}],79:[function(require,module,exports){
+},{"bn.js":29,"miller-rabin":147,"randombytes":167}],81:[function(require,module,exports){
 module.exports={
     "modp1": {
         "gen": "02",
@@ -22026,7 +22363,7 @@ module.exports={
         "prime": "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aaac42dad33170d04507a33a85521abdf1cba64ecfb850458dbef0a8aea71575d060c7db3970f85a6e1e4c7abf5ae8cdb0933d71e8c94e04a25619dcee3d2261ad2ee6bf12ffa06d98a0864d87602733ec86a64521f2b18177b200cbbe117577a615d6c770988c0bad946e208e24fa074e5ab3143db5bfce0fd108e4b82d120a92108011a723c12a787e6d788719a10bdba5b2699c327186af4e23c1a946834b6150bda2583e9ca2ad44ce8dbbbc2db04de8ef92e8efc141fbecaa6287c59474e6bc05d99b2964fa090c3a2233ba186515be7ed1f612970cee2d7afb81bdd762170481cd0069127d5b05aa993b4ea988d8fddc186ffb7dc90a6c08f4df435c93402849236c3fab4d27c7026c1d4dcb2602646dec9751e763dba37bdf8ff9406ad9e530ee5db382f413001aeb06a53ed9027d831179727b0865a8918da3edbebcf9b14ed44ce6cbaced4bb1bdb7f1447e6cc254b332051512bd7af426fb8f401378cd2bf5983ca01c64b92ecf032ea15d1721d03f482d7ce6e74fef6d55e702f46980c82b5a84031900b1c9e59e7c97fbec7e8f323a97a7e36cc88be0f1d45b7ff585ac54bd407b22b4154aacc8f6d7ebf48e1d814cc5ed20f8037e0a79715eef29be32806a1d58bb7c5da76f550aa3d8a1fbff0eb19ccb1a313d55cda56c9ec2ef29632387fe8d76e3c0468043e8f663f4860ee12bf2d5b0b7474d6e694f91e6dbe115974a3926f12fee5e438777cb6a932df8cd8bec4d073b931ba3bc832b68d9dd300741fa7bf8afc47ed2576f6936ba424663aab639c5ae4f5683423b4742bf1c978238f16cbe39d652de3fdb8befc848ad922222e04a4037c0713eb57a81a23f0c73473fc646cea306b4bcbc8862f8385ddfa9d4b7fa2c087e879683303ed5bdd3a062b3cf5b3a278a66d2a13f83f44f82ddf310ee074ab6a364597e899a0255dc164f31cc50846851df9ab48195ded7ea1b1d510bd7ee74d73faf36bc31ecfa268359046f4eb879f924009438b481c6cd7889a002ed5ee382bc9190da6fc026e479558e4475677e9aa9e3050e2765694dfc81f56e880b96e7160c980dd98edd3dfffffffffffffffff"
     }
 }
-},{}],80:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 'use strict';
 
 var elliptic = exports;
@@ -22042,7 +22379,7 @@ elliptic.curves = require('./elliptic/curves');
 elliptic.ec = require('./elliptic/ec');
 elliptic.eddsa = require('./elliptic/eddsa');
 
-},{"../package.json":96,"./elliptic/curve":83,"./elliptic/curves":86,"./elliptic/ec":87,"./elliptic/eddsa":90,"./elliptic/hmac-drbg":93,"./elliptic/utils":95,"brorand":28}],81:[function(require,module,exports){
+},{"../package.json":98,"./elliptic/curve":85,"./elliptic/curves":88,"./elliptic/ec":89,"./elliptic/eddsa":92,"./elliptic/hmac-drbg":95,"./elliptic/utils":97,"brorand":30}],83:[function(require,module,exports){
 'use strict';
 
 var bn = require('bn.js');
@@ -22395,7 +22732,7 @@ BasePoint.prototype.dblp = function dblp(k) {
   return r;
 };
 
-},{"../../elliptic":80,"bn.js":27}],82:[function(require,module,exports){
+},{"../../elliptic":82,"bn.js":29}],84:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -22803,7 +23140,7 @@ Point.prototype.eq = function eq(other) {
 Point.prototype.toP = Point.prototype.normalize;
 Point.prototype.mixedAdd = Point.prototype.add;
 
-},{"../../elliptic":80,"../curve":83,"bn.js":27,"inherits":123}],83:[function(require,module,exports){
+},{"../../elliptic":82,"../curve":85,"bn.js":29,"inherits":127}],85:[function(require,module,exports){
 'use strict';
 
 var curve = exports;
@@ -22813,7 +23150,7 @@ curve.short = require('./short');
 curve.mont = require('./mont');
 curve.edwards = require('./edwards');
 
-},{"./base":81,"./edwards":82,"./mont":84,"./short":85}],84:[function(require,module,exports){
+},{"./base":83,"./edwards":84,"./mont":86,"./short":87}],86:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -22991,7 +23328,7 @@ Point.prototype.getX = function getX() {
   return this.x.fromRed();
 };
 
-},{"../../elliptic":80,"../curve":83,"bn.js":27,"inherits":123}],85:[function(require,module,exports){
+},{"../../elliptic":82,"../curve":85,"bn.js":29,"inherits":127}],87:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -23900,7 +24237,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
   return this.z.cmpn(0) === 0;
 };
 
-},{"../../elliptic":80,"../curve":83,"bn.js":27,"inherits":123}],86:[function(require,module,exports){
+},{"../../elliptic":82,"../curve":85,"bn.js":29,"inherits":127}],88:[function(require,module,exports){
 'use strict';
 
 var curves = exports;
@@ -24107,7 +24444,7 @@ defineCurve('secp256k1', {
   ]
 });
 
-},{"../elliptic":80,"./precomputed/secp256k1":94,"hash.js":115}],87:[function(require,module,exports){
+},{"../elliptic":82,"./precomputed/secp256k1":96,"hash.js":119}],89:[function(require,module,exports){
 'use strict';
 
 var bn = require('bn.js');
@@ -24325,7 +24662,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
   throw new Error('Unable to find valid recovery factor');
 };
 
-},{"../../elliptic":80,"./key":88,"./signature":89,"bn.js":27}],88:[function(require,module,exports){
+},{"../../elliptic":82,"./key":90,"./signature":91,"bn.js":29}],90:[function(require,module,exports){
 'use strict';
 
 var bn = require('bn.js');
@@ -24434,7 +24771,7 @@ KeyPair.prototype.inspect = function inspect() {
          ' pub: ' + (this.pub && this.pub.inspect()) + ' >';
 };
 
-},{"bn.js":27}],89:[function(require,module,exports){
+},{"bn.js":29}],91:[function(require,module,exports){
 'use strict';
 
 var bn = require('bn.js');
@@ -24571,7 +24908,7 @@ Signature.prototype.toDER = function toDER(enc) {
   return utils.encode(res, enc);
 };
 
-},{"../../elliptic":80,"bn.js":27}],90:[function(require,module,exports){
+},{"../../elliptic":82,"bn.js":29}],92:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -24691,7 +25028,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
   return val instanceof this.pointClass;
 };
 
-},{"../../elliptic":80,"./key":91,"./signature":92,"hash.js":115}],91:[function(require,module,exports){
+},{"../../elliptic":82,"./key":93,"./signature":94,"hash.js":119}],93:[function(require,module,exports){
 'use strict';
 
 var elliptic = require('../../elliptic');
@@ -24789,7 +25126,7 @@ KeyPair.prototype.getPublic = function getPublic(enc) {
 
 module.exports = KeyPair;
 
-},{"../../elliptic":80}],92:[function(require,module,exports){
+},{"../../elliptic":82}],94:[function(require,module,exports){
 'use strict';
 
 var bn = require('bn.js');
@@ -24857,7 +25194,7 @@ Signature.prototype.toHex = function toHex() {
 
 module.exports = Signature;
 
-},{"../../elliptic":80,"bn.js":27}],93:[function(require,module,exports){
+},{"../../elliptic":82,"bn.js":29}],95:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -24973,7 +25310,7 @@ HmacDRBG.prototype.generate = function generate(len, enc, add, addEnc) {
   return utils.encode(res, enc);
 };
 
-},{"../elliptic":80,"hash.js":115}],94:[function(require,module,exports){
+},{"../elliptic":82,"hash.js":119}],96:[function(require,module,exports){
 module.exports = {
   doubles: {
     step: 4,
@@ -25755,7 +26092,7 @@ module.exports = {
   }
 };
 
-},{}],95:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 'use strict';
 
 var utils = exports;
@@ -25930,7 +26267,7 @@ function intFromLE(bytes) {
 utils.intFromLE = intFromLE;
 
 
-},{"bn.js":27}],96:[function(require,module,exports){
+},{"bn.js":29}],98:[function(require,module,exports){
 module.exports={
   "_args": [
     [
@@ -26028,11 +26365,11 @@ module.exports={
   "version": "6.0.2"
 }
 
-},{}],97:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 
 module.exports =  require('./lib/');
 
-},{"./lib/":98}],98:[function(require,module,exports){
+},{"./lib/":100}],100:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -26044,7 +26381,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":99,"engine.io-parser":107}],99:[function(require,module,exports){
+},{"./socket":101,"engine.io-parser":109}],101:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -26777,7 +27114,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./transport":100,"./transports":101,"component-emitter":58,"debug":68,"engine.io-parser":107,"indexof":122,"parsejson":151,"parseqs":152,"parseuri":153}],100:[function(require,module,exports){
+},{"./transport":102,"./transports":103,"component-emitter":60,"debug":70,"engine.io-parser":109,"indexof":126,"parsejson":155,"parseqs":156,"parseuri":157}],102:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -26934,7 +27271,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":58,"engine.io-parser":107}],101:[function(require,module,exports){
+},{"component-emitter":60,"engine.io-parser":109}],103:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -26992,7 +27329,7 @@ function polling(opts){
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./polling-jsonp":102,"./polling-xhr":103,"./websocket":105,"xmlhttprequest-ssl":106}],102:[function(require,module,exports){
+},{"./polling-jsonp":104,"./polling-xhr":105,"./websocket":107,"xmlhttprequest-ssl":108}],104:[function(require,module,exports){
 (function (global){
 
 /**
@@ -27235,7 +27572,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./polling":104,"component-inherit":59}],103:[function(require,module,exports){
+},{"./polling":106,"component-inherit":61}],105:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -27652,7 +27989,7 @@ function unloadHandler() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./polling":104,"component-emitter":58,"component-inherit":59,"debug":68,"xmlhttprequest-ssl":106}],104:[function(require,module,exports){
+},{"./polling":106,"component-emitter":60,"component-inherit":61,"debug":70,"xmlhttprequest-ssl":108}],106:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -27901,7 +28238,7 @@ Polling.prototype.uri = function(){
   return schema + '://' + (ipv6 ? '[' + this.hostname + ']' : this.hostname) + port + this.path + query;
 };
 
-},{"../transport":100,"component-inherit":59,"debug":68,"engine.io-parser":107,"parseqs":152,"xmlhttprequest-ssl":106,"yeast":202}],105:[function(require,module,exports){
+},{"../transport":102,"component-inherit":61,"debug":70,"engine.io-parser":109,"parseqs":156,"xmlhttprequest-ssl":108,"yeast":208}],107:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -28194,7 +28531,7 @@ WS.prototype.check = function(){
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../transport":100,"component-inherit":59,"debug":68,"engine.io-parser":107,"parseqs":152,"ws":29,"yeast":202}],106:[function(require,module,exports){
+},{"../transport":102,"component-inherit":61,"debug":70,"engine.io-parser":109,"parseqs":156,"ws":31,"yeast":208}],108:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 var hasCORS = require('has-cors');
 
@@ -28232,7 +28569,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":114}],107:[function(require,module,exports){
+},{"has-cors":118}],109:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -28831,7 +29168,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./keys":108,"after":6,"arraybuffer.slice":7,"base64-arraybuffer":24,"blob":26,"has-binary":109,"utf8":196}],108:[function(require,module,exports){
+},{"./keys":110,"after":6,"arraybuffer.slice":8,"base64-arraybuffer":25,"blob":28,"has-binary":111,"utf8":202}],110:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -28852,7 +29189,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],109:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 (function (global){
 
 /*
@@ -28915,7 +29252,7 @@ function hasBinary(data) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"isarray":126}],110:[function(require,module,exports){
+},{"isarray":130}],112:[function(require,module,exports){
 'use strict';
 
 //
@@ -29179,7 +29516,7 @@ if ('undefined' !== typeof module) {
   module.exports = EventEmitter;
 }
 
-},{}],111:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29482,7 +29819,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],112:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 (function (Buffer){
 var md5 = require('create-hash/md5')
 module.exports = EVP_BytesToKey
@@ -29555,7 +29892,261 @@ function EVP_BytesToKey (password, salt, keyLen, ivLen) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"create-hash/md5":64}],113:[function(require,module,exports){
+},{"buffer":57,"create-hash/md5":66}],115:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _inherits = require('inherits');
+
+var _inherits2 = _interopRequireDefault(_inherits);
+
+var _guardfn = require('guardfn');
+
+var _guardfn2 = _interopRequireDefault(_guardfn);
+
+var _afterfn = require('afterfn');
+
+var _afterfn2 = _interopRequireDefault(_afterfn);
+
+var _beforefn = require('beforefn');
+
+var _beforefn2 = _interopRequireDefault(_beforefn);
+
+var _sliced = require('sliced');
+
+var _sliced2 = _interopRequireDefault(_sliced);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Graph = function () {
+    function Graph() {
+        _classCallCheck(this, Graph);
+
+        this.set = new Set();
+        this.linkMap = new Map();
+        aspectify(this);
+        this.guard('add', function () {
+            return arguments.length;
+        });
+        this.before('add', function fn() {
+            fn.args = fn.args.filter(function (item) {
+                return item && !this.has(item);
+            }, this);
+        });
+        this.after('delete', function () {
+            (0, _sliced2.default)(arguments).forEach(function (item) {
+                this.unlinkAll(item);
+            }, this);
+        });
+        this.after('link', function ensureAdded() {
+            (0, _sliced2.default)(arguments).forEach(function (item) {
+                this.add(item);
+            }, this);
+        });
+    }
+
+    _createClass(Graph, [{
+        key: 'link',
+        value: function link(from, to) {
+            var linked = this._linked(from);
+            linked.add(to);
+            return true;
+        }
+    }, {
+        key: 'unlink',
+        value: function unlink(from, to) {
+            var linked = this._linked(from);
+            if (!linked.has(to)) return false;
+            linked.delete(to);
+            if (!linked.size) this.linkMap.delete(from);
+            return true;
+        }
+    }, {
+        key: 'unlinkAll',
+        value: function unlinkAll(node) {
+            this.from(node).forEach(function unlinkEachLinkedFrom(to) {
+                this.unlink(node, to);
+            }, this);
+            this.to(node).forEach(function unlinkEachLinkedTo(from) {
+                this.unlink(from, node);
+            }, this);
+        }
+    }, {
+        key: 'from',
+        value: function from(_from) {
+            return new Set(this._linked(_from));
+        }
+    }, {
+        key: 'to',
+        value: function to(_to) {
+            var linked = new Set();
+            this.linkMap.forEach(function (value, key) {
+                if (value.has(_to)) linked.add(key);
+            });
+            return linked;
+        }
+    }, {
+        key: '_linked',
+        value: function _linked(from) {
+            var linkedFrom = this.linkMap.get(from);
+            if (!linkedFrom) {
+                linkedFrom = new Set();
+                this.linkMap.set(from, linkedFrom);
+            }
+            return linkedFrom;
+        }
+    }, {
+        key: 'visit',
+        value: function visit(root, fn, visited) {
+            if (arguments.length == 1) {
+                fn = root;
+                return this.visitAll(fn);
+            } else if (arguments.length == 2) {
+                if (typeof fn === 'function') {
+                    return this.visitFrom(root, fn);
+                } else {
+                    visited = fn;
+                    fn = root;
+                    return this.visitAll(fn, visited);
+                }
+            }
+            return this.visitFrom(root, fn, visited);
+        }
+    }, {
+        key: 'visitFrom',
+        value: function visitFrom(root, fn, visited, previous) {
+            visited = visited || new Set();
+            if (!this.has(root)) return;
+            if (visited.has(root)) return;
+            visited.add(root);
+            fn.call(this, root, previous);
+            return this.from(root).forEach(function (linked) {
+                this.visitFrom(linked, fn, visited, root);
+            }, this);
+        }
+    }, {
+        key: 'visitAll',
+        value: function visitAll(fn, visited) {
+            visited = visited || new Set();
+            this.forEach(function (node) {
+                this.visitFrom(node, fn, visited);
+            }, this);
+        }
+    }, {
+        key: 'traverse',
+        value: function traverse(from, fn) {
+            if (arguments.length === 1) return this.traverseAll(from);
+            return this.traverseFrom(from, fn);
+        }
+    }, {
+        key: 'traverseFrom',
+        value: function traverseFrom(from, fn, visited) {
+            visited = visited || new Map();
+            var linked = visited.get(from);
+            if (!linked) linked = new Set();
+            visited.set(from, linked);
+            this.from(from).forEach(function (to) {
+                if (linked.has(to)) return;
+                linked.add(to);
+                fn.call(this, from, to);
+                this.traverseFrom(to, fn, visited);
+            }, this);
+        }
+    }, {
+        key: 'traverseAll',
+        value: function traverseAll(fn) {
+            var self = this;
+            this.linkMap.forEach(function (links, from) {
+                links.forEach(function (to) {
+                    fn.call(self, from, to);
+                });
+            });
+        }
+    }]);
+
+    return Graph;
+}();
+
+exports.default = Graph;
+
+
+proxyNativeSetProperty(Graph, 'size');
+Graph.prototype.add = proxyNativeSet('add');
+Graph.prototype.has = proxyNativeSet('has');
+Graph.prototype.keys = proxyNativeSet('keys');
+Graph.prototype.delete = proxyNativeSet('delete');
+Graph.prototype.clear = proxyNativeSet('clear');
+Graph.prototype.values = proxyNativeSet('values');
+Graph.prototype.forEach = proxyNativeSet('forEach');
+Graph.prototype.entries = proxyNativeSet('entries');
+
+function proxyNativeSet(name) {
+    return function () {
+        return this.set[name].apply(this.set, arguments);
+    };
+}
+
+function proxyNativeSetProperty(obj, name) {
+    Object.defineProperty(obj, name, {
+        get: function get() {
+            return this.set[name];
+        }
+    });
+}
+
+// TODO use a module or an event emitter
+function aspectify(target) {
+    var _before = _beforefn2.default;
+    var _after = _afterfn2.default;
+    var _guard = _guardfn2.default;
+    target.before = function before(name, fn) {
+        this[name] = _before(this[name], fn);
+        return this;
+    };
+    target.after = function after(name, fn) {
+        this[name] = _after(this[name], fn);
+        return this;
+    };
+    target.guard = function guard(name, fn) {
+        this[name] = _guard(this[name], fn);
+        return this;
+    };
+    return target;
+}
+
+},{"afterfn":7,"beforefn":27,"guardfn":116,"inherits":127,"sliced":187}],116:[function(require,module,exports){
+"use strict"
+
+module.exports = guardQueue
+
+function guardQueue(fn, guardFn) {
+  if (fn.__guardFns) {
+    fn.__guardFns.push(guardFn)
+    return fn
+  }
+
+  var fns = guard.__guardFns = guard.__guardFns || []
+
+  fns.push(guardFn)
+
+  function guard() {
+    var args = arguments
+    var ok = fns.every(function(test) {
+      return test.apply(this, args)
+    }, this)
+    if (ok) return fn.apply(this, args)
+  }
+  return guard
+}
+
+},{}],117:[function(require,module,exports){
 (function (global){
 
 /*
@@ -29619,7 +30210,7 @@ function hasBinary(data) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"isarray":126}],114:[function(require,module,exports){
+},{"isarray":130}],118:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -29638,7 +30229,7 @@ try {
   module.exports = false;
 }
 
-},{}],115:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 var hash = exports;
 
 hash.utils = require('./hash/utils');
@@ -29655,7 +30246,7 @@ hash.sha384 = hash.sha.sha384;
 hash.sha512 = hash.sha.sha512;
 hash.ripemd160 = hash.ripemd.ripemd160;
 
-},{"./hash/common":116,"./hash/hmac":117,"./hash/ripemd":118,"./hash/sha":119,"./hash/utils":120}],116:[function(require,module,exports){
+},{"./hash/common":120,"./hash/hmac":121,"./hash/ripemd":122,"./hash/sha":123,"./hash/utils":124}],120:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -29748,7 +30339,7 @@ BlockHash.prototype._pad = function pad() {
   return res;
 };
 
-},{"../hash":115}],117:[function(require,module,exports){
+},{"../hash":119}],121:[function(require,module,exports){
 var hmac = exports;
 
 var hash = require('../hash');
@@ -29798,7 +30389,7 @@ Hmac.prototype.digest = function digest(enc) {
   return this.outer.digest(enc);
 };
 
-},{"../hash":115}],118:[function(require,module,exports){
+},{"../hash":119}],122:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 
@@ -29944,7 +30535,7 @@ var sh = [
   8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
 ];
 
-},{"../hash":115}],119:[function(require,module,exports){
+},{"../hash":119}],123:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -30510,7 +31101,7 @@ function g1_512_lo(xh, xl) {
   return r;
 }
 
-},{"../hash":115}],120:[function(require,module,exports){
+},{"../hash":119}],124:[function(require,module,exports){
 var utils = exports;
 var inherits = require('inherits');
 
@@ -30769,7 +31360,7 @@ function shr64_lo(ah, al, num) {
 };
 exports.shr64_lo = shr64_lo;
 
-},{"inherits":123}],121:[function(require,module,exports){
+},{"inherits":127}],125:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -30855,7 +31446,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],122:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -30866,7 +31457,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],123:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -30891,7 +31482,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],124:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 
 /**
  * isArray
@@ -30926,7 +31517,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],125:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 /**
  * Determine if an object is Buffer
  *
@@ -30945,12 +31536,12 @@ module.exports = function (obj) {
     ))
 }
 
-},{}],126:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],127:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 
 var Pipe = require('../pipe').Pipe;
 
@@ -31001,7 +31592,7 @@ Context.prototype.push = function(child, name) {
 
 exports.Context = Context;
 
-},{"../pipe":141}],128:[function(require,module,exports){
+},{"../pipe":145}],132:[function(require,module,exports){
 var Context = require('./context').Context;
 
 var DiffContext = function DiffContext(left, right) {
@@ -31014,7 +31605,7 @@ DiffContext.prototype = new Context();
 
 exports.DiffContext = DiffContext;
 
-},{"./context":127}],129:[function(require,module,exports){
+},{"./context":131}],133:[function(require,module,exports){
 var Context = require('./context').Context;
 
 var PatchContext = function PatchContext(left, delta) {
@@ -31027,7 +31618,7 @@ PatchContext.prototype = new Context();
 
 exports.PatchContext = PatchContext;
 
-},{"./context":127}],130:[function(require,module,exports){
+},{"./context":131}],134:[function(require,module,exports){
 var Context = require('./context').Context;
 
 var ReverseContext = function ReverseContext(delta) {
@@ -31039,7 +31630,7 @@ ReverseContext.prototype = new Context();
 
 exports.ReverseContext = ReverseContext;
 
-},{"./context":127}],131:[function(require,module,exports){
+},{"./context":131}],135:[function(require,module,exports){
 // use as 2nd parameter for JSON.parse to revive Date instances
 module.exports = function dateReviver(key, value) {
   var parts;
@@ -31052,7 +31643,7 @@ module.exports = function dateReviver(key, value) {
   return value;
 };
 
-},{}],132:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 var Processor = require('./processor').Processor;
 var Pipe = require('./pipe').Pipe;
 var DiffContext = require('./contexts/diff').DiffContext;
@@ -31115,11 +31706,11 @@ DiffPatcher.prototype.unpatch = function(right, delta) {
 
 exports.DiffPatcher = DiffPatcher;
 
-},{"./contexts/diff":128,"./contexts/patch":129,"./contexts/reverse":130,"./filters/arrays":134,"./filters/dates":135,"./filters/nested":137,"./filters/texts":138,"./filters/trivial":139,"./pipe":141,"./processor":142}],133:[function(require,module,exports){
+},{"./contexts/diff":132,"./contexts/patch":133,"./contexts/reverse":134,"./filters/arrays":138,"./filters/dates":139,"./filters/nested":141,"./filters/texts":142,"./filters/trivial":143,"./pipe":145,"./processor":146}],137:[function(require,module,exports){
 
 exports.isBrowser = typeof window !== 'undefined';
 
-},{}],134:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 var DiffContext = require('../contexts/diff').DiffContext;
 var PatchContext = require('../contexts/patch').PatchContext;
 var ReverseContext = require('../contexts/reverse').ReverseContext;
@@ -31559,7 +32150,7 @@ exports.collectChildrenPatchFilter = collectChildrenPatchFilter;
 exports.reverseFilter = reverseFilter;
 exports.collectChildrenReverseFilter = collectChildrenReverseFilter;
 
-},{"../contexts/diff":128,"../contexts/patch":129,"../contexts/reverse":130,"./lcs":136}],135:[function(require,module,exports){
+},{"../contexts/diff":132,"../contexts/patch":133,"../contexts/reverse":134,"./lcs":140}],139:[function(require,module,exports){
 var diffFilter = function datesDiffFilter(context) {
   if (context.left instanceof Date) {
     if (context.right instanceof Date) {
@@ -31580,7 +32171,7 @@ diffFilter.filterName = 'dates';
 
 exports.diffFilter = diffFilter;
 
-},{}],136:[function(require,module,exports){
+},{}],140:[function(require,module,exports){
 /*
 
 LCS implementation that supports arrays or strings
@@ -31656,7 +32247,7 @@ var get = function(array1, array2, match, context) {
 
 exports.get = get;
 
-},{}],137:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 var DiffContext = require('../contexts/diff').DiffContext;
 var PatchContext = require('../contexts/patch').PatchContext;
 var ReverseContext = require('../contexts/reverse').ReverseContext;
@@ -31788,7 +32379,7 @@ exports.collectChildrenPatchFilter = collectChildrenPatchFilter;
 exports.reverseFilter = reverseFilter;
 exports.collectChildrenReverseFilter = collectChildrenReverseFilter;
 
-},{"../contexts/diff":128,"../contexts/patch":129,"../contexts/reverse":130}],138:[function(require,module,exports){
+},{"../contexts/diff":132,"../contexts/patch":133,"../contexts/reverse":134}],142:[function(require,module,exports){
 /* global diff_match_patch */
 var TEXT_DIFF = 2;
 var DEFAULT_MIN_LENGTH = 60;
@@ -31917,7 +32508,7 @@ exports.diffFilter = diffFilter;
 exports.patchFilter = patchFilter;
 exports.reverseFilter = reverseFilter;
 
-},{}],139:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 var isArray = (typeof Array.isArray === 'function') ?
   // use native function
   Array.isArray :
@@ -32020,7 +32611,7 @@ exports.diffFilter = diffFilter;
 exports.patchFilter = patchFilter;
 exports.reverseFilter = reverseFilter;
 
-},{}],140:[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 
 var environment = require('./environment');
 
@@ -32079,7 +32670,7 @@ if (environment.isBrowser) {
 	exports.console = formatters.console;
 }
 
-},{"./date-reviver":131,"./diffpatcher":132,"./environment":133}],141:[function(require,module,exports){
+},{"./date-reviver":135,"./diffpatcher":136,"./environment":137}],145:[function(require,module,exports){
 var Pipe = function Pipe(name) {
   this.name = name;
   this.filters = [];
@@ -32193,7 +32784,7 @@ Pipe.prototype.shouldHaveResult = function(should) {
 
 exports.Pipe = Pipe;
 
-},{}],142:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 
 var Processor = function Processor(options){
 	this.selfOptions = options;
@@ -32255,7 +32846,7 @@ Processor.prototype.process = function(input, pipe) {
 
 exports.Processor = Processor;
 
-},{}],143:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -32370,7 +32961,7 @@ MillerRabin.prototype.getDivisor = function getDivisor(n, k) {
   return false;
 };
 
-},{"bn.js":27,"brorand":28}],144:[function(require,module,exports){
+},{"bn.js":29,"brorand":30}],148:[function(require,module,exports){
 module.exports = assert;
 
 function assert(val, msg) {
@@ -32383,7 +32974,7 @@ assert.equal = function assertEqual(l, r, msg) {
     throw new Error(msg || ('Assertion failed: ' + l + ' != ' + r));
 };
 
-},{}],145:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -32510,7 +33101,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],146:[function(require,module,exports){
+},{}],150:[function(require,module,exports){
 (function (Buffer){
 //     uuid.js
 //
@@ -32787,7 +33378,7 @@ function plural(ms, n, name) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"crypto":66}],147:[function(require,module,exports){
+},{"buffer":57,"crypto":68}],151:[function(require,module,exports){
 module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.2": "aes-128-cbc",
 "2.16.840.1.101.3.4.1.3": "aes-128-ofb",
@@ -32801,7 +33392,7 @@ module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.43": "aes-256-ofb",
 "2.16.840.1.101.3.4.1.44": "aes-256-cfb"
 }
-},{}],148:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 // from https://github.com/indutny/self-signed/blob/gh-pages/lib/asn1.js
 // Fedor, you are amazing.
 
@@ -32920,7 +33511,7 @@ exports.signature = asn1.define('signature', function () {
   )
 })
 
-},{"asn1.js":8}],149:[function(require,module,exports){
+},{"asn1.js":9}],153:[function(require,module,exports){
 (function (Buffer){
 // adapted from https://github.com/apatil/pemstrip
 var findProc = /Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\r?\n\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n/m
@@ -32955,7 +33546,7 @@ module.exports = function (okey, password) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"browserify-aes":32,"buffer":55,"evp_bytestokey":112}],150:[function(require,module,exports){
+},{"browserify-aes":34,"buffer":57,"evp_bytestokey":114}],154:[function(require,module,exports){
 (function (Buffer){
 var asn1 = require('./asn1')
 var aesid = require('./aesid.json')
@@ -33061,7 +33652,7 @@ function decrypt (data, password) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"./aesid.json":147,"./asn1":148,"./fixProc":149,"browserify-aes":32,"buffer":55,"pbkdf2":154}],151:[function(require,module,exports){
+},{"./aesid.json":151,"./asn1":152,"./fixProc":153,"browserify-aes":34,"buffer":57,"pbkdf2":158}],155:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -33097,7 +33688,7 @@ module.exports = function parsejson(data) {
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],152:[function(require,module,exports){
+},{}],156:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -33136,7 +33727,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],153:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -33177,7 +33768,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],154:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 (function (Buffer){
 var createHmac = require('create-hmac')
 var MAX_ALLOC = Math.pow(2, 30) - 1 // default in iojs
@@ -33262,7 +33853,7 @@ function pbkdf2Sync (password, salt, iterations, keylen, digest) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"create-hmac":65}],155:[function(require,module,exports){
+},{"buffer":57,"create-hmac":67}],159:[function(require,module,exports){
 (function (process){
 'use strict';
 module.exports = nextTick;
@@ -33280,7 +33871,7 @@ function nextTick(fn) {
 
 }).call(this,require('_process'))
 
-},{"_process":156}],156:[function(require,module,exports){
+},{"_process":160}],160:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -33373,7 +33964,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],157:[function(require,module,exports){
+},{}],161:[function(require,module,exports){
 exports.publicEncrypt = require('./publicEncrypt');
 exports.privateDecrypt = require('./privateDecrypt');
 
@@ -33384,7 +33975,7 @@ exports.privateEncrypt = function privateEncrypt(key, buf) {
 exports.publicDecrypt = function publicDecrypt(key, buf) {
   return exports.privateDecrypt(key, buf, true);
 };
-},{"./privateDecrypt":159,"./publicEncrypt":160}],158:[function(require,module,exports){
+},{"./privateDecrypt":163,"./publicEncrypt":164}],162:[function(require,module,exports){
 (function (Buffer){
 var createHash = require('create-hash');
 module.exports = function (seed, len) {
@@ -33404,7 +33995,7 @@ function i2ops(c) {
 }
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55,"create-hash":62}],159:[function(require,module,exports){
+},{"buffer":57,"create-hash":64}],163:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var mgf = require('./mgf');
@@ -33516,7 +34107,7 @@ function compare(a, b){
 }
 }).call(this,require("buffer").Buffer)
 
-},{"./mgf":158,"./withPublic":161,"./xor":162,"bn.js":27,"browserify-rsa":48,"buffer":55,"create-hash":62,"parse-asn1":150}],160:[function(require,module,exports){
+},{"./mgf":162,"./withPublic":165,"./xor":166,"bn.js":29,"browserify-rsa":50,"buffer":57,"create-hash":64,"parse-asn1":154}],164:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var randomBytes = require('randombytes');
@@ -33615,7 +34206,7 @@ function nonZero(len, crypto) {
 }
 }).call(this,require("buffer").Buffer)
 
-},{"./mgf":158,"./withPublic":161,"./xor":162,"bn.js":27,"browserify-rsa":48,"buffer":55,"create-hash":62,"parse-asn1":150,"randombytes":163}],161:[function(require,module,exports){
+},{"./mgf":162,"./withPublic":165,"./xor":166,"bn.js":29,"browserify-rsa":50,"buffer":57,"create-hash":64,"parse-asn1":154,"randombytes":167}],165:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 function withPublic(paddedMsg, key) {
@@ -33629,7 +34220,7 @@ function withPublic(paddedMsg, key) {
 module.exports = withPublic;
 }).call(this,require("buffer").Buffer)
 
-},{"bn.js":27,"buffer":55}],162:[function(require,module,exports){
+},{"bn.js":29,"buffer":57}],166:[function(require,module,exports){
 module.exports = function xor(a, b) {
   var len = a.length;
   var i = -1;
@@ -33638,7 +34229,7 @@ module.exports = function xor(a, b) {
   }
   return a
 };
-},{}],163:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 (function (process,global,Buffer){
 'use strict';
 
@@ -33671,10 +34262,10 @@ function oldBrowser() {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
 
-},{"_process":156,"buffer":55}],164:[function(require,module,exports){
+},{"_process":160,"buffer":57}],168:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":165}],165:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":169}],169:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -33758,7 +34349,7 @@ function forEach (xs, f) {
   }
 }
 
-},{"./_stream_readable":167,"./_stream_writable":169,"core-util-is":60,"inherits":123,"process-nextick-args":155}],166:[function(require,module,exports){
+},{"./_stream_readable":171,"./_stream_writable":173,"core-util-is":62,"inherits":127,"process-nextick-args":159}],170:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -33787,7 +34378,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":168,"core-util-is":60,"inherits":123}],167:[function(require,module,exports){
+},{"./_stream_transform":172,"core-util-is":62,"inherits":127}],171:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34765,7 +35356,7 @@ function indexOf (xs, x) {
 
 }).call(this,require('_process'))
 
-},{"./_stream_duplex":165,"_process":156,"buffer":55,"core-util-is":60,"events":111,"inherits":123,"isarray":126,"process-nextick-args":155,"string_decoder/":194,"util":29}],168:[function(require,module,exports){
+},{"./_stream_duplex":169,"_process":160,"buffer":57,"core-util-is":62,"events":113,"inherits":127,"isarray":130,"process-nextick-args":159,"string_decoder/":200,"util":31}],172:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -34964,7 +35555,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":165,"core-util-is":60,"inherits":123}],169:[function(require,module,exports){
+},{"./_stream_duplex":169,"core-util-is":62,"inherits":127}],173:[function(require,module,exports){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
 // the drain event emission and buffering.
@@ -35493,10 +36084,10 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./_stream_duplex":165,"buffer":55,"core-util-is":60,"events":111,"inherits":123,"process-nextick-args":155,"util-deprecate":197}],170:[function(require,module,exports){
+},{"./_stream_duplex":169,"buffer":57,"core-util-is":62,"events":113,"inherits":127,"process-nextick-args":159,"util-deprecate":203}],174:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":166}],171:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":170}],175:[function(require,module,exports){
 var Stream = (function (){
   try {
     return require('st' + 'ream'); // hack to fix a circular dependency issue when used with browserify
@@ -35510,13 +36101,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":165,"./lib/_stream_passthrough.js":166,"./lib/_stream_readable.js":167,"./lib/_stream_transform.js":168,"./lib/_stream_writable.js":169}],172:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":169,"./lib/_stream_passthrough.js":170,"./lib/_stream_readable.js":171,"./lib/_stream_transform.js":172,"./lib/_stream_writable.js":173}],176:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":168}],173:[function(require,module,exports){
+},{"./lib/_stream_transform.js":172}],177:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":169}],174:[function(require,module,exports){
+},{"./lib/_stream_writable.js":173}],178:[function(require,module,exports){
 (function (Buffer){
 /*
 CryptoJS v3.1.2
@@ -35731,7 +36322,7 @@ module.exports = ripemd160
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],175:[function(require,module,exports){
+},{"buffer":57}],179:[function(require,module,exports){
 (function (Buffer){
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -35805,7 +36396,7 @@ module.exports = Hash
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":55}],176:[function(require,module,exports){
+},{"buffer":57}],180:[function(require,module,exports){
 var exports = module.exports = function SHA (algorithm) {
   algorithm = algorithm.toLowerCase()
 
@@ -35822,7 +36413,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":177,"./sha1":178,"./sha224":179,"./sha256":180,"./sha384":181,"./sha512":182}],177:[function(require,module,exports){
+},{"./sha":181,"./sha1":182,"./sha224":183,"./sha256":184,"./sha384":185,"./sha512":186}],181:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
@@ -35927,7 +36518,7 @@ module.exports = Sha
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"buffer":55,"inherits":123}],178:[function(require,module,exports){
+},{"./hash":179,"buffer":57,"inherits":127}],182:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -36028,7 +36619,7 @@ module.exports = Sha1
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"buffer":55,"inherits":123}],179:[function(require,module,exports){
+},{"./hash":179,"buffer":57,"inherits":127}],183:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -36085,7 +36676,7 @@ module.exports = Sha224
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"./sha256":180,"buffer":55,"inherits":123}],180:[function(require,module,exports){
+},{"./hash":179,"./sha256":184,"buffer":57,"inherits":127}],184:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -36231,7 +36822,7 @@ module.exports = Sha256
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"buffer":55,"inherits":123}],181:[function(require,module,exports){
+},{"./hash":179,"buffer":57,"inherits":127}],185:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
@@ -36292,7 +36883,7 @@ module.exports = Sha384
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"./sha512":182,"buffer":55,"inherits":123}],182:[function(require,module,exports){
+},{"./hash":179,"./sha512":186,"buffer":57,"inherits":127}],186:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var Hash = require('./hash')
@@ -36563,7 +37154,45 @@ module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
 
-},{"./hash":175,"buffer":55,"inherits":123}],183:[function(require,module,exports){
+},{"./hash":179,"buffer":57,"inherits":127}],187:[function(require,module,exports){
+module.exports = exports = require('./lib/sliced');
+
+},{"./lib/sliced":188}],188:[function(require,module,exports){
+
+/**
+ * An Array.prototype.slice.call(arguments) alternative
+ *
+ * @param {Object} args something with a length
+ * @param {Number} slice
+ * @param {Number} sliceEnd
+ * @api public
+ */
+
+module.exports = function (args, slice, sliceEnd) {
+  var ret = [];
+  var len = args.length;
+
+  if (0 === len) return ret;
+
+  var start = slice < 0
+    ? Math.max(0, slice + len)
+    : slice || 0;
+
+  if (sliceEnd !== undefined) {
+    len = sliceEnd < 0
+      ? sliceEnd + len
+      : sliceEnd
+  }
+
+  while (len-- > start) {
+    ret[len - start] = args[len];
+  }
+
+  return ret;
+}
+
+
+},{}],189:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -36657,7 +37286,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":184,"./socket":186,"./url":187,"debug":68,"socket.io-parser":190}],184:[function(require,module,exports){
+},{"./manager":190,"./socket":192,"./url":193,"debug":70,"socket.io-parser":196}],190:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -37216,7 +37845,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":185,"./socket":186,"backo2":23,"component-bind":57,"component-emitter":188,"debug":68,"engine.io-client":97,"indexof":122,"socket.io-parser":190}],185:[function(require,module,exports){
+},{"./on":191,"./socket":192,"backo2":24,"component-bind":59,"component-emitter":194,"debug":70,"engine.io-client":99,"indexof":126,"socket.io-parser":196}],191:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -37242,7 +37871,7 @@ function on(obj, ev, fn) {
   };
 }
 
-},{}],186:[function(require,module,exports){
+},{}],192:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -37656,7 +38285,7 @@ Socket.prototype.compress = function(compress){
   return this;
 };
 
-},{"./on":185,"component-bind":57,"component-emitter":188,"debug":68,"has-binary":113,"socket.io-parser":190,"to-array":195}],187:[function(require,module,exports){
+},{"./on":191,"component-bind":59,"component-emitter":194,"debug":70,"has-binary":117,"socket.io-parser":196,"to-array":201}],193:[function(require,module,exports){
 (function (global){
 
 /**
@@ -37737,7 +38366,7 @@ function url(uri, loc){
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"debug":68,"parseuri":153}],188:[function(require,module,exports){
+},{"debug":70,"parseuri":157}],194:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -37900,7 +38529,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],189:[function(require,module,exports){
+},{}],195:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -38046,7 +38675,7 @@ exports.removeBlobs = function(data, callback) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./is-buffer":191,"isarray":126}],190:[function(require,module,exports){
+},{"./is-buffer":197,"isarray":130}],196:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -38448,7 +39077,7 @@ function error(data){
   };
 }
 
-},{"./binary":189,"./is-buffer":191,"component-emitter":58,"debug":68,"isarray":126,"json3":192}],191:[function(require,module,exports){
+},{"./binary":195,"./is-buffer":197,"component-emitter":60,"debug":70,"isarray":130,"json3":198}],197:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -38466,7 +39095,7 @@ function isBuf(obj) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],192:[function(require,module,exports){
+},{}],198:[function(require,module,exports){
 (function (global){
 /*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 ;(function () {
@@ -39373,7 +40002,7 @@ function isBuf(obj) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],193:[function(require,module,exports){
+},{}],199:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39502,7 +40131,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":111,"inherits":123,"readable-stream/duplex.js":164,"readable-stream/passthrough.js":170,"readable-stream/readable.js":171,"readable-stream/transform.js":172,"readable-stream/writable.js":173}],194:[function(require,module,exports){
+},{"events":113,"inherits":127,"readable-stream/duplex.js":168,"readable-stream/passthrough.js":174,"readable-stream/readable.js":175,"readable-stream/transform.js":176,"readable-stream/writable.js":177}],200:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39725,7 +40354,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":55}],195:[function(require,module,exports){
+},{"buffer":57}],201:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -39740,7 +40369,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],196:[function(require,module,exports){
+},{}],202:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
@@ -39989,7 +40618,7 @@ function toArray(list, index) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],197:[function(require,module,exports){
+},{}],203:[function(require,module,exports){
 (function (global){
 
 /**
@@ -40061,14 +40690,14 @@ function config (name) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],198:[function(require,module,exports){
+},{}],204:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],199:[function(require,module,exports){
+},{}],205:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -40659,7 +41288,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./support/isBuffer":198,"_process":156,"inherits":123}],200:[function(require,module,exports){
+},{"./support/isBuffer":204,"_process":160,"inherits":127}],206:[function(require,module,exports){
 var indexOf = require('indexof');
 
 var Object_keys = function (obj) {
@@ -40799,7 +41428,7 @@ exports.createContext = Script.createContext = function (context) {
     return copy;
 };
 
-},{"indexof":122}],201:[function(require,module,exports){
+},{"indexof":126}],207:[function(require,module,exports){
 var cola;
 (function (cola) {
     var packingOptions = {
@@ -45584,7 +46213,7 @@ var cola;
 // === cola), so `export = cola` is transpiled as a no-op.
 module.exports = cola;
 
-},{}],202:[function(require,module,exports){
+},{}],208:[function(require,module,exports){
 'use strict';
 
 var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
@@ -45653,418 +46282,6 @@ for (; i < length; i++) map[alphabet[i]] = i;
 yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
-
-},{}],203:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var _inherits = require('inherits');
-
-var _inherits2 = _interopRequireDefault(_inherits);
-
-var _guardfn = require('guardfn');
-
-var _guardfn2 = _interopRequireDefault(_guardfn);
-
-var _afterfn = require('afterfn');
-
-var _afterfn2 = _interopRequireDefault(_afterfn);
-
-var _beforefn = require('beforefn');
-
-var _beforefn2 = _interopRequireDefault(_beforefn);
-
-var _sliced = require('sliced');
-
-var _sliced2 = _interopRequireDefault(_sliced);
-
-var Graph = (function () {
-    function Graph() {
-        _classCallCheck(this, Graph);
-
-        this.set = new Set();
-        this.linkMap = new Map();
-        aspectify(this);
-        this.guard('add', function () {
-            return arguments.length;
-        });
-        this.before('add', function fn() {
-            fn.args = fn.args.filter(function (item) {
-                return item && !this.has(item);
-            }, this);
-        });
-        this.after('delete', function () {
-            _sliced2['default'](arguments).forEach(function (item) {
-                this.unlinkAll(item);
-            }, this);
-        });
-        this.after('link', function ensureAdded() {
-            _sliced2['default'](arguments).forEach(function (item) {
-                this.add(item);
-            }, this);
-        });
-    }
-
-    _createClass(Graph, [{
-        key: 'link',
-        value: function link(from, to) {
-            var linked = this._linked(from);
-            linked.add(to);
-            return true;
-        }
-    }, {
-        key: 'unlink',
-        value: function unlink(from, to) {
-            var linked = this._linked(from);
-            if (!linked.has(to)) return false;
-            linked['delete'](to);
-            if (!linked.size) this.linkMap['delete'](from);
-            return true;
-        }
-    }, {
-        key: 'unlinkAll',
-        value: function unlinkAll(node) {
-            this.from(node).forEach(function unlinkEachLinkedFrom(to) {
-                this.unlink(node, to);
-            }, this);
-            this.to(node).forEach(function unlinkEachLinkedTo(from) {
-                this.unlink(from, node);
-            }, this);
-        }
-    }, {
-        key: 'from',
-        value: function from(from) {
-            return new Set(this._linked(from));
-        }
-    }, {
-        key: 'to',
-        value: function to(to) {
-            var linked = new Set();
-            this.linkMap.forEach(function (value, key) {
-                if (value.has(to)) linked.add(key);
-            });
-            return linked;
-        }
-    }, {
-        key: '_linked',
-        value: function _linked(from) {
-            var linkedFrom = this.linkMap.get(from);
-            if (!linkedFrom) {
-                linkedFrom = new Set();
-                this.linkMap.set(from, linkedFrom);
-            }
-            return linkedFrom;
-        }
-    }, {
-        key: 'visit',
-        value: function visit(root, fn, visited) {
-            if (arguments.length == 1) {
-                fn = root;
-                return this.visitAll(fn);
-            } else if (arguments.length == 2) {
-                if (typeof fn === 'function') {
-                    return this.visitFrom(root, fn);
-                } else {
-                    visited = fn;
-                    fn = root;
-                    return this.visitAll(fn, visited);
-                }
-            }
-            return this.visitFrom(root, fn, visited);
-        }
-    }, {
-        key: 'visitFrom',
-        value: function visitFrom(root, fn, visited, previous) {
-            visited = visited || new Set();
-            if (!this.has(root)) return;
-            if (visited.has(root)) return;
-            visited.add(root);
-            fn.call(this, root, previous);
-            return this.from(root).forEach(function (linked) {
-                this.visitFrom(linked, fn, visited, root);
-            }, this);
-        }
-    }, {
-        key: 'visitAll',
-        value: function visitAll(fn, visited) {
-            visited = visited || new Set();
-            this.forEach(function (node) {
-                this.visitFrom(node, fn, visited);
-            }, this);
-        }
-    }, {
-        key: 'traverse',
-        value: function traverse(from, fn) {
-            if (arguments.length === 1) return this.traverseAll(from);
-            return this.traverseFrom(from, fn);
-        }
-    }, {
-        key: 'traverseFrom',
-        value: function traverseFrom(from, fn, visited) {
-            visited = visited || new Map();
-            var linked = visited.get(from);
-            if (!linked) linked = new Set();
-            visited.set(from, linked);
-            this.from(from).forEach(function (to) {
-                if (linked.has(to)) return;
-                linked.add(to);
-                fn.call(this, from, to);
-                this.traverseFrom(to, fn, visited);
-            }, this);
-        }
-    }, {
-        key: 'traverseAll',
-        value: function traverseAll(fn) {
-            var self = this;
-            this.linkMap.forEach(function (links, from) {
-                links.forEach(function (to) {
-                    fn.call(self, from, to);
-                });
-            });
-        }
-    }]);
-
-    return Graph;
-})();
-
-exports['default'] = Graph;
-
-proxyNativeSetProperty(Graph, 'size');
-Graph.prototype.add = proxyNativeSet('add');
-Graph.prototype.has = proxyNativeSet('has');
-Graph.prototype.keys = proxyNativeSet('keys');
-Graph.prototype['delete'] = proxyNativeSet('delete');
-Graph.prototype.clear = proxyNativeSet('clear');
-Graph.prototype.values = proxyNativeSet('values');
-Graph.prototype.forEach = proxyNativeSet('forEach');
-Graph.prototype.entries = proxyNativeSet('entries');
-
-function proxyNativeSet(name) {
-    return function () {
-        return this.set[name].apply(this.set, arguments);
-    };
-}
-
-function proxyNativeSetProperty(obj, name) {
-    Object.defineProperty(obj, name, {
-        get: function get() {
-            return this.set[name];
-        }
-    });
-}
-
-// TODO use a module or an event emitter
-function aspectify(target) {
-    var _before = _beforefn2['default'];
-    var _after = _afterfn2['default'];
-    var _guard = _guardfn2['default'];
-    target.before = function before(name, fn) {
-        this[name] = _before(this[name], fn);
-        return this;
-    };
-    target.after = function after(name, fn) {
-        this[name] = _after(this[name], fn);
-        return this;
-    };
-    target.guard = function guard(name, fn) {
-        this[name] = _guard(this[name], fn);
-        return this;
-    };
-    return target;
-}
-module.exports = exports['default'];
-},{"afterfn":204,"beforefn":205,"guardfn":206,"inherits":207,"sliced":208}],204:[function(require,module,exports){
-"use strict"
-
-var slice = require('sliced')
-module.exports = afterQueue
-
-function afterQueue(fn, doAfter) {
-  after.__proto__ = fn
-  after.prototype = fn.prototype
-  function after() {
-    var result = fn.apply(this, arguments)
-
-    var valueBefore = doAfter.value
-    var fnBefore = doAfter.fn
-    var argsBefore = doAfter.args
-
-    doAfter.value = result
-    doAfter.fn = fn
-    doAfter.args = slice(arguments)
-    doAfter.apply(this, doAfter.args)
-    result = doAfter.value
-    doAfter.value = valueBefore
-    doAfter.args = argsBefore
-    doAfter.fn = fnBefore
-    return result
-  }
-  return after
-}
-
-afterQueue.return = function afterQueueValue(fn, doAfter) {
-  after.__proto__ = fn
-  after.prototype = fn.prototype
-  function after() {
-
-    var valueBefore = doAfter.value
-    var fnBefore = doAfter.fn
-    var argsBefore = doAfter.args
-
-    var result = fn.apply(this, arguments)
-
-    doAfter.value = result
-    doAfter.fn = fn
-    doAfter.args = slice(arguments)
-
-    result = doAfter.call(this, doAfter.value, doAfter.args, doAfter.fn)
-
-    doAfter.value = valueBefore
-    doAfter.args = argsBefore
-    doAfter.fn = fnBefore
-    return result
-  }
-  return after
-}
-
-
-},{"sliced":208}],205:[function(require,module,exports){
-"use strict"
-
-var slice = require('sliced')
-
-module.exports = beforeQueue
-
-function beforeQueue(fn, beforeFn, overrideContext) {
-  if (overrideContext) beforeFn.__context = overrideContext
-  if (fn.__beforeFns) {
-    fn.__beforeFns.push(beforeFn)
-    return fn
-  }
-
-  before.__beforeFns = [beforeFn]
-  before.__proto__ = fn
-  before.prototype = fn.prototype
-  function before() {
-    var self = this
-
-    var fns = before.__beforeFns
-    var fnArgs = slice(arguments)
-    var fnContext = undefined
-
-    // for loop because performance
-    for (var i = 0; i < fns.length; i++) {
-      var doBefore = fns[i]
-      var args = fnArgs
-
-      var context = self
-      if (fnContext) context = fnContext
-      else if (doBefore.__context) context = doBefore.__context
-      var oldArgs = doBefore.args
-      var oldContext = doBefore.context
-      var oldFn = doBefore.fn
-      // execution information is stored on doBefore function itself
-      doBefore.args = args
-      doBefore.fn = fn
-      doBefore.context = context
-
-      doBefore.apply(doBefore.context, doBefore.args)
-
-      // extract args/context which may have changed during execution of doBefore
-      if (doBefore.args !== args) {
-        fnArgs = doBefore.args
-        if (Array.isArray(fnArgs)) {}
-        else fnArgs = slice(fnArgs || [])
-      }
-
-      // if we have a new context
-      fnContext = (doBefore.context !== context) ? doBefore.context : undefined
-
-      // for good measure remove properties we added on doBefore
-      doBefore.args = oldArgs
-      doBefore.fn = oldFn
-      doBefore.context = oldContext
-    }
-
-    var finalContext = fnContext ? fnContext : self
-    return fn.apply(finalContext, fnArgs)
-  }
-  return before
-}
-
-},{"sliced":208}],206:[function(require,module,exports){
-"use strict"
-
-module.exports = guardQueue
-
-function guardQueue(fn, guardFn) {
-  if (fn.__guardFns) {
-    fn.__guardFns.push(guardFn)
-    return fn
-  }
-
-  var fns = guard.__guardFns = guard.__guardFns || []
-
-  fns.push(guardFn)
-
-  function guard() {
-    var args = arguments
-    var ok = fns.every(function(test) {
-      return test.apply(this, args)
-    }, this)
-    if (ok) return fn.apply(this, args)
-  }
-  return guard
-}
-
-},{}],207:[function(require,module,exports){
-arguments[4][123][0].apply(exports,arguments)
-},{"dup":123}],208:[function(require,module,exports){
-module.exports = exports = require('./lib/sliced');
-
-},{"./lib/sliced":209}],209:[function(require,module,exports){
-
-/**
- * An Array.prototype.slice.call(arguments) alternative
- *
- * @param {Object} args something with a length
- * @param {Number} slice
- * @param {Number} sliceEnd
- * @api public
- */
-
-module.exports = function (args, slice, sliceEnd) {
-  var ret = [];
-  var len = args.length;
-
-  if (0 === len) return ret;
-
-  var start = slice < 0
-    ? Math.max(0, slice + len)
-    : slice || 0;
-
-  if (sliceEnd !== undefined) {
-    len = sliceEnd < 0
-      ? sliceEnd + len
-      : sliceEnd
-  }
-
-  while (len-- > start) {
-    ret[len - start] = args[len];
-  }
-
-  return ret;
-}
-
 
 },{}]},{},[5])(5)
 });

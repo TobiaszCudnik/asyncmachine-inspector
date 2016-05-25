@@ -5,7 +5,6 @@
 /// <reference path="chai/chai.d.ts" />
 /// <reference path="jsondiffpatch/jsondiffpatch.d.ts" />
 /// -- <reference path="node/node.d.ts" />
-/// <reference path="../node_modules/asyncmachine/build/asyncmachine.d.ts" />
 /// -- <reference path="../node_modules/graphs/index.d.ts" />
 /// <reference path="socket.io/socket.io.d.ts" />
 /// <reference path="socket.io-client/socket.io-client.d.ts" />

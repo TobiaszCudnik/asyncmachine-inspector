@@ -21,9 +21,8 @@
   },
   "dependencies": {
     "node-uuid": "latest",
-    "asyncmachine": "latest",
+    "asyncmachine": "^2",
     "d3": "latest",
-    "graphs": "latest",
     "lodash": "latest"
   },
   "devDependencies": {
@@ -41,7 +40,7 @@
     "gulp-plumber": "^1.0.1",
     "gulp-shell": "^0.4.2",
     "gulp-sourcemaps": "^1.6.0",
-    "gulp-typescript": "^2.9.2",
+    "gulp-typescript": "^2.13.4",
     "gulp-uglify": "^1.4.2",
     "gulp-util": "^3.0.7",
     "jsondiffpatch": "latest",
@@ -53,8 +52,6 @@
     "sorcery": "^0.8.0",
     "tsd": "^0.6.3",
     "typedoc": "^0.3.10",
-    "typescript": "^1.6.2",
-    "typescript-require": "^0.2.9-1",
     "underscore": "^1.8.3",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",

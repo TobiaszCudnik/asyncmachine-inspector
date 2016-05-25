@@ -169,23 +169,28 @@ export class D3JsonDiffFactory {
 }
 
 
-// TODO type obj
 export function objectHash(obj: State | Link | Machine) {
     let key
-    switch(obj.object_type) {
-        case OBJECT_TYPE.MACHINE:
-            key = obj.id
-            break
-        case OBJECT_TYPE.STATE:
-            key = `${obj.machine_id}:${obj.name}`
-            break
-        case OBJECT_TYPE.LINK:
-            key = `${obj.source_name}:${obj.target_name}`
-            break
-        default:
-            throw new Error('unknown object type')
-    }
-    return key
+    if (isTypeMachine(obj))
+        return obj.id
+    else if (isTypeState(obj))
+        return `${obj.machine_id}:${obj.name}`
+    else if (isTypeLink(obj))
+        return `${obj.source_name}:${obj.target_name}`
+    else
+        throw new Error('unknown object type')
+}
+
+function isTypeMachine(obj: State | Link | Machine): obj is Machine {
+    return (obj.object_type == OBJECT_TYPE.MACHINE)
+}
+
+function isTypeState(obj: State | Link | Machine): obj is State {
+    return (obj.object_type == OBJECT_TYPE.STATE)
+}
+
+function isTypeLink(obj: State | Link | Machine): obj is Link {
+    return (obj.object_type == OBJECT_TYPE.LINK)
 }
 
 /* ---------- TYPES ---------- */

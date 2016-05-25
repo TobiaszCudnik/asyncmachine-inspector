@@ -93,6 +93,10 @@ var source_bundler = browserify({
     standalone: 'amv'
 }).transform("babelify", {
     presets: ["es2015"],
+    plugins: [
+        "transform-es2015-modules-commonjs"
+    ],
+    // sourceMaps: false,
     sourceMapRelative: path.resolve(__dirname, 'src'),
     only: 'build/**'
 })
