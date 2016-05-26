@@ -25,6 +25,7 @@ var machine5 = am.AsyncMachine.factory(['E', 'F'])
 machine5.id('5')
 machine5.E = {drops: ['F']}
 
+// TODO check this piping
 machine1.pipe('A', machine2, 'E')
 machine2.pipe('E', machine1, 'B')
 machine2.pipe('F', machine1, 'B')

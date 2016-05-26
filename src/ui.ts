@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
 import * as cola from 'webcola'
-import * as am from 'asyncmachine'
 import Graph from 'graphs'
 import {
-	ID3NetworkJson
+	ID3NetworkJson,
+	State
 } from './d3network'
 
 // TODO this is bad
@@ -81,7 +81,7 @@ export default class Ui {
 				.attr("width", d => d.width - 2 * this.pad )
 				.attr("height", d =>  d.height - 2 * this.pad )
 				.attr("rx", 5).attr("ry", 5)
-				.style("fill", d => this.state_color(d.name) )
+				// .style("fill", d => this.state_color(d.name) )
 				.call(this.layout.drag);
 
 		this.label = this.container.selectAll(".label")
@@ -98,20 +98,27 @@ export default class Ui {
 	}
 
 	redrawNodes() {
-		this.link.attr("x1", d => d.source.x )
+		this.link
+			.attr("x1", d => d.source.x )
 			.attr("y1", d => d.source.y )
 			.attr("x2", d => d.target.x )
-			.attr("y2", d => d.target.y );
+			.attr("y2", d => d.target.y )
 
-		this.node.attr("x", d => d.x - d.width / 2 + this.pad )
-			.attr("y", d => d.y - d.height / 2 + this.pad );
+		this.node
+			.attr("x", d => d.x - d.width / 2 + this.pad )
+			.attr("y", d => d.y - d.height / 2 + this.pad )
+			.attr("class", (d: State) => {
+				return d.is_set ? 'node set' : 'node'
+			})
 
-		this.group.attr("x", d => d.bounds.x )
+		this.group
+			.attr("x", d => d.bounds.x )
 			.attr("y", d => d.bounds.y )
 			.attr("width", d => d.bounds.width() )
-			.attr("height", d => d.bounds.height() );
+			.attr("height", d => d.bounds.height() )
 
-		this.label.attr("x", d => d.x )
+		this.label
+			.attr("x", d => d.x )
 			.attr("y", function(d) {
 				var h = this.getBBox().height;
 				return d.y + h/4;

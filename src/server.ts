@@ -88,7 +88,7 @@ export default function createServer() {
         })
         socket.on('diff-sync', function(diff) {
             console.log(`diff-sync from ${socket.loggerId}`)
-            server.to(socket.loggerId).emit('diff-sync', diff)
+            clientEndpoint.to(socket.loggerId).emit('diff-sync', diff)
         })
         socket.on('error', console.error.bind(console))
         // store the ID    

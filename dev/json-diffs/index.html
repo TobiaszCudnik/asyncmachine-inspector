@@ -14,11 +14,15 @@
         svg {
             width: 100%;
         }
-        circle.node {
+        .node {
             fill: lightsteelblue;
             stroke: #555;
             stroke-width: 3px;
             padding: 5px;
+            padding-right: 10px;
+        }
+        .node.set {
+            fill: red;
         }
         circle.leaf {
             stroke: #fff;
@@ -79,6 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     socket.once('diff-sync', function(diff) {
         amv.jsondiffpatch.patch(ui.data, diff)
+        console.log(diff)
+        ui.layout.tick()
     })
 })
 // socket.on('connect', function() {
