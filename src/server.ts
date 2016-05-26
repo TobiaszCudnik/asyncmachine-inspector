@@ -1,12 +1,24 @@
+/**
+ * Itermidate server proxying traffic between Loggers (sources) and UIs (consumers).
+ * 
+ * A lot of traffic is being duplicated at the moment.
+ */
+
 import * as io from 'socket.io'
 import * as _ from 'underscore'
 import * as assert from 'assert'
-import AsyncMachine from 'asyncmachine'
+// import AsyncMachine from 'asyncmachine'
 
 
 interface IJoinEvent {
     loggerId: string;
 }
+
+// declare namespace SocketIO {
+//     export interface Socket {
+//         loggerId: string;
+//     }
+// }
 
 export default function createServer() {
     const server = io()
@@ -75,7 +87,7 @@ export default function createServer() {
             loggerSockets = _.without(loggerSockets, socket)
         })
         socket.on('diff-sync', function(diff) {
-            console.log(socket.loggerId)
+            console.log(`diff-sync from ${socket.loggerId}`)
             server.to(socket.loggerId).emit('diff-sync', diff)
         })
         socket.on('error', console.error.bind(console))
@@ -108,13 +120,16 @@ export default function createServer() {
         socket.on('join', function(event: IJoinEvent) {
             socket.join(event.loggerId)
             // TODO find by ID
-            let loggerSocket = loggerSockets[0]
+            let loggerSocket = _.findWhere(loggerSockets, {
+                loggerId: event.loggerId})
+                
             if (!clientsPerLogger.has(loggerSocket))
                 clientsPerLogger.set(loggerSocket, [])
             clientsPerLogger.get(loggerSocket).push(socket)
             // TODO group clients for this request
             loggerSocket.emit('full-sync')
             loggerSocket.once('full-sync', function(json) {
+                console.log(`full-sync from ${socket.loggerId}`)
                 socket.emit('full-sync', json)
             })
         })

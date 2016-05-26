@@ -4,20 +4,25 @@ var Network = require('../../build/network').default
 const repl = require('repl')
 
 global.machine1 = am.AsyncMachine.factory(['A', 'B', 'C', 'D'])
+machine1.id('1').logLevel(2)
 machine1.C = {drops: ['B']}
 machine1.A = {requires: ['B']}
 machine1.D = {requires: ['C']}
 
 var machine2 = am.AsyncMachine.factory(['E', 'F', 'G'])
+machine2.id('2')
 machine2.E = {drops: ['F']}
 
 var machine3 = am.AsyncMachine.factory(['E', 'F'])
+machine3.id('3')
 machine3.E = {drops: ['F']}
 
 var machine4 = am.AsyncMachine.factory(['E', 'F'])
+machine4.id('4')
 machine4.E = {drops: ['F']}
 
 var machine5 = am.AsyncMachine.factory(['E', 'F'])
+machine5.id('5')
 machine5.E = {drops: ['F']}
 
 machine1.pipe('A', machine2, 'E')
@@ -27,7 +32,7 @@ machine2.pipe('E', machine3, 'F')
 machine2.pipe('G', machine4, 'F')
 machine5.pipe('F', machine3, 'E')
 
-machine1.debug('[1]', 2)
+// init env
 machine1.add('A')
 
 var network = new Network

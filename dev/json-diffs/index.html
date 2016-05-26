@@ -69,10 +69,13 @@ var ui;
 
 document.addEventListener('DOMContentLoaded', function() {
     socket.once('loggers', function(ids) {
-        socket.emit('join', ids[0])
+        socket.emit('join', {
+            loggerId: ids[0]
+        })
     })
     socket.once('full-sync', function(data) {
-        ui = new amv.Ui(data).render()
+        ui = new amv.Ui(data)
+        ui.render()
     })
     socket.once('diff-sync', function(diff) {
         amv.jsondiffpatch.patch(ui.data, diff)
