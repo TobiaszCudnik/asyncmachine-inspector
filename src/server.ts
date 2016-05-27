@@ -14,11 +14,9 @@ interface IJoinEvent {
     loggerId: string;
 }
 
-// declare namespace SocketIO {
-//     export interface Socket {
-//         loggerId: string;
-//     }
-// }
+export interface LoggerSocket extends SocketIO.Socket {
+    loggerId: string;
+}
 
 export default function createServer() {
     const server = io()
@@ -74,11 +72,10 @@ export default function createServer() {
 
     // SERVER ENDPOINT
 
-    type loggerSocket = SocketIO.Socket
     var loggerEndpoint = server.of('/logger')
-    var loggerSockets: loggerSocket[] = []
+    var loggerSockets: LoggerSocket[] = []
 
-    loggerEndpoint.on('connection', function(socket: loggerSocket) {
+    loggerEndpoint.on('connection', function(socket: LoggerSocket) {
         // constructor
         console.log('new logger connected')
         loggerSockets.push(socket)
@@ -105,7 +102,7 @@ export default function createServer() {
     var clientSockets: clientSocket[] = []
 
     // TODO gc
-    var clientsPerLogger = new Map<loggerSocket, clientSocket[]>()
+    var clientsPerLogger = new Map<LoggerSocket, clientSocket[]>()
 
     clientEndpoint.on('connection', function(socket: clientSocket) {
         // constructor
@@ -129,7 +126,7 @@ export default function createServer() {
             // TODO group clients for this request
             loggerSocket.emit('full-sync')
             loggerSocket.once('full-sync', function(json) {
-                console.log(`full-sync from ${socket.loggerId}`)
+                console.log(`full-sync from ${loggerSocket.loggerId}`)
                 socket.emit('full-sync', json)
             })
         })
