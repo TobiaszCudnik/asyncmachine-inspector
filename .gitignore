@@ -3,5 +3,6 @@
 /.idea/
 /build/
 /build*/
-/node_modules/asyncmachine
+/node_modules/*
+!/node_modules/graphs/
 /dist/
