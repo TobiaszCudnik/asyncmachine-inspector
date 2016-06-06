@@ -85,6 +85,7 @@ export default function createServer() {
         })
         socket.on('diff-sync', function(diff) {
             console.log(`diff-sync from ${socket.loggerId}`)
+            console.dir(diff)
             clientEndpoint.to(socket.loggerId).emit('diff-sync', diff)
         })
         socket.on('error', console.error.bind(console))
@@ -124,11 +125,11 @@ export default function createServer() {
                 clientsPerLogger.set(loggerSocket, [])
             clientsPerLogger.get(loggerSocket).push(socket)
             // TODO group clients for this request
-            loggerSocket.emit('full-sync')
-            loggerSocket.once('full-sync', function(json) {
+            loggerSocket.on('full-sync', function(json) {
                 console.log(`full-sync from ${loggerSocket.loggerId}`)
                 socket.emit('full-sync', json)
             })
+            loggerSocket.emit('full-sync')
         })
         socket.on('error', console.error.bind(console))
         

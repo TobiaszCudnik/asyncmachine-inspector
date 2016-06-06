@@ -72,7 +72,7 @@ export default class Network extends EventEmitter {
     addMachine(machine: am.AsyncMachine) {
         // TODO check for duplicates first
         // TODO deterministic IDs!!!
-        var id = machine.log_prefix || uuid.v4()
+        var id = machine.id() || uuid.v4()
         this.machines.set(machine, id)
         this.machine_ids[id] = machine
         this.statesToNodes(machine.states_all, id)
@@ -82,7 +82,7 @@ export default class Network extends EventEmitter {
         for (let [machine, id] of this.machines) {
             this.linkPipedStates(machine)
         }
-        
+
         this.emit('change')
     }
 

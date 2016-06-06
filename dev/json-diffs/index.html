@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
     })
     socket.once('full-sync', function(data) {
+        console.log('full-sync', data)
         ui = new amv.Ui(data)
         ui.render()
     })

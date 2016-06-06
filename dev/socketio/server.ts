@@ -1,7 +1,11 @@
-var io = require('socket.io')();
-io.on('connection', function(socket){
+import * as io from 'socket.io'
+const server = io()
+const foo = server.of('/foo')
+foo.on('connection', function(socket){
     console.log('server:new-client')
-    //console.log(socket.client)
-    io.emit('test', {a: 1});
+    socket.join('bar', () => {
+        foo.to('bar').emit('test', '1')
+        foo.to('bar').emit('test', '2')
+    })
 });
-io.listen(3000)
+server.listen(3000)
