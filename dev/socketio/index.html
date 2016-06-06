@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="../../node_modules/socket.io-client/socket.io.js"></script>
+    <script>
+var socket = io('http://localhost:3000/foo');
+
+localStorage.debug = '*'
+document.addEventListener('DOMContentLoaded', function() {
+    socket.on('test', function(diff) {
+        console.log('TEST', diff)
+    })
+})
+// socket.on('connect', function() {
+//     console.log('client:connected')
+// });
+// socket.on('test', function(data){
+//     console.log('test event', data)
+// });
+// socket.on('disconnect', function(){});
+    </script>
+</head>
+<body>
+    <div id="graph" />
+</body>
+</html>
