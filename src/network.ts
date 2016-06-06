@@ -82,6 +82,8 @@ export default class Network extends EventEmitter {
         for (let [machine, id] of this.machines) {
             this.linkPipedStates(machine)
         }
+        
+        this.emit('change')
     }
 
     private bindToMachine(machine: am.AsyncMachine) {

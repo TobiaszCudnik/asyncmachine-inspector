@@ -35,11 +35,6 @@ export default class Ui {
 		this.machine_color = d3.scale.category10()
 		this.state_color = d3.scale.category20c()
 
-		for (let node of this.data.nodes) {
-			node.width = node.name.length * 20
-			node.height = 25
-		}
-
 		this.layout = cola.d3adaptor()
 			.linkDistance(100)
 			.avoidOverlaps(true)
@@ -56,27 +51,28 @@ export default class Ui {
 			.attr("width", this.width)
 			.attr("height", this.height)
 
-		this.layout.start()
+		this.updateSelection()
+		this.updateData()
 		this.renderNodes()
+		this.layout.start()
+
+		this.layout.on("tick", this.redrawNodes.bind(this));
 	}
 
 	renderNodes() {
-		this.group = this.container.selectAll(".group")
-			.data(this.data.groups)
-			.enter().append("rect")
+		this.group.enter().append("rect")
+				.filter( x => x )
 				.attr("rx", 8).attr("ry", 8)
 				.attr("class", "group")
 				.style("fill", (d) => this.machine_color(d.id) )
 				.call(this.layout.drag);
 
-		this.link = this.container.selectAll(".link")
-			.data(this.data.links)
-			.enter().append("line")
+		this.link.enter().append("line")
+				.filter( x => x )
 				.attr("class", "link");
 
-		this.node = this.container.selectAll(".node")
-			.data(this.data.nodes)
-			.enter().append("rect")
+		this.node.enter().append("rect")
+				.filter( x => x )
 				.attr("class", "node")
 				.attr("width", d => d.width - 2 * this.pad )
 				.attr("height", d =>  d.height - 2 * this.pad )
@@ -84,17 +80,39 @@ export default class Ui {
 				// .style("fill", d => this.state_color(d.name) )
 				.call(this.layout.drag);
 
-		this.label = this.container.selectAll(".label")
-			.data(this.data.nodes)
-			.enter().append("text")
+		this.label.enter().append("text")
+				.filter( x => x )
 				.attr("class", "label")
 				.text(d => d.name )
 				.call(this.layout.drag);
 
 		this.node.append("title")
 			.text(d => d.name )
+	}
+	
+	updateData() {
 
-		this.layout.on("tick", this.redrawNodes.bind(this));
+		for (let node of this.data.nodes) {
+			node.width = node.name.length * 20
+			node.height = 25
+		}
+		
+		this.layout
+			.nodes(this.data.nodes)
+			.links(this.data.links)
+			.groups(this.data.groups)
+			
+		this.link = this.link.data(this.data.links)
+		this.node = this.node.data(this.data.nodes)
+		this.group = this.group.data(this.data.groups)
+		this.label = this.label.data(this.data.nodes)
+	}
+	
+	updateSelection() {
+		this.group = this.container.selectAll(".group")
+		this.link = this.container.selectAll(".link")
+		this.node = this.container.selectAll(".node")
+		this.label = this.container.selectAll(".label")
 	}
 
 	redrawNodes() {

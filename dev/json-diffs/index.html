@@ -81,10 +81,14 @@ document.addEventListener('DOMContentLoaded', function() {
         ui = new amv.Ui(data)
         ui.render()
     })
-    socket.once('diff-sync', function(diff) {
+    socket.on('diff-sync', function(diff) {
         amv.jsondiffpatch.patch(ui.data, diff)
         console.log(diff)
-        ui.layout.tick()
+        ui.updateData()
+        ui.renderNodes()
+        ui.layout.start()
+        ui.redrawNodes()
+		ui.layout.on("tick", ui.redrawNodes.bind(ui));
     })
 })
 // socket.on('connect', function() {
