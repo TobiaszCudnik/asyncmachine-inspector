@@ -83,13 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ui.render()
     })
     socket.on('diff-sync', function(diff) {
-        amv.jsondiffpatch.patch(ui.data, diff)
+        ui.patch(diff)
         console.log(diff)
-        ui.updateData()
-        ui.renderNodes()
-        ui.layout.start()
-        ui.redrawNodes()
-		ui.layout.on("tick", ui.redrawNodes.bind(ui));
     })
 })
 // socket.on('connect', function() {

@@ -42,11 +42,21 @@ machine1.add('A')
 global.network = new Network
 
 function test() {
-  var test = am.AsyncMachine.factory(['X', 'Y'])
+  var test = am.factory(['X', 'Y'])
   network.addMachine(test)
 }
 
+function test2() {
+  machine1.pipe('A', machine4, 'F')
+}
+
+function test3() {
+  machine3.pipe('F', machine4, 'F')
+}
+
 global.test = test
+global.test2 = test2
+global.test3 = test3
 
 global.network = new Network
 network.addMachine(machine1)

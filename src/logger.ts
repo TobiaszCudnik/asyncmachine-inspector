@@ -36,6 +36,8 @@ export default class Logger {
     }
 
     onGraphChange() {
-        this.io.emit('diff-sync', this.diff.generateDiff())
+        let diff = this.diff.generateDiff()
+        if (diff)
+            this.io.emit('diff-sync', diff)
     }
 }

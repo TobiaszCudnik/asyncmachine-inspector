@@ -95,6 +95,10 @@ export default class Network extends EventEmitter {
         // TODO unbind on dispose
         // TODO group the same changes emitted by couple of machines
         machine.on('change', () => this.emit('change'))
+        machine.on('pipe', () => {
+            this.linkPipedStates(machine)
+            this.emit('change') 
+        })
     }
 
     dispose() {
@@ -148,14 +152,15 @@ export default class Network extends EventEmitter {
 
     protected linkPipedStates(machine: am.AsyncMachine) {
         for (let state in machine.piped) {
-            var data = machine.piped[state]
+            for (let target of machine.piped[state]) {
 
-            let source_state = this.getNodeByName(state, this.machines.get(machine))
-            let target_state = this.getNodeByName(data.state,
-                this.machines.get(data.machine))
-            if (!target_state)
-                continue
-            this.graph.link(source_state, target_state)
+                let source_state = this.getNodeByName(state, this.machines.get(machine))
+                let target_state = this.getNodeByName(target.state,
+                    this.machines.get(target.machine))
+                if (!target_state)
+                    continue
+                this.graph.link(source_state, target_state)
+            }
         }
     }
 }

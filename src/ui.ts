@@ -5,6 +5,7 @@ import {
 	ID3NetworkJson,
 	State
 } from './d3network'
+import * as jsondiffpatch from 'jsondiffpatch'
 
 // TODO this is bad
 window['d3'] = d3
@@ -58,6 +59,14 @@ export default class Ui {
 
 		this.layout.on("tick", this.redrawNodes.bind(this));
 	}
+	
+	patch(diff: ID3NetworkJson) {
+		jsondiffpatch.patch(this.data, diff)
+		this.updateData()
+		this.renderNodes()
+		this.layout.start()
+		this.redrawNodes()
+	}
 
 	renderNodes() {
 		this.group.enter().append("rect")
@@ -91,7 +100,6 @@ export default class Ui {
 	}
 	
 	updateData() {
-
 		for (let node of this.data.nodes) {
 			node.width = node.name.length * 20
 			node.height = 25
