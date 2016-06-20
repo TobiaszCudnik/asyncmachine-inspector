@@ -4,8 +4,9 @@ import Graph from 'graphs'
 import {
 	ID3NetworkJson,
 	State
-} from './d3network'
+} from './d3-network'
 import * as jsondiffpatch from 'jsondiffpatch'
+import UiBase from './ui'
 
 // TODO this is bad
 window['d3'] = d3
@@ -14,7 +15,7 @@ window['d3'] = d3
  * TODO consume a stream of events
  * TODO support an initialization without a reference to other instances
  */
-export default class Ui {
+export default class Ui<T> extends UiBase<T> {
 
 	machine_color: D3.Scale.OrdinalScale;
 	state_color: D3.Scale.OrdinalScale;
@@ -25,13 +26,15 @@ export default class Ui {
 	node: D3.Selection;
 	group: D3.Selection;
 	label: D3.Selection;
+	group_label: D3.Selection;
 
 	pad = 3;
 	width = 800;
 	height = 600;
 
 	constructor(
-			public data: ID3NetworkJson) {
+			public data: T) {
+		super(data)
 
 		this.machine_color = d3.scale.category10()
 		this.state_color = d3.scale.category20c()
@@ -46,7 +49,7 @@ export default class Ui {
 			.size([this.width, this.height])
 	}
 
-	render() {
+	render(el?: Element) {
 		// TODO customizable container
 		this.container = d3.select("body").append("svg")
 			.attr("width", this.width)
@@ -93,7 +96,11 @@ export default class Ui {
 				.filter( x => x )
 				.attr("class", "label")
 				.text(d => d.name )
-				.call(this.layout.drag);
+
+		this.group_label.enter().append("text")
+				.filter( x => x )
+				.attr("class", "group-label")
+				.text(d => d.name )
 
 		this.node.append("title")
 			.text(d => d.name )
@@ -114,6 +121,7 @@ export default class Ui {
 		this.node = this.node.data(this.data.nodes)
 		this.group = this.group.data(this.data.groups)
 		this.label = this.label.data(this.data.nodes)
+		this.group_label = this.group_label.data(this.data.groups)
 	}
 	
 	updateSelection() {
@@ -121,6 +129,7 @@ export default class Ui {
 		this.link = this.container.selectAll(".link")
 		this.node = this.container.selectAll(".node")
 		this.label = this.container.selectAll(".label")
+		this.group_label = this.container.selectAll(".group-label")
 	}
 
 	redrawNodes() {
@@ -148,6 +157,13 @@ export default class Ui {
 			.attr("y", function(d) {
 				var h = this.getBBox().height;
 				return d.y + h/4;
+			});
+
+		this.group_label
+			.attr("x", d => d.bounds.x )
+			.attr("y", function(d) {
+				var h = this.getBBox().height;
+				return d.bounds.y + h/4;
 			});
 	}
 }

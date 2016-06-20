@@ -1,7 +1,7 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import Network, {
     Node as GraphNode
-} from "./network";
+} from "../network";
 import * as assert from 'assert'
 
 
@@ -127,8 +127,7 @@ export default class D3NetworkJson {
     }
 
     protected getMachineName(machine) {
-        return (machine.debug_prefix || '')
-            .replace(['[', ']', ' '], '');
+        return machine.id().replace(['[', ']', ' '], '')
     }
 }
 

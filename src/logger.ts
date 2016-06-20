@@ -1,9 +1,9 @@
 // import { IState } from 'asyncmachine';
-import Network from "./network";
+import Network from "./network"
 import * as io from 'socket.io-client'
 import D3NetworkJson, {
     D3JsonDiffFactory
-} from "./d3network";
+} from "./uis/d3-network"
 
 type MachineId = string;
 
