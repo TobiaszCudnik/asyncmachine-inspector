@@ -4,7 +4,7 @@ import Graph from 'graphs'
 import {
 	ID3NetworkJson,
 	State
-} from './d3-network'
+} from './cola-network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import UiBase from './ui'
 

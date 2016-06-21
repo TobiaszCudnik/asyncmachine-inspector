@@ -38,28 +38,40 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
             type: 'uml.State',
             id: machine_id,
             name: machine.id(),
-            embeds: []
+            embeds: [],
+            z: 1
         }
     }
     createStateNode(node: GraphNode): State {
+        let size = Math.max(50, 9 * node.name.length)
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
-            parent: node.machine_id
+            parent: node.machine_id,
+            attrs: { text: { text: node.name }},
+            z: 3,
+            size: { 
+                width: size,
+                height: size
+            },
+            is_set: node.is_set
         }
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
         return {
             type: 'fsa.Arrow',
+            smooth: true,
             source: {
                 id: this.getStateNodeId(from)
             },
             target: {
                 id: this.getStateNodeId(to)
             },
-            id: `${this.getStateNodeId(to)}-${this.getStateNodeId(from)}-${relation}`,
+            id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}`,
             labels: [{
-                attrs: { text: { text: NODE_LINK_TYPE[relation] }}}]
+                position: 0.5,
+                attrs: { text: { text: NODE_LINK_TYPE[relation] }}}],
+            z: 2
         }
     }
 
@@ -72,28 +84,40 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
     }
 }
 
-export var JsonDiffFactory = JsonDiffFactoryBase
+export default NetworkJsonFactory
+export class JsonDiffFactory extends JsonDiffFactoryBase<INetworkJson> {}
+
+// TYPES
 
 export type MachineId = string;
 export type StateName = string;
 
+export interface UiNode {
+    z: number
+}
 
-export type Machine = {
+export interface Machine extends UiNode {
     type: 'uml.State',
     embeds: string[],
     id: MachineId,
     name: string
 }
 
-export type State = {
+export interface State extends UiNode {
     type: 'fsa.State'
     id: MachineId,
-    parent: string
+    parent: string,
+    attrs?: { text: { text: string }},
+    size: {
+        width: number,
+        height: number
+    }
 }
 
-export type Link = {
+export interface Link extends UiNode {
     type: 'fsa.Arrow'
     id: string,
+    smooth: boolean,
     source: {
         id: string
     },
@@ -101,6 +125,7 @@ export type Link = {
         id: string
     },
     labels?: Array<{
+        position: number,
         attrs: {
             text: {
                 text: string

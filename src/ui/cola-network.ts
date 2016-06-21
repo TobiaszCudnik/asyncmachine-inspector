@@ -5,22 +5,21 @@ import Network, {
 import * as assert from 'assert'
 
 
-
 /**
  * Produce JSON from Network, ready to be consumed by the D3 UI layer.
  */
 export default class D3NetworkJson {
     // list of created machine nodes
-    machine_ids: Set<MachineId>;
+    machine_ids: Set<MachineId>
     // map of machine IDs to machine nodes
     machine_nodes: {
         [index: string]: Machine
     };
     // map of graph nodes to their d3 nodes
-    nodes: Map<GraphNode, State>;
+    nodes: Map<GraphNode, State>
     // map of created external nodes
     // also used for creating links between machine nodes
-    externals: Map<GraphNode, Set<GraphNode>>;
+    externals: Map<GraphNode, Set<GraphNode>>
 
     json: ID3NetworkJson;
 

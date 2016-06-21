@@ -26,7 +26,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
     // TODO use enum for the source relations
     relations_map = {
         requires: NODE_LINK_TYPE.REQUIRES,
-        blocks: NODE_LINK_TYPE.BLOCKS,
+        drops: NODE_LINK_TYPE.BLOCKS,
         implies: NODE_LINK_TYPE.IMPLIES,
         order: NODE_LINK_TYPE.ORDER,
         piped: NODE_LINK_TYPE.PIPED_IN

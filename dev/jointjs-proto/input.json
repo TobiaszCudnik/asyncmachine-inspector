@@ -1,0 +1,489 @@
+{
+    "cells": [
+        {
+            "type": "uml.State",
+            "id": "1",
+            "name": "1",
+            "embeds": [
+                "1:Exception",
+                "1:A",
+                "1:B",
+                "1:C",
+                "1:D"
+            ]
+        },
+        {
+            "type": "fsa.State",
+            "id": "1:Exception",
+            "parent": "1",
+            "attrs": {
+                "text": {
+                    "text": "Exception"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "1:A",
+            "parent": "1",
+            "attrs": {
+                "text": {
+                    "text": "A"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "1:B",
+            "parent": "1",
+            "attrs": {
+                "text": {
+                    "text": "B"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "1:C",
+            "parent": "1",
+            "attrs": {
+                "text": {
+                    "text": "C"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "1:D",
+            "parent": "1",
+            "attrs": {
+                "text": {
+                    "text": "D"
+                }
+            }
+        },
+        {
+            "type": "uml.State",
+            "id": "2",
+            "name": "2",
+            "embeds": [
+                "2:Exception",
+                "2:E",
+                "2:F",
+                "2:G"
+            ]
+        },
+        {
+            "type": "fsa.State",
+            "id": "2:Exception",
+            "parent": "2",
+            "attrs": {
+                "text": {
+                    "text": "Exception"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "2:E",
+            "parent": "2",
+            "attrs": {
+                "text": {
+                    "text": "E"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "2:F",
+            "parent": "2",
+            "attrs": {
+                "text": {
+                    "text": "F"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "2:G",
+            "parent": "2",
+            "attrs": {
+                "text": {
+                    "text": "G"
+                }
+            }
+        },
+        {
+            "type": "uml.State",
+            "id": "3",
+            "name": "3",
+            "embeds": [
+                "3:Exception",
+                "3:E",
+                "3:F"
+            ]
+        },
+        {
+            "type": "fsa.State",
+            "id": "3:Exception",
+            "parent": "3",
+            "attrs": {
+                "text": {
+                    "text": "Exception"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "3:E",
+            "parent": "3",
+            "attrs": {
+                "text": {
+                    "text": "E"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "3:F",
+            "parent": "3",
+            "attrs": {
+                "text": {
+                    "text": "F"
+                }
+            }
+        },
+        {
+            "type": "uml.State",
+            "id": "4",
+            "name": "4",
+            "embeds": [
+                "4:Exception",
+                "4:E",
+                "4:F"
+            ]
+        },
+        {
+            "type": "fsa.State",
+            "id": "4:Exception",
+            "parent": "4",
+            "attrs": {
+                "text": {
+                    "text": "Exception"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "4:E",
+            "parent": "4",
+            "attrs": {
+                "text": {
+                    "text": "E"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "4:F",
+            "parent": "4",
+            "attrs": {
+                "text": {
+                    "text": "F"
+                }
+            }
+        },
+        {
+            "type": "uml.State",
+            "id": "5",
+            "name": "5",
+            "embeds": [
+                "5:Exception",
+                "5:E",
+                "5:F"
+            ]
+        },
+        {
+            "type": "fsa.State",
+            "id": "5:Exception",
+            "parent": "5",
+            "attrs": {
+                "text": {
+                    "text": "Exception"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "5:E",
+            "parent": "5",
+            "attrs": {
+                "text": {
+                    "text": "E"
+                }
+            }
+        },
+        {
+            "type": "fsa.State",
+            "id": "5:F",
+            "parent": "5",
+            "attrs": {
+                "text": {
+                    "text": "F"
+                }
+            }
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "1:A"
+            },
+            "target": {
+                "id": "1:B"
+            },
+            "id": "1:B-1:A-0",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "REQUIRES"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "1:A"
+            },
+            "target": {
+                "id": "2:E"
+            },
+            "id": "2:E-1:A-4",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "PIPED_IN"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "1:C"
+            },
+            "target": {
+                "id": "1:B"
+            },
+            "id": "1:B-1:C-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "1:D"
+            },
+            "target": {
+                "id": "1:C"
+            },
+            "id": "1:C-1:D-0",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "REQUIRES"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "2:E"
+            },
+            "target": {
+                "id": "2:F"
+            },
+            "id": "2:F-2:E-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "2:E"
+            },
+            "target": {
+                "id": "1:B"
+            },
+            "id": "1:B-2:E-4",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "PIPED_IN"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "2:E"
+            },
+            "target": {
+                "id": "3:F"
+            },
+            "id": "3:F-2:E-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "2:F"
+            },
+            "target": {
+                "id": "1:B"
+            },
+            "id": "1:B-2:F-4",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "PIPED_IN"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "3:E"
+            },
+            "target": {
+                "id": "3:F"
+            },
+            "id": "3:F-3:E-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "4:E"
+            },
+            "target": {
+                "id": "4:F"
+            },
+            "id": "4:F-4:E-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "2:G"
+            },
+            "target": {
+                "id": "4:F"
+            },
+            "id": "4:F-2:G-4",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "PIPED_IN"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "fsa.Arrow",
+            "smooth": true,
+            "source": {
+                "id": "5:E"
+            },
+            "target": {
+                "id": "5:F"
+            },
+            "id": "5:F-5:E-1",
+            "labels": [
+                {
+                    "position": 0.5,
+                    "attrs": {
+                        "text": {
+                            "text": "BLOCKS"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

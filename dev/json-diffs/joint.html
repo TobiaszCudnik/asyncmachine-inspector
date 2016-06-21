@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <!--<link rel="stylesheet" href="../../node_modules/jointjs/css/themes/default.css" />-->
+    <link rel="stylesheet" href="joint.css" />
+    <style>
+        svg {
+            border: 1px solid #ccc;
+        }
+        body {
+            font: 10px Monospace;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+        text {
+            fill: #000000;
+            font-weight: 'normal';
+        }
+        circle {
+            fill: #f6f6f6;
+            stroke: #000000;
+            stroke-width: 2
+        }
+        .uml-state-body {
+            fill: rgba(48, 208, 198, 0.1);
+            stroke: rgba(48, 208, 198, 0.5);
+            stroke-width: 1.5;
+        }
+        .uml-state-separator: {
+            stroke: rgba(48, 208, 198, 0.4)
+        }
+        .is-set circle {
+            fill: thistle
+        }
+    </style>
+    <script src="../../node_modules/socket.io-client/socket.io.js"></script>
+    <script src="../../dist/main.js"></script>
+    <script>
+var socket = io('http://localhost:3030/client');
+var ui;
+
+document.addEventListener('DOMContentLoaded', function() {
+    socket.once('loggers', function(ids) {
+        socket.emit('join', {
+            loggerId: ids[0]
+        })
+    })
+    socket.once('full-sync', function(data) {
+        console.log('full-sync', data)
+        ui = new amv.JointUi(data)
+        ui.render('#graph')
+    })
+    socket.on('diff-sync', function(diff) {
+        ui.patch(diff)
+        console.log(diff)
+    })
+})
+// socket.on('connect', function() {
+//     console.log('client:connected')
+// });
+// socket.on('test', function(data){
+//     console.log('test event', data)
+// });
+// socket.on('disconnect', function(){});
+    </script>
+</head>
+<body>
+    <div id="graph" />
+</body>
+</html>

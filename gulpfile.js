@@ -88,7 +88,7 @@ gulp.task('ts:build:watch', 'Build the TS sources and watch for changes',
 var source_bundler = browserify({
     cache: {},
     packageCache: {},
-    entries: ['./build/visualizer.js'],
+    entries: ['./build/main.js'],
     debug: true,
     standalone: 'amv'
 }).transform("babelify", {
@@ -119,15 +119,15 @@ function bundle() {
             .on('error', function(err) {
                 gutil.log(err.message)
             })
-            .pipe(source('visualizer.js'))
+            .pipe(source('main.js'))
             .pipe(buffer())
             .pipe(sourcemaps.init({loadMaps: true}))
             .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: '../'}))
             .pipe(gulp.dest('./dist'))
-            // TODO use a stream
-            .pipe(shell([
-                'sorcery -i dist/visualizer.js'
-            ]))
+            // // TODO use a stream
+            // .pipe(shell([
+            //     'sorcery -i dist/main.js'
+            // ]))
 }
 
 //gulp.task('dist', "Minify the dist file", function() {

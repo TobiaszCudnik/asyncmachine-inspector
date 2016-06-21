@@ -7,8 +7,6 @@
     }, 
     "files": [
         "typings/tsd.d.ts",
-        "src/client.ts",
-        "src/server.ts",
-        "src/logger.ts"
+        "src/main.ts"
     ]
 }

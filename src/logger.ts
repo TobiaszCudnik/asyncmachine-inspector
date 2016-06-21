@@ -1,16 +1,21 @@
-// import { IState } from 'asyncmachine';
+/**
+ * TODO network-to-ui-json should be handled by the server
+ */
 import Network from "./network"
 import * as io from 'socket.io-client'
-import D3NetworkJson, {
-    D3JsonDiffFactory
-} from "./uis/d3-network"
+// import D3NetworkJson, {
+//     D3JsonDiffFactory
+// } from "./ui/cola-network"
+import NetworkJson, {
+    JsonDiffFactory
+} from "./ui/joint-network"
 
 type MachineId = string;
 
 export default class Logger {
     io: SocketIOClient.Socket;
-    json: D3NetworkJson;
-    diff: D3JsonDiffFactory;
+    json: NetworkJson;
+    diff: JsonDiffFactory;
 
     constructor(
             public network: Network,
@@ -19,10 +24,10 @@ export default class Logger {
             query: `id=${network.id}`
         });
 
-        this.json = new D3NetworkJson(network)
+        this.json = new NetworkJson(network)
         this.json.network.on('change', () => this.onGraphChange())
 
-        this.diff = new D3JsonDiffFactory(this.json)
+        this.diff = new JsonDiffFactory(this.json)
         this.diff.generateJson()
         
         this.io.on('full-sync', () => this.onFullSync())

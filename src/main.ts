@@ -1,9 +1,11 @@
 import Network from './network';
-import Ui from './ui';
+import ColaUi from './ui/cola-ui';
+import JointUi from './ui/joint-ui';
 import Logger from './logger';
 import * as jsondiffpatch from 'jsondiffpatch'
 
 export { Network };
-export { Ui };
+export { ColaUi };
+export { JointUi };
 export { Logger };
 export { jsondiffpatch }
