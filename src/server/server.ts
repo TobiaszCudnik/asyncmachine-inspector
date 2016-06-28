@@ -2,6 +2,9 @@
  * Itermidate server proxying traffic between Loggers (sources) and UIs (consumers).
  * 
  * A lot of traffic is being duplicated at the moment.
+ * 
+ * TODO:
+ * - when logger reconnects, re-bind the clients, perform a full sync
  */
 
 import * as io from 'socket.io'
@@ -24,51 +27,6 @@ export default function createServer() {
     server.on('connection', () => {
         console.log('new connection')
     })
-
-    // class LoggerClient {
-    //     io: SocketIO.Socket
-    //     states: AsyncMachine
-        
-    //     constructor(io) {
-    //         this.io = io
-    //         this.states = AsyncMachine.factory({
-    //             Connecting: {
-    //                 blocks: ['Connected']
-    //             },
-    //             Connected: {
-    //                 blocks: ['Disconnected']
-    //             },
-    //             Disconnecting: {
-    //                 blocks: ['Disconnected']
-    //             },
-    //             Disconnected: {
-    //                 blocks: ['Disconnecting']
-    //             }
-    //         })
-    //     }
-        
-    //     Disconnect_state() {
-    //         loggerSockets = _.without(loggerSockets, socket)
-    //     }
-        
-    //     Sync_Sync() {
-    //         return this.Sync_state(...arguments)
-    //     }
-        
-    //     Sync_state() {
-    //         var abort = this.states.getAbo
-    //         this.io.emit('full-sync', diff)
-    //         this.io.on('full-sync', this.)
-    //     }
-        
-    //     Diff_Sync() {
-    //         return this.Sync_state(...arguments)
-    //     }
-        
-    //     Diff_state() {
-    //         server.to(socket.loggerId).emit('diff-sync', diff)
-    //     }
-    // }
 
     // SERVER ENDPOINT
 

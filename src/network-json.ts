@@ -6,7 +6,7 @@ import Network, {
 import AsyncMachine from 'asyncmachine'
 
 /**
- * Produce JSON from Network, ready to be consumed by the D3 UI layer.
+ * Produce JSON from a Network instance, ready to be consumed by the UI layer.
  */
 export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
     // list of created machine nodes
@@ -114,12 +114,12 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
 /**
  * TODO make it a steram
  */
-export abstract class JsonDiffFactory<Json> {
+export abstract class JsonDiffFactory<T extends NetworkJsonFactory, Json> {
     diffpatcher: jsondiffpatch.IDiffPatch;
     previous_json: Json;
     
     constructor(
-            public network: NetworkJsonFactory<Json>) {
+            public network: T) {
         assert(network)
         this.diffpatcher = jsondiffpatch.create({
             objectHash: this.objectHash()

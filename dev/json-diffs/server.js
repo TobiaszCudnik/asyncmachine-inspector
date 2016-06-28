@@ -1,3 +1,2 @@
-var createServer = require('../../build/server').default
-
-createServer().listen(3030)
+require('source-map-support').install()
+require('../../dist/server').default().listen(3030)

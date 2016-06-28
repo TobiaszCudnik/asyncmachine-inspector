@@ -43,18 +43,12 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
         }
     }
     createStateNode(node: GraphNode): State {
-        let size = Math.max(50, 9 * node.name.length)
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
             parent: node.machine_id,
             attrs: { text: { text: node.name }},
-            z: 3,
-            size: { 
-                width: size,
-                height: size
-            },
-            is_set: node.is_set
+            z: 3
         }
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
@@ -92,32 +86,25 @@ export class JsonDiffFactory extends JsonDiffFactoryBase<INetworkJson> {}
 export type MachineId = string;
 export type StateName = string;
 
-export interface UiNode {
-    z: number
-}
 
-export interface Machine extends UiNode {
+export type Machine = {
     type: 'uml.State',
     embeds: string[],
     id: MachineId,
     name: string
 }
 
-export interface State extends UiNode {
+export type State = {
     type: 'fsa.State'
     id: MachineId,
     parent: string,
-    attrs?: { text: { text: string }},
-    size: {
-        width: number,
-        height: number
-    }
+    name: string,
+    attrs?: { text: { text: string }}
 }
 
-export interface Link extends UiNode {
+export type Link = {
     type: 'fsa.Arrow'
     id: string,
-    smooth: boolean,
     source: {
         id: string
     },
@@ -125,7 +112,6 @@ export interface Link extends UiNode {
         id: string
     },
     labels?: Array<{
-        position: number,
         attrs: {
             text: {
                 text: string
