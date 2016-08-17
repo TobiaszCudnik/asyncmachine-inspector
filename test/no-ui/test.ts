@@ -1,5 +1,5 @@
 import 'source-map-support/register'
-import { AsyncMachine } from 'asyncmachine'
+import { factory } from 'asyncmachine'
 import { expect } from 'chai'
 import * as assert from 'assert'
 import Network from '../../src/network'
@@ -12,7 +12,7 @@ import * as path from 'path'
 // describe("Single machine graph", function() {
 
 //   beforeEach( function() {
-//     this.machine = new AsyncMachine.factory(['A', 'B', 'C', 'D'])
+//     this.machine = new factory(['A', 'B', 'C', 'D'])
 //     this.machine.A = {requires: ['B']}
 //     this.machine.C = {blocks: ['B']}
 //     this.machine.D = {requires: ['C']}
@@ -43,25 +43,25 @@ describe("Network", function() {
     var stateGraph;
 
     before( function() {
-        this.machine1 = AsyncMachine.factory(['A', 'B', 'C', 'D'])
+        this.machine1 = factory(['A', 'B', 'C', 'D'])
         this.machine1.debug_prefix = 'machine1'
         this.machine1.C = {blocks: ['B']}
         this.machine1.A = {requires: ['B']}
         this.machine1.D = {requires: ['C']}
 
-        this.machine2 = AsyncMachine.factory(['E', 'F', 'G'])
+        this.machine2 = factory(['E', 'F', 'G'])
         this.machine2.debug_prefix = 'machine2'
         this.machine2.E = {blocks: ['F']}
 
-        this.machine3 = AsyncMachine.factory(['E', 'F'])
+        this.machine3 = factory(['E', 'F'])
         this.machine3.debug_prefix = 'machine3'
         this.machine3.E = {blocks: ['F']}
 
-        this.machine4 = AsyncMachine.factory(['E', 'F'])
+        this.machine4 = factory(['E', 'F'])
         this.machine4.debug_prefix = 'machine4'
         this.machine4.E = {blocks: ['F']}
 
-        this.machine5 = AsyncMachine.factory(['E', 'F'])
+        this.machine5 = factory(['E', 'F'])
         this.machine5.debug_prefix = 'machine5'
         this.machine5.E = {blocks: ['F']}
 
@@ -96,9 +96,7 @@ describe("Network", function() {
                 fs.readFileSync('test/fixtures/1.json').toString()))
         })
         
-        it('should support cross-machine connections', () => {
-            throw new Error
-        })
+        it('should support cross-machine connections')
     })
     
     describe('diffs factory', function() {

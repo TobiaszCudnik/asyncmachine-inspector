@@ -52,7 +52,9 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
             object_type: OBJECT_TYPE.MACHINE,
             name: this.getMachineName(machine),
             leaves: [],
-            id: machine_id
+            id: machine_id,
+            x: null,
+            y: null
         }
     }
     createStateNode(node: GraphNode): State {
@@ -63,7 +65,9 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
             auto: Boolean(node.state.auto),
             negotiating: false, // TODO
             is_set: node.is_set,
-            index: this.json.nodes.length
+            index: this.json.nodes.length,
+            x: null,
+            y: null
         }
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
@@ -121,7 +125,9 @@ export type Machine = {
     object_type: OBJECT_TYPE,
     name: string,
     leaves: number[],
-    id: string
+    id: string,
+    x: number,
+    y: number
 }
 
 export type State = {
@@ -131,7 +137,11 @@ export type State = {
     auto: boolean
     negotiating: boolean,
     is_set: boolean,
-    index: number
+    index: number,
+    x: number,
+    y: number,
+    width?: number,
+    height?: number
 }
 
 export type Link = {

@@ -3,10 +3,11 @@
         "outDir": "build/",
         "sourceMap": true,
         "target": "es6",
-        "module": "commonjs"
+        "module": "commonjs",
+        "lib": ["es7", "dom"]
     }, 
     "files": [
-        "typings/tsd.d.ts",
+        "typings/index.d.ts",
         "src/main.ts"
     ]
 }

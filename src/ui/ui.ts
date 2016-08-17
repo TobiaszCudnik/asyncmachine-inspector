@@ -9,7 +9,7 @@ abstract class Ui<T> {
 	
 	abstract render(el: Element | string);
 	
-	patch(diff: Object) {
+	patch(diff: jsondiffpatch.IDelta) {
 		jsondiffpatch.patch(this.data, diff)
 	}
 }

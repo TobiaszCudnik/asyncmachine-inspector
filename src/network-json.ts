@@ -112,7 +112,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
 }
 
 /**
- * TODO make it a steram
+ * TODO make it a stream
  */
 export abstract class JsonDiffFactory<T extends NetworkJsonFactory, Json> {
     diffpatcher: jsondiffpatch.IDiffPatch;

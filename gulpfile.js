@@ -19,6 +19,7 @@ var path = require('path')
 var del = require('del')
 var plumber = require('gulp-plumber')
 var sorcery = require('sorcery')
+var typescript = require('typescript')
 
 gulp.task('default', ['js:build'])
 
@@ -47,14 +48,15 @@ gulp.task('clean:build:test', "Clean the ./build-test dir", function() {
 var tsFiles = [
     './src/**/**.ts',
     // TODO this should be taken from tsconfig.json
-    './typings/tsd.d.ts'
+    './typings/index.d.ts'
 ];
 
-var compileProject = ts.createProject('./tsconfig.json')
+var compileProject = ts.createProject('./tsconfig.json', { typescript })
 
 // Setup the project for a fastest build
 var buildProject = ts.createProject('./tsconfig.json', {
-    isolatedModules: true
+    isolatedModules: true,
+    typescript
 })
 
 gulp.task('ts:compile', 'Compile the TS sources without writing to disk',
@@ -118,7 +120,7 @@ linkerTasks({
 //----- BUNDLE MAIN
 
 linkerTasks({
-    name: 'main',
+    name: 'complete',
     desc: 'Build the complete dist file',
     entry: './build/main.js',
     // optional
@@ -143,11 +145,12 @@ var filterTestErrors = function(error) {
 var testErrorReporter = Object.create(defaultReporter)
 testErrorReporter.error = filterTestErrors
 
-var compileTestProject = ts.createProject('./test/no-ui/tsconfig.json')
+var compileTestProject = ts.createProject('./test/no-ui/tsconfig.json', { typescript })
 
 // Setup the project for a fastest build
 var buildTestProject = ts.createProject('./test/no-ui/tsconfig.json', {
-    isolatedModules: true
+    isolatedModules: true,
+    typescript
 })
 
 var testFiles = [
@@ -295,34 +298,85 @@ function linkerTasks(options) {
 // --- EXPERIMENTS - rollup linker
 // watch cache is slow
 
-var rollup = require('rollup');
-var commonjs = require('rollup-plugin-commonjs');
-var nodeResolve = require('rollup-plugin-node-resolve');
-var typescript = require('rollup-plugin-typescript');
-// var watch = require('rollup-plugin-watch');
+// var rollup = require('rollup');
+// var commonjs = require('rollup-plugin-commonjs');
+// var nodeResolve = require('rollup-plugin-node-resolve');
+// var typescript = require('rollup-plugin-typescript');
+// // var watch = require('rollup-plugin-watch');
 
-var umd_globals = {
-    'util': 'window',
-    'crypto': 'window',
-    'net': 'window',
-    'fs': 'window',
-    'tty': 'window',
-    'zlib': 'window',
-    'utf-8-validate': 'window',
-    'bufferutil': 'window',
-    'tls': 'window',
-    'stream': 'window',
-    'https': 'window',
-    'http': 'window',
-    'child_process': 'window'
-}
+// var umd_globals = {
+//     'util': 'window',
+//     'crypto': 'window',
+//     'net': 'window',
+//     'fs': 'window',
+//     'tty': 'window',
+//     'zlib': 'window',
+//     'utf-8-validate': 'window',
+//     'bufferutil': 'window',
+//     'tls': 'window',
+//     'stream': 'window',
+//     'https': 'window',
+//     'http': 'window',
+//     'child_process': 'window'
+// }
+
+// // var rollup_bundle
+// // gulp.task('experimental-rollup', 'Make a dist file', function() {
+// //     return rollup.rollup({
+// //         entry: 'src/main.ts',
+// //         plugins: [
+// //             typescript({
+// //                 isolatedModules: false,
+// //                 module: 'es6'
+// //             }),
+// //             nodeResolve({
+// //                 jsnext: true,
+// //                 main: true,
+// //                 preferBuiltins: false
+// //             }),
+// //             commonjs({
+// //                 include: 'node_modules/**',
+// //                 ignoreGlobal: true
+// //             })
+// //         ],
+// //         external: [
+// //             'bufferutil',
+// //             'utf-8-validate'
+// //         ],
+// //         cache: rollup_bundle
+// //     }).then(function (bundle) {
+// //         rollup_bundle = bundle
+// //         console.log('rolled up!')
+// //         // Alternatively, let Rollup do it for you
+// //         // (this returns a promise). This is much
+// //         // easier if you're generating a sourcemap
+// //         return Promise.all([
+// //             bundle.write({
+// //                 format: 'umd',
+// //                 dest: 'dist/rollup.umd.js',
+// //                 moduleName: 'amv',
+// //                 sourceMap: true,
+// //                 globals: umd_globals
+// //             }),
+// //             bundle.write({
+// //                 format: 'cjs',
+// //                 dest: 'dist/rollup.cjs.js',
+// //                 sourceMap: true
+// //             })
+// //         ]);
+// //     });
+// // });
+
+// var rollupJson = require('rollup-plugin-json')
 
 // var rollup_bundle
 // gulp.task('experimental-rollup', 'Make a dist file', function() {
 //     return rollup.rollup({
-//         entry: 'src/main.ts',
+//         entry: 'src/server/server.ts',
 //         plugins: [
+//             rollupJson(),
 //             typescript({
+//                 target: 'es5',
 //                 isolatedModules: false,
 //                 module: 'es6'
 //             }),
@@ -333,12 +387,12 @@ var umd_globals = {
 //             }),
 //             commonjs({
 //                 include: 'node_modules/**',
-//                 ignoreGlobal: true
+//                 ignoreGlobal: false,
+//                 extensions: [ '.js', '.json' ]
 //             })
 //         ],
 //         external: [
-//             'bufferutil',
-//             'utf-8-validate'
+//             'util',
 //         ],
 //         cache: rollup_bundle
 //     }).then(function (bundle) {
@@ -349,66 +403,15 @@ var umd_globals = {
 //         // easier if you're generating a sourcemap
 //         return Promise.all([
 //             bundle.write({
-//                 format: 'umd',
-//                 dest: 'dist/rollup.umd.js',
-//                 moduleName: 'amv',
-//                 sourceMap: true,
-//                 globals: umd_globals
-//             }),
-//             bundle.write({
 //                 format: 'cjs',
-//                 dest: 'dist/rollup.cjs.js',
+//                 dest: 'dist/server.js',
 //                 sourceMap: true
 //             })
 //         ]);
 //     });
 // });
 
-var rollupJson = require('rollup-plugin-json')
 
-var rollup_bundle
-gulp.task('experimental-rollup', 'Make a dist file', function() {
-    return rollup.rollup({
-        entry: 'src/server/server.ts',
-        plugins: [
-            rollupJson(),
-            typescript({
-                target: 'es5',
-                isolatedModules: false,
-                module: 'es6'
-            }),
-            nodeResolve({
-                jsnext: true,
-                main: true,
-                preferBuiltins: false
-            }),
-            commonjs({
-                include: 'node_modules/**',
-                ignoreGlobal: false,
-                extensions: [ '.js', '.json' ]
-            })
-        ],
-        external: [
-            'util',
-        ],
-        cache: rollup_bundle
-    }).then(function (bundle) {
-        rollup_bundle = bundle
-        console.log('rolled up!')
-        // Alternatively, let Rollup do it for you
-        // (this returns a promise). This is much
-        // easier if you're generating a sourcemap
-        return Promise.all([
-            bundle.write({
-                format: 'cjs',
-                dest: 'dist/server.js',
-                sourceMap: true
-            })
-        ]);
-    });
-});
-
-
-gulp.task('experimental-rollup:watch', 'Make a dist file, watch for changes', ['rollup'], function() {
-    gulp.watch(watchGlob.lib, ['rollup'])
-})
+// gulp.task('experimental-rollup:watch', 'Make a dist file, watch for changes', ['rollup'], function() {
+//     gulp.watch(watchGlob.lib, ['rollup'])
+// })

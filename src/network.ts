@@ -1,4 +1,4 @@
-import * as am from 'asyncmachine'
+import AsyncMachine from 'asyncmachine'
 import Graph from 'graphs'
 import * as uuid from 'node-uuid'
 import * as assert from 'assert'
@@ -6,12 +6,12 @@ import * as assert from 'assert'
 // import * as EventEmitter from 'eventemitter3'
 import * as EventEmitter from 'eventemitter3'
 
-type MachinesMap = Map<am.AsyncMachine, string>;
+type MachinesMap = Map<AsyncMachine, string>;
 type NodeGraph = Graph<Node>
 
 export interface ExternalNode {
     node: Node;
-    machine: am.AsyncMachine;
+    machine: AsyncMachine;
 }
 
 export class Node {
@@ -19,7 +19,7 @@ export class Node {
     /**
      * Get the original state definition.
      */
-    get state(): am.IState {
+    get state() {
         return this.machine.get(this.name)
     }
 
@@ -36,7 +36,7 @@ export class Node {
 
     constructor(
         public name: string,
-        public machine: am.AsyncMachine,
+        public machine: AsyncMachine,
         public machine_id: string) {
     }
 
@@ -55,7 +55,7 @@ export default class Network extends EventEmitter {
     id: string;
     graph: NodeGraph;
     machines: MachinesMap;
-    machine_ids: { [index: string]: am.AsyncMachine };
+    machine_ids: { [index: string]: AsyncMachine };
 
     get states() {
         return [...this.graph.set]
@@ -69,7 +69,7 @@ export default class Network extends EventEmitter {
         this.id = uuid.v4()
     }
 
-    addMachine(machine: am.AsyncMachine) {
+    addMachine(machine: AsyncMachine) {
         // TODO check for duplicates first
         // TODO deterministic IDs!!!
         var id = machine.id() || uuid.v4()
@@ -86,7 +86,7 @@ export default class Network extends EventEmitter {
         this.emit('change')
     }
 
-    private bindToMachine(machine: am.AsyncMachine) {
+    private bindToMachine(machine: AsyncMachine) {
         // bind to the state change
         // TODO bind to:
         // - piping (new and removed ones)
@@ -150,7 +150,7 @@ export default class Network extends EventEmitter {
         return ret
     }
 
-    protected linkPipedStates(machine: am.AsyncMachine) {
+    protected linkPipedStates(machine: AsyncMachine) {
         for (let state in machine.piped) {
             for (let target of machine.piped[state]) {
 

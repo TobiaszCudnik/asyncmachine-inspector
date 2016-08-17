@@ -1,0 +1,18 @@
+{
+  "globalDependencies": {
+    "eventemitter3": "registry:dt/eventemitter3#1.1.1+20151208234524",
+    "jquery": "registry:dt/jquery#1.10.0+20160704162008",
+    "mocha": "registry:dt/mocha#2.2.5+20160720003353",
+    "node": "registry:env/node#6.0.0+20160813135048",
+    "socket.io": "registry:dt/socket.io#1.4.4+20160317120654",
+    "socket.io-client": "registry:dt/socket.io-client#1.4.4+20160317120654",
+    "underscore": "registry:dt/underscore#1.7.0+20160805164035"
+  },
+  "dependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160723033700",
+    "d3": "registry:npm/d3#3.0.0+20160723033700",
+    "jointjs": "registry:npm/jointjs#0.9.10+20160728120838",
+    "node-uuid": "registry:npm/node-uuid#1.4.7+20160723033700",
+    "sinon": "registry:npm/sinon#1.16.0+20160723033700"
+  }
+}

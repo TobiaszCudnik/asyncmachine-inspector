@@ -99,7 +99,8 @@ export type State = {
     id: MachineId,
     parent: string,
     name: string,
-    attrs?: { text: { text: string }}
+    attrs?: { text: { text: string }},
+    is_set: boolean
 }
 
 export type Link = {
