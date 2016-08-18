@@ -9,7 +9,7 @@
 
 import * as io from 'socket.io'
 import * as _ from 'underscore'
-import * as assert from 'assert'
+import * as assert from 'assert/'
 // import AsyncMachine from 'asyncmachine'
 
 

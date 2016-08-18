@@ -1,3 +1,5 @@
+/// <reference path="../../typings/globals/socket.io-client/index.d.ts" />
+
 import Ui from './joint'
 import * as io from 'socket.io-client'
 

@@ -1,7 +1,7 @@
 import AsyncMachine from 'asyncmachine'
 import Graph from 'graphs'
 import * as uuid from 'node-uuid'
-import * as assert from 'assert'
+import * as assert from 'assert/'
 // TODO fix the declaration
 // import * as EventEmitter from 'eventemitter3'
 import * as EventEmitter from 'eventemitter3'
@@ -43,7 +43,7 @@ export class Node {
     relations(node: Node | string): string[] {
         var name = node instanceof Node
             ? node.name : node.toString()
-        return this.machine.getRelations(this.name, name)
+        return this.machine.getRelationsBetween(this.name, name)
     }
 }
 
@@ -126,13 +126,8 @@ export default class Network extends EventEmitter {
         let machine = this.machine_ids[machine_id]
         let state = node.state
         assert(state)
-        for (let relation in state) {
-            if (relation == 'auto')
-                continue
-
-            let targets = state[relation]
-
-            for (let target_name of targets) {
+        for (let relation of machine.getRelationsOf(node.name)) {
+            for (let target_name of state[relation]) {
                 let target = this.getNodeByName(target_name, machine_id)
                 assert(target)
                 this.graph.link(node, target)

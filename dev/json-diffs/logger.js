@@ -1,3 +1,4 @@
+require('source-map-support').install()
 var am = require('asyncmachine')
 var Logger = require('../../build/logger').default
 var Network = require('../../build/network').default
@@ -7,28 +8,28 @@ global.am = am
 
 global.machine1 = am.factory(['A', 'B', 'C', 'D'])
 machine1.id('1').logLevel(2)
-machine1.C = {drops: ['B']}
-machine1.A = {requires: ['B']}
-machine1.D = {requires: ['C']}
+machine1.C = {drop: ['B']}
+machine1.A = {require: ['B']}
+machine1.D = {require: ['C']}
 
 global.machine2 = am.factory(['E', 'F', 'G'])
 machine2.id('2')
-machine2.E = {drops: ['F']}
+machine2.E = {drop: ['F']}
 
 global.machine3 = am.factory(['E', 'F'])
 machine3.id('3')
-machine3.E = {drops: ['F']}
+machine3.E = {drop: ['F']}
 
 global.machine4 = am.factory(['E', 'F'])
 machine4.id('4')
-machine4.E = {drops: ['F']}
+machine4.E = {drop: ['F']}
 
 global.machine5 = am.factory(['E', 'F'])
 machine5.id('5')
-machine5.E = {drops: ['F']}
+machine5.E = {drop: ['F']}
 
 // TODO check this piping
-machine1.pipe('A', machine2, 'E')
+machine1.pipe('A', machine2, 'E', am.PipeFlags.INVERT)
 machine2.pipe('E', machine1, 'B')
 machine2.pipe('F', machine1, 'B')
 machine2.pipe('E', machine3, 'F')

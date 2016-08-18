@@ -6,7 +6,8 @@ import {
 import UiBase from './ui'
 import * as joint from 'jointjs'
 import * as $ from 'jquery'
-import * as assert from 'assert'
+import * as assert from 'assert/'
+import { IDelta } from 'jsondiffpatch'
 
 /**
  * TODO consume a stream of events
@@ -14,7 +15,7 @@ import * as assert from 'assert'
  */
 export default class Ui extends UiBase<INetworkJson> {
 
-	container: $;
+	container: JQuery;
 	width = 800;
 	height = 600;
 
@@ -58,7 +59,8 @@ export default class Ui extends UiBase<INetworkJson> {
 			rankDir: 'TB',
 			marginX: 50,
 			marginY: 50,
-			clusterPadding: { top: 30, left: 10, right: 10, bottom: 10 }
+			clusterPadding: {
+				top: 30, left: 10, right: 10, bottom: 10 }
 		})
 		this.setActiveClass()
 	}
@@ -66,11 +68,12 @@ export default class Ui extends UiBase<INetworkJson> {
 	setActiveClass() {
 		// set the active class 
 		for (let cell of this.data.cells) {
-			joint.V(this.paper.findViewByModel(cell).el).toggleClass('is-set', cell.is_set);
+			joint.V(this.paper.findViewByModel(cell).el)
+				.toggleClass('is-set', cell.is_set);
 		}
 	}
 	
-	patch(diff: Object) {
+	patch(diff: IDelta) {
 		super.patch(diff)
 		this.graph.fromJSON(this.data)
 		this.layout()

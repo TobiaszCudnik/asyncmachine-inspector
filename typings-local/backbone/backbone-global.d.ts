@@ -3,7 +3,7 @@
 // Definitions by: Boris Yankov <https://github.com/borisyankov/>, Natan Vivo <https://github.com/nvivo/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/// <reference path="../jquery/jquery.d.ts" />
+/// <reference path="../../typings/globals/jquery/index.d.ts" />
 
 declare namespace Backbone {
 

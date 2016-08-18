@@ -3,5 +3,5 @@
 // Definitions by: Boris Yankov <https://github.com/borisyankov/>, Natan Vivo <https://github.com/nvivo/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/// <reference path="../underscore/underscore.d.ts" />
+/// <reference path="../../typings/globals/underscore/index.d.ts" />
 /// <reference path="./backbone-global.d.ts" />

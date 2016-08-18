@@ -2,7 +2,7 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import Network, {
     Node as GraphNode
 } from "../network";
-import * as assert from 'assert'
+import * as assert from 'assert/'
 import {
     NetworkJsonFactory as NetworkJsonFactoryBase,
     JsonDiffFactory as JsonDiffFactoryBase,

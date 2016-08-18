@@ -1,14 +1,22 @@
 import * as jsondiffpatch from 'jsondiffpatch'
-import * as assert from 'assert'
+import * as assert from 'assert/'
 import Network, {
     Node as GraphNode
 } from './network'
-import AsyncMachine from 'asyncmachine'
+import AsyncMachine, {
+    PipeFlags
+} from 'asyncmachine'
+
+
+export interface INetworkJsonFactory<Json> {
+    generateJson(): Json;
+}
 
 /**
  * Produce JSON from a Network instance, ready to be consumed by the UI layer.
  */
-export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
+export abstract class NetworkJsonFactory<Json, Machine, State, Link> 
+        implements INetworkJsonFactory<Json> {
     // list of created machine nodes
     machine_ids: Set<string>;
     // map of machine IDs to machine nodes
@@ -22,15 +30,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
     externals: Map<GraphNode, Set<GraphNode>>;
 
     json: Json;
-
-    // TODO use enum for the source relations
-    relations_map = {
-        requires: NODE_LINK_TYPE.REQUIRES,
-        drops: NODE_LINK_TYPE.BLOCKS,
-        implies: NODE_LINK_TYPE.IMPLIES,
-        order: NODE_LINK_TYPE.ORDER,
-        piped: NODE_LINK_TYPE.PIPED_IN
-    }
     
     constructor(
             public network: Network) {
@@ -82,17 +81,52 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
         this.nodes.set(graph_node, node)
     }
 
+    /**
+     * create a link for every relation
+     */
     parseLink(from: GraphNode, to: GraphNode) {
-        // create a link for every relation
-        var relations = from.relations(to)
-        for (let relation of relations) {
-            let relation_type = this.relations_map[relation]
-            assert(relation_type !== undefined)
-            this.addLinkNode(this.createLinkNode(from, to, relation_type))
+        // state relations
+        if (from.machine_id == to.machine_id) {
+            let relations = from.relations(to)
+            for (let relation of relations) {
+                let relation_type = RELATION_TO_LINK_TYPE[relation]
+                assert(relation_type !== undefined)
+                
+                this.addLinkNode(this.createLinkNode(from, to, relation_type))
+            }
+        // piped states
+        } else {
+            for (let pipe of from.machine.piped[from.name]) {
+                if (pipe.machine != to.machine || pipe.state != to.name)
+                    continue
+
+                let type
+                if (!pipe.flags)
+                    type = NODE_LINK_TYPE.PIPE
+                else if (pipe.flags & PipeFlags.INVERT && pipe.flags & PipeFlags.NEGOTIATION)
+                    type = NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
+                else if (pipe.flags & PipeFlags.NEGOTIATION)
+                    type = NODE_LINK_TYPE.PIPE_NEGOTIATION
+                else if (pipe.flags & PipeFlags.INVERT)
+                    type = NODE_LINK_TYPE.PIPE_INVERTED
+
+                this.addLinkNode(this.createLinkNode(from, to, type))
+                break
+            }
         }
-        // TODO support piping properly, distinguish types
-        if (!relations.length) {
-            this.addLinkNode(this.createLinkNode(from, to, NODE_LINK_TYPE.PIPED_IN))
+    }
+
+    getLabelFromLinkType(type: NODE_LINK_TYPE): string {
+        let t = NODE_LINK_TYPE
+        switch(type) {
+            case t.REQUIRE: return 'require'
+            case t.DROP: return 'drop'
+            case t.AFTER: return 'after'
+            case t.ADD: return 'add'
+            case t.PIPE: return ''
+            case t.PIPE_INVERTED: return 'inverted'
+            case t.PIPE_NEGOTIATION: return 'negotiation'
+            case t.PIPE_INVERTED_NEGOTIATION: return 'inverted negotiation'
         }
     }
 
@@ -114,7 +148,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link> {
 /**
  * TODO make it a stream
  */
-export abstract class JsonDiffFactory<T extends NetworkJsonFactory, Json> {
+export abstract class JsonDiffFactory<T extends INetworkJsonFactory<Json>, Json> {
     diffpatcher: jsondiffpatch.IDiffPatch;
     previous_json: Json;
     
@@ -126,7 +160,7 @@ export abstract class JsonDiffFactory<T extends NetworkJsonFactory, Json> {
         })
     }
 
-    objectHash() {
+    objectHash(): (node: any) => any {
         return function(node) {
             return node.id
         }
@@ -150,14 +184,21 @@ export abstract class JsonDiffFactory<T extends NetworkJsonFactory, Json> {
 }
 
 export enum NODE_LINK_TYPE {
-    REQUIRES,
-    BLOCKS,
-    ORDER,
-    IMPLIES,
-    PIPED_IN,
-    PIPED_OUT,
-    PIPED_INVERTED_IN,
-    PIPED_INVERTED_OUT
+    REQUIRE,
+    DROP,
+    AFTER,
+    ADD,
+    PIPE,
+    PIPE_INVERTED,
+    PIPE_NEGOTIATION,
+    PIPE_INVERTED_NEGOTIATION
+}
+
+export enum RELATION_TO_LINK_TYPE {
+    require = NODE_LINK_TYPE.REQUIRE,
+    drop = NODE_LINK_TYPE.DROP,
+    add = NODE_LINK_TYPE.ADD,
+    after = NODE_LINK_TYPE.AFTER
 }
 
 export enum OBJECT_TYPE {

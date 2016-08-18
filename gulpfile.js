@@ -93,7 +93,8 @@ linkerTasks({
     entry: './build/ui/web.js',
     // optional
     standalone: 'amv_ui',
-    target: 'ui.js'
+    target: 'ui.js',
+    browser: true
 })
 
 //----- BUNDLE LOGGER
@@ -113,8 +114,7 @@ linkerTasks({
     name: 'server',
     desc: '(BROKEN) Build the node server dist file',
     entry: './build/server/server.js',
-    target: 'server.js',
-    browser: false
+    target: 'server.js'
 })
 
 //----- BUNDLE MAIN
