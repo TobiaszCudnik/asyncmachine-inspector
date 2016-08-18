@@ -10,7 +10,7 @@ export default function() {
 
   document.addEventListener('DOMContentLoaded', () => {
       // render the main layout
-      layout = renderLayout(document.getElementById('app'))
+      layout = renderLayout(document.getElementById('app'), false)
 
       socket.once('loggers', function(ids) {
           socket.emit('join', {
@@ -22,6 +22,7 @@ export default function() {
           console.log('full-sync', data)
           graph = new Graph(data)
           graph.render(document.getElementById('graph'))
+          layout = renderLayout(document.getElementById('app'), true)
       })
       
       socket.on('diff-sync', function(diff) {
