@@ -4,10 +4,12 @@
         "sourceMap": true,
         "target": "es6",
         "module": "commonjs",
-        "lib": ["es7", "dom"]
+        "lib": ["es7", "dom"],
+        "jsx": "react"
     }, 
     "files": [
         "typings/index.d.ts",
-        "src/main.ts"
+        "src/main.ts",
+        "src/ui/web.tsx"
     ]
 }

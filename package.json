@@ -19,10 +19,11 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "node-uuid": "latest",
     "asyncmachine": "^2",
     "d3": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "material-ui": "^0.15.4",
+    "node-uuid": "latest"
   },
   "devDependencies": {
     "babel-polyfill": "^6.0.16",
@@ -33,6 +34,7 @@
     "chai-xml": "^0.3.0",
     "del": "^2.0.2",
     "eventemitter3": "^1.1.1",
+    "graphs": "TobiaszCudnik/graphs",
     "gulp": "^3.9.0",
     "gulp-babel": "6.0.0",
     "gulp-help": "^1.6.1",
@@ -46,6 +48,8 @@
     "jsondiffpatch": "latest",
     "mocha": "^2.2.5",
     "node-uuid": "^1.4.7",
+    "react": "^15.3.0",
+    "react-dom": "^15.3.0",
     "sinon": "^1.17.2",
     "socket.io": "^1.4.8",
     "socket.io-client": "^1.4.8",
@@ -56,7 +60,6 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.3.0",
-    "webcola": "^3.1.3",
-    "graphs": "TobiaszCudnik/graphs"
+    "webcola": "^3.1.3"
   }
 }

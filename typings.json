@@ -12,7 +12,10 @@
     "chai": "registry:npm/chai#3.5.0+20160723033700",
     "d3": "registry:npm/d3#3.0.0+20160723033700",
     "jointjs": "registry:npm/jointjs#0.9.10+20160728120838",
+    "material-ui": "registry:npm/material-ui#0.15.1+20160817172421",
     "node-uuid": "registry:npm/node-uuid#1.4.7+20160723033700",
+    "react": "registry:npm/react#15.0.1+20160601175240",
+    "react-dom": "registry:npm/react-dom#15.0.1+20160705210405",
     "sinon": "registry:npm/sinon#1.16.0+20160723033700"
   }
 }

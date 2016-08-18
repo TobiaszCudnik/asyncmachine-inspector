@@ -3,7 +3,7 @@ import {
 	INetworkJson,
 	State
 } from './joint-network'
-import UiBase from './ui'
+import UiBase from './graph'
 import * as joint from 'jointjs'
 import * as $ from 'jquery'
 import * as assert from 'assert/'

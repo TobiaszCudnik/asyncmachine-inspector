@@ -6,7 +6,7 @@ import {
 	State
 } from './cola-network'
 import * as jsondiffpatch from 'jsondiffpatch'
-import UiBase from './ui'
+import UiBase from './graph'
 
 // TODO this is bad
 window['d3'] = d3

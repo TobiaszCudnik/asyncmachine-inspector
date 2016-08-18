@@ -51,12 +51,14 @@ var tsFiles = [
     './typings/index.d.ts'
 ];
 
-var compileProject = ts.createProject('./tsconfig.json', { typescript })
+var compileProject = ts.createProject('./tsconfig.json', 
+    { typescript } )
 
 // Setup the project for a fastest build
 var buildProject = ts.createProject('./tsconfig.json', {
     isolatedModules: true,
-    typescript
+    typescript,
+    jsx: 'preserve'
 })
 
 gulp.task('ts:compile', 'Compile the TS sources without writing to disk',
@@ -77,8 +79,8 @@ gulp.task('ts:build', 'Build the TS sources', function() {
         .pipe(sourcemaps.init())
         // TODO this shouldn't emit non-changed files
         .pipe(ts(buildProject))
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('./build'))
+        // .pipe(sourcemaps.write('.'))
+        // .pipe(gulp.dest('./build'))
 })
 
 gulp.task('ts:build:watch', 'Build the TS sources and watch for changes', ['ts:build'], function() {
@@ -238,13 +240,19 @@ gulp.task('docs', 'Generate API docs from the TypeScript source', shell.task([
 // --- BROWSERIFY LINKER
 
 function linkerTasks(options) {
-    gulp.task(options.name + ':link', 'Build the dist file', ['ts:build'], bundle)
+    // gulp.task(options.name + ':link', 'Build the dist file', ['ts:build'], bundle)
 
-    gulp.task(options.name + ':link:watch', 'Build the dist file and watch for changes',
-            ['ts:build:watch'], function() {
-                source_bundler.plugin(watchify)
-                return bundle()
-            })
+    // gulp.task(options.name + ':link:watch', 'Build the dist file and watch for changes',
+    //         ['ts:build:watch'], function() {
+    //             source_bundler.plugin(watchify)
+    //             return bundle()
+    //         })
+    gulp.task(options.name + ':link', 'Build the dist file', bundle)
+
+    gulp.task(options.name + ':link:watch', 'Build the dist file and watch for changes', function() {
+        source_bundler.plugin(watchify)
+        return bundle()
+    })
 
     var bundler_options = {
         cache: {},
@@ -278,6 +286,7 @@ function linkerTasks(options) {
      * TODO vars for path and names
      */
     function bundle() {
+        let dir = 'dist/'
         return source_bundler.bundle()
                 .on('error', function(err) {
                     gutil.log(err.message)
@@ -286,10 +295,10 @@ function linkerTasks(options) {
                 .pipe(buffer())
                 .pipe(sourcemaps.init({loadMaps: true}))
                 .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: '../'}))
-                .pipe(gulp.dest('./dist'))
-                .on('end', function(foo) {
-                    return sorcery.load( options.target ).then(function(chain) {
-                        return chain.write( options.target )
+                .pipe(gulp.dest(dir))
+                .on('end', function() {
+                    return sorcery.load( dir + options.target ).then(function(chain) {
+                        return chain.write( dir + options.target )
                     })
                 })
     }

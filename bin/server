@@ -1,0 +1,8 @@
+#!/usr/bin/node
+
+require('source-map-support').install()
+
+var port = process.argv[2] || 3030
+
+require('../build/server').default()
+    .listen(port)

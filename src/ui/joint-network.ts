@@ -50,8 +50,11 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
             attrs: { text: { text: node.name } },
             z: 3,
             size: this.getNodeSize(node),
+            is_set: node.is_set,
+            // TODO remove, use the class
             fill: node.is_set ? 'yellow' : null
         }
+        // 
         if (node.is_set)
             ret.attrs['circle'] = { fill: 'yellow' }
         return ret
