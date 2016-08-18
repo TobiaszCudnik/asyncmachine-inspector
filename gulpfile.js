@@ -297,9 +297,8 @@ function linkerTasks(options) {
                 .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: '../'}))
                 .pipe(gulp.dest(dir))
                 .on('end', function() {
-                    return sorcery.load( dir + options.target ).then(function(chain) {
-                        return chain.write( dir + options.target )
-                    })
+                    chain = sorcery.loadSync( dir + options.target )
+                    chain.write( dir + options.target )
                 })
     }
 }

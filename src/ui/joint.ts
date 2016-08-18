@@ -8,6 +8,7 @@ import * as joint from 'jointjs'
 import * as $ from 'jquery'
 import * as assert from 'assert/'
 import { IDelta } from 'jsondiffpatch'
+import * as debounce from 'throttle-debounce/debounce'
 
 /**
  * TODO consume a stream of events
@@ -16,8 +17,6 @@ import { IDelta } from 'jsondiffpatch'
 export default class Ui extends UiBase<INetworkJson> {
 
 	container: JQuery;
-	width = 800;
-	height = 600;
 
 	paper: joint.dia.Paper
 	graph: joint.dia.Graph
@@ -25,8 +24,8 @@ export default class Ui extends UiBase<INetworkJson> {
 	constructor(
 			public data: INetworkJson) {
 			
-			super(data)
-			this.graph = new joint.dia.Graph();
+		super(data)
+		this.graph = new joint.dia.Graph();
 	}
 
 	render(el) {
@@ -36,8 +35,6 @@ export default class Ui extends UiBase<INetworkJson> {
 		if (!this.paper) {
 			this.paper = new joint.dia.Paper({
 				el: this.container,
-				width: 800,
-				height: 600,
 				gridSize: 1,
 				model: this.graph
 			});
@@ -45,6 +42,20 @@ export default class Ui extends UiBase<INetworkJson> {
 
 		this.graph.fromJSON(this.data)
 		this.layout()
+
+		// TODO debounce
+		window.addEventListener('resize', debounce(500, false, 
+			() => this.autosize() ))
+	}
+
+	autosize() {
+		let width = this.container.width() - 2
+		let height = this.container.height() - 2
+		this.paper.setDimensions(width, height)
+		this.paper.scaleContentToFit({
+			minScale: 0.5,
+			padding: 10
+		})
 	}
 
 	layout() {
@@ -63,6 +74,7 @@ export default class Ui extends UiBase<INetworkJson> {
 				top: 30, left: 10, right: 10, bottom: 10 }
 		})
 		this.setActiveClass()
+		this.autosize()
 	}
 
 	setActiveClass() {

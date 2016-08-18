@@ -11,14 +11,6 @@
             padding: 0;
             margin: 0;
         }
-        svg {
-            width: 100%;
-            height: 100%;
-        }
-        #graph {
-            width: 100%;
-            height: 100%;
-        }
         .node {
             fill: lightsteelblue;
             stroke: #555;
@@ -68,6 +60,64 @@
         }
         .node {
             opacity: 0.8;
+        }
+
+        .flex {
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+        }
+
+        .react-layout-components--box {
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+        }
+
+        /* LAYOUT */
+
+        main {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        section {
+            background: white;
+        }
+
+        section#graph {
+            position: absolute;
+            bottom: 10%;
+            top: 0;
+            left: 0;
+            right: 30%;
+            overflow: auto;
+        }
+
+        section#side-bar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 70%;
+            border-width: 0 0 0 1px;
+            border-color: gray;
+            border-style: solid;
+        }
+
+        section#bottom-bar {
+            position: absolute;
+            top: 90%;
+            right: 30%;
+            bottom: 0;
+            left: 0;
         }
     </style>
     <script src="../../dist/ui.js"></script>

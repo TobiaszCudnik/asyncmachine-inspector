@@ -10,7 +10,7 @@ import { Component } from 'react'
 import {deepOrange500} from 'material-ui/styles/colors'; 
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import Ui from './joint'
+import Box, { ScrollView, Page } from 'react-layout-components'
 
 
 const styles = {
@@ -53,11 +53,18 @@ export class Main extends Component<{}, {}> {
   render() {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
-        <div style={styles.container}>
-          <h1>Material-UI</h1>
-          <h2>example project</h2>
-          <div id="graph"></div>
-        </div>
+        <main>
+          <section id="graph" />
+          <section id="side-bar">
+            test test test<br />
+            test test test
+            .......................................
+          </section>
+          <section id="bottom-bar">
+            <h1>Material-UI</h1>
+            <h2>example project</h2>
+          </section>
+        </main>
       </MuiThemeProvider>
     );
   }
