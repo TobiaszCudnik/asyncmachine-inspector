@@ -54,6 +54,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		this.paper.setDimensions(width, height)
 		this.paper.scaleContentToFit({
 			minScale: 0.5,
+			maxScale: 1.5,
 			padding: 10
 		})
 	}

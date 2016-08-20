@@ -51,11 +51,9 @@ export class NetworkJsonFactory
             attrs: { text: { text: node.name } },
             z: 3,
             size: this.getNodeSize(node),
-            is_set: node.is_set,
-            // TODO remove, use the class
-            fill: node.is_set ? 'yellow' : null
+            is_set: node.is_set
         }
-        // 
+            // TODO remove, use the class
         if (node.is_set)
             ret.attrs['circle'] = { fill: 'yellow' }
         return ret
@@ -72,6 +70,7 @@ export class NetworkJsonFactory
             },
             id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}`,
             labels: [{
+                id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}-label`,
                 position: 0.5,
                 attrs: { text: {
                     text: this.getLabelFromLinkType(relation)
@@ -98,16 +97,6 @@ export class NetworkJsonFactory
 export default NetworkJsonFactory
 export class JsonDiffFactory 
         extends JsonDiffFactoryBase<NetworkJsonFactory, INetworkJson> {
-    objectHash() {
-        // TODO JSON diffs for labels 
-        return function(node) {
-            if (Array.isArray(node)) {
-                return JSON.stringify(node)
-            } else {
-                return node.id
-            }
-        }
-    }
 }
 
 // TYPES
@@ -150,6 +139,7 @@ export type Link = {
         id: string
     },
     labels?: Array<{
+        id: string,
         position?: number,
         attrs: {
             text: {
