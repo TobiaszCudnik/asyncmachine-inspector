@@ -4,5 +4,5 @@ require('source-map-support').install()
 
 var port = process.argv[2] || 3030
 
-require('../build/server').default()
+require('../build/server/server').default()
     .listen(port)

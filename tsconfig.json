@@ -9,7 +9,8 @@
     }, 
     "files": [
         "typings/index.d.ts",
-        "src/main.ts",
+        "src/server/server.ts",
+        "src/logger.ts",
         "src/ui/web.tsx"
     ]
 }

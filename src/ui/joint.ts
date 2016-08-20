@@ -40,14 +40,14 @@ export default class Ui extends UiBase<INetworkJson> {
 			});
 		}
 
-		this.graph.fromJSON(this.data)
-		this.layout()
+		this.setData(this.data)
 
 		// TODO debounce
 		window.addEventListener('resize', debounce(500, false, 
 			() => this.autosize() ))
 	}
 
+	// TODO buggy, the svg element doesnt get expanded after a min scale has been achieved
 	autosize() {
 		let width = this.container.width() - 2
 		let height = this.container.height() - 2
@@ -85,10 +85,9 @@ export default class Ui extends UiBase<INetworkJson> {
 		}
 	}
 	
-	patch(diff: IDelta) {
-		super.patch(diff)
+	setData(data) {
+		this.data = data
 		this.graph.fromJSON(this.data)
 		this.layout()
-		// this.render(this.container)
 	}
 }

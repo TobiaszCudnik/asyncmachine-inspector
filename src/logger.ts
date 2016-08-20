@@ -42,7 +42,15 @@ export default class Logger {
 
     onGraphChange() {
         let diff = this.diff.generateDiff()
-        if (diff)
-            this.io.emit('diff-sync', diff)
+        this.io.emit('diff-sync', {
+            diff,
+            logs: this.network.logs
+        })
+        this.network.logs = []
+    }
+
+    onLogMsg(msg: {id: string, text: string}) {
+        this.io.emit('log', msg)
     }
 }
+

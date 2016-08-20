@@ -1,5 +1,4 @@
 import NetworkJson from '../network'
-import * as jsondiffpatch from 'jsondiffpatch'
 
 abstract class Ui<T> {
 
@@ -8,10 +7,8 @@ abstract class Ui<T> {
 	}
 	
 	abstract render(el: Element | string);
-	
-	patch(diff: jsondiffpatch.IDelta) {
-		jsondiffpatch.patch(this.data, diff)
-	}
+
+	abstract setData(data);
 }
 
 export default Ui

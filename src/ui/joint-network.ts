@@ -13,7 +13,8 @@ import AsyncMachine from 'asyncmachine'
 import * as _ from "underscore"
 
 
-export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
+export class NetworkJsonFactory 
+        extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
     initJson() {
         return {
             cells: []

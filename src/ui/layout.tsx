@@ -27,37 +27,26 @@ const muiTheme = getMuiTheme({
   },
 });
 
-export class Main extends Component<{connected: boolean}, {}> {
+type MainProps = {
+    diffs: any[];
+    msg: string;
+    step: number;
+    onSlider: Function;
+}
+
+export class Main extends Component<MainProps, {msgHidden: boolean}> {
   constructor(props, context) {
     super(props, context);
 
-    this.handleCloseNotifications = this.handleCloseNotifications.bind(this)
-
     this.state = {
-      msgsCount: 1,
-      step: 1,
-      hideConnected: false
+      msgHidden: false
     };
   }
 
-//   handleRequestClose() {
-//     this.setState({
-//       open: false,
-//     });
-//   }
-
-//   handleTouchTap() {
-//     this.setState({
-//       open: true,
-//     });
-//   }
-
-  handleSlider(event, value) {
-    this.setState({step: value});
-  }
-
   handleCloseNotifications() {
-    this.setState({hideConnected: true})
+    this.setState({
+      msgHidden: true
+    })
   }
 
   render() {
@@ -65,34 +54,35 @@ export class Main extends Component<{connected: boolean}, {}> {
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
           <section id="graph" />
-          <section id="side-bar">
-TODOoo...<br />
-[add] B<br />
-[add:implied] Foo<br />
-[transition] Foo_enter<br />
-[cancelled] B, Foo by the method Foo_enter<br />
-[add] A<br />
-[add:implied] Foo<br />
-[transition] Foo_enter<br />
-[states] +A +Foo<br />
-[ 'A', 'Foo' ]<br />
-          </section>
+          <section id="side-bar">{(()=>{
+            var container = []
+            for(let i = 0; i < this.props.step; i++) {
+                let diff = this.props.diffs[i]
+                for (let ii = 0; ii < diff.logs.length; ii++) {
+                  let entry = diff.logs[ii]
+                  let key = `log-${i}-${ii}`
+                  container.push(<span className="{entry.id}" key={key}>[{entry.id}] {entry.msg}<br /></span>)
+                }
+            }
+            return container
+          })()}</section>
           <section id="bottom-bar">
             <Slider
               min={0}
-              max={this.state.msgsCount}
+              max={this.props.diffs.length || 1}
+              disabled={!this.props.diffs.length}
               step={1}
-              value={this.state.step}
-              onChange={this.handleSlider.bind(this)}
+              value={this.props.step}
+              onChange={this.props.onSlider}
             />
           </section>
 
 
           <Snackbar
-            open={this.props.connected && !this.state.hideConnected}
-            message="Connected!"
+            open={(!!this.props.msg && !this.state.msgHidden)}
+            message={this.props.msg || ''}
             autoHideDuration={2000}
-            onRequestClose={this.handleCloseNotifications}
+            onRequestClose={this.handleCloseNotifications.bind(this)}
           />
         </main>
       </MuiThemeProvider>
@@ -100,8 +90,8 @@ TODOoo...<br />
   }
 }
 
-export default function(container, connected) {
-  var layout = <Main connected={connected} />
+export default function(container, props) {
+  var layout = <Main {...props} />
   render(layout, container)
 
   return layout

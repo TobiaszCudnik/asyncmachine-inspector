@@ -5,9 +5,18 @@ import * as assert from 'assert/'
 // TODO fix the declaration
 // import * as EventEmitter from 'eventemitter3'
 import * as EventEmitter from 'eventemitter3'
+import { IDelta as IJsonDiff } from 'jsondiffpatch'
 
 type MachinesMap = Map<AsyncMachine, string>;
 type NodeGraph = Graph<Node>
+export type Diff = {
+    diff: IJsonDiff,
+    logs: LogEntry[]
+}
+export type LogEntry = {
+    id: string,
+    msg: string
+}
 
 export interface ExternalNode {
     node: Node;
@@ -56,6 +65,7 @@ export default class Network extends EventEmitter {
     graph: NodeGraph;
     machines: MachinesMap;
     machine_ids: { [index: string]: AsyncMachine };
+    logs: LogEntry[] = []
 
     get states() {
         return [...this.graph.set]
@@ -89,7 +99,7 @@ export default class Network extends EventEmitter {
     private bindToMachine(machine: AsyncMachine) {
         // bind to the state change
         // TODO bind to:
-        // - piping (new and removed ones)
+        // - piping (removed ones)
         // - transition start
         // - transition end / cancel
         // TODO unbind on dispose
@@ -97,7 +107,16 @@ export default class Network extends EventEmitter {
         machine.on('change', () => this.emit('change'))
         machine.on('pipe', () => {
             this.linkPipedStates(machine)
-            this.emit('change') 
+            this.emit('change')
+        })
+        machine.logHandler( (msg, level) => {
+            machine.logHandlerDefault(msg.toString(), level)
+            if (level > 2)
+                return
+            this.logs.push({
+                id: machine.id(),
+                msg: msg
+            })
         })
     }
 
