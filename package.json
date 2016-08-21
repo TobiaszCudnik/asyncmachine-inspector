@@ -23,7 +23,8 @@
     "d3": "latest",
     "lodash": "latest",
     "material-ui": "^0.15.4",
-    "node-uuid": "latest"
+    "node-uuid": "latest",
+    "stylesheet.js": "^1.1.1"
   },
   "devDependencies": {
     "babel-polyfill": "^6.0.16",
@@ -32,6 +33,7 @@
     "browserify": "^13.1.0",
     "chai": "^3.0.0",
     "chai-xml": "^0.3.0",
+    "deepcopy": "^0.6.3",
     "del": "^2.0.2",
     "eventemitter3": "^1.1.1",
     "graphs": "TobiaszCudnik/graphs",
@@ -48,6 +50,7 @@
     "jsondiffpatch": "latest",
     "mocha": "^2.2.5",
     "node-uuid": "^1.4.7",
+    "random-number": "0.0.7",
     "react": "^15.3.0",
     "react-dom": "^15.3.0",
     "sinon": "^1.17.2",

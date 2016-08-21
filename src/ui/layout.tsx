@@ -61,7 +61,8 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
                 for (let ii = 0; ii < diff.logs.length; ii++) {
                   let entry = diff.logs[ii]
                   let key = `log-${i}-${ii}`
-                  container.push(<span className="{entry.id}" key={key}>[{entry.id}] {entry.msg}<br /></span>)
+                  let className = `group-${entry.id}`
+                  container.push(<span className={className} key={key}>{entry.msg}<br /></span>)
                 }
             }
             return container

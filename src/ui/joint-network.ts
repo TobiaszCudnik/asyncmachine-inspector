@@ -44,7 +44,7 @@ export class NetworkJsonFactory
         }
     }
     createStateNode(node: GraphNode): State {
-        let ret = {
+        return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
             parent: node.machine_id,
@@ -53,10 +53,6 @@ export class NetworkJsonFactory
             size: this.getNodeSize(node),
             is_set: node.is_set
         }
-            // TODO remove, use the class
-        if (node.is_set)
-            ret.attrs['circle'] = { fill: 'yellow' }
-        return ret
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
         return {
@@ -125,6 +121,7 @@ export type State = {
             'stroke-width'?: number;
         }
     },
+    is_set?: boolean,
     z?: number,
     size?: {width: number, height: number}
 }
