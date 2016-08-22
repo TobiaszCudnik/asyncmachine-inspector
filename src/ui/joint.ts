@@ -172,6 +172,7 @@ export default class Ui extends UiBase<INetworkJson> {
 			canPatch = Object.keys(diff.cells).every( key => {
 				if (key == '_t')
 					return true
+					
 				return data.cells[key].type == "fsa.State"
 			})
 		}
@@ -182,8 +183,21 @@ export default class Ui extends UiBase<INetworkJson> {
 		} else {
 			this.data = deepcopy(data)
 			this.graph.fromJSON(this.data)
+			this.setLinkClasses()
 			this.layout()
 		}
+	}
+
+	setLinkClasses() {
+		this.data.cells.forEach( link => {
+			// TODO define class on the server
+			if (link.type != "fsa.Arrow")
+				return
+			let className = link.labels["0"].attrs.text.text || 'pipe'
+			let node = joint.V(this.paper.findViewByModel(link).el).node
+			for (let name of className.split(' '))
+				node.classList.add(name);
+		})
 	}
 
 	patchElements(patch: IDelta, data: INetworkJson) {
