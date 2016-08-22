@@ -1,15 +1,15 @@
 {
-  "name": "asyncmachine-visualizer",
-  "version": "0.0.1",
+  "name": "asyncmachine-inspector",
+  "version": "0.1.0",
   "description": "",
   "author": "Tobiasz Cudnik",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TobiaszCudnik/asyncmachine-visualizer"
+    "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/TobiaszCudnik/asyncmachineVisualizer/issues"
+    "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
   },
   "scripts": {
     "test": "grunt test"
