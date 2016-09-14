@@ -12,6 +12,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
 import Snackbar from 'material-ui/Snackbar';
+import ConnectionDialog from './connection-dialog'
 
 
 const styles = {
@@ -32,6 +33,7 @@ type MainProps = {
     msg: string;
     step: number;
     onSlider: Function;
+    connectionDialog?: any;
 }
 
 export class Main extends Component<MainProps, {msgHidden: boolean}> {
@@ -53,6 +55,7 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
+          <ConnectionDialog config={this.props.connectionDialog} />
           <section id="graph" />
           <section id="side-bar">{(()=>{
             var container = []
