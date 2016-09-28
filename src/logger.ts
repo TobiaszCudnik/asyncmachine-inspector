@@ -1,7 +1,9 @@
 /**
  * TODO network-to-ui-json should be handled by the server
  */
-import Network from "./network"
+import Network, {
+    ChangeType
+} from "./network"
 import * as io from 'socket.io-client'
 // import D3NetworkJson, {
 //     D3JsonDiffFactory
@@ -25,7 +27,7 @@ export default class Logger {
         });
 
         this.json = new NetworkJson(network)
-        this.json.network.on('change', () => this.onGraphChange())
+        this.json.network.on('change', (type) => this.onGraphChange(type))
 
         this.diff = new JsonDiffFactory(this.json)
         this.diff.generateJson()
@@ -40,12 +42,13 @@ export default class Logger {
         this.io.emit('full-sync', this.diff.previous_json)
     }
 
-    onGraphChange() {
+    onGraphChange(type: ChangeType) {
         let diff = this.diff.generateDiff()
-        this.io.emit('diff-sync', {
-            diff,
+        let packet = { diff, type,
             logs: this.network.logs
-        })
+        }
+        this.io.emit('diff-sync', packet)
+        console.dir(diff && diff.cells)
         this.network.logs = []
     }
 

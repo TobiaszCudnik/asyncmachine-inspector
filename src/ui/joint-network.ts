@@ -34,6 +34,8 @@ export class NetworkJsonFactory
         this.json.cells.push(node)
     }
 
+    // TODO queue size
+    // TODO number of listeners
     createMachineNode(machine: AsyncMachine, machine_id: string): Machine {
         return {
             type: 'uml.State',
@@ -51,7 +53,8 @@ export class NetworkJsonFactory
             attrs: { text: { text: node.name } },
             z: 3,
             size: this.getNodeSize(node),
-            is_set: node.is_set
+            is_set: node.is_set,
+            step_style: node.step_style
         }
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
@@ -68,10 +71,12 @@ export class NetworkJsonFactory
             labels: [{
                 id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}-label`,
                 position: 0.5,
-                attrs: { text: {
-                    text: this.getLabelFromLinkType(relation)
-                }}}],
-            z: 2
+                attrs: {
+                    text: { text: this.getLabelFromLinkType(relation)}
+                }
+            }],
+            z: 2,
+            is_touched: this.network.isLinkTouched(from, to, relation)
         }
     }
 

@@ -6,10 +6,10 @@ const repl = require('repl')
 
 global.am = am
 
-global.machine1 = am.factory(['A', 'B', 'C', 'D'])
+global.machine1 = am.factory(['A', 'B', 'C', 'D', 'E'])
 machine1.id('1').logLevel(2)
 machine1.C = {drop: ['B']}
-machine1.A = {require: ['B']}
+machine1.A = {require: ['B'], add: ['E']}
 machine1.D = {require: ['C']}
 
 global.machine2 = am.factory(['E', 'F', 'G'])
@@ -30,7 +30,7 @@ machine5.E = {drop: ['F']}
 
 // TODO check this piping
 machine1.pipe('A', machine2, 'E', am.PipeFlags.INVERT)
-machine2.pipe('E', machine1, 'B')
+// machine2.pipe('E', machine1, 'B')
 machine2.pipe('F', machine1, 'B')
 machine2.pipe('E', machine3, 'F')
 machine2.pipe('G', machine4, 'F')

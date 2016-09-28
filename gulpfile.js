@@ -73,6 +73,7 @@ gulp.task('ts:compile:watch',
             gulp.watch(watchGlob.lib, ['ts:compile']);
         })
 
+// TODO this doesnt work
 gulp.task('ts:build', 'Build the TS sources', function() {
     return gulp.src(tsFiles, { base: './src' })
         .pipe(plumber())

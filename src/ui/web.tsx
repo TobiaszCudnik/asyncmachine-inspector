@@ -3,10 +3,13 @@ import Graph from './joint'
 import * as io from 'socket.io-client'
 import { IDelta } from 'jsondiffpatch'
 import { INetworkJson } from './joint-network'
-import { Diff } from '../network'
+import {Diff, ChangeType} from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 
 
+/**
+ * TODO all of this has to be seriously rewritten
+ */
 export default function() {
 	var graph: Graph;
 	var socket = io('http://localhost:3030/client');
@@ -17,10 +20,11 @@ export default function() {
 	var dataPatches: Diff[] = []
 
 	var layoutData = {
-			diffs: dataPatches,
-			msg: null,
-			step: 0,
-			onSlider: onSlider
+		diffs: dataPatches,
+		msg: null,
+		step: 0,
+		onSlider: onSlider,
+		duringTransition: false
 	}
 
 	function onSlider(event, value) {
@@ -32,6 +36,7 @@ export default function() {
 			for (let i = layoutData.step; i > value; i--) {
 				if (dataPatches[i-1].diff)
 					jsondiffpatch.unpatch(dataStep, dataPatches[i-1].diff)
+				handleDuringTransition(dataPatches[i-1], true)
 			}
 			graph.setData(dataStep)
 		} else if (value > layoutData.step) {
@@ -39,6 +44,7 @@ export default function() {
 			for (let i = layoutData.step; i < value; i++) {
 				if (dataPatches[i].diff)
 					jsondiffpatch.patch(dataStep, dataPatches[i].diff)
+				handleDuringTransition(dataPatches[i])
 			}
 			graph.setData(dataStep)
 		}
@@ -53,6 +59,13 @@ export default function() {
 
 	function render() {
 		layout = renderLayout(container, layoutData)
+	}
+
+	function handleDuringTransition(packet, reversed) {
+		if (packet.type == ChangeType.TRANSITION_START)
+			layoutData.duringTransition = !reversed
+		else if (packet.type == ChangeType.TRANSITION_END)
+			layoutData.duringTransition = !!reversed
 	}
 
 	function patch(diff) {
@@ -91,6 +104,7 @@ export default function() {
 								patch(packet.diff)
 								graph.setData(dataStep)
 						}
+						handleDuringTransition(packet)
 						layoutData.step++
 						render()
 					}

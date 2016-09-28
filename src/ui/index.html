@@ -63,21 +63,68 @@
         }
 
         path.connection {
-            stroke-width: 2;
+            stroke-width: 4px;
         }
 
         .require path.connection {
             stroke: #1976D2;
         }
+        .link.require .labels rect {
+            stroke: #1976D2;
+            fill: #1976D2;
+        }
 
         .drop path.connection,
         .inverted path.connection {
             stroke: #C62828;
+            stroke-dasharray: 5 2;
+        }
+        .link.drop .labels rect,
+        .link.inverted .labels rect {
+            stroke: #C62828;
+            fill: #C62828;
         }
 
         .add path.connection,
         .pipe path.connection {
-            stroke: forestgreen;
+            stroke: #555;
+        }
+        .link.add .labels rect,
+        .link.pipe .labels rect {
+            stroke: #555;
+            fill: #555;
+        }
+
+        .link .labels rect {
+            fill: #7c68fc;
+            stroke: #7c68fc;
+            stroke-width: 10;
+            rx: 5;
+            ry: 5;
+        }
+
+        .link .labels text {
+            fill: white;
+        }
+
+        .State.is-touched circle {
+            fill: black;
+        }
+
+        .State.is-touched text {
+            fill: white;
+        }
+
+        .State.step-requested circle {
+            fill: red;
+        }
+
+        #graph.during-transition .viewport > :not(.is-touched) {
+            opacity: 0.3
+        }
+
+        #graph.during-transition .connection-wrap {
+            stroke: transparent;
         }
 
         .flex {

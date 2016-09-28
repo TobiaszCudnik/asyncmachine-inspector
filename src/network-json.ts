@@ -68,8 +68,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         // handle a machine node TODO extract
         if (!this.machine_ids.has(graph_node.machine_id)) {
             this.parseMachine(machine, graph_node.machine_id)
-        } else {
-            machine_node = this.machine_nodes[graph_node.machine_id]
         }
 
         var node = this.createStateNode(graph_node)
@@ -111,6 +109,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
                     type = NODE_LINK_TYPE.PIPE_INVERTED
 
                 this.addLinkNode(this.createLinkNode(from, to, type))
+
+                // pipe is represented by 2 entries (enter and exit)
                 break
             }
         }

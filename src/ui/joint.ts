@@ -3,6 +3,7 @@ import {
 	INetworkJson,
 	State
 } from './joint-network'
+import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
 import * as joint from 'jointjs'
 import * as $ from 'jquery'
@@ -90,7 +91,8 @@ export default class Ui extends UiBase<INetworkJson> {
 			clusterPadding: {
 				top: 30, left: 10, right: 10, bottom: 10 }
 		})
-		this.syncActiveClasses()
+		this.syncStateClasses()
+		this.syncLinkClasses()
 		this.assignColors()
 		this.autosize()
 	}
@@ -147,56 +149,78 @@ export default class Ui extends UiBase<INetworkJson> {
 		)
 	}
 
-	syncActiveClasses() {
-		// TODO this should sync from models, not the JSON 
-		this.data.cells.forEach( cell => this.setActiveClass(cell) )
-	}
+	diffHasNewElements(diff: IDelta) {
+		return Object.keys(diff.cells).some( key => {
+			if (key == '_t')
+				return false
 
-	setActiveClass(cell) {
-		joint.V(this.paper.findViewByModel(cell).el)
-			.toggleClass('is-set', Boolean(cell.is_set));
+			return diff.cells[key].length === 1
+		})
 	}
 	
 	setData(data, inital = false) {
 		var canPatch = false
 		var diff
 		if (!inital && this.data) {
+			// TODO avoid double diff
 			// TODO maybe setting all the cells with cell.set() will be faster?
 			diff = jsondiffpatch.create({
 					objectHash: (node) => node.id
 				}).diff(this.data, data)
 			if (!diff || !diff.cells)
 				return
-			// checks if the changes include only the states (not machines or links)
-			// TODO support patching of more types
-			canPatch = Object.keys(diff.cells).every( key => {
-				if (key == '_t')
-					return true
-					
-				return data.cells[key].type == "fsa.State"
-			})
+			canPatch = !this.diffHasNewElements(diff)
 		}
 		
 		if (canPatch) {
 			this.patchElements(diff, data)
 			this.data = deepcopy(data)
+			// TODO sync only altered elements
+			this.syncStateClasses()
+			this.syncLinkClasses()
 		} else {
 			this.data = deepcopy(data)
 			this.graph.fromJSON(this.data)
-			this.setLinkClasses()
 			this.layout()
 		}
 	}
 
-	setLinkClasses() {
-		this.data.cells.forEach( link => {
-			// TODO define class on the server
-			if (link.type != "fsa.Arrow")
-				return
-			let className = link.labels["0"].attrs.text.text || 'pipe'
-			let node = joint.V(this.paper.findViewByModel(link).el).node
-			for (let name of className.split(' '))
-				node.classList.add(name);
+	// TODO define class on the server
+	// TODO this should sync from models, not JSON
+	syncLinkClasses() {
+		this.data.cells
+				.filter( node => node.type == "fsa.Arrow" )
+				.forEach( link => {
+			// handle link types
+			let classNames = (link.labels["0"].attrs.text.text || 'pipe')
+					.split(' ')
+			let view = joint.V(this.paper.findViewByModel(link).el)
+			for (let name of classNames)
+				view.addClass(name)
+			// handle the touched state
+			view.toggleClass('is-touched', Boolean(link.is_touched))
+		})
+	}
+
+	// TODO this should sync from models, not JSON
+	syncStateClasses() {
+		this.data.cells
+				.filter( node => node.type == "fsa.State" )
+				.forEach( (state: Node) => {
+			let view = joint.V(this.paper.findViewByModel(state).el)
+			// active state
+			view.toggleClass('is-set', Boolean(state.is_set))
+			// touched state
+			view.toggleClass('is-touched', Boolean(state.step_style))
+			// step type classes
+			for (let key of Object.keys(TransitionStepTypes)) {
+				// skip labels
+				if (typeof TransitionStepTypes[key] !== 'number')
+					continue
+				let classname = 'step-' + key.toLowerCase()
+						.replace('_', '-')
+				view.toggleClass(classname, Boolean(state.step_style & TransitionStepTypes[key]))
+			}
 		})
 	}
 
@@ -207,7 +231,7 @@ export default class Ui extends UiBase<INetworkJson> {
 			// TODO assumes this.data didnt mutate
 			let cell = this.graph.getCell(this.data.cells[key].id)
 			cell.set(data.cells[key])
-			this.setActiveClass(cell.attributes)
+			// this.setActiveClass(cell.attributes)
 		}
 	}
 }

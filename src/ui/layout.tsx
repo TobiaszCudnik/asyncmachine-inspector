@@ -12,7 +12,8 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
 import Snackbar from 'material-ui/Snackbar';
-import ConnectionDialog from './connection-dialog'
+// TODO undelete and branch
+// import ConnectionDialog from './connection-dialog'
 
 
 const styles = {
@@ -29,11 +30,12 @@ const muiTheme = getMuiTheme({
 });
 
 type MainProps = {
-    diffs: any[];
-    msg: string;
-    step: number;
-    onSlider: Function;
-    connectionDialog?: any;
+  diffs: any[];
+  msg: string;
+  step: number;
+  onSlider: Function;
+  connectionDialog?: any;
+  duringTransition: boolean;
 }
 
 export class Main extends Component<MainProps, {msgHidden: boolean}> {
@@ -55,8 +57,8 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
-          <ConnectionDialog config={this.props.connectionDialog} />
-          <section id="graph" />
+          {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
+          <section id="graph" className={this.props.duringTransition && 'during-transition'} />
           <section id="side-bar">{(()=>{
             var container = []
             for(let i = 0; i < this.props.step; i++) {

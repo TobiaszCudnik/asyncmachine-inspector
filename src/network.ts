@@ -1,18 +1,30 @@
-import AsyncMachine from 'asyncmachine'
+import AsyncMachine, {
+    StateStructFields,
+    TransitionStepTypes,
+    TransitionTouchFields
+} from 'asyncmachine'
+import {
+    ITransitionTouch,
+    IStateStruct
+} from '../node_modules/asyncmachine/build/types'
+// TODO remove once fixed in webstorm
+import Transition from '../node_modules/asyncmachine/build/transition'
 import Graph from 'graphs'
 import * as uuid from 'node-uuid'
 import * as assert from 'assert/'
-// TODO fix the declaration
-// import * as EventEmitter from 'eventemitter3'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta as IJsonDiff } from 'jsondiffpatch'
+import { NODE_LINK_TYPE } from "./network-json";
 
 type MachinesMap = Map<AsyncMachine, string>;
 type NodeGraph = Graph<Node>
+
 export type Diff = {
     diff: IJsonDiff,
+    type: ChangeType,
     logs: LogEntry[]
 }
+
 export type LogEntry = {
     id: string,
     msg: string
@@ -21,6 +33,15 @@ export type LogEntry = {
 export interface ExternalNode {
     node: Node;
     machine: AsyncMachine;
+}
+
+export enum ChangeType {
+    STATE,
+    NEW_MACHINE,
+    TRANSITION_START,
+    TRANSITION_END,
+    TRANSITION_STEP,
+    PIPE
 }
 
 export class Node {
@@ -49,10 +70,33 @@ export class Node {
         public machine_id: string) {
     }
 
+    /**
+     * Bit mask with all the step types for this state during the current
+     * transition.
+     */
+    step_style: TransitionStepTypes | null = null;
+
+    updateStepStyle(type: TransitionStepTypes) {
+        // add this step type to the bit mask
+        this.step_style |= type
+        // exceptions are SET and NO_SET which are mutually exclusive
+        // with a latest-wins policy
+        if (type == TransitionStepTypes.SET)
+            this.step_style ^= TransitionStepTypes.NO_SET
+        else if (type == TransitionStepTypes.NO_SET)
+            this.step_style ^= TransitionStepTypes.SET
+    }
+
     relations(node: Node | string): string[] {
         var name = node instanceof Node
             ? node.name : node.toString()
-        return this.machine.getRelationsBetween(this.name, name)
+        return this.machine.getRelationsOf(this.name, name) as string[]
+    }
+
+    isFromState(state_struct: IStateStruct): boolean {
+        let f = StateStructFields
+        return (state_struct[f.MACHINE_ID] == this.machine_id
+            && state_struct[f.STATE_NAME] == this.name)
     }
 }
 
@@ -73,8 +117,8 @@ export default class Network extends EventEmitter {
 
     constructor() {
         super()
-        this.graph = <NodeGraph>new Graph()
-        this.machines = <MachinesMap>new Map()
+        this.graph = new Graph() as NodeGraph
+        this.machines = new Map() as MachinesMap
         this.machine_ids = {}
         this.id = uuid.v4()
     }
@@ -93,7 +137,13 @@ export default class Network extends EventEmitter {
             this.linkPipedStates(machine)
         }
 
-        this.emit('change')
+        this.emit('change', ChangeType.NEW_MACHINE)
+    }
+
+    isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
+        // TODO handle the relation param
+        return (this.transition_links.has(from)
+            && this.transition_links.get(from).has(to))
     }
 
     private bindToMachine(machine: AsyncMachine) {
@@ -102,12 +152,22 @@ export default class Network extends EventEmitter {
         // - piping (removed ones)
         // - transition start
         // - transition end / cancel
+        // - adding / removing a state
         // TODO unbind on dispose
         // TODO group the same changes emitted by couple of machines
-        machine.on('change', () => this.emit('change'))
+        // machine.on('change', () => this.emit('change', ChangeType.STATE))
         machine.on('pipe', () => {
             this.linkPipedStates(machine)
-            this.emit('change')
+            this.emit('change', ChangeType.PIPE)
+        })
+        machine.on('transition-start', (transition) => {
+            this.logTransition('start', transition)
+            // TODO this fires too early and produces an empty diff
+            this.emit('change', ChangeType.TRANSITION_START)
+        })
+        machine.on('transition-end', (transition) => {
+            this.logTransition('end', transition)
+            this.emit('change', ChangeType.TRANSITION_END)
         })
         machine.logHandler( (msg, level) => {
             machine.logHandlerDefault(msg.toString(), level)
@@ -122,6 +182,60 @@ export default class Network extends EventEmitter {
 
     dispose() {
         // TODO unbind listeners
+    }
+
+    private transitionStepIndexes = new Map<Transition, number>()
+    private transitions: Transition[] = []
+    private transition_links = new Map<Node, Node[]>()
+
+    /**
+     * TODO handle duplicates
+     */
+    private logTransition(type: 'start' | 'end', transition: Transition) {
+        if (type == 'start') {
+            // parse steps from the parent transition
+            if (this.transitionStepIndexes.size) {
+                this.parseTransitionSteps(this.transitions[this.transitions.length - 1])
+            }
+            this.transitionStepIndexes.set(transition, 0)
+            this.transitions.push(transition)
+        } else {
+            // parse steps from transition which just ended and remove it
+            this.parseTransitionSteps(transition)
+            this.transitionStepIndexes.delete(transition)
+            assert(transition === this.transitions.pop())
+        }
+
+        if (!this.transitions.length) {
+            this.transition_links.clear()
+            for (let node of this.graph.set)
+                node.step_style = null
+        }
+    }
+
+    private parseTransitionSteps(transition: Transition) {
+        let index = this.transitionStepIndexes.get(transition)
+        let steps = transition.steps.slice(index)
+        let fields = TransitionTouchFields
+        let types = TransitionStepTypes
+        for (let step of steps) {
+            let type = step[fields.TYPE]
+            let node = this.getNodeByStruct(step[fields.STATE])
+            node.updateStepStyle(type)
+
+            if (step[fields.SOURCE_STATE]) {
+                // TODO handle the "Any" state
+                let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
+                source_node.updateStepStyle(type)
+
+                // add the link
+                if (!this.transition_links.get(source_node))
+                    this.transition_links.set(source_node, new Set<Node>())
+                this.transition_links.get(source_node).add(node)
+            }
+
+            this.emit('change', ChangeType.TRANSITION_STEP)
+        }
     }
 
     private statesToNodes(names: string[], machine_id: string) {
@@ -154,7 +268,7 @@ export default class Network extends EventEmitter {
         }
     }
 
-    getNodeByName(name: string, machine_id: string) {
+    getNodeByName(name: string, machine_id: string): Node | null {
         // for (let node of this.graph.set) {
         var ret
         this.graph.set.forEach( node => {
@@ -162,6 +276,12 @@ export default class Network extends EventEmitter {
                 ret = node
         })
         return ret
+    }
+
+    getNodeByStruct(state: IStateStruct): Node | null {
+        return this.getNodeByName(
+            state[StateStructFields.STATE_NAME],
+            state[StateStructFields.MACHINE_ID])
     }
 
     protected linkPipedStates(machine: AsyncMachine) {
