@@ -107,20 +107,46 @@
             fill: white;
         }
 
-        .State.is-touched circle {
-            fill: black;
-        }
-
-        .State.is-touched text {
-            fill: white;
-        }
+        /* STEP REQUESTED */
 
         .State.step-requested circle {
+            stroke: red;
+        }
+
+        /* STEP CANCEL */
+
+        .State.step-cancel circle {
             fill: red;
         }
 
+        /* STEP SET */
+
+        .State.step-set circle {
+            fill: black;
+        }
+
+        .State.step-set text {
+            fill: white;
+        }
+
+        /* STEP DROP */
+
+        .State.step-drop circle {
+            fill: brown;
+        }
+
+        .State.step-drop text {
+            fill: white;
+        }
+
+        #graph .viewport > * {
+            opacity: 1;
+            transition-duration: 0.5s;
+        }
+
         #graph.during-transition .viewport > :not(.is-touched) {
-            opacity: 0.3
+            opacity: 0.3;
+            transition-duration: 0.5s;
         }
 
         #graph.during-transition .connection-wrap {

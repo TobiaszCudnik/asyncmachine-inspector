@@ -91,8 +91,7 @@ export default class Ui extends UiBase<INetworkJson> {
 			clusterPadding: {
 				top: 30, left: 10, right: 10, bottom: 10 }
 		})
-		this.syncStateClasses()
-		this.syncLinkClasses()
+		this.syncClasses()
 		this.assignColors()
 		this.autosize()
 	}
@@ -176,13 +175,18 @@ export default class Ui extends UiBase<INetworkJson> {
 			this.patchElements(diff, data)
 			this.data = deepcopy(data)
 			// TODO sync only altered elements
-			this.syncStateClasses()
-			this.syncLinkClasses()
+			this.syncClasses()
 		} else {
 			this.data = deepcopy(data)
 			this.graph.fromJSON(this.data)
 			this.layout()
 		}
+	}
+
+	syncClasses() {
+		this.syncMachineClasses()
+		this.syncStateClasses()
+		this.syncLinkClasses()
 	}
 
 	// TODO define class on the server
@@ -199,6 +203,18 @@ export default class Ui extends UiBase<INetworkJson> {
 				view.addClass(name)
 			// handle the touched state
 			view.toggleClass('is-touched', Boolean(link.is_touched))
+		})
+	}
+
+	// TODO define class on the server
+	// TODO this should sync from models, not JSON
+	syncMachineClasses() {
+		this.data.cells
+				.filter( node => node.type == "uml.State" )
+				.forEach( machine => {
+			let view = joint.V(this.paper.findViewByModel(machine).el)
+			// handle the touched state
+			view.toggleClass('is-touched', Boolean(machine.is_touched))
 		})
 	}
 

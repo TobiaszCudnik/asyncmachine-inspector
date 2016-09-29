@@ -111,6 +111,10 @@ export default class Network extends EventEmitter {
     machine_ids: { [index: string]: AsyncMachine };
     logs: LogEntry[] = []
 
+    private transitionStepIndexes = new Map<Transition, number>()
+    transitions: Transition[] = []
+    private transition_links = new Map<Node, Set<Node>>()
+
     get states() {
         return [...this.graph.set]
     }
@@ -158,16 +162,16 @@ export default class Network extends EventEmitter {
         // machine.on('change', () => this.emit('change', ChangeType.STATE))
         machine.on('pipe', () => {
             this.linkPipedStates(machine)
-            this.emit('change', ChangeType.PIPE)
+            this.emit('change', ChangeType.PIPE, machine.id())
         })
-        machine.on('transition-start', (transition) => {
+        machine.on('transition-init', (transition) => {
             this.logTransition('start', transition)
             // TODO this fires too early and produces an empty diff
-            this.emit('change', ChangeType.TRANSITION_START)
+            this.emit('change', ChangeType.TRANSITION_START, machine.id())
         })
         machine.on('transition-end', (transition) => {
             this.logTransition('end', transition)
-            this.emit('change', ChangeType.TRANSITION_END)
+            this.emit('change', ChangeType.TRANSITION_END, machine.id())
         })
         machine.logHandler( (msg, level) => {
             machine.logHandlerDefault(msg.toString(), level)
@@ -183,10 +187,6 @@ export default class Network extends EventEmitter {
     dispose() {
         // TODO unbind listeners
     }
-
-    private transitionStepIndexes = new Map<Transition, number>()
-    private transitions: Transition[] = []
-    private transition_links = new Map<Node, Node[]>()
 
     /**
      * TODO handle duplicates
@@ -218,8 +218,12 @@ export default class Network extends EventEmitter {
         let steps = transition.steps.slice(index)
         let fields = TransitionTouchFields
         let types = TransitionStepTypes
+        let prev_type: TransitionStepTypes
         for (let step of steps) {
             let type = step[fields.TYPE]
+            if (prev_type === undefined || prev_type != types.REQUESTED || type != prev_type)
+                this.emit('change', ChangeType.TRANSITION_STEP)
+
             let node = this.getNodeByStruct(step[fields.STATE])
             node.updateStepStyle(type)
 
@@ -234,8 +238,10 @@ export default class Network extends EventEmitter {
                 this.transition_links.get(source_node).add(node)
             }
 
-            this.emit('change', ChangeType.TRANSITION_STEP)
+            prev_type = type
         }
+
+        this.emit('change', ChangeType.TRANSITION_STEP)
     }
 
     private statesToNodes(names: string[], machine_id: string) {

@@ -24,7 +24,8 @@ export default function() {
 		msg: null,
 		step: 0,
 		onSlider: onSlider,
-		duringTransition: false
+		duringTransition: false,
+		msgHidden: false
 	}
 
 	function onSlider(event, value) {
@@ -61,11 +62,19 @@ export default function() {
 		layout = renderLayout(container, layoutData)
 	}
 
-	function handleDuringTransition(packet, reversed) {
-		if (packet.type == ChangeType.TRANSITION_START)
+	// TODO breaks when reversing inside nested transitions
+	function handleDuringTransition(packet, reversed = false) {
+		// TODO highlight the
+		if (packet.type == ChangeType.TRANSITION_START) {
 			layoutData.duringTransition = !reversed
-		else if (packet.type == ChangeType.TRANSITION_END)
+			layoutData.msg = `Transition started on ${packet.machine_id}`
+			layoutData.msgHidden = false
+		} else if (packet.type == ChangeType.TRANSITION_END) {
 			layoutData.duringTransition = !!reversed
+			layoutData.msg = `Transition ended on ${packet.machine_id}`
+			layoutData.msgHidden = false
+		} else
+			layoutData.msg = null
 	}
 
 	function patch(diff) {

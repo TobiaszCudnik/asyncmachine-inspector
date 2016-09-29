@@ -42,7 +42,9 @@ export class NetworkJsonFactory
             id: machine_id,
             name: machine.id(),
             embeds: [],
-            z: 1
+            z: 1,
+            is_touched: this.network.transitions.length 
+                && this.network.transitions[this.network.transitions.length-1].source_machine_id == machine_id
         }
     }
     createStateNode(node: GraphNode): State {

@@ -27,7 +27,8 @@ export default class Logger {
         });
 
         this.json = new NetworkJson(network)
-        this.json.network.on('change', (type) => this.onGraphChange(type))
+        this.json.network.on('change', (type, machine_id, ...params) =>
+            this.onGraphChange(type, machine_id, ...params))
 
         this.diff = new JsonDiffFactory(this.json)
         this.diff.generateJson()
@@ -42,11 +43,15 @@ export default class Logger {
         this.io.emit('full-sync', this.diff.previous_json)
     }
 
-    onGraphChange(type: ChangeType) {
+    // TODO merge many empty transition-end events into 1
+    onGraphChange(type: ChangeType, machine_id, ...params) {
         let diff = this.diff.generateDiff()
-        let packet = { diff, type,
+        let packet = { diff, type, machine_id,
             logs: this.network.logs
         }
+        // skip empty steps
+        if (type == ChangeType.TRANSITION_STEP && !diff && !this.network.logs.length)
+            return
         this.io.emit('diff-sync', packet)
         console.dir(diff && diff.cells)
         this.network.logs = []

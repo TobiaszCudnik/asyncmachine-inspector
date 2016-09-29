@@ -53,6 +53,14 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
     })
   }
 
+  componentWillReceiveProps(props) {
+    if (props.msg) {
+      this.setState({
+        msgHidden: false
+      })
+    }
+  }
+
   render() {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
