@@ -170,6 +170,7 @@ export default class Network extends EventEmitter {
             this.emit('change', ChangeType.TRANSITION_START, machine.id())
         })
         machine.on('transition-end', (transition) => {
+            // TODO highlight all the invoved state machines
             this.logTransition('end', transition)
             this.emit('change', ChangeType.TRANSITION_END, machine.id())
         })
@@ -230,7 +231,9 @@ export default class Network extends EventEmitter {
             if (step[fields.SOURCE_STATE]) {
                 // TODO handle the "Any" state
                 let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
-                source_node.updateStepStyle(type)
+                // dont mark the source node as piped, as it already has styles
+                if (type != types.PIPE)
+                    source_node.updateStepStyle(type)
 
                 // add the link
                 if (!this.transition_links.get(source_node))
