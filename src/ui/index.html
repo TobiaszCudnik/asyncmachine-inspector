@@ -113,6 +113,11 @@
             stroke: red;
         }
 
+        .State.step-requested.step-pipe circle {
+            stroke-dasharray: 120;
+            stroke-dashoffset: 80;
+        }
+
         /* STEP CANCEL */
 
         .State.step-cancel circle {
@@ -142,6 +147,10 @@
         #graph .viewport > * {
             opacity: 1;
             transition-duration: 0.5s;
+        }
+
+        .is-touched path.connection {
+            stroke-width: 6px;
         }
 
         #graph.during-transition .viewport > :not(.is-touched) {

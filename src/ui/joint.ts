@@ -22,6 +22,9 @@ type IDelta = jsondiffpatch.IDelta
 /**
  * TODO consume a stream of events
  * TODO support an initialization without a reference to other instances
+ * TODO
+ * - machine colors in the msg
+ * - static machine colors (hash name, closest color)
  */
 export default class Ui extends UiBase<INetworkJson> {
 

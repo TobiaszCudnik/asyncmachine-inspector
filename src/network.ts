@@ -1,10 +1,10 @@
 import AsyncMachine, {
     StateStructFields,
     TransitionStepTypes,
-    TransitionTouchFields
+    TransitionStepFields
 } from 'asyncmachine'
 import {
-    ITransitionTouch,
+    ITransitionStep,
     IStateStruct
 } from '../node_modules/asyncmachine/build/types'
 // TODO remove once fixed in webstorm
@@ -57,7 +57,9 @@ export class Node {
      * Is the state currently set?
      */
     get is_set(): boolean {
-        return this.machine.is(this.name)
+        return this.machine.duringTransition()
+            ? this.machine.duringTransition().before.includes(this.name)
+            : this.machine.is(this.name)
     }
     
     get full_name(): string {
@@ -165,14 +167,18 @@ export default class Network extends EventEmitter {
             this.emit('change', ChangeType.PIPE, machine.id())
         })
         machine.on('transition-init', (transition) => {
-            this.logTransition('start', transition)
             // TODO this fires too early and produces an empty diff
             this.emit('change', ChangeType.TRANSITION_START, machine.id())
         })
         machine.on('transition-end', (transition) => {
             // TODO highlight all the invoved state machines
-            this.logTransition('end', transition)
             this.emit('change', ChangeType.TRANSITION_END, machine.id())
+            // TODO dispose also the nested sets?
+            this.transition_links.clear()
+        })
+        machine.on('transition-step', (...steps) => {
+            this.parseTransitionSteps(...steps)
+            this.emit('change', ChangeType.TRANSITION_STEP, machine.id())
         })
         machine.logHandler( (msg, level) => {
             machine.logHandlerDefault(msg.toString(), level)
@@ -189,41 +195,11 @@ export default class Network extends EventEmitter {
         // TODO unbind listeners
     }
 
-    /**
-     * TODO handle duplicates
-     */
-    private logTransition(type: 'start' | 'end', transition: Transition) {
-        if (type == 'start') {
-            // parse steps from the parent transition
-            if (this.transitionStepIndexes.size) {
-                this.parseTransitionSteps(this.transitions[this.transitions.length - 1])
-            }
-            this.transitionStepIndexes.set(transition, 0)
-            this.transitions.push(transition)
-        } else {
-            // parse steps from transition which just ended and remove it
-            this.parseTransitionSteps(transition)
-            this.transitionStepIndexes.delete(transition)
-            assert(transition === this.transitions.pop())
-        }
-
-        if (!this.transitions.length) {
-            this.transition_links.clear()
-            for (let node of this.graph.set)
-                node.step_style = null
-        }
-    }
-
-    private parseTransitionSteps(transition: Transition) {
-        let index = this.transitionStepIndexes.get(transition)
-        let steps = transition.steps.slice(index)
-        let fields = TransitionTouchFields
+    private parseTransitionSteps(...steps: ITransitionStep[]) {
+        let fields = TransitionStepFields
         let types = TransitionStepTypes
-        let prev_type: TransitionStepTypes
         for (let step of steps) {
             let type = step[fields.TYPE]
-            if (prev_type === undefined || prev_type != types.REQUESTED || type != prev_type)
-                this.emit('change', ChangeType.TRANSITION_STEP)
 
             let node = this.getNodeByStruct(step[fields.STATE])
             node.updateStepStyle(type)
@@ -235,13 +211,12 @@ export default class Network extends EventEmitter {
                 if (type != types.PIPE)
                     source_node.updateStepStyle(type)
 
-                // add the link
+                // mark the link as touched
+                // TODO create tmp links for transitions between states
                 if (!this.transition_links.get(source_node))
                     this.transition_links.set(source_node, new Set<Node>())
                 this.transition_links.get(source_node).add(node)
             }
-
-            prev_type = type
         }
 
         this.emit('change', ChangeType.TRANSITION_STEP)
