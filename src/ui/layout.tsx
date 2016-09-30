@@ -38,6 +38,13 @@ type MainProps = {
   duringTransition: boolean;
 }
 
+/**
+ * TODO
+ * - legend with state meanings (WHILE during transition)
+ * - switches for
+ *   - "show transition"
+ *   - "show steps"
+ */
 export class Main extends Component<MainProps, {msgHidden: boolean}> {
   constructor(props, context) {
     super(props, context);

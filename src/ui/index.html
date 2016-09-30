@@ -40,6 +40,10 @@
             stroke: red;
             stroke-width: 5px;
         }
+        .uml-state-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
         path.hull {
             fill: lightsteelblue;
             fill-opacity: 0.3;
@@ -118,20 +122,14 @@
             stroke-dashoffset: 80;
         }
 
-        /* STEP CANCEL */
-
-        .State.step-cancel circle {
-            fill: red;
-        }
-
         /* STEP SET */
 
         .State.step-set circle {
-            fill: black;
+            fill: #ffb40b;
         }
 
         .State.step-set text {
-            fill: white;
+            fill: black;
         }
 
         /* STEP DROP */
@@ -143,6 +141,19 @@
         .State.step-drop text {
             fill: white;
         }
+
+        /* STEP CANCEL */
+
+        .State.step-cancel circle {
+            fill: red;
+            stroke: black;
+        }
+
+        .State.step-cancel text {
+            fill: white;
+        }
+
+        /* DURING TRANSITION */
 
         #graph .viewport > * {
             opacity: 1;

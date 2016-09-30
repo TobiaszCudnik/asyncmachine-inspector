@@ -81,12 +81,13 @@ export class Node {
     updateStepStyle(type: TransitionStepTypes) {
         // add this step type to the bit mask
         this.step_style |= type
+        let types = TransitionStepTypes
         // exceptions are SET and NO_SET which are mutually exclusive
         // with a latest-wins policy
-        if (type == TransitionStepTypes.SET)
-            this.step_style ^= TransitionStepTypes.NO_SET
-        else if (type == TransitionStepTypes.NO_SET)
-            this.step_style ^= TransitionStepTypes.SET
+        if (type == types.SET && this.step_style & type.NO_SET)
+            this.step_style ^= types.NO_SET
+        else if (type == types.NO_SET && this.step_style & type.SET)
+            this.step_style ^= types.SET
     }
 
     relations(node: Node | string): string[] {
@@ -112,10 +113,9 @@ export default class Network extends EventEmitter {
     machines: MachinesMap;
     machine_ids: { [index: string]: AsyncMachine };
     logs: LogEntry[] = []
-
-    private transitionStepIndexes = new Map<Transition, number>()
-    transitions: Transition[] = []
+    machines_during_transition: Set<string> = new Set
     private transition_links = new Map<Node, Set<Node>>()
+    transition_origin: AsyncMachine;
 
     get states() {
         return [...this.graph.set]
@@ -167,18 +167,25 @@ export default class Network extends EventEmitter {
             this.emit('change', ChangeType.PIPE, machine.id())
         })
         machine.on('transition-init', (transition) => {
+            if (!this.transition_origin)
+                this.transition_origin = machine
+            this.machines_during_transition.add(machine.id())
             // TODO this fires too early and produces an empty diff
             this.emit('change', ChangeType.TRANSITION_START, machine.id())
         })
         machine.on('transition-end', (transition) => {
-            // TODO highlight all the invoved state machines
+            if (this.transition_origin === machine) {
+                // if the first transition ended, cleanup everything
+                this.transition_origin = null
+                this.machines_during_transition.clear()
+                this.transition_links.clear()
+                for (let node of this.graph.set)
+                    node.step_style = null
+            }
             this.emit('change', ChangeType.TRANSITION_END, machine.id())
-            // TODO dispose also the nested sets?
-            this.transition_links.clear()
         })
         machine.on('transition-step', (...steps) => {
-            this.parseTransitionSteps(...steps)
-            this.emit('change', ChangeType.TRANSITION_STEP, machine.id())
+            this.parseTransitionSteps(machine.id(), ...steps)
         })
         machine.logHandler( (msg, level) => {
             machine.logHandlerDefault(msg.toString(), level)
@@ -195,7 +202,7 @@ export default class Network extends EventEmitter {
         // TODO unbind listeners
     }
 
-    private parseTransitionSteps(...steps: ITransitionStep[]) {
+    private parseTransitionSteps(machine_id: string, ...steps: ITransitionStep[]) {
         let fields = TransitionStepFields
         let types = TransitionStepTypes
         for (let step of steps) {
@@ -207,19 +214,22 @@ export default class Network extends EventEmitter {
             if (step[fields.SOURCE_STATE]) {
                 // TODO handle the "Any" state
                 let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
-                // dont mark the source node as piped, as it already has styles
                 if (type != types.PIPE)
+                    // dont mark the source node as piped, as it already has styles
                     source_node.updateStepStyle(type)
+                else
+                    // be a little ahead of time here, for better styling
+                    this.machines_during_transition.add(node.machine_id)
 
                 // mark the link as touched
-                // TODO create tmp links for transitions between states
+                // TODO create tmp links for active_transitions between states
                 if (!this.transition_links.get(source_node))
                     this.transition_links.set(source_node, new Set<Node>())
                 this.transition_links.get(source_node).add(node)
             }
         }
 
-        this.emit('change', ChangeType.TRANSITION_STEP)
+        this.emit('change', ChangeType.TRANSITION_STEP, machine_id)
     }
 
     private statesToNodes(names: string[], machine_id: string) {

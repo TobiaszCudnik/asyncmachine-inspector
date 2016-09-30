@@ -42,7 +42,7 @@ machine1.add('A')
 
 global.network = new Network
 
-function test() {
+function test1() {
   var test = am.factory(['X', 'Y'])
   network.addMachine(test)
 }
@@ -55,9 +55,19 @@ function test3() {
   machine3.pipe('F', machine4, 'F')
 }
 
-global.test = test
+function test4() {
+  machine1.add(['A', 'B'])
+}
+
+function test5() {
+  machine1.drop(['A', 'B'])
+}
+
+global.test1 = test1
 global.test2 = test2
 global.test3 = test3
+global.test4 = test4
+global.test5 = test5
 
 global.network = new Network
 network.addMachine(machine1)

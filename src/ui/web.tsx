@@ -29,9 +29,6 @@ export default function() {
 	}
 
 	function onSlider(event, value) {
-		console.log('slider', value)
-		console.log('step', layoutData.step)
-
 		if (value < layoutData.step) {
 			// go back in time
 			for (let i = layoutData.step; i > value; i--) {
@@ -62,19 +59,22 @@ export default function() {
 		layout = renderLayout(container, layoutData)
 	}
 
-	// TODO breaks when reversing inside nested transitions
+	let transitionsCount = 0
+
+	// TODO breaks when reversing inside nested active_transitions
 	function handleDuringTransition(packet, reversed = false) {
 		// TODO highlight the
 		if (packet.type == ChangeType.TRANSITION_START) {
-			layoutData.duringTransition = !reversed
+			transitionsCount += reversed ? -1 : 1
 			layoutData.msg = `Transition started on ${packet.machine_id}`
 			layoutData.msgHidden = false
 		} else if (packet.type == ChangeType.TRANSITION_END) {
-			layoutData.duringTransition = !!reversed
+			transitionsCount += reversed ? 1 : -1
 			layoutData.msg = `Transition ended on ${packet.machine_id}`
 			layoutData.msgHidden = false
 		} else
 			layoutData.msg = null
+		layoutData.duringTransition = !!transitionsCount
 	}
 
 	function patch(diff) {
