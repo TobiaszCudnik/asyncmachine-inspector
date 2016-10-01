@@ -7,25 +7,25 @@ const repl = require('repl')
 global.am = am
 
 global.machine1 = am.factory(['A', 'B', 'C', 'D', 'E'])
-machine1.id('1').logLevel(2)
+machine1.id('machine 1').logLevel(2)
 machine1.C = {drop: ['B']}
 machine1.A = {require: ['B'], add: ['E']}
 machine1.D = {require: ['C']}
 
 global.machine2 = am.factory(['E', 'F', 'G'])
-machine2.id('2')
+machine2.id('machine 2')
 machine2.E = {drop: ['F']}
 
 global.machine3 = am.factory(['E', 'F'])
-machine3.id('3')
+machine3.id('machine 3')
 machine3.E = {drop: ['F']}
 
 global.machine4 = am.factory(['E', 'F'])
-machine4.id('4')
+machine4.id('machine 4')
 machine4.E = {drop: ['F']}
 
 global.machine5 = am.factory(['E', 'F'])
-machine5.id('5')
+machine5.id('machine 5')
 machine5.E = {drop: ['F']}
 
 // TODO check this piping
@@ -63,11 +63,16 @@ function test5() {
   machine1.drop(['A', 'B'])
 }
 
+function test6() {
+  machine1.pipe('A', machine2, 'G')
+}
+
 global.test1 = test1
 global.test2 = test2
 global.test3 = test3
 global.test4 = test4
 global.test5 = test5
+global.test6 = test6
 
 global.network = new Network
 network.addMachine(machine1)

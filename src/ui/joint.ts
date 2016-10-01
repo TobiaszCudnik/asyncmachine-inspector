@@ -1,7 +1,9 @@
 import Graph from 'graphs'
 import {
 	INetworkJson,
-	State
+	State,
+	Machine,
+	Link
 } from './joint-network'
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
@@ -14,7 +16,6 @@ import * as deepcopy from 'deepcopy'
 import * as colors from 'material-ui/styles/colors' 
 import * as randomNumber from 'random-number'
 import * as Stylesheet from 'stylesheet.js'
-// TODO shim Object.entries
 
 
 type IDelta = jsondiffpatch.IDelta
@@ -114,14 +115,14 @@ export default class Ui extends UiBase<INetworkJson> {
 			node.attributes.type == 'uml.State' ))
 	}
 
-	getRandomColor(): string {
+	getColor(group): string {
+		// TODO constant color per group (by ID)
 		if (!this.available_colors.length)
 			return null
-		let index = randomNumber({
-			min: 0,
-			max: this.available_colors.length - 1,
-			integer: true
-		})
+		let index = [...group.id]
+			.map( a => a.charCodeAt(0) )
+			.reduce( (prev, curr) => (prev || 0) * curr )
+		index = index % (this.available_colors.length - 1)
 		let color = this.available_colors[index]
 		// remove the color
 		this.available_colors.splice(index, 1)
@@ -133,7 +134,7 @@ export default class Ui extends UiBase<INetworkJson> {
 			let id = group.get('id')
 			if (this.group_colors[id])
 				continue
-			let color = this.getRandomColor()
+			let color = this.getColor(group)
 			this.group_colors[id] = color
 			this.applyColor(group, color)
 		}
@@ -142,21 +143,27 @@ export default class Ui extends UiBase<INetworkJson> {
 	applyColor(group, color_name) {
 		let fg = colors[color_name + '200']
 		let bg = colors[color_name + '100']
-		group.attr('path/stroke', fg)
-		group.attr('rect/stroke', fg)
-		group.attr('rect/fill', bg)
 		this.stylesheet.addRule(
 			`.group-${group.get('id')}`,
 			`color: ${fg};`
 		)
+		this.stylesheet.addRule(
+			`.group-${group.get('id')} path`,
+			`stroke: ${fg};`
+		)
+		this.stylesheet.addRule(
+			`.group-${group.get('id')} rect`,
+			`stroke: ${fg}; fill: ${bg};`
+		)
 	}
 
-	diffHasNewElements(diff: IDelta) {
+	diffAddsRemovesElements(diff: IDelta) {
 		return Object.keys(diff.cells).some( key => {
-			if (key == '_t')
+			if (key == '_t' || !(diff.cells[key] instanceof Array))
 				return false
 
-			return diff.cells[key].length === 1
+			// added elements have the length of 1 (replaced and removed have 2)
+			return diff.cells[key].length !== 2
 		})
 	}
 	
@@ -171,7 +178,7 @@ export default class Ui extends UiBase<INetworkJson> {
 				}).diff(this.data, data)
 			if (!diff || !diff.cells)
 				return
-			canPatch = !this.diffHasNewElements(diff)
+			canPatch = !this.diffAddsRemovesElements(diff)
 		}
 		
 		if (canPatch) {
@@ -197,7 +204,9 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncLinkClasses() {
 		this.data.cells
 				.filter( node => node.type == "fsa.Arrow" )
-				.forEach( link => {
+				.forEach( (link: Link) => {
+			if (!this.paper.findViewByModel(link))
+				return
 			// handle link types
 			let classNames = (link.labels["0"].attrs.text.text || 'pipe')
 					.split(' ')
@@ -214,10 +223,13 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncMachineClasses() {
 		this.data.cells
 				.filter( node => node.type == "uml.State" )
-				.forEach( machine => {
+				.forEach( (machine: Machine) => {
+			if (!this.paper.findViewByModel(machine))
+				return
 			let view = joint.V(this.paper.findViewByModel(machine).el)
 			// handle the touched state
 			view.toggleClass('is-touched', Boolean(machine.is_touched))
+			view.addClass('group-' + machine.id)
 		})
 	}
 
@@ -225,7 +237,9 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncStateClasses() {
 		this.data.cells
 				.filter( node => node.type == "fsa.State" )
-				.forEach( (state: Node) => {
+				.forEach( (state: State) => {
+			if (!this.paper.findViewByModel(state))
+				return
 			let view = joint.V(this.paper.findViewByModel(state).el)
 			// active state
 			view.toggleClass('is-set', Boolean(state.is_set))

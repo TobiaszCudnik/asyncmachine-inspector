@@ -123,9 +123,9 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
             case t.DROP: return 'drop'
             case t.AFTER: return 'after'
             case t.ADD: return 'add'
-            case t.PIPE: return 'pipe'
+            case t.PIPE: return 'add'
             case t.PIPE_INVERTED: return 'drop'
-            case t.PIPE_NEGOTIATION: return 'pipe neg'
+            case t.PIPE_NEGOTIATION: return 'add neg'
             case t.PIPE_INVERTED_NEGOTIATION: return 'drop neg'
         }
     }

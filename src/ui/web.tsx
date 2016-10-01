@@ -5,7 +5,7 @@ import { IDelta } from 'jsondiffpatch'
 import { INetworkJson } from './joint-network'
 import {Diff, ChangeType} from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
-
+import 'core-js/es6/symbol'
 
 /**
  * TODO all of this has to be seriously rewritten
@@ -18,6 +18,16 @@ export default function() {
 	var dataBase: INetworkJson
 	var dataStep: INetworkJson
 	var dataPatches: Diff[] = []
+	let autoplay_ = true
+	let timer
+	function autoplay(state?) {
+		if (state === undefined)
+			return autoplay_
+
+		autoplay_ = state
+		if (!state && timer)
+			clearInterval(timer)
+	}
 
 	var layoutData = {
 		diffs: dataPatches,
@@ -30,6 +40,7 @@ export default function() {
 
 	function onSlider(event, value) {
 		if (value < layoutData.step) {
+			autoplay(false)
 			// go back in time
 			for (let i = layoutData.step; i > value; i--) {
 				if (dataPatches[i-1].diff)
@@ -47,6 +58,9 @@ export default function() {
 			graph.setData(dataStep)
 		}
 		layoutData.step = value
+		// autoplay turns ON on the last step of the slider
+		if (layoutData.step == dataPatches.length - 1)
+			autoplay(true)
 		render()
 	}
 
@@ -108,14 +122,22 @@ export default function() {
 					dataPatches.push(packet)
 					console.log('diff', packet)
 					// auto render if slider at the end
-					if (layoutData.step == dataPatches.length - 1) {
-						if (packet.diff) {
-								patch(packet.diff)
+					if (autoplay() && !timer) {
+						timer = setInterval( () => {
+
+							if (layoutData.step < dataPatches.length) {
+								let i = layoutData.step
+								if (dataPatches[i].diff)
+									jsondiffpatch.patch(dataStep, dataPatches[i].diff)
+								handleDuringTransition(dataPatches[i])
 								graph.setData(dataStep)
-						}
-						handleDuringTransition(packet)
-						layoutData.step++
-						render()
+								layoutData.step++
+								render()
+							} else {
+								clearInterval(timer)
+								timer = null
+							}
+						}, 500)
 					}
 			})
 	})

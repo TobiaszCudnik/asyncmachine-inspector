@@ -39,7 +39,8 @@ export class NetworkJsonFactory
     createMachineNode(machine: AsyncMachine, machine_id: string): Machine {
         return {
             type: 'uml.State',
-            id: machine_id,
+            // TODO normalize machine ID    
+            id: machine_id.replace(/[^\w\d]/g, '-'),
             name: machine.id(),
             embeds: [],
             z: 1,
@@ -50,7 +51,8 @@ export class NetworkJsonFactory
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
-            parent: node.machine_id,
+            // TODO normalize machine ID
+            parent: node.machine_id.replace(/[^\w\d]/g, '-'),
             attrs: { text: { text: node.name } },
             z: 3,
             size: this.getNodeSize(node),

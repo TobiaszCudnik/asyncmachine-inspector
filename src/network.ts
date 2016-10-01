@@ -192,7 +192,8 @@ export default class Network extends EventEmitter {
             if (level > 2)
                 return
             this.logs.push({
-                id: machine.id(),
+                // TODO normalize ID
+                id: machine.id().replace(/[^\w\d]/g, '-'),
                 msg: msg
             })
         })

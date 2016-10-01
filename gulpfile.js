@@ -73,15 +73,15 @@ gulp.task('ts:compile:watch',
             gulp.watch(watchGlob.lib, ['ts:compile']);
         })
 
-// TODO this doesnt work
+// TODO sourcemaps are broken
 gulp.task('ts:build', 'Build the TS sources', function() {
     return gulp.src(tsFiles, { base: './src' })
         .pipe(plumber())
         .pipe(sourcemaps.init())
         // TODO this shouldn't emit non-changed files
         .pipe(ts(buildProject))
-        // .pipe(sourcemaps.write('.'))
-        // .pipe(gulp.dest('./build'))
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest('./build'))
 })
 
 gulp.task('ts:build:watch', 'Build the TS sources and watch for changes', ['ts:build'], function() {

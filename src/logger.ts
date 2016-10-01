@@ -47,6 +47,7 @@ export default class Logger {
     onGraphChange(type: ChangeType, machine_id, ...params) {
         let diff = this.diff.generateDiff()
         let packet = { diff, type, machine_id,
+            machine_id_normalized: machine_id.replace(/[^\w\d]/g, '-'),
             logs: this.network.logs
         }
         // skip empty steps
