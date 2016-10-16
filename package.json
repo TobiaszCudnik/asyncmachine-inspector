@@ -18,9 +18,11 @@
   "engines": {
     "node": ">=0.10.0"
   },
+  "main": "build/logger.js",
+  "browser": "build/ui.js",
   "dependencies": {
-    "asyncmachine": "^2",
-    "d3": "latest",
+    "asyncmachine": "^3.0.0",
+    "d3": "^3.1.0",
     "lodash": "latest",
     "material-ui": "^0.15.4",
     "node-uuid": "latest",

@@ -45,7 +45,7 @@ type MainProps = {
  *   - "show transition"
  *   - "show steps"
  * - keystrokes
- *   - space pause/resume (requires the frame time)
+ *   - space pause/resume
  *   - left/right patch left right
  */
 export class Main extends Component<MainProps, {msgHidden: boolean}> {

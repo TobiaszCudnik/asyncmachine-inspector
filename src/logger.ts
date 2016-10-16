@@ -5,15 +5,19 @@ import Network, {
     ChangeType
 } from "./network"
 import * as io from 'socket.io-client'
-// import D3NetworkJson, {
-//     D3JsonDiffFactory
-// } from "./ui/cola-network"
 import NetworkJson, {
     JsonDiffFactory
-} from "./ui/joint-network"
+} from "./ui/cola-network"
+// import NetworkJson, {
+//     JsonDiffFactory
+// } from "./ui/joint-network"
 
 type MachineId = string;
 
+/**
+ * TODO rename to LoggerClient
+ * fix d.ts files geeneration
+ */
 export default class Logger {
     io: SocketIOClient.Socket;
     json: NetworkJson;

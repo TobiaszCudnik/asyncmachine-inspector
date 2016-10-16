@@ -10,12 +10,14 @@ import {
     NODE_LINK_TYPE
 } from '../network-json'
 import AsyncMachine from 'asyncmachine'
+import * as _ from "underscore"
 
 
 /**
  * TODO make it a steram
  */
-export class JsonDiffFactory extends JsonDiffFactoryBase<NetworkJsonFactory, INetworkJson> {
+export class JsonDiffFactory 
+        extends JsonDiffFactoryBase<NetworkJsonFactory, INetworkJson> {
     diffpatcher: jsondiffpatch.IDiffPatch;
     previous_json: INetworkJson;
 
@@ -25,7 +27,8 @@ export class JsonDiffFactory extends JsonDiffFactoryBase<NetworkJsonFactory, INe
 }
 
 
-export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
+export default class NetworkJsonFactory 
+        extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
     initJson() {
         return {
             groups: [],
@@ -41,7 +44,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<INetworkJson, Mac
         this.json.nodes.push(node)
 
         let machine = this.getMachineNodeById(node.machine_id)
-        machine.leaves.push(this.json.nodes.length)
+        machine.leaves.push(this.json.nodes.length - 1)
     }
     addLinkNode(node: Link) {
         this.json.links.push(node)

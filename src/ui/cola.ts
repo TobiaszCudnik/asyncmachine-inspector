@@ -35,8 +35,8 @@ export default class Ui extends UiBase<INetworkJson> {
 	group_label: d3.selection.Update<any>;
 
 	pad = 3;
-	width = 800;
-	height = 600;
+	width = 4500;
+	height = 3500;
 
 	constructor(
 			public data: INetworkJson) {
@@ -49,33 +49,51 @@ export default class Ui extends UiBase<INetworkJson> {
 			.linkDistance(100)
 			.avoidOverlaps(true)
 			.handleDisconnected(false)
-			.nodes(this.data.nodes)
-			.links(this.data.links)
-			.groups(this.data.groups)
 			.size([this.width, this.height])
 	}
 
-	render(el?: Element) {
+	render(el?: string) {
 		// TODO customizable container
-		this.container = d3.select("body").append("svg")
-			.attr("width", this.width)
-			.attr("height", this.height)
+		if (!this.container) {
+			this.container = d3.select(el || "body").append("svg")
+				.attr("width", this.width)
+				.attr("height", this.height)
+		}
 
-		this.initialSelection()
-		this.updateData()
-		this.renderNodes()
-		this.layout.start()
+		if (this.data) {
+			this.initialSelection()
+			this.updateData()
+			this.renderNodes()
+			this.layout.start()
+			this.layout.on("tick", this.redrawNodes.bind(this));
+		}
+	}
 
-		this.layout.on("tick", this.redrawNodes.bind(this));
+	setData(data) {
+		if (!this.data) {
+			this.data = data
+			this.layout 
+				.nodes(this.data.nodes)
+				.links(this.data.links)
+				.groups(this.data.groups)
+			this.render()
+		} else {
+			this.data = data
+			this.updateData()
+			this.renderNodes()
+			this.layout.start()
+			this.redrawNodes()
+		}
 	}
 	
-	patch(diff: jsondiffpatch.IDelta) {
-		jsondiffpatch.patch(this.data, diff)
-		this.updateData()
-		this.renderNodes()
-		this.layout.start()
-		this.redrawNodes()
-	}
+	// TODO remove, use setData
+	// patch(diff: jsondiffpatch.IDelta) {
+	// 	jsondiffpatch.patch(this.data, diff)
+	// 	this.updateData()
+	// 	this.renderNodes()
+	// 	this.layout.start()
+	// 	this.redrawNodes()
+	// }
 
 	renderNodes() {
 		this.group.enter().append("rect")

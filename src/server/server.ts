@@ -37,6 +37,11 @@ export default function createServer() {
         // constructor
         console.log('new logger connected')
         loggerSockets.push(socket)
+        // if this is the first logger, inform all the UIs
+        if (loggerSockets.length == 1) {
+            for (let uiSocket of clientSockets)
+                uiSocket.emit('loggers', loggerSockets.map( socket => socket.loggerId ))
+        }
         // handlers
         socket.on('disconnect', function() {
             loggerSockets = _.without(loggerSockets, socket)
@@ -92,7 +97,8 @@ export default function createServer() {
         socket.on('error', console.error.bind(console))
         
         // send the list of loggers
-        socket.emit('loggers', loggerSockets.map( socket => socket.loggerId ))
+        if (loggerSockets.length)
+            socket.emit('loggers', loggerSockets.map( socket => socket.loggerId ))
     })
     
     return server

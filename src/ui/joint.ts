@@ -25,7 +25,10 @@ type IDelta = jsondiffpatch.IDelta
  * TODO support an initialization without a reference to other instances
  * TODO
  * - machine colors in the msg
- * - static machine colors (hash name, closest color)
+ * - save calculated layout positions, so when scrolling theres no delay
+ * - calculate positions using the WebCole library
+ * - show the number of steps
+ * - use cell highlighters `cellView.highlight();`	
  */
 export default class Ui extends UiBase<INetworkJson> {
 
@@ -59,7 +62,8 @@ export default class Ui extends UiBase<INetworkJson> {
 			});
 		}
 
-		this.setData(this.data, true)
+		if (this.data)
+			this.setData(this.data, true)
 
 		// TODO debounce
 		window.addEventListener('resize', debounce(500, false, 
@@ -74,7 +78,9 @@ export default class Ui extends UiBase<INetworkJson> {
 		this.paper.scaleContentToFit({
 			minScale: 0.5,
 			maxScale: 1.5,
-			padding: 10
+			padding: 10,
+			// TODO this makes padding a bit less bad
+			fittingBBox: { x: 0, y: 0 }
 		})
 		this.paper.setDimensions(width*2, height*2)
 	}
@@ -93,7 +99,7 @@ export default class Ui extends UiBase<INetworkJson> {
 			marginX: 50,
 			marginY: 50,
 			clusterPadding: {
-				top: 30, left: 10, right: 10, bottom: 10 }
+				top: 40, left: 20, right: 20, bottom: 20 }
 		})
 		this.syncClasses()
 		this.assignColors()
@@ -224,9 +230,12 @@ export default class Ui extends UiBase<INetworkJson> {
 		this.data.cells
 				.filter( node => node.type == "uml.State" )
 				.forEach( (machine: Machine) => {
+			let view = joint.V(this.paper.findViewByModel(machine).el)
+			// TODO edit the main template
+			view.find('path')[0].attr('d',
+				view.find('path')[0].attr('d').replace(/ 20 ?/g, ' 30'))
 			if (!this.paper.findViewByModel(machine))
 				return
-			let view = joint.V(this.paper.findViewByModel(machine).el)
 			// handle the touched state
 			view.toggleClass('is-touched', Boolean(machine.is_touched))
 			view.addClass('group-' + machine.id)

@@ -2,6 +2,7 @@
     "compilerOptions": {
         "outDir": "build/",
         "sourceMap": true,
+        "declaration": true,
         "target": "es6",
         "module": "commonjs",
         "lib": ["es7", "dom"],
@@ -11,6 +12,7 @@
         "typings/index.d.ts",
         "src/server/server.ts",
         "src/logger.ts",
+        "src/network.ts",
         "src/ui/web.tsx"
     ]
 }

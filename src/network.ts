@@ -16,8 +16,8 @@ import * as EventEmitter from 'eventemitter3'
 import { IDelta as IJsonDiff } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from "./network-json";
 
-type MachinesMap = Map<AsyncMachine, string>;
-type NodeGraph = Graph<Node>
+export type MachinesMap = Map<AsyncMachine, string>;
+export type NodeGraph = Graph<Node>
 
 export type Diff = {
     diff: IJsonDiff,
@@ -84,9 +84,9 @@ export class Node {
         let types = TransitionStepTypes
         // exceptions are SET and NO_SET which are mutually exclusive
         // with a latest-wins policy
-        if (type == types.SET && this.step_style & type.NO_SET)
+        if (type == types.SET && this.step_style & types.NO_SET)
             this.step_style ^= types.NO_SET
-        else if (type == types.NO_SET && this.step_style & type.SET)
+        else if (type == types.NO_SET && this.step_style & types.SET)
             this.step_style ^= types.SET
     }
 
@@ -106,6 +106,7 @@ export class Node {
 
 /**
  * TODO inherit from Graph
+ * TODO detect ID collisions
  */
 export default class Network extends EventEmitter {
     id: string;
@@ -121,6 +122,9 @@ export default class Network extends EventEmitter {
         return [...this.graph.set]
     }
 
+    /**
+     * TODO accept machines in the constructor
+     */
     constructor() {
         super()
         this.graph = new Graph() as NodeGraph
@@ -143,7 +147,7 @@ export default class Network extends EventEmitter {
             this.linkPipedStates(machine)
         }
 
-        this.emit('change', ChangeType.NEW_MACHINE)
+        this.emit('change', ChangeType.NEW_MACHINE, machine.id())
     }
 
     isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
