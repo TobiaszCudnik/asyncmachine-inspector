@@ -2,10 +2,10 @@
     "compilerOptions": {
         "outDir": "build/",
         "sourceMap": true,
-        "declaration": true,
         "target": "es6",
         "module": "commonjs",
-        "lib": ["es7", "dom"],
+        "allowJs": true,
+        "lib": ["es7", "dom", "es6"],
         "jsx": "react"
     }, 
     "files": [

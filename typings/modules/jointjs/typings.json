@@ -5,7 +5,6 @@
     "raw": "registry:npm/jointjs#0.9.10+20160728120838",
     "main": "index.d.ts",
     "version": "0.9.10",
-    "global": false,
     "name": "jointjs",
     "type": "typings"
   }

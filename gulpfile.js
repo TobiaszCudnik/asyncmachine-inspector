@@ -1,6 +1,7 @@
 /*
 TODO
 - separate builds for ui and graph source
+- use webpack2 and awesome-typescript-loader
 */
 
 var gulp = require('gulp-help')(require('gulp'))
@@ -186,7 +187,7 @@ gulp.task('tests:build', 'Build unit tests', function() {
             presets: ['es2015']
         }))
         .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('./build-test/no-ui'))
+        .pipe(gulp.dest('./build-test/'))
 });
 
 gulp.task('tests:build:watch', 'Compile unit tests and watch for changes', ['tests:build'], function() {
@@ -194,15 +195,15 @@ gulp.task('tests:build:watch', 'Compile unit tests and watch for changes', ['tes
 });
 
 gulp.task('tests:run', 'Run already BUILT unit tests', shell.task([
-    'mocha build-test/no-ui/test/no-ui/test.js'
+    'mocha build-test/no-ui/test/**/*.js'
 ]))
 
 gulp.task('tests:debug', 'Run already BUILT unit tests', shell.task([
-    'mocha --debug-brk --no-timeouts build-test/no-ui/test/no-ui/test.js'
+    'mocha --debug-brk --no-timeouts build-test/no-ui/test/**.*.js'
 ]))
 
 gulp.task('tests:debug:inspector', 'Run already BUILT unit tests', shell.task([
-    'node-debug _mocha --no-timeouts build-test/no-ui/test/no-ui/test.js'
+    'node-debug _mocha --no-timeouts build-test/no-ui/test/**/*'
 ]))
 
 // TODO ignore test errors in watch

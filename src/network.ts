@@ -107,6 +107,9 @@ export class Node {
 /**
  * TODO inherit from Graph
  * TODO detect ID collisions
+ * TODO switch the graph struct to cpettitt/graphlib
+ *   maybe add support for the Map datastructure
+ * TODO use jsongraph/json-graph-specification
  */
 export default class Network extends EventEmitter {
     id: string;

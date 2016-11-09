@@ -84,7 +84,7 @@ namespace joint {
       findModelsFromPoint(rect: BBox): Element[];
       findModelsUnderElement(element: Element, options?: { searchBy?: 'bbox' | 'center' | 'origin' | 'corner' | 'topRight' | 'bottomLeft' }): Element[];
       getBBox(elements: Element[], options?: any): BBox;
-      toGraphLib(): any; // graphlib graph object
+      toGraphLib(opts: any): any; // graphlib graph object
       findModelsInArea(rect: BBox, options?: any): BBox|boolean;
       getCellsBBox(cells: Cell[], options?: any): BBox;
       getInboundEdges(node: string): Object;
@@ -555,6 +555,7 @@ namespace joint {
 
     class DirectedGraph {
       static layout(graph: dia.Graph, options?: LayoutOptions): LayoutResult;
+      static toGraphLib(graph: dia.Graph, opt: any): any;
     }
   }
 }

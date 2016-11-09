@@ -1,11 +1,12 @@
 import 'source-map-support/register'
 import { factory } from 'asyncmachine'
+import * as jsondiffpatch from 'jsondiffpatch'
 import { expect } from 'chai'
 import * as assert from 'assert'
 import Network from '../../src/network'
-import D3GraphJson, {
-    D3JsonDiffFactory
-} from '../../src/d3network'
+import GraphJson, {
+    JsonDiffFactory
+} from '../../src/ui/cola-network'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -86,7 +87,7 @@ describe("Network", function() {
     describe('json factory', () => {
         var json;
         before(() => {
-            this.jsonGenerator = new D3GraphJson(stateGraph)
+            this.jsonGenerator = new GraphJson(stateGraph)
             json = this.jsonGenerator.generateJson();
         })
         
@@ -102,8 +103,8 @@ describe("Network", function() {
     describe('diffs factory', function() {
         var json2;
         before(function() {
-            let jsonGenerator = new D3GraphJson(stateGraph)
-            var differ = new D3JsonDiffFactory(jsonGenerator)
+            let jsonGenerator = new GraphJson(stateGraph)
+            var differ = new JsonDiffFactory(jsonGenerator)
             
             differ.generateJson()
             var prev = differ.previous_json
@@ -124,7 +125,6 @@ describe("Network", function() {
             expect(this.diff).to.eql(expected_diff)
         })
     })
-        
 
     //describe('ui', function() {
     //    it('should render', function() {

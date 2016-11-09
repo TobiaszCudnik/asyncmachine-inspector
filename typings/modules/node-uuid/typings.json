@@ -5,7 +5,6 @@
     "raw": "registry:npm/node-uuid#1.4.7+20160723033700",
     "main": "main.d.ts",
     "browser": "browser.d.ts",
-    "global": false,
     "name": "node-uuid",
     "type": "typings"
   }

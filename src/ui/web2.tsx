@@ -12,7 +12,8 @@ import {
 } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
-import IterableEmitter from '../../../async-iterators/iterable-emitter'
+// import IterableEmitter from '../../../async-iterators/iterable-emitter'
+import JointDataService from './joint-data-service'
 
 /**
  * TODO
@@ -24,15 +25,9 @@ export default function() {
 	var socket = io('http://localhost:3030/client');
 	var layout
 	var container: Element
-	let data: {
-		graph: INetworkJson,
-		patches: Diff[]
-	} = {
-		graph: null,
-		patches: []
-	};
 	let autoplay_ = true
 	let timer
+	let data_service = new JointDataService
 	function autoplay(state?) {
 		return false
 		if (state === undefined)
@@ -70,6 +65,7 @@ export default function() {
 
 	function onSlider(event, value) {
 		// TODO debounce
+		data_service.scrollData(value)
 		if (value < layoutData.step) {
 			autoplay(false)
 			// go back in time
@@ -153,8 +149,8 @@ export default function() {
 		})
 
 		socket.on('full-sync', (graph_data: INetworkJson) => {
-			console.log('full-sync', data)
-			data.graph = graph_data
+			console.log('full-sync', graph_data)
+			data_service.data = graph_data
 			graph.setData(graph_data, true)
 			layoutData.graph = graph_data
 			showMsg('Connected')

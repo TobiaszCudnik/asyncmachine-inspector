@@ -10,6 +10,7 @@ declare module "jsondiffpatch" {
     export interface IDiffPatch {
         reverse(delta: IDelta): IDelta;
         path(source: Object, delta: IDelta);
+        unpatch(source: Object, delta: IDelta);
         diff(source1: Object, source2: Object): IDelta;
     }
     

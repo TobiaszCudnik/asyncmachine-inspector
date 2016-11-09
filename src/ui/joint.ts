@@ -13,14 +13,23 @@ import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as debounce from 'throttle-debounce/debounce'
 import * as deepcopy from 'deepcopy'
-import * as colors from 'material-ui/styles/colors' 
+import * as colors from 'material-ui/styles/colors'
 import * as randomNumber from 'random-number'
 import * as Stylesheet from 'stylesheet.js'
+import GraphLayout from './joint-layout-json'
+// import * as morphdom from 'morphdom'
 
 
-type IDelta = jsondiffpatch.IDelta
+type IDelta = jsondiffpatch.IDeltas
+
+// simplify the link markup
+joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
+    markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
+});
 
 /**
+ * Fiddles:
+ * http://jsfiddle.net/user/kumilingus/fiddles/3/
  * TODO consume a stream of events
  * TODO support an initialization without a reference to other instances
  * TODO
@@ -28,7 +37,15 @@ type IDelta = jsondiffpatch.IDelta
  * - save calculated layout positions, so when scrolling theres no delay
  * - calculate positions using the WebCole library
  * - show the number of steps
- * - use cell highlighters `cellView.highlight();`	
+ * - use cell highlighters `cellView.highlight();`
+ * - update jointjs to 1.0
+ * - switch autolayout to ciena-blueplanet/dagre
+ * 
+ * TODO
+ * - slim links
+ * http://jsfiddle.net/kumilingus/fjzvqhhk/
+ * - clone cells from existing cells
+ * http://jsfiddle.net/kumilingus/fjzvqhhk/
  */
 export default class Ui extends UiBase<INetworkJson> {
 
@@ -36,74 +53,113 @@ export default class Ui extends UiBase<INetworkJson> {
 
 	paper: joint.dia.Paper
 	graph: joint.dia.Graph
+	graph_layout: GraphLayout;
 
 	available_colors: string[] = [];
 	group_colors = {};
 	stylesheet: Stylesheet;
+
+	width = 5000;
+	height = 3500;
+
+	minScale = 0.3;
+	maxScale = 1.5;
 
 	constructor(
 			public data: INetworkJson) {
 			
 		super(data)
 		this.graph = new joint.dia.Graph();
+		this.graph_layout = new GraphLayout(this.graph)
 		this.stylesheet = new Stylesheet
 		this.parseColors()
 	}
 
 	render(el) {
 		this.container = $(el)
+		// this.container = $('<div/>')
 		assert(this.container)
 
 		if (!this.paper) {
 			this.paper = new joint.dia.Paper({
 				el: this.container,
+				// TODO make it work
+				async: true,
 				gridSize: 1,
-				model: this.graph
+				model: this.graph,
+				width: this.width,
+				height: this.height,
+				// TODO check these
+				// defaultLink: new joint.dia.Link({
+				// 	router: { name: 'manhattan', args: { step: 20 } },
+				// 	connection: { name: 'orthogonal' },
+				// 	attrs: {
+				// 		'.marker-target': { d: 'M 10 0 L 0 5 L 10 10 z', fill: '#fff', stroke: '#000' },
+				// 		'.link-tools .tool-remove circle, .marker-vertex': { r: 8 },
+				// 		'.connection': {
+				// 				stroke: '#000', 'stroke-width': 1
+				// 		}
+				// 	}
+				// }),
+				interactive: {
+					vertexAdd: false
+				}
 			});
+			// TODO debounce
+			window.addEventListener('resize', debounce(500, false, 
+				() => this.autosize() ))
 		}
 
 		if (this.data)
 			this.setData(this.data, true)
 
-		// TODO debounce
-		window.addEventListener('resize', debounce(500, false, 
-			() => this.autosize() ))
+		// let start = Date.now()
+		// morphdom(this.container.get(0), this.vdom_container.get(0))
+		// console.log(`DOM sync ${Date.now() - start}ms`)
 	}
 
 	// TODO buggy, the svg element doesnt get expanded after a min scale has been achieved
 	autosize() {
-		let width = this.container.width() - 2
-		let height = this.container.height() - 2
-		this.paper.setDimensions(width, height)
-		this.paper.scaleContentToFit({
-			minScale: 0.5,
-			maxScale: 1.5,
-			padding: 10,
-			// TODO this makes padding a bit less bad
-			fittingBBox: { x: 0, y: 0 }
-		})
-		this.paper.setDimensions(width*2, height*2)
+		let visible_width = this.container.width()
+		let visible_height = this.container.height()
+
+		let graph_width = this.graph_layout.clusters.graph().width
+		let graph_height = this.graph_layout.clusters.graph().height
+
+		let scale = Math.min(
+        	Math.min(this.maxScale, Math.max(this.minScale, visible_width / graph_width)),
+        	Math.min(this.maxScale, Math.max(this.minScale, visible_height / graph_height))
+		)
+		this.paper.scale(scale, scale);
 	}
 
 	// TODO add scrolling by click-n-drag
 	layout() {
 		// lay out the graph
-		joint.layout.DirectedGraph.layout(this.graph, {
-			// setLinkVertices: true,
-			// setVertices: (link, points) => {
-			// 	points[0] = link.findView(this.paper).sourcePoint
-			// 	points[points.length-1] = link.findView(this.paper).targetPoint
-			// 	link.set('vertices', points);
-			// },
-			rankDir: 'TB',
-			marginX: 50,
-			marginY: 50,
-			clusterPadding: {
-				top: 40, left: 20, right: 20, bottom: 20 }
-		})
+		// joint.layout.DirectedGraph.layout(this.graph, {
+		// 	// TODO check verticles from dagre
+		// 	// setLinkVertices: true,
+		// 	// setVertices: (link, points) => {
+		// 	// 	points[0] = link.findView(this.paper).sourcePoint
+		// 	// 	points[points.length-1] = link.findView(this.paper).targetPoint
+		// 	// 	link.set('vertices', points);
+		// 	// },
+		// 	rankDir: 'TB',
+		// 	marginX: 50,
+		// 	marginY: 50,
+		// 	clusterPadding: {
+		// 		top: 40, left: 20, right: 20, bottom: 20 }
+		// 	// TODO check resizeClusters: true
+		// })
+		let start = Date.now()
+		let tmp1 = start
 		this.syncClasses()
+		let tmp2 = Date.now()
+		console.log(`Sync classes ${tmp2- tmp1}ms`)
 		this.assignColors()
-		this.autosize()
+		tmp1 = tmp2
+		tmp2 = Date.now()
+		console.log(`Assign colors ${tmp2- tmp1}ms`)
 	}
 
 	parseColors() {
@@ -163,6 +219,23 @@ export default class Ui extends UiBase<INetworkJson> {
 		)
 	}
 
+	diffToCells(source, target, diff: IDelta): (State | Link | Machine)[] {
+		if (!diff.cells)
+			return []
+
+		let changed = []
+		for (let key of Object.keys(diff.cells)) {
+			if (key == '_t')
+				continue
+			if (key[0] == '_')
+				changed.push(source.cells[key.slice(1)])
+			else
+				changed.push(target.cells[key])
+		}
+
+		return changed
+	}
+
 	diffAddsRemovesElements(diff: IDelta) {
 		return Object.keys(diff.cells).some( key => {
 			if (key == '_t' || !(diff.cells[key] instanceof Array))
@@ -174,29 +247,51 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 	
 	setData(data, inital = false) {
-		var canPatch = false
-		var diff
+		let start = Date.now()
+		let changed_cells
+		let can_patch = false
+		let diff
+
 		if (!inital && this.data) {
-			// TODO avoid double diff
-			// TODO maybe setting all the cells with cell.set() will be faster?
 			diff = jsondiffpatch.create({
-					objectHash: (node) => node.id
-				}).diff(this.data, data)
-			if (!diff || !diff.cells)
+				objectHash: (node) => node.id
+			}).diff(this.data, data)
+			console.log(`Diff ${Date.now() - start}ms`)
+			if (!diff)
 				return
-			canPatch = !this.diffAddsRemovesElements(diff)
+			console.log('diff', diff)
+			can_patch = !this.diffAddsRemovesElements(diff)
+			changed_cells = this.diffToCells(this.data, data, diff)
+
+			console.log(`${changed_cells.length} cells changed`)
+
+			if (!changed_cells.length)
+				return
 		}
-		
-		if (canPatch) {
+
+		if (can_patch) {
+			// this.patchElements(changed_cells)
+			let start = Date.now()
 			this.patchElements(diff, data)
+			console.log(`Patch elements ${Date.now() - start}ms`)
 			this.data = deepcopy(data)
-			// TODO sync only altered elements
 			this.syncClasses()
 		} else {
 			this.data = deepcopy(data)
-			this.graph.fromJSON(this.data)
-			this.layout()
+			console.log(`clone ${Date.now() - start}ms`)
+			this.graph_layout.fromJson(this.data)
+			this.paper.on('render:done', () => {
+				// TODO mutex on setdata till here
+				this.layout()
+				console.log(`Overall ${Date.now() - start}ms`)
+			})
+
+			let tmp2 = Date.now()
+			this.autosize()
+			console.log(`Autosize ${Date.now() - tmp2}ms`)
 		}
+
+		console.log(`setData ${Date.now() - start}ms`)
 	}
 
 	syncClasses() {
@@ -265,6 +360,10 @@ export default class Ui extends UiBase<INetworkJson> {
 			}
 		})
 	}
+
+	// patchElements(changed_cells) {
+	// 	this.graph.resetCells(changed_cells)
+	// }
 
 	patchElements(patch: IDelta, data: INetworkJson) {
 		for (let key of Object.keys(patch.cells)) {

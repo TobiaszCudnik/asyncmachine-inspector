@@ -28,6 +28,7 @@ export class NetworkJsonFactory
         this.json.cells.push(node)
 
         let machine = <Machine>this.getNodeById(node.parent)
+        // TODO normalize ID !!!
         machine.embeds.push(node.id)
     }
     addLinkNode(node: Link) {
@@ -41,7 +42,7 @@ export class NetworkJsonFactory
             type: 'uml.State',
             // TODO normalize machine ID    
             id: machine_id.replace(/[^\w\d]/g, '-'),
-            name: machine.id(),
+            attrs: { text: { text: machine.id() } },
             embeds: [],
             z: 1,
             is_touched: this.network.machines_during_transition.has(machine_id),
@@ -163,3 +164,5 @@ type JsonNode = Machine | State | Link
 export interface INetworkJson {
     cells: Array<State | Link | Machine>
 }
+
+export type TCell = State | Link | Machine

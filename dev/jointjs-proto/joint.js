@@ -12409,7 +12409,7 @@ joint.layout.DirectedGraph = {
                     });
                 }
             },
-            importEdge: function(edgeObj, gl) {
+            importEdge: function(edgeObj, gl) { 
 
                 var link = this.getCell(edgeObj.name);
                 var glEdge = gl.edge(edgeObj);

@@ -5,12 +5,15 @@ import Network, {
     ChangeType
 } from "./network"
 import * as io from 'socket.io-client'
-import NetworkJson, {
-    JsonDiffFactory
-} from "./ui/cola-network"
 // import NetworkJson, {
 //     JsonDiffFactory
-// } from "./ui/joint-network"
+// } from "./ui/cola-network"
+import NetworkJson, {
+    JsonDiffFactory
+} from "./ui/joint-network"
+// import NetworkJson, {
+//     JsonDiffFactory
+// } from "./ui/graphviz-network"
 
 type MachineId = string;
 
