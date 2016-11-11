@@ -7,12 +7,18 @@ import { INetworkJson } from './joint-network'
 import * as io from 'socket.io-client'
 import { IDelta } from 'jsondiffpatch'
 import {
-	Diff,
-	ChangeType
+	IPatch,
+	PatchType
 } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
-import IterableEmitter from '../../../async-iterators/iterable-emitter'
+// import IterableEmitter from '../../../async-iterators/iterable-emitter'
+import {
+	default as JointDataService,
+	Direction
+} from './joint-data-service'
+import * as debounce from 'throttle-debounce/debounce'
+import { TLayoutProps } from './layout'
 
 /**
  * TODO
@@ -24,15 +30,9 @@ export default function() {
 	var socket = io('http://localhost:3030/client');
 	var layout
 	var container: Element
-	let data: {
-		graph: INetworkJson,
-		patches: Diff[]
-	} = {
-		graph: null,
-		patches: []
-	};
 	let autoplay_ = true
 	let timer
+	let data_service = new JointDataService
 	function autoplay(state?) {
 		return false
 		if (state === undefined)
@@ -44,53 +44,38 @@ export default function() {
 	}
 
 	// global setter
-	window.setJson = function(json) {
-		data = json
-		layoutData.graph = data.graph
-		layoutData.diffs = data.patches
-		layoutData.step = 0
-		layoutData.duringTransition = false
-		graph.setData(layoutData.graph)
-	}
+	// window.setJson = function(json) {
+	// 	data = json
+	// 	layoutData.graph = data.graph
+	// 	layoutData.diffs = data.patches
+	// 	layoutData.step = 0
+	// 	layoutData.duringTransition = false
+	// 	graph.setData(layoutData.graph)
+	// }
 
-	window.getJson = function() {
-		// TODO custom replaces for .leaves looking in indexOf(.nodes)
-		console.log(JSON.stringify(data))
-	}
+	// window.getJson = function() {
+	// 	// TODO custom replaces for .leaves looking in indexOf(.nodes)
+	// 	console.log(JSON.stringify(data))
+	// }
 
-	var layoutData = {
-		diffs: data.patches,
-		msg: null,
-		graph: null,
-		step: 0,
+	var layoutData: TLayoutProps = {
+		getPatchesCount() { return data_service.patches.length },
+		isDuringTransition() { return data_service.during_transition },
+		getPosition() { return data_service.step },
+		getLogs() { return data_service.getLogs() },
 		onSlider: onSlider,
-		duringTransition: false,
+		msg: null,
 		msgHidden: false
 	}
 
+	// const onSlider = debounce(500, false, FUNC ))
 	function onSlider(event, value) {
 		// TODO debounce
-		if (value < layoutData.step) {
-			autoplay(false)
-			// go back in time
-			for (let i = layoutData.step; i > value; i--) {
-				if (data.patches[i-1].diff)
-					jsondiffpatch.unpatch(layoutData.graph, data.patches[i-1].diff)
-				handleDuringTransition(data.patches[i-1], true)
-			}
-			graph.setData(layoutData.graph)
-		} else if (value > layoutData.step) {
-			// go fwd in time
-			for (let i = layoutData.step; i < value; i++) {
-				if (data.patches[i].diff)
-					jsondiffpatch.patch(layoutData.graph, data.patches[i].diff)
-				handleDuringTransition(data.patches[i])
-			}
-			graph.setData(layoutData.graph)
-		}
-		layoutData.step = value
+		let changed_cells = data_service.scrollTo(value)
+		graph.updateCells(changed_cells, data_service.last_scroll_add_remove)
+		handleTransitionMessage(data_service)
 		// autoplay turns ON on the last step of the slider
-		if (layoutData.step == data.patches.length - 1)
+		if (data_service.is_latest)
 			autoplay(true)
 		render()
 	}
@@ -104,26 +89,19 @@ export default function() {
 		layout = renderLayout(container, layoutData)
 	}
 
-	let transitionsCount = 0
-
 	// TODO breaks when reversing inside nested active_transitions
-	function handleDuringTransition(packet, reversed = false) {
-		// TODO highlight the
-		if (packet.type == ChangeType.TRANSITION_START) {
-			transitionsCount += reversed ? -1 : 1
+	function handleTransitionMessage(data_service) {
+		// TODO highlight the involved parts of the log view
+		// let reversed = (data_service.last_scroll_direction == Direction.BACK)
+		let packet = data_service.current_patch
+		if (packet.type == PatchType.TRANSITION_START) {
 			layoutData.msg = `Transition started on ${packet.machine_id}`
 			layoutData.msgHidden = false
-		} else if (packet.type == ChangeType.TRANSITION_END) {
-			transitionsCount += reversed ? 1 : -1
+		} else if (packet.type == PatchType.TRANSITION_END) {
 			layoutData.msg = `Transition ended on ${packet.machine_id}`
 			layoutData.msgHidden = false
 		} else
 			layoutData.msg = null
-		layoutData.duringTransition = !!transitionsCount
-	}
-
-	function patch(diff) {
-		jsondiffpatch.patch(layoutData.graph, diff)
 	}
 
 	document.addEventListener('DOMContentLoaded', () => {
@@ -131,7 +109,10 @@ export default function() {
 		render()
 		graph.render('#graph')
 
-		socket.once('loggers', function(ids) {
+		let start_join
+		socket.once('loggers', function (ids) {
+			start_join = Date.now()
+
 			socket.emit('join', {
 				loggerId: ids[0]
 			})
@@ -153,10 +134,10 @@ export default function() {
 		})
 
 		socket.on('full-sync', (graph_data: INetworkJson) => {
-			console.log('full-sync', data)
-			data.graph = graph_data
-			graph.setData(graph_data, true)
-			layoutData.graph = graph_data
+			console.log('full-sync', Date.now() - start_join)
+			console.log('full-sync', graph_data)
+			data_service.data = graph_data
+			graph.setData(graph_data)
 			showMsg('Connected')
 		})
 
@@ -164,22 +145,17 @@ export default function() {
 			showMsg('Disconnected')
 		})
 		
-		socket.on('diff-sync', function(packet: Diff) {
-			data.patches.push(packet)
+		socket.on('diff-sync', function(packet: IPatch) {
+			data_service.addPatch(packet)
 			console.log('diff', packet)
 			// auto render if slider at the end
 			if (autoplay() && !timer) {
 				// TODO setTimeout
 				timer = setInterval( () => {
 
-					if (layoutData.step < data.patches.length) {
-						let i = layoutData.step
-						if (data.patches[i].diff)
-							jsondiffpatch.patch(layoutData.graph, data.patches[i].diff)
-						handleDuringTransition(data.patches[i])
-						// graph.setData(layoutData.graph)
-						layoutData.step++
-						// render()
+					if (!data_service.is_latest) {
+						data_service.scrollOne()
+						render()
 					} else {
 						clearInterval(timer)
 						timer = null

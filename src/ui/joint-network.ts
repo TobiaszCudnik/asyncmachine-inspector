@@ -14,30 +14,30 @@ import * as _ from "underscore"
 
 
 export class NetworkJsonFactory 
-        extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
+        extends NetworkJsonFactoryBase<INetworkJson, TMachine, TState, TLink> {
     initJson() {
         return {
             cells: []
         }
     }
 
-    addMachineNode(node: Machine) {
+    addMachineNode(node: TMachine) {
         this.json.cells.push(node)
     }
-    addStateNode(node: State) {
+    addStateNode(node: TState) {
         this.json.cells.push(node)
 
-        let machine = <Machine>this.getNodeById(node.parent)
+        let machine = <TMachine>this.getNodeById(node.parent)
         // TODO normalize ID !!!
         machine.embeds.push(node.id)
     }
-    addLinkNode(node: Link) {
+    addLinkNode(node: TLink) {
         this.json.cells.push(node)
     }
 
     // TODO queue size
     // TODO number of listeners
-    createMachineNode(machine: AsyncMachine, machine_id: string): Machine {
+    createMachineNode(machine: AsyncMachine, machine_id: string): TMachine {
         return {
             type: 'uml.State',
             // TODO normalize machine ID    
@@ -49,7 +49,7 @@ export class NetworkJsonFactory
             
         }
     }
-    createStateNode(node: GraphNode): State {
+    createStateNode(node: GraphNode): TState {
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
@@ -62,7 +62,7 @@ export class NetworkJsonFactory
             step_style: node.step_style
         }
     }
-    createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): Link {
+    createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): TLink {
         return {
             type: 'fsa.Arrow',
             smooth: true,
@@ -111,7 +111,7 @@ export type MachineId = string;
 export type StateName = string;
 
 
-export type Machine = {
+export type TMachine = {
     type: 'uml.State',
     embeds: string[],
     id: MachineId,
@@ -119,7 +119,7 @@ export type Machine = {
     z?: number
 }
 
-export type State = {
+export type TState = {
     type: 'fsa.State'
     id: MachineId,
     parent: string,
@@ -136,7 +136,7 @@ export type State = {
     size?: {width: number, height: number}
 }
 
-export type Link = {
+export type TLink = {
     type: 'fsa.Arrow'
     id: string,
     source: {
@@ -158,11 +158,11 @@ export type Link = {
     z?: number
 }
 
-type JsonNode = Machine | State | Link
+type JsonNode = TMachine | TState | TLink
 
 
 export interface INetworkJson {
-    cells: Array<State | Link | Machine>
+    cells: Array<TState | TLink | TMachine>
 }
 
-export type TCell = State | Link | Machine
+export type TCell = TState | TLink | TMachine

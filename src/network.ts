@@ -13,35 +13,35 @@ import Graph from 'graphs'
 import * as uuid from 'node-uuid'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
-import { IDelta as IJsonDiff } from 'jsondiffpatch'
+import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from "./network-json";
 
 export type MachinesMap = Map<AsyncMachine, string>;
 export type NodeGraph = Graph<Node>
 
-export type Diff = {
-    diff: IJsonDiff,
-    type: ChangeType,
-    logs: LogEntry[]
+export interface IPatch {
+    diff: IDelta
+    type: PatchType,
+    logs: ILogEntry[]
 }
 
-export type LogEntry = {
+export interface ILogEntry {
     id: string,
     msg: string
 }
 
-export interface ExternalNode {
-    node: Node;
-    machine: AsyncMachine;
-}
-
-export enum ChangeType {
+export enum PatchType {
     STATE,
     NEW_MACHINE,
     TRANSITION_START,
     TRANSITION_END,
     TRANSITION_STEP,
     PIPE
+}
+
+export interface ExternalNode {
+    node: Node;
+    machine: AsyncMachine;
 }
 
 export class Node {
@@ -116,7 +116,7 @@ export default class Network extends EventEmitter {
     graph: NodeGraph;
     machines: MachinesMap;
     machine_ids: { [index: string]: AsyncMachine };
-    logs: LogEntry[] = []
+    logs: ILogEntry[] = []
     machines_during_transition: Set<string> = new Set
     private transition_links = new Map<Node, Set<Node>>()
     transition_origin: AsyncMachine;
@@ -150,7 +150,7 @@ export default class Network extends EventEmitter {
             this.linkPipedStates(machine)
         }
 
-        this.emit('change', ChangeType.NEW_MACHINE, machine.id())
+        this.emit('change', PatchType.NEW_MACHINE, machine.id())
     }
 
     isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
@@ -171,14 +171,14 @@ export default class Network extends EventEmitter {
         // machine.on('change', () => this.emit('change', ChangeType.STATE))
         machine.on('pipe', () => {
             this.linkPipedStates(machine)
-            this.emit('change', ChangeType.PIPE, machine.id())
+            this.emit('change', PatchType.PIPE, machine.id())
         })
         machine.on('transition-init', (transition) => {
             if (!this.transition_origin)
                 this.transition_origin = machine
             this.machines_during_transition.add(machine.id())
             // TODO this fires too early and produces an empty diff
-            this.emit('change', ChangeType.TRANSITION_START, machine.id())
+            this.emit('change', PatchType.TRANSITION_START, machine.id())
         })
         machine.on('transition-end', (transition) => {
             if (this.transition_origin === machine) {
@@ -189,7 +189,7 @@ export default class Network extends EventEmitter {
                 for (let node of this.graph.set)
                     node.step_style = null
             }
-            this.emit('change', ChangeType.TRANSITION_END, machine.id())
+            this.emit('change', PatchType.TRANSITION_END, machine.id())
         })
         machine.on('transition-step', (...steps) => {
             this.parseTransitionSteps(machine.id(), ...steps)
@@ -237,7 +237,7 @@ export default class Network extends EventEmitter {
             }
         }
 
-        this.emit('change', ChangeType.TRANSITION_STEP, machine_id)
+        this.emit('change', PatchType.TRANSITION_STEP, machine_id)
     }
 
     private statesToNodes(names: string[], machine_id: string) {

@@ -12,6 +12,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
 import Snackbar from 'material-ui/Snackbar';
+import { ILogEntry } from '../network'
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -29,13 +30,15 @@ const muiTheme = getMuiTheme({
   },
 });
 
-type MainProps = {
-  diffs: any[];
-  msg: string;
-  step: number;
+export type TLayoutProps = {
+  getPatchesCount(): number,
+  isDuringTransition(): boolean,
+  getPosition(): number,
+  getLogs(): ILogEntry[][],
   onSlider: Function;
+  msg: string;
+  msgHidden: boolean;
   connectionDialog?: any;
-  duringTransition: boolean;
 }
 
 /**
@@ -48,7 +51,7 @@ type MainProps = {
  *   - space pause/resume
  *   - left/right patch left right
  */
-export class Main extends Component<MainProps, {msgHidden: boolean}> {
+export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
   constructor(props, context) {
     super(props, context);
 
@@ -76,13 +79,13 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
-          <section id="graph" className={this.props.duringTransition && 'during-transition'} />
+          <section id="graph" className={this.props.isDuringTransition() && 'during-transition'} />
           <section id="side-bar">{(()=>{
             var container = []
-            for(let i = 0; i < this.props.step; i++) {
-                let diff = this.props.diffs[i]
-                for (let ii = 0; ii < diff.logs.length; ii++) {
-                  let entry = diff.logs[ii]
+            var logs = this.props.getLogs()
+            for (let i = 0; i < logs.length; i++) {
+                for (let ii = 0; ii < logs[i].length; ii++) {
+                  let entry = logs[i][ii]
                   let key = `log-${i}-${ii}`
                   let className = `group-${entry.id}`
                   container.push(<span className={className} key={key}>{entry.msg}<br /></span>)
@@ -93,10 +96,10 @@ export class Main extends Component<MainProps, {msgHidden: boolean}> {
           <section id="bottom-bar">
             <Slider
               min={0}
-              max={this.props.diffs.length || 1}
-              disabled={!this.props.diffs.length}
+              max={this.props.getPatchesCount() || 1}
+              disabled={!this.props.getPatchesCount()}
               step={1}
-              value={this.props.step}
+              value={this.props.getPosition()}
               onChange={this.props.onSlider}
             />
           </section>

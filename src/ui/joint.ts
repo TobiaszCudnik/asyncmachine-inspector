@@ -1,9 +1,10 @@
 import Graph from 'graphs'
 import {
 	INetworkJson,
-	State,
-	Machine,
-	Link
+	TState,
+	TMachine,
+	TLink,
+	TCell
 } from './joint-network'
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
@@ -16,13 +17,14 @@ import * as deepcopy from 'deepcopy'
 import * as colors from 'material-ui/styles/colors'
 import * as randomNumber from 'random-number'
 import * as Stylesheet from 'stylesheet.js'
-import GraphLayout from './joint-layout-json'
+import GraphLayout from './joint-layout'
 // import * as morphdom from 'morphdom'
 
 
 type IDelta = jsondiffpatch.IDeltas
 
 // simplify the link markup
+// TODO put into the right place
 joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
     markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
 });
@@ -105,17 +107,50 @@ export default class Ui extends UiBase<INetworkJson> {
 					vertexAdd: false
 				}
 			});
-			// TODO debounce
 			window.addEventListener('resize', debounce(500, false, 
 				() => this.autosize() ))
 		}
 
 		if (this.data)
-			this.setData(this.data, true)
+			this.setData(this.data)
 
 		// let start = Date.now()
 		// morphdom(this.container.get(0), this.vdom_container.get(0))
 		// console.log(`DOM sync ${Date.now() - start}ms`)
+	}
+	
+	setData(data: INetworkJson, changed_cells: TCell[] = null) {
+		this.data = data
+		let start = Date.now()
+
+		this.graph_layout.setData(this.data, changed_cells)
+		this.paper.once('render:done', () => {
+			// TODO mutex on setdata till here
+			this.layout()
+			console.log(`Overall ${Date.now() - start}ms`)
+		})
+
+		let tmp2 = Date.now()
+		this.autosize()
+		console.log(`Autosize ${Date.now() - tmp2}ms`)
+
+		console.log(`setData ${Date.now() - start}ms`)
+	}
+
+	updateCells(cells, was_add_remove) {
+		if (!was_add_remove) {
+			this.patchCells(cells)
+			this.syncClasses()
+		} else {
+			this.setData(this.data, cells)
+		}
+	}
+
+	patchCells(cells) {
+		for (let cell of cells) {
+			let model = this.graph.getCell(cell.id)
+			model.set(cell)
+		}
 	}
 
 	// TODO buggy, the svg element doesnt get expanded after a min scale has been achieved
@@ -219,81 +254,6 @@ export default class Ui extends UiBase<INetworkJson> {
 		)
 	}
 
-	diffToCells(source, target, diff: IDelta): (State | Link | Machine)[] {
-		if (!diff.cells)
-			return []
-
-		let changed = []
-		for (let key of Object.keys(diff.cells)) {
-			if (key == '_t')
-				continue
-			if (key[0] == '_')
-				changed.push(source.cells[key.slice(1)])
-			else
-				changed.push(target.cells[key])
-		}
-
-		return changed
-	}
-
-	diffAddsRemovesElements(diff: IDelta) {
-		return Object.keys(diff.cells).some( key => {
-			if (key == '_t' || !(diff.cells[key] instanceof Array))
-				return false
-
-			// added elements have the length of 1 (replaced and removed have 2)
-			return diff.cells[key].length !== 2
-		})
-	}
-	
-	setData(data, inital = false) {
-		let start = Date.now()
-		let changed_cells
-		let can_patch = false
-		let diff
-
-		if (!inital && this.data) {
-			diff = jsondiffpatch.create({
-				objectHash: (node) => node.id
-			}).diff(this.data, data)
-			console.log(`Diff ${Date.now() - start}ms`)
-			if (!diff)
-				return
-			console.log('diff', diff)
-			can_patch = !this.diffAddsRemovesElements(diff)
-			changed_cells = this.diffToCells(this.data, data, diff)
-
-			console.log(`${changed_cells.length} cells changed`)
-
-			if (!changed_cells.length)
-				return
-		}
-
-		if (can_patch) {
-			// this.patchElements(changed_cells)
-			let start = Date.now()
-			this.patchElements(diff, data)
-			console.log(`Patch elements ${Date.now() - start}ms`)
-			this.data = deepcopy(data)
-			this.syncClasses()
-		} else {
-			this.data = deepcopy(data)
-			console.log(`clone ${Date.now() - start}ms`)
-			this.graph_layout.fromJson(this.data)
-			this.paper.on('render:done', () => {
-				// TODO mutex on setdata till here
-				this.layout()
-				console.log(`Overall ${Date.now() - start}ms`)
-			})
-
-			let tmp2 = Date.now()
-			this.autosize()
-			console.log(`Autosize ${Date.now() - tmp2}ms`)
-		}
-
-		console.log(`setData ${Date.now() - start}ms`)
-	}
-
 	syncClasses() {
 		this.syncMachineClasses()
 		this.syncStateClasses()
@@ -305,7 +265,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncLinkClasses() {
 		this.data.cells
 				.filter( node => node.type == "fsa.Arrow" )
-				.forEach( (link: Link) => {
+				.forEach( (link: TLink) => {
 			if (!this.paper.findViewByModel(link))
 				return
 			// handle link types
@@ -324,7 +284,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncMachineClasses() {
 		this.data.cells
 				.filter( node => node.type == "uml.State" )
-				.forEach( (machine: Machine) => {
+				.forEach( (machine: TMachine) => {
 			let view = joint.V(this.paper.findViewByModel(machine).el)
 			// TODO edit the main template
 			view.find('path')[0].attr('d',
@@ -341,7 +301,8 @@ export default class Ui extends UiBase<INetworkJson> {
 	syncStateClasses() {
 		this.data.cells
 				.filter( node => node.type == "fsa.State" )
-				.forEach( (state: State) => {
+				.forEach( (state: TState) => {
+			// state = state as joint.dia.Cell
 			if (!this.paper.findViewByModel(state))
 				return
 			let view = joint.V(this.paper.findViewByModel(state).el)
@@ -359,20 +320,5 @@ export default class Ui extends UiBase<INetworkJson> {
 				view.toggleClass(classname, Boolean(state.step_style & TransitionStepTypes[key]))
 			}
 		})
-	}
-
-	// patchElements(changed_cells) {
-	// 	this.graph.resetCells(changed_cells)
-	// }
-
-	patchElements(patch: IDelta, data: INetworkJson) {
-		for (let key of Object.keys(patch.cells)) {
-			if (key == '_t')
-				continue
-			// TODO assumes this.data didnt mutate
-			let cell = this.graph.getCell(this.data.cells[key].id)
-			cell.set(data.cells[key])
-			// this.setActiveClass(cell.attributes)
-		}
 	}
 }

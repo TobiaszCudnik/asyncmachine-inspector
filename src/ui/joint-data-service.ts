@@ -5,11 +5,15 @@ import {
     TCell
 } from './joint-network'
 import { EventEmitter } from 'events'
-import { ChangeType } from '../network'
+import {
+    IPatch,
+    PatchType,
+    ILogEntry
+} from '../network'
 
-export interface IPatch {
-    type: number,
-    diff: IDelta
+export enum Direction {
+    FWD,
+    BACK
 }
 
 class JointDataService extends EventEmitter {
@@ -20,16 +24,34 @@ class JointDataService extends EventEmitter {
     during_transition = false;
     transitions_count = 0;
     /** Did the last scroll add or remove any cells? */
+    // TODO binary flags for all of the last scrolls props
     last_scroll_add_remove = false;
-    get current_patch(): IPatch {
-        return this.patches[this.step+1]
+    last_scroll_direction: Direction | null = null
+    get current_patch(): IPatch | null {
+        if (!this.step)
+            return null
+        return this.patches[this.step-1]
+    }
+    get is_latest() {
+        return this.step == this.patches.length
     }
     constructor(data?: INetworkJson) {
         super()
         this.data = data || null
     }
-    addDiff(patch: IPatch) {
+    addPatch(patch: IPatch) {
         this.patches.push(patch)
+    }
+    // TODO the reverse param
+    scrollOne() {
+        this.scrollTo(Math.min(this.step + 1, this.patches.length))
+    }
+    /**
+     * Returns all the logs till the current position.
+     */
+    getLogs(): ILogEntry[][] {
+        return this.patches.slice(0, Math.max(0, this.step - 1))
+            .map( patch => patch.logs || [] )
     }
     /**
      * Slides data to specific point (0 == no patches applied).
@@ -37,10 +59,11 @@ class JointDataService extends EventEmitter {
      * Returns a list of affected nodes (in their latest form (
      * in the scroll direction)).
      */
-    scrollData(position: number): Set<string> {
+    scrollTo(position: number): Set<string> {
         this.last_scroll_add_remove = false
         let changed = new Set<string>()
 		if (position < this.step) {
+            this.last_scroll_direction = Direction.BACK
 			// go back in time
 			for (let i = this.step; i > position; i--) {
                 let diff = this.patches[i-1].diff
@@ -50,6 +73,7 @@ class JointDataService extends EventEmitter {
 				this.handleDuringTransition(this.patches[i-1], true)
 			}
 		} else if (position > this.step) {
+            this.last_scroll_direction = Direction.FWD
 			// go fwd in time
 			for (let i = this.step; i < position; i++) {
                 let diff = this.patches[i].diff
@@ -104,9 +128,9 @@ class JointDataService extends EventEmitter {
 	// TODO breaks when reversing inside nested active_transitions
 	handleDuringTransition(packet, reversed = false) {
         // TODO expose data for messages
-		if (packet.type == ChangeType.TRANSITION_START)
+		if (packet.type == PatchType.TRANSITION_START)
 			this.transitions_count += reversed ? -1 : 1
-		else if (packet.type == ChangeType.TRANSITION_END)
+		else if (packet.type == PatchType.TRANSITION_END)
 			this.transitions_count += reversed ? 1 : -1
 	}
 }
