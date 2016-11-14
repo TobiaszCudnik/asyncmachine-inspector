@@ -34,7 +34,6 @@ export default function() {
 	let timer
 	let data_service = new JointDataService
 	function autoplay(state?) {
-		return false
 		if (state === undefined)
 			return autoplay_
 

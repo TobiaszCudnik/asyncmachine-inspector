@@ -116,7 +116,15 @@ export type TMachine = {
     embeds: string[],
     id: MachineId,
     name: string,
-    z?: number
+    z?: number,
+    position?: {
+        x: number,
+        y: number,
+    },
+    size?: {
+        width: number,
+        height: number,
+    },
 }
 
 export type TState = {
@@ -133,7 +141,14 @@ export type TState = {
     },
     is_set?: boolean,
     z?: number,
-    size?: {width: number, height: number}
+    size?: {
+        width: number,
+        height: number,
+    },
+    position?: {
+        x: number,
+        y: number,
+    },
 }
 
 export type TLink = {
@@ -155,7 +170,15 @@ export type TLink = {
         }
     }>,
     smooth?: boolean,
-    z?: number
+    z?: number,
+    position?: {
+        x: number,
+        y: number,
+    },
+    size?: {
+        width: number,
+        height: number,
+    },
 }
 
 type JsonNode = TMachine | TState | TLink

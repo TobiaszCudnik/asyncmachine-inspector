@@ -21,8 +21,8 @@ export type NodeGraph = Graph<Node>
 
 export interface IPatch {
     diff: IDelta
-    type: PatchType,
-    logs: ILogEntry[]
+    type?: PatchType,
+    logs?: ILogEntry[]
 }
 
 export interface ILogEntry {

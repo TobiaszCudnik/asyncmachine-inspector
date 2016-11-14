@@ -8,3 +8,9 @@
 !/node_modules/graphs/
 /node_modules/graphs/node_modules/
 /dist/
+/src/**/*.js
+/src/**/*.d.ts
+/src/**/*.js.map
+/test/**/*.js
+/test/**/*.d.ts
+/test/**/*.js.map

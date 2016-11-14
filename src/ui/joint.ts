@@ -119,7 +119,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		// console.log(`DOM sync ${Date.now() - start}ms`)
 	}
 	
-	setData(data: INetworkJson, changed_cells: TCell[] = null) {
+	setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
 		this.data = data
 		let start = Date.now()
 
@@ -137,7 +137,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		console.log(`setData ${Date.now() - start}ms`)
 	}
 
-	updateCells(cells, was_add_remove) {
+	updateCells(cells: Iterable<string>, was_add_remove) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
 			this.syncClasses()
@@ -266,7 +266,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		this.data.cells
 				.filter( node => node.type == "fsa.Arrow" )
 				.forEach( (link: TLink) => {
-			if (!this.paper.findViewByModel(link))
+			if (!this.paper.findViewByModel(link as TCell))
 				return
 			// handle link types
 			let classNames = (link.labels["0"].attrs.text.text || 'pipe')

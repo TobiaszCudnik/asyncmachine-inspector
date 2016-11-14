@@ -101,7 +101,7 @@ export default class GraphLayout {
     })
   }
 
-  setData(data: INetworkJson, changed_cells: TCell[] = []) {
+  setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
     let start = Date.now()
     this.syncData(data, changed_cells)
     console.log(`Sync data ${Date.now() - start}ms`)
@@ -152,7 +152,7 @@ export default class GraphLayout {
   }
 
   // TODO split!
-  syncData(data: INetworkJson, changed_cells: TCell[] = []) {
+  syncData(data: INetworkJson, changed_cells: Iterable<string> = []) {
     let subgraphs = this.subgraphs
     let clusters = this.clusters
     let cells = this.cells
@@ -247,9 +247,10 @@ export default class GraphLayout {
     changed_cells = changed_cells || []
 
     // find deleted nodes
-    for (let cell of changed_cells) {
-      if (cells.has(cell.id))
+    for (let cell_id of changed_cells) {
+      if (cells.has(cell_id))
         continue
+      let cell = 
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
         clusters.removeNode(cell.id)
@@ -335,7 +336,7 @@ export default class GraphLayout {
     }
   }
 
-  syncSourceGraph(data: INetworkJson, changed_cells: TCell[] = []) {
+  syncSourceGraph(data: INetworkJson, changed_cells: Iterable<string> = []) {
 
     let subgraphs = this.subgraphs
     let clusters = this.clusters
@@ -371,9 +372,9 @@ export default class GraphLayout {
       }
 
       if (first_run) {
-        cell = deepcopy(cell)
-        cell.position = position
-        cell.size = size
+        // cell = deepcopy(cell)
+        // cell.position = position
+        // cell.size = size
         batch_cells.push(cell)
         continue
       }
@@ -383,17 +384,18 @@ export default class GraphLayout {
       cell.position = position
       cell.size = size
       if (!element) {
-        this.source_graph.addCell(cell)
+        this.source_graph.addCell((<any>cell) as joint.dia.Cell)
       } else {
         element.set(cell)
       }
     }
 
     if (!first_run) {
-      for (let cell of changed_cells) {
-        if (cells.has(cell.id))
+      for (let cell_id of changed_cells) {
+        if (cells.has(cell_id))
           continue
-        this.source_graph.removeCells([cell])
+        // TODO check if ID is enough
+        this.source_graph.removeCells([cell_id])
       }
     } else {
       this.source_graph.resetCells(batch_cells)
