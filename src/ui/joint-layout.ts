@@ -250,7 +250,7 @@ export default class GraphLayout {
     for (let cell_id of changed_cells) {
       if (cells.has(cell_id))
         continue
-      let cell = // TODO
+      let cell = this.source_graph.getCell(cell_id)
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
         clusters.removeNode(cell.id)
@@ -373,8 +373,8 @@ export default class GraphLayout {
 
       if (first_run) {
         // cell = deepcopy(cell)
-        // cell.position = position
-        // cell.size = size
+        cell.position = position
+        cell.size = size
         batch_cells.push(cell)
         continue
       }
