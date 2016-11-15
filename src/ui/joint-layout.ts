@@ -250,7 +250,7 @@ export default class GraphLayout {
     for (let cell_id of changed_cells) {
       if (cells.has(cell_id))
         continue
-      let cell = 
+      let cell = // TODO
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
         clusters.removeNode(cell.id)

@@ -42,6 +42,7 @@ joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
  * - use cell highlighters `cellView.highlight();`
  * - update jointjs to 1.0
  * - switch autolayout to ciena-blueplanet/dagre
+ * - hightlight/strike through required dependencies of auto states
  * 
  * TODO
  * - slim links

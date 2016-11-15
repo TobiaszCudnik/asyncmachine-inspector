@@ -61,7 +61,7 @@ export default class Logger {
         if (type == PatchType.TRANSITION_STEP && !diff && !this.network.logs.length)
             return
         this.io.emit('diff-sync', packet)
-        console.dir(diff && diff.cells)
+        // console.dir(diff && diff.cells)
         this.network.logs = []
     }
 
