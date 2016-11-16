@@ -57,8 +57,9 @@ export class Node {
      * Is the state currently set?
      */
     get is_set(): boolean {
-        return this.machine.duringTransition()
-            ? this.machine.duringTransition().before.includes(this.name)
+        // TODO somehow handle transition executed by an external queue
+        return this.machine.transition
+            ? this.machine.transition.before.includes(this.name)
             : this.machine.is(this.name)
     }
     

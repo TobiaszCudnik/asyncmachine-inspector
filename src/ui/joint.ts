@@ -43,6 +43,7 @@ joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
  * - update jointjs to 1.0
  * - switch autolayout to ciena-blueplanet/dagre
  * - hightlight/strike through required dependencies of auto states
+ * - mark which machines queue is currently executing
  * 
  * TODO
  * - slim links
