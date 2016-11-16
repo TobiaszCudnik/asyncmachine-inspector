@@ -38,6 +38,7 @@
     "chai": "^3.0.0",
     "chai-xml": "^0.3.0",
     "ciena-dagre": "^1.0.0",
+    "dagre": "^0.7.4",
     "deepcopy": "^0.6.3",
     "del": "^2.0.2",
     "eventemitter3": "^1.1.1",
