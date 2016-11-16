@@ -21,12 +21,14 @@ class JointDataService extends EventEmitter {
     data: INetworkJson | null;
     // 0 mean initial, non-patched data
     step = 0;
-    during_transition = false;
-    transitions_count = 0;
+    active_transitions_count = 0;
     /** Did the last scroll add or remove any cells? */
     // TODO binary flags for all of the last scrolls props
     last_scroll_add_remove = false;
     last_scroll_direction: Direction | null = null
+    get during_transition(): boolean {
+        return Boolean(this.active_transitions_count)
+    };
     get current_patch(): IPatch | null {
         if (!this.step)
             return null
@@ -129,9 +131,9 @@ class JointDataService extends EventEmitter {
 	handleDuringTransition(packet, reversed = false) {
         // TODO expose data for messages
 		if (packet.type == PatchType.TRANSITION_START)
-			this.transitions_count += reversed ? -1 : 1
+			this.active_transitions_count += reversed ? -1 : 1
 		else if (packet.type == PatchType.TRANSITION_END)
-			this.transitions_count += reversed ? 1 : -1
+			this.active_transitions_count += reversed ? 1 : -1
 	}
 }
 

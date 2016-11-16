@@ -71,11 +71,11 @@
         }
 
         .require path.connection {
-            stroke: #1976D2;
+            stroke: #555;
         }
-        .link.require .labels rect {
-            stroke: #1976D2;
-            fill: #1976D2;
+        .joint-link.require .labels rect {
+            stroke: #555;
+            fill: #555;
         }
 
         .drop path.connection,
@@ -83,23 +83,23 @@
             stroke: #C62828;
             stroke-dasharray: 5 2;
         }
-        .link.drop .labels rect,
-        .link.inverted .labels rect {
+        .joint-link.drop .labels rect,
+        .joint-link.inverted .labels rect {
             stroke: #C62828;
             fill: #C62828;
         }
 
         .add path.connection,
         .pipe path.connection {
-            stroke: #555;
+            stroke: #1976D2;
         }
-        .link.add .labels rect,
-        .link.pipe .labels rect {
-            stroke: #555;
-            fill: #555;
+        .joint-link.add .labels rect,
+        .joint-link.pipe .labels rect {
+            stroke: #1976D2;
+            fill: #1976D2;
         }
 
-        .link .labels rect {
+        .joint-link .labels rect {
             fill: #7c68fc;
             stroke: #7c68fc;
             stroke-width: 10;
@@ -107,7 +107,7 @@
             ry: 5;
         }
 
-        .link .labels text {
+        .joint-link .labels text {
             fill: white;
         }
 
@@ -164,7 +164,7 @@
             stroke-width: 6px;
         }
 
-        #graph.during-transition .viewport > :not(.is-touched) {
+        #graph.during-transition .joint-viewport > :not(.is-touched) {
             opacity: 0.3;
             transition-duration: 0.5s;
         }

@@ -139,7 +139,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		console.log(`setData ${Date.now() - start}ms`)
 	}
 
-	updateCells(cells: Iterable<string>, was_add_remove) {
+	updateCells(cells: Iterable<string>, was_add_remove: boolean = false) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
 			this.syncClasses()
@@ -148,11 +148,16 @@ export default class Ui extends UiBase<INetworkJson> {
 		}
 	}
 
-	patchCells(cells) {
-		for (let cell of cells) {
-			let model = this.graph.getCell(cell.id)
+	patchCells(cell_ids: Iterable<string>) {
+		for (let cell of this.getDataCellsByIds(cell_ids)) {
+			let model = this.graph.getCell(cell)
 			model.set(cell)
 		}
+	}
+
+	getDataCellsByIds(cell_ids: Iterable<string>): TCell {
+		let ids = [...cell_ids]
+		return this.data.cells.filter( cell => ids.includes(cell.id))
 	}
 
 	// TODO buggy, the svg element doesnt get expanded after a min scale has been achieved
