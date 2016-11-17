@@ -93,10 +93,10 @@ export default function() {
 		// TODO highlight the involved parts of the log view
 		// let reversed = (data_service.last_scroll_direction == Direction.BACK)
 		let packet = data_service.current_patch
-		if (packet.type == PatchType.TRANSITION_START) {
+		if (packet && packet.type == PatchType.TRANSITION_START) {
 			layoutData.msg = `Transition started on ${packet.machine_id}`
 			layoutData.msgHidden = false
-		} else if (packet.type == PatchType.TRANSITION_END) {
+		} else if (packet && packet.type == PatchType.TRANSITION_END) {
 			layoutData.msg = `Transition ended on ${packet.machine_id}`
 			layoutData.msgHidden = false
 		} else

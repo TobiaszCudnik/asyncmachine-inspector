@@ -4,6 +4,10 @@ import AsyncMachine, {
     TransitionStepFields
 } from 'asyncmachine'
 import {
+    IBind,
+    IEmit
+} from 'asyncmachine/src/types-states'
+import {
     ITransitionStep,
     IStateStruct
 } from '../node_modules/asyncmachine/build/types'
@@ -16,12 +20,12 @@ import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from "./network-json";
 
-export type MachinesMap = Map<AsyncMachine, string>;
+export type MachinesMap = Map<AsyncMachine<any, IBind, IEmit>, string>;
 export type NodeGraph = Graph<Node>
 
 export interface IPatch {
     diff: IDelta
-    type?: PatchType,
+    type: PatchType,
     logs?: ILogEntry[]
 }
 
@@ -41,7 +45,7 @@ export enum PatchType {
 
 export interface ExternalNode {
     node: Node;
-    machine: AsyncMachine;
+    machine: AsyncMachine<any, IBind, IEmit>;
 }
 
 export class Node {

@@ -3,6 +3,7 @@ import * as deepcopy from 'deepcopy'
 import { expect } from 'chai'
 import JointDataService from '../../src/ui/joint-data-service'
 import { TCell } from '../../src/ui/joint-network'
+import { PatchType } from '../../src/network'
 
 describe('JointDataService', function(){
     let steps = [
@@ -56,10 +57,14 @@ describe('JointDataService', function(){
     beforeEach(function(){
         data = deepcopy(steps[0])
         service = new JointDataService(data)
-        service.addPatch({diff: differ.diff(steps[0], steps[1])})
-        service.addPatch({diff: differ.diff(steps[1], steps[2])})
-        service.addPatch({diff: differ.diff(steps[2], steps[3])})
-        service.addPatch({diff: differ.diff(steps[3], steps[4])})
+        service.addPatch({type: PatchType.TRANSITION_START,
+            diff: differ.diff(steps[0], steps[1])})
+        service.addPatch({type: PatchType.TRANSITION_STEP,
+            diff: differ.diff(steps[1], steps[2])})
+        service.addPatch({type: PatchType.TRANSITION_STEP,
+            diff: differ.diff(steps[2], steps[3])})
+        service.addPatch({type: PatchType.TRANSITION_END,
+            diff: differ.diff(steps[3], steps[4])})
     })
     describe('patching', function(){
         beforeEach(function(){
@@ -70,6 +75,8 @@ describe('JointDataService', function(){
             expect(cells.size).to.eql(1)
             expect([...cells]).to.eql(['3'])
             expect(service.data).to.eql(steps[1])
+            expect(service.step).to.eql(1)
+            expect(service.active_transitions).to.eql(1)
             expect(service.last_scroll_add_remove).to.eql(true)
         })
         it('0 -> 3', function(){
@@ -77,12 +84,16 @@ describe('JointDataService', function(){
             expect(cells.size).to.eql(4)
             expect([...cells]).to.eql(['3', '4', '5', '2'])
             expect(service.data).to.eql(steps[3])
+            expect(service.step).to.eql(3)
+            expect(service.active_transitions).to.eql(1)
             expect(service.last_scroll_add_remove).to.eql(true)
         })
         it('0 -> 3 -> 4', function(){
             service.scrollTo(3)
             service.scrollTo(4)
             expect(service.last_scroll_add_remove).to.eql(false)
+            expect(service.active_transitions).to.eql(0)
+            expect(service.step).to.eql(4)
         })
     })
     describe('unpatching', function(){
@@ -95,7 +106,9 @@ describe('JointDataService', function(){
             expect(cells.size).to.eql(1)
             expect([...cells]).to.eql(['3'])
             expect(service.data).to.eql(steps[0])
+            expect(service.step).to.eql(0)
             expect(service.last_scroll_add_remove).to.eql(true)
+            expect(service.active_transitions).to.eql(0)
         })
         it('0 -> 3 -> 0', function(){
             service.scrollTo(3)
@@ -103,7 +116,15 @@ describe('JointDataService', function(){
             expect(cells.size).to.eql(4)
             expect([...cells]).to.eql(['2', '4', '5', '3'])
             expect(service.data).to.eql(steps[0])
+            expect(service.step).to.eql(0)
             expect(service.last_scroll_add_remove).to.eql(true)
+            expect(service.active_transitions).to.eql(0)
+        })
+        it('0 -> 3 -> 0', function(){
+            service.scrollTo(3)
+            let cells = service.scrollTo(0)
+            expect(service.step).to.eql(0)
+            expect(service.active_transitions).to.eql(0)
         })
     })
     // describe('unpatching', function(){
