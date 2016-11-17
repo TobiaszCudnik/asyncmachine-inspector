@@ -148,14 +148,20 @@ export default class Ui extends UiBase<INetworkJson> {
 		}
 	}
 
+	patch_fields = ['step_style', 'is_set', 'is_touched']
+
 	patchCells(cell_ids: Iterable<string>) {
 		for (let cell of this.getDataCellsByIds(cell_ids)) {
-			let model = this.graph.getCell(cell)
-			model.set(cell)
+			let model = this.graph.getCell(cell.id)
+			for (let field of this.patch_fields) {
+				if (!cell.hasOwnProperty(field))
+					continue
+				model.set(field, cell[field])
+			}
 		}
 	}
 
-	getDataCellsByIds(cell_ids: Iterable<string>): TCell {
+	getDataCellsByIds(cell_ids: Iterable<string>): TCell[] {
 		let ids = [...cell_ids]
 		return this.data.cells.filter( cell => ids.includes(cell.id))
 	}

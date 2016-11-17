@@ -85,6 +85,7 @@ class JointDataService extends EventEmitter {
 				this.handleDuringTransition(this.patches[i])
 			}
 		}
+        this.emit('scrolled', position, changed)
         return changed
     }
     protected applyDiff(diff, changed: Set<string>): void {

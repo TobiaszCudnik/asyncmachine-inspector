@@ -41,6 +41,11 @@ export default function() {
 		if (!state && timer)
 			clearInterval(timer)
 	}
+	
+	data_service.on('scrolled', (position, changed_cells) => {
+		graph.updateCells(changed_cells, data_service.last_scroll_add_remove)
+		handleTransitionMessage(data_service)
+	})
 
 	// global setter
 	// window.setJson = function(json) {
@@ -70,9 +75,7 @@ export default function() {
 	// const onSlider = debounce(500, false, FUNC ))
 	function onSlider(event, value) {
 		// TODO debounce
-		let changed_cells = data_service.scrollTo(value)
-		graph.updateCells(changed_cells, data_service.last_scroll_add_remove)
-		handleTransitionMessage(data_service)
+		data_service.scrollTo(value)
 		// autoplay turns ON on the last step of the slider
 		if (data_service.is_latest)
 			autoplay(true)
