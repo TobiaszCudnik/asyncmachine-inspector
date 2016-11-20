@@ -1,16 +1,14 @@
-import AsyncMachine, {
+import {
     StateStructFields,
     TransitionStepTypes,
-    TransitionStepFields
+    TransitionStepFields,
+    StateRelations
 } from 'asyncmachine'
 import {
-    IBind,
-    IEmit
-} from 'asyncmachine/src/types-states'
-import {
+    AsyncMachine,
     ITransitionStep,
     IStateStruct
-} from '../node_modules/asyncmachine/build/types'
+} from 'asyncmachine/src/types'
 // TODO remove once fixed in webstorm
 import Transition from '../node_modules/asyncmachine/build/transition'
 import Graph from 'graphs'
@@ -20,7 +18,7 @@ import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from "./network-json";
 
-export type MachinesMap = Map<AsyncMachine<any, IBind, IEmit>, string>;
+export type MachinesMap = Map<AsyncMachine, string>;
 export type NodeGraph = Graph<Node>
 
 export interface IPatch {
@@ -45,7 +43,7 @@ export enum PatchType {
 
 export interface ExternalNode {
     node: Node;
-    machine: AsyncMachine<any, IBind, IEmit>;
+    machine: AsyncMachine;
 }
 
 export class Node {
@@ -95,10 +93,10 @@ export class Node {
             this.step_style ^= types.SET
     }
 
-    relations(node: Node | string): string[] {
+    relations(node: Node | string): StateRelations[] {
         var name = node instanceof Node
             ? node.name : node.toString()
-        return this.machine.getRelationsOf(this.name, name) as string[]
+        return this.machine.getRelationsOf(this.name, name)
     }
 
     isFromState(state_struct: IStateStruct): boolean {
@@ -150,7 +148,6 @@ export default class Network extends EventEmitter {
         this.statesToNodes(machine.states_all, id)
         this.bindToMachine(machine)
 
-        // TODO this is required, but should be checked
         for (let [machine, id] of this.machines) {
             this.linkPipedStates(machine)
         }
@@ -215,7 +212,8 @@ export default class Network extends EventEmitter {
         // TODO unbind listeners
     }
 
-    private parseTransitionSteps(machine_id: string, ...steps: ITransitionStep[]) {
+    private parseTransitionSteps(machine_id: string,
+            ...steps: ITransitionStep[]) {
         let fields = TransitionStepFields
         let types = TransitionStepTypes
         for (let step of steps) {
@@ -226,9 +224,11 @@ export default class Network extends EventEmitter {
 
             if (step[fields.SOURCE_STATE]) {
                 // TODO handle the "Any" state
-                let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
+                let source_node = this.getNodeByStruct(
+                    step[fields.SOURCE_STATE])
                 if (type != types.PIPE)
-                    // dont mark the source node as piped, as it already has styles
+                    // dont mark the source node as piped, as it already has
+                    // styles
                     source_node.updateStepStyle(type)
                 else
                     // be a little ahead of time here, for better styling

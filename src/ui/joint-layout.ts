@@ -54,6 +54,7 @@ type TClusterData = {
   is_dirty?: boolean
 }
 
+// TODO update the definitions
 type TDagreGraph = Graph<TNode, TEdge, TGraphData>
 type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
 
@@ -95,7 +96,6 @@ export default class GraphLayout {
       height: 0,
       is_dirty: true
     })
-    this.cells = new Map<string, TCell>()
     this.differ = jsondiffpatch.create({
       objectHash: (obj: TCell) => obj.id
     })
@@ -105,19 +105,26 @@ export default class GraphLayout {
     let start = Date.now()
     this.syncData(data, changed_cells)
     console.log(`Sync data ${Date.now() - start}ms`)
-    this.layout()
+    if (!this.layout())
+      return
     start = Date.now()
     this.syncSourceGraph(data, changed_cells)
     console.log(`Update the source graph ${Date.now() - start}ms`)
   }
 
-  layout() {
+  /**
+   * 
+   * @return Number of changed graphs.
+   */
+  layout(): number {
     let start = Date.now()
     let cloned = 0
+    let dirty = 0
     for (let [id, graph] of this.subgraphs.entries()) {
       let graph_data = graph.graph()
       if (!graph_data.is_dirty)
         continue
+      dirty++
       let diff = this.layouts_by_hash.get(graph_data.hash)
       if (diff) {
         jsondiffpatch.patch(graph, diff)
@@ -135,15 +142,19 @@ export default class GraphLayout {
         this.layouts_by_hash.set(graph_data.hash, diff)
       }
     }
-    console.log(`Layout subgraphs (${cloned} cloned) ${Date.now() - start}ms`)
-    start = Date.now()
+    console.log(`Layout ${this.subgraphs.size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`)
     // sizes of clusters could've changed
     if (this.clusters.graph().is_dirty) {
       // TODO support the hash based cache
+      dirty++
+      start = Date.now()
+      // TODO sync only changed graphs
       this.syncClusterSizes()
       layout(this.clusters)
+      this.clusters.graph().is_dirty = false
+      console.log(`Layout the cluster graph ${Date.now() - start}ms`)
     }
-    console.log(`Layout the cluster graph ${Date.now() - start}ms`)
+    return dirty
   }
 
   // TODO remove!
@@ -155,7 +166,7 @@ export default class GraphLayout {
   syncData(data: INetworkJson, changed_cells: Iterable<string> = []) {
     let subgraphs = this.subgraphs
     let clusters = this.clusters
-    let cells = this.cells
+    let cells = this.cells = new Map<string, TCell>()
 
     // ADD / SET
 
@@ -183,7 +194,6 @@ export default class GraphLayout {
         })
       } else if ((cell as TState).type == "fsa.State") {
         cell = cell as TState
-        cells.set
         let [parent_id, id] = cell.id.split(':')
         parent_id = this.normalizeId(parent_id)
         if (!subgraphs.get(parent_id).node(id)) {
@@ -210,13 +220,14 @@ export default class GraphLayout {
           let edge_data = clusters.edge(edge) 
           if (edge_data) {
             // add a inner node to inner node connection
-            if (!edge_data.cells.has(cell.id))
+            if (!edge_data.cells.has(cell.id)) {
               edge_data.cells.add(cell.id)
+              // TODO is_dirty isnt required, but will trigger syncing of the (new) edge
+              clusters.graph().is_dirty = true
+            }
           } else {
             // add a new cluster to cluster connection
             clusters.graph().is_dirty = true
-            subgraphs.get(source_parent_id).graph().is_dirty = true
-            subgraphs.get(target_parent_id).graph().is_dirty = true
             clusters.setEdge(edge, {
               cells: new Set<string>(),
               minLen: cell.minLen || 1,
@@ -251,26 +262,25 @@ export default class GraphLayout {
       if (cells.has(cell_id))
         continue
       let cell = this.source_graph.getCell(cell_id)
-      if ((cell as TMachine).embeds) {
-        cell = cell as TMachine
+      if (cell.get('embeds')) {
         clusters.removeNode(cell.id)
         clusters.graph().is_dirty = true
         subgraphs.delete(cell.id)
-      } else if ((cell as TState).type == "fsa.State") {
-        cell = cell as TState
+      } else if (cell.get('type') == "fsa.State") {
         let [parent_id, id] = cell.id.split(':')
         parent_id = this.normalizeId(parent_id)
-        let graph = subgraphs.get(parent_id)
-        if (!graph)
-          continue
-        graph.removeNode(id)
         clusters.graph().is_dirty = true
+        let graph = subgraphs.get(parent_id)
+        if (!graph) {
+          console.log(`Missing graph ${parent_id}`)
+          continue
+        }
+        graph.removeNode(id)
         graph.graph().is_dirty = true
-      } else if ((cell as TLink).type == "fsa.Arrow") {
-        cell = cell as TLink
-        let [source_parent_id, source_id] = cell.source.id.split(':')
+      } else if (cell.get('type') == "fsa.Arrow") {
+        let [source_parent_id, source_id] = cell.get('source').id.split(':')
         source_parent_id = this.normalizeId(source_parent_id)
-        let [target_parent_id, target_id] = cell.target.id.split(':')
+        let [target_parent_id, target_id] = cell.get('target').id.split(':')
         target_parent_id = this.normalizeId(target_parent_id)
         if (target_parent_id != source_parent_id) {
           // cluster to cluster
@@ -291,8 +301,12 @@ export default class GraphLayout {
           }
         } else {
           // subgraph
-          let graph = subgraphs.get(source_parent_id)
           clusters.graph().is_dirty = true
+          let graph = subgraphs.get(source_parent_id)
+          if (!graph) {
+            console.log(`Missing graph ${source_parent_id}`)
+            continue
+          }
           graph.graph().is_dirty = true
           graph.removeEdge(source_id, target_id, this.removeParentIds(cell.id))
         }
@@ -391,12 +405,11 @@ export default class GraphLayout {
     }
 
     if (!first_run) {
-      for (let cell_id of changed_cells) {
-        if (cells.has(cell_id))
-          continue
-        // TODO check if ID is enough
-        this.source_graph.removeCells([cell_id])
-      }
+      let cells_to_remove = [...changed_cells]
+        .filter( id => !cells.has(id) )
+        .map( id => this.source_graph.getCell(id) )
+        .filter( cell => cell )
+      this.source_graph.removeCells(cells_to_remove)
     } else {
       this.source_graph.resetCells(batch_cells)
     }

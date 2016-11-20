@@ -107,9 +107,7 @@ very thin.
 
 
 .connection {
-   /* stroke: black; */
-   /* stroke width cannot be overriden by attribute? */
-   /*   stroke-width: 1; */
+    stroke: black;
    fill: none;
    stroke-linejoin: round;
 }

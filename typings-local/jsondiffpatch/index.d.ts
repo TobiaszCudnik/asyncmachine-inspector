@@ -16,6 +16,7 @@ declare module "jsondiffpatch" {
     
     export function reverse(delta: IDelta): IDelta;
     export function patch(source: Object, delta: IDelta);
+    export function unpatch(source: Object, delta: IDelta);
     export function diff(source1: Object, source2: Object): IDelta;
     export function create(config: IDiffPatchConfig): IDiffPatch;
 }

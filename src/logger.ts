@@ -4,12 +4,14 @@
 import Network, {
     PatchType
 } from "./network"
+import './polyfill'
 import * as io from 'socket.io-client'
 // import NetworkJson, {
 //     JsonDiffFactory
 // } from "./ui/cola-network"
 import NetworkJson, {
-    JsonDiffFactory
+    JsonDiffFactory,
+    INetworkJson
 } from "./ui/joint-network"
 // import NetworkJson, {
 //     JsonDiffFactory
@@ -19,12 +21,14 @@ type MachineId = string;
 
 /**
  * TODO rename to LoggerClient
- * fix d.ts files geeneration
+ * fix d.ts files generation
+ * TODO introduce revision hashes
  */
 export default class Logger {
     io: SocketIOClient.Socket;
     json: NetworkJson;
     diff: JsonDiffFactory;
+    base_version: INetworkJson;
 
     constructor(
             public network: Network,
@@ -39,6 +43,7 @@ export default class Logger {
 
         this.diff = new JsonDiffFactory(this.json)
         this.diff.generateJson()
+        this.base_version = this.diff.previous_json
         
         this.io.on('full-sync', () => this.onFullSync())
         this.io.on('connected', () => {
@@ -47,7 +52,7 @@ export default class Logger {
     }
 
     onFullSync() {
-        this.io.emit('full-sync', this.diff.previous_json)
+        this.io.emit('full-sync', this.base_version)
     }
 
     // TODO merge many empty transition-end events into 1
@@ -63,10 +68,6 @@ export default class Logger {
         this.io.emit('diff-sync', packet)
         // console.dir(diff && diff.cells)
         this.network.logs = []
-    }
-
-    onLogMsg(msg: {id: string, text: string}) {
-        this.io.emit('log', msg)
     }
 }
 

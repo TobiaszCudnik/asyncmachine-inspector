@@ -11,7 +11,7 @@ declare module 'cinea-graphlib' {
         multigraph?: boolean
     }
 
-    class Graph<T> {
+    export class Graph<T> {
         constructor(opts?: IOptions);
         isDirected(): boolean;
         isMultigraph(): boolean;

@@ -3,10 +3,8 @@ import * as assert from 'assert/'
 import Network, {
     Node as GraphNode
 } from './network'
-import AsyncMachine, {
-    PipeFlags
-} from 'asyncmachine'
-
+import { PipeFlags } from 'asyncmachine'
+import { AsyncMachine } from 'asyncmachine/src/types'
 
 export interface INetworkJsonFactory<Json> {
     generateJson(): Json;

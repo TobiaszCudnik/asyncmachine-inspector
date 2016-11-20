@@ -121,28 +121,29 @@ export default class Ui extends UiBase<INetworkJson> {
 		// console.log(`DOM sync ${Date.now() - start}ms`)
 	}
 	
-	setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
+	async setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
 		this.data = data
 		let start = Date.now()
 
+		// TODO async
 		this.graph_layout.setData(this.data, changed_cells)
-		this.paper.once('render:done', () => {
-			// TODO mutex on setdata till here
-			this.layout()
-			console.log(`Overall ${Date.now() - start}ms`)
-		})
 
-		let tmp2 = Date.now()
-		this.autosize()
-		console.log(`Autosize ${Date.now() - tmp2}ms`)
+		if (this.paper._frameId) {
+			await new Promise(resolve => this.paper.once('render:done', () => {
+				// TODO mutex on setdata till here
+				resolve()
+			}))
+		}
+		
+		this.layout(changed_cells)
 
-		console.log(`setData ${Date.now() - start}ms`)
+		console.log(`Overall setData ${Date.now() - start}ms`)
 	}
 
 	updateCells(cells: Iterable<string>, was_add_remove: boolean = false) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
-			this.syncClasses()
+			this.layout(cells)
 		} else {
 			this.setData(this.data, cells)
 		}
@@ -182,7 +183,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 
 	// TODO add scrolling by click-n-drag
-	layout() {
+	layout(cells?) {
 		// lay out the graph
 		// joint.layout.DirectedGraph.layout(this.graph, {
 		// 	// TODO check verticles from dagre
@@ -201,13 +202,16 @@ export default class Ui extends UiBase<INetworkJson> {
 		// })
 		let start = Date.now()
 		let tmp1 = start
-		this.syncClasses()
+		this.syncClasses(cells ? [...cells] : null)
 		let tmp2 = Date.now()
 		console.log(`Sync classes ${tmp2- tmp1}ms`)
 		this.assignColors()
 		tmp1 = tmp2
 		tmp2 = Date.now()
 		console.log(`Assign colors ${tmp2- tmp1}ms`)
+		tmp2 = Date.now()
+		this.autosize()
+		console.log(`Autosize ${Date.now() - tmp2}ms`)
 	}
 
 	parseColors() {
@@ -267,62 +271,69 @@ export default class Ui extends UiBase<INetworkJson> {
 		)
 	}
 
-	syncClasses() {
-		this.syncMachineClasses()
-		this.syncStateClasses()
-		this.syncLinkClasses()
+	syncClasses(changed_cells?) {
+		if (!changed_cells)
+			changed_cells = this.data.cells.map( cell => cell.id ) 
+		this.syncMachineClasses(changed_cells)
+		this.syncStateClasses(changed_cells)
+		this.syncLinkClasses(changed_cells)
 	}
 
 	// TODO define class on the server
 	// TODO this should sync from models, not JSON
-	syncLinkClasses() {
-		this.data.cells
-				.filter( node => node.type == "fsa.Arrow" )
-				.forEach( (link: TLink) => {
-			if (!this.paper.findViewByModel(link as TCell))
+	syncLinkClasses(changed_cells: string[]) {
+		changed_cells
+				.map( id => this.graph.getCell(id) )
+				.filter( node => node && node.get('type') == "fsa.Arrow" )
+				.forEach( link => {
+			if (!this.paper.findViewByModel(link))
 				return
 			// handle link types
-			let classNames = (link.labels["0"].attrs.text.text || 'pipe')
+			let classNames = (link.get('labels')["0"].attrs.text.text || 'pipe')
 					.split(' ')
 			let view = joint.V(this.paper.findViewByModel(link).el)
 			for (let name of classNames)
 				view.addClass(name)
 			// handle the touched state
-			view.toggleClass('is-touched', Boolean(link.is_touched))
+			view.toggleClass('is-touched', Boolean(link.get('is_touched')))
 		})
 	}
 
 	// TODO define class on the server
 	// TODO this should sync from models, not JSON
-	syncMachineClasses() {
-		this.data.cells
-				.filter( node => node.type == "uml.State" )
-				.forEach( (machine: TMachine) => {
+	syncMachineClasses(changed_cells: string[]) {
+		changed_cells
+				.map( id => this.graph.getCell(id) )
+				.filter( node => node && node.get('type') == "uml.State" )
+				.forEach( machine => {
+			if (!this.paper.findViewByModel(machine))
+				return
 			let view = joint.V(this.paper.findViewByModel(machine).el)
 			// TODO edit the main template
-			view.find('path')[0].attr('d',
-				view.find('path')[0].attr('d').replace(/ 20 ?/g, ' 30'))
+			// view.find('path')[0].attr('d',
+			// 	view.find('path')[0].attr('d').replace(/ 20 ?/g, ' 30'))
 			if (!this.paper.findViewByModel(machine))
 				return
 			// handle the touched state
-			view.toggleClass('is-touched', Boolean(machine.is_touched))
+			view.toggleClass('is-touched', Boolean(machine.get('is_touched')))
 			view.addClass('group-' + machine.id)
 		})
 	}
 
 	// TODO this should sync from models, not JSON
-	syncStateClasses() {
-		this.data.cells
-				.filter( node => node.type == "fsa.State" )
-				.forEach( (state: TState) => {
+	syncStateClasses(changed_cells: string[]) {
+		changed_cells
+				.map( id => this.graph.getCell(id) )
+				.filter( node => node && node.get('type') == "fsa.State" )
+				.forEach( state => {
 			// state = state as joint.dia.Cell
 			if (!this.paper.findViewByModel(state))
 				return
 			let view = joint.V(this.paper.findViewByModel(state).el)
 			// active state
-			view.toggleClass('is-set', Boolean(state.is_set))
+			view.toggleClass('is-set', Boolean(state.get('is_set')))
 			// touched state
-			view.toggleClass('is-touched', Boolean(state.step_style))
+			view.toggleClass('is-touched', Boolean(state.get('step_style')))
 			// step type classes
 			for (let key of Object.keys(TransitionStepTypes)) {
 				// skip labels
@@ -330,7 +341,7 @@ export default class Ui extends UiBase<INetworkJson> {
 					continue
 				let classname = 'step-' + key.toLowerCase()
 						.replace('_', '-')
-				view.toggleClass(classname, Boolean(state.step_style & TransitionStepTypes[key]))
+				view.toggleClass(classname, Boolean(state.get('step_style') & TransitionStepTypes[key]))
 			}
 		})
 	}

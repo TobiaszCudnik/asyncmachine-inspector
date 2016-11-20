@@ -5,7 +5,6 @@ import { expect } from 'chai'
 import graph_json from '../fixtures/data-joint-graph'
 
 
-
 describe("Dagre", function() {
 
 	let joint_graph: dia.Graph;
@@ -21,7 +20,7 @@ describe("Dagre", function() {
 	describe('convertion', function() {
 		it('should convert the source JointJS graph')
 
-		it('should produce a graph per each of the clusters', function() {
+		it('should produce a graph per each of the clusters', () => {
 			let graphs = layout.sub_graphs
 			expect(graphs.size).to.eql(clusters)
 			for (let graph of graphs.values()) {

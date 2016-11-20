@@ -37,6 +37,9 @@ class JointDataService extends EventEmitter {
     get is_latest() {
         return this.step == this.patches.length
     }
+    get max() {
+        return this.patches.length
+    }
     constructor(data?: INetworkJson) {
         super()
         this.data = data || null
@@ -95,16 +98,14 @@ class JointDataService extends EventEmitter {
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] != '_')
 				continue
-            if (Array.isArray(diff.cells[key]) && diff.cells[key].length !== 2)
-                this.last_scroll_add_remove = true
+            this.setAddRemove(diff.cells[key])
             changed.add(this.data.cells[key.slice(1)].id)
 		}
         jsondiffpatch.patch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] == '_')
 				continue
-            if (Array.isArray(diff.cells[key]) && diff.cells[key].length !== 2)
-                this.last_scroll_add_remove = true
+            this.setAddRemove(diff.cells[key])
             changed.add(this.data.cells[key].id)
 		}
     }
@@ -115,18 +116,20 @@ class JointDataService extends EventEmitter {
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] == '_')
 				continue
-            if (Array.isArray(diff.cells[key]) && diff.cells[key].length !== 2)
-                this.last_scroll_add_remove = true
+            this.setAddRemove(diff.cells[key])
             changed.add(this.data.cells[key].id)
 		}
         jsondiffpatch.unpatch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] != '_')
 				continue
-            if (Array.isArray(diff.cells[key]) && diff.cells[key].length !== 2)
-                this.last_scroll_add_remove = true
+            this.setAddRemove(diff.cells[key])
             changed.add(this.data.cells[key.slice(1)].id)
 		}
+    }
+    protected setAddRemove(cell) {
+        this.last_scroll_add_remove = this.last_scroll_add_remove ||
+            Array.isArray(cell) && cell.length !== 2
     }
 	// TODO breaks when reversing inside nested active_transitions
 	handleDuringTransition(packet, reversed = false) {

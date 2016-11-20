@@ -1,6 +1,7 @@
 /// <reference path="../typings-local/backbone/backbone.d.ts" />
 /// <reference path="../typings-local/custom.d.ts" />
 /// <reference path="../typings-local/dagre/dagre.d.ts" />
+/// <reference path="../typings-local/graphlib/graph.d.ts" />
 /// <reference path="../typings-local/jsondiffpatch/index.d.ts" />
 /// <reference path="globals/eventemitter3/index.d.ts" />
 /// <reference path="globals/jquery/index.d.ts" />

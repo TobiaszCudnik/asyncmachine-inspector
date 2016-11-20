@@ -1,4 +1,5 @@
 import renderLayout from './layout'
+import '../polyfill'
 // UI type
 import Graph from './joint'
 import { INetworkJson } from './joint-network'
@@ -26,6 +27,7 @@ import { TLayoutProps } from './layout'
  * - longer delay for msgs than for a step they come from
  */
 export default function() {
+	const frametime = 0.5
 	var graph = new Graph(null)
 	var socket = io('http://localhost:3030/client');
 	var layout
@@ -62,6 +64,20 @@ export default function() {
 	// 	console.log(JSON.stringify(data))
 	// }
 
+	let is_rendering = false
+
+	// const onSlider = debounce(500, false, FUNC ))
+	let onSlider = debounce(500, false, (event, value) => {
+		// autoplay turns ON on the last step of the slider
+		if (data_service.is_latest)
+			autoplay(true)
+		else 
+			autoplay_ = false
+		// TODO debounce
+		data_service.scrollTo(value)
+		render()
+	})
+
 	var layoutData: TLayoutProps = {
 		getPatchesCount() { return data_service.patches.length },
 		isDuringTransition() { return data_service.during_transition },
@@ -70,16 +86,6 @@ export default function() {
 		onSlider: onSlider,
 		msg: null,
 		msgHidden: false
-	}
-
-	// const onSlider = debounce(500, false, FUNC ))
-	function onSlider(event, value) {
-		// TODO debounce
-		data_service.scrollTo(value)
-		// autoplay turns ON on the last step of the slider
-		if (data_service.is_latest)
-			autoplay(true)
-		render()
 	}
 
 	function showMsg(msg) {
@@ -112,7 +118,7 @@ export default function() {
 		graph.render('#graph')
 
 		let start_join
-		socket.once('loggers', function (ids) {
+		socket.on('loggers', function (ids) {
 			start_join = Date.now()
 
 			socket.emit('join', {
@@ -135,12 +141,14 @@ export default function() {
 			// showMsg('Connected')
 		})
 
-		socket.on('full-sync', (graph_data: INetworkJson) => {
+		socket.on('full-sync', async (graph_data: INetworkJson) => {
+			is_rendering = true
 			console.log('full-sync', Date.now() - start_join)
 			console.log('full-sync', graph_data)
 			data_service.data = graph_data
-			graph.setData(graph_data)
+			await graph.setData(graph_data)
 			showMsg('Connected')
+			is_rendering = false
 		})
 
 		socket.on('disconnected', function() {
@@ -152,17 +160,34 @@ export default function() {
 			console.log('diff', packet)
 			// auto render if slider at the end
 			if (autoplay() && !timer) {
-				// TODO setTimeout
-				timer = setInterval( () => {
-
-					if (!data_service.is_latest) {
+				const start = Date.now()
+				let last
+				let timer_fn
+				timer = setTimeout( timer_fn = () => {
+					if (!autoplay()) {
+						timer = null
+						return
+					}
+					if (is_rendering) {
+						setTimeout(timer_fn, frametime*1000)
+						return
+					}
+					// merged-step to catch up with the skipped frames
+					let framestimes_since_last = Math.round(
+						(Date.now() - last) / (frametime*1000))
+					if (framestimes_since_last > 1) {
+						data_service.scrollTo(Math.max(data_service.max,
+							data_service.step + framestimes_since_last))
+						render()
+						setTimeout(timer_fn, frametime*1000)
+					} else if (!data_service.is_latest) {
 						data_service.scrollOne()
 						render()
+						setTimeout(timer_fn, frametime*1000)
 					} else {
-						clearInterval(timer)
 						timer = null
 					}
-				}, 500)
+			}, frametime*1000)
 			}
 		})
 	})
