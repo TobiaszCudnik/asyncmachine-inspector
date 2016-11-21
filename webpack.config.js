@@ -1,5 +1,3 @@
-// ./node_modules/webpack/bin/webpack.js --plugin webpack-async-await --config webpack.js build/ui/web.js dist/ui-webpack.js
-// npm i webpack@2.1.0-beta.23 acorn@latest webpack-async-await awesome-typescript-loader
 const AsyncAwaitPlugin = require('webpack-async-await')
 const path = require('path')
 
@@ -11,9 +9,8 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
   entry: {
-    // TODO use ./src
-    ui: "./src/ui/web.tsx",
-    logger: "./src/logger.ts"
+    inspector: "./src/ui/web",
+    logger: "./src/logger"
   },
   plugins: [
     new AsyncAwaitPlugin({})
@@ -29,6 +26,10 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, "dist"),
-    filename: "[name].webpack.js"
-  }
+    filename: "[name].umd.js",
+    library: "[name]",
+    libraryTarget: "umd"
+  },
+
+  devtool: 'source-map',
 }

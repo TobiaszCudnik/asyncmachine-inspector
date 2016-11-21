@@ -12,6 +12,9 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
 import Snackbar from 'material-ui/Snackbar';
+import {
+  RadioButton, RadioButtonGroup
+} from 'material-ui/RadioButton';
 import { ILogEntry } from '../network'
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
@@ -44,9 +47,11 @@ export type TLayoutProps = {
 /**
  * TODO
  * - legend with state meanings (WHILE during transition)
- * - switches for
- *   - "show transition"
- *   - "show steps"
+ * - step by
+ *   - states
+ *   - transitions
+ *   - steps
+ * - zoom in/out slider (+background dragging)
  * - keystrokes
  *   - space pause/resume
  *   - left/right patch left right
@@ -102,6 +107,25 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
               value={this.props.getPosition()}
               onChange={this.props.onSlider}
             />
+          </section>
+
+          <Slider id="zoom" style={{height: 100}} axis="y" defaultValue={0.5} />
+
+          <section id="settings-bar">
+            <RadioButtonGroup labelPosition="left" name="step-type" defaultSelected="states">
+              <RadioButton
+                value="states"
+                label="States"
+              />
+              <RadioButton
+                value="transitions"
+                label="Transitions"
+              />
+              <RadioButton
+                value="steps"
+                label="Steps"
+              />
+            </RadioButtonGroup>
           </section>
 
 
