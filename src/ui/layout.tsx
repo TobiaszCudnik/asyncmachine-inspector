@@ -51,6 +51,8 @@ export type TLayoutProps = {
  *   - states
  *   - transitions
  *   - steps
+ * - step counter
+ * - play/pause button
  * - zoom in/out slider (+background dragging)
  * - keystrokes
  *   - space pause/resume
