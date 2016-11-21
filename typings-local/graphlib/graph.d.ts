@@ -11,21 +11,21 @@ declare module 'cinea-graphlib' {
         multigraph?: boolean
     }
 
-    export class Graph<T> {
+    export class Graph<T, L, GL> {
         constructor(opts?: IOptions);
         isDirected(): boolean;
         isMultigraph(): boolean;
         isCompound(): boolean;
-        setGraph(label: T): this;
-        graph(): T;
+        setGraph(label: GL): this;
+        graph(): GL;
         setDefaultNodeLabel(newDefault: (v: string) => T): this;
         nodeCount(): number;
         nodes(): string[];
         sources(): any;
         sinks(): any;
         setNodes(vs: any, value: any): this;
-        setNode(v: string, value: any): this;
-        node(v: string): string[];
+        setNode(v: string, value: T): this;
+        node(v: string): T;
         hasNode(v: string): any;
         removeNode(v: string): this;
         setParent(v: string, parent: string): this;
@@ -40,17 +40,17 @@ declare module 'cinea-graphlib' {
         edgeCount(): number;
         edges(): IEdge[];
         setPath(vs: any, value: any): this;
-        setEdge(edge: IEdge, value?: number): this;
-        setEdge(v: string, w: string, label: string, value?: number): this;
-        edge(v: string, w: any, name: string): any;
-        hasEdge(v: string, w: any, name: string): any;
-        removeEdge(v: string, w: any, name: any): this;
+        setEdge(edge: IEdge, label?: L): this;
+        setEdge(v: string, w: string, label?: L, name?: string): this;
+        edge(v: string, w: any, name: string): L;
+        edge(v: IEdge): L;
+        hasEdge(v: string, w: any, name?: string): boolean;
+        hasEdge(v: IEdge): boolean;
+        removeEdge(v: string, w: any, name?: string): this;
         inEdges(v: string, u: any): any;
         outEdges(v: string, w: any): any;
         nodeEdges(v: string, w: any): any;
     }
-
-    export default Graph;
 }
 
 declare module 'graphlib' {
