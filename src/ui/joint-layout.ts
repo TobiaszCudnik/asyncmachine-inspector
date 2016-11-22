@@ -351,7 +351,6 @@ export default class GraphLayout {
   }
 
   syncSourceGraph(data: INetworkJson, changed_cells: Iterable<string> = []) {
-
     let subgraphs = this.subgraphs
     let clusters = this.clusters
     let cells = this.cells
@@ -393,14 +392,14 @@ export default class GraphLayout {
         continue
       }
 
-      let element = this.source_graph.getCell(cell.id)
+      let model = this.source_graph.getCell(cell.id)
       cell = deepcopy(cell)
       cell.position = position
       cell.size = size
-      if (!element) {
+      if (!model) {
         this.source_graph.addCell((<any>cell) as joint.dia.Cell)
       } else {
-        element.set(cell)
+        model.set(cell)
       }
     }
 

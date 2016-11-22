@@ -16,10 +16,12 @@ import 'core-js/es6/symbol'
 // import IterableEmitter from '../../../async-iterators/iterable-emitter'
 import {
 	default as JointDataService,
-	Direction
+	Direction,
+	StepType
 } from './joint-data-service'
 import * as debounce from 'throttle-debounce/debounce'
 import { TLayoutProps } from './layout'
+
 
 /**
  * TODO
@@ -79,13 +81,28 @@ export default function() {
 	})
 
 	var layoutData: TLayoutProps = {
-		getPatchesCount() { return data_service.patches.length },
-		isDuringTransition() { return data_service.during_transition },
-		getPosition() { return data_service.step },
-		getLogs() { return data_service.getLogs() },
-		onSlider: onSlider,
+		get position_max() { return data_service.position_max },
+		get is_during_transition() { return data_service.during_transition },
+		get position() { return data_service.position },
+		get step_type() {
+			let t = StepType
+			switch (data_service.step_type) {
+				case t.TRANSITIONS: return 'transition'
+				case t.STEPS: return 'steps'
+			}
+			return 'states'
+		},
+		get logs() { return data_service.getLogs() },
+		onStepSlider: onSlider,
+		onZoomSlider: null, // TODO
+		onStepType: (event, value) => {
+			debugger
+			console.log(value)
+			data_service.setStepType(value)
+		},
 		msg: null,
-		msgHidden: false
+		msgHidden: false,
+		get is_playing() { return timer && autoplay() }
 	}
 
 	function showMsg(msg) {
@@ -176,8 +193,8 @@ export default function() {
 					let framestimes_since_last = Math.round(
 						(Date.now() - last) / (frametime*1000))
 					if (framestimes_since_last > 1) {
-						data_service.scrollTo(Math.max(data_service.max,
-							data_service.step + framestimes_since_last))
+						data_service.scrollTo(Math.max(data_service.position_max,
+							data_service.position + framestimes_since_last))
 						render()
 						setTimeout(timer_fn, frametime*1000)
 					} else if (!data_service.is_latest) {

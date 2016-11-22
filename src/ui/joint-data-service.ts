@@ -16,47 +16,121 @@ export enum Direction {
     BACK
 }
 
+export enum StepTypes {
+    STEPS,
+    TRANSITIONS,
+    STATES,
+}
+
 class JointDataService extends EventEmitter {
     patches: IPatch[] = [];
     data: INetworkJson | null;
     // 0 mean initial, non-patched data
-    step = 0;
+    protected patch_position = 0;
+    /** 0 mean initial, non-patched data */
+    position = 0;
     active_transitions = 0;
     /** Did the last scroll add or remove any cells? */
     // TODO binary flags for all of the last scrolls props
     last_scroll_add_remove = false;
     last_scroll_direction: Direction | null = null
+    step_type: StepTypes = StepTypes.STATES
+    /**
+     * Index of patches of a certain type (values map directly to this.patches)*/
+    index: {
+        states: number[],
+        transitions: number[]
+    } = {
+        states: [],
+        transitions: []
+    }
     get during_transition(): boolean {
         return Boolean(this.active_transitions)
-    };
+    }
     get current_patch(): IPatch | null {
-        if (!this.step)
+        if (!this.patch_position)
             return null
-        return this.patches[this.step-1]
+        return this.patches[this.patch_position-1]
     }
     get is_latest() {
-        return this.step == this.patches.length
+        return this.patch_position == this.position_max
     }
-    get max() {
-        return this.patches.length
+    get position_max() {
+        const t = StepTypes
+        switch (this.step_type) {
+            case t.STATES:
+                return this.index.states.length
+            case t.TRANSITIONS:
+                return this.index.transitions.length
+            case t.STEPS:
+                return this.patches.length
+        }
     }
     constructor(data?: INetworkJson) {
         super()
         this.data = data || null
     }
     addPatch(patch: IPatch) {
+        if (patch.type == PatchType.TRANSITION_END ||
+                patch.type == PatchType.STATE ||
+                patch.type == PatchType.NEW_MACHINE) {
+            this.index.states.push(this.patches.length)
+        }
+        // TODO avoid nested transitions
+        if (patch.type == PatchType.TRANSITION_END)
+            this.index.transitions.push(this.patches.length)
         this.patches.push(patch)
     }
-    // TODO the reverse param
-    scrollOne() {
-        this.scrollTo(Math.min(this.step + 1, this.patches.length))
+    setStepType(type: StepTypes) {
+        let old_step_type = this.step_type
+        this.step_type = type
+        // lower granularity
+        if (type > old_step_type) {
+            const positions = (type == StepTypes.STATES) ?
+                this.index.states : this.index.transitions
+            // go back to the prev step
+            if (!positions.includes(this.patch_position)) {
+                let index = positions.findIndex(
+                    positions => positions > this.position )
+                this.scrollTo(Math.max(0, index))
+            } else {
+                this.position = positions.indexOf(this.patch_position) + 1
+            }
+        } else if (type < old_step_type) {
+            // higher granularity
+            // TODO
+        }
     }
     /**
      * Returns all the logs till the current position.
      */
     getLogs(): ILogEntry[][] {
-        return this.patches.slice(0, Math.max(0, this.step - 1))
+        return this.patches.slice(0, Math.max(0, this.patch_position - 1))
             .map( patch => patch.logs || [] )
+    }
+    // TODO the reverse param
+    scrollOne(reverse = false) {
+        if (reverse)
+            this.scrollTo(Math.max(this.position - 1, 0))
+        else
+            this.scrollTo(Math.min(this.position + 1, this.position_max))
+    }
+    // TODO
+    // scrollBy(amount)
+    scrollTo(position: number): Set<string> {
+        // TODO ensure that the position is not out of range
+        const t = StepTypes
+        let patch_position = position
+        switch (this.step_type) {
+            case t.STATES:
+                patch_position = this.index.states[position - 1]
+                break
+            case t.TRANSITIONS:
+                patch_position = this.index.transitions[position - 1]
+                break
+        }
+        this.position = position + 1
+        return this.scrollToPatch(patch_position + 1)
     }
     /**
      * Slides data to specific point (0 == no patches applied).
@@ -64,27 +138,27 @@ class JointDataService extends EventEmitter {
      * Returns a list of affected nodes (in their latest form (
      * in the scroll direction)).
      */
-    scrollTo(position: number): Set<string> {
+    protected scrollToPatch(position: number): Set<string> {
         this.last_scroll_add_remove = false
         let changed = new Set<string>()
-		if (position < this.step) {
+		if (position < this.patch_position) {
             this.last_scroll_direction = Direction.BACK
 			// go back in time
-			for (let i = this.step; i > position; i--) {
+			for (let i = this.patch_position; i > position; i--) {
                 let diff = this.patches[i-1].diff
 				if (diff)
                     this.unapplyDiff(diff, changed)
-                this.step = i-1
+                this.patch_position = i - 1
 				this.handleDuringTransition(this.patches[i-1], true)
 			}
-		} else if (position > this.step) {
+		} else if (position > this.patch_position) {
             this.last_scroll_direction = Direction.FWD
 			// go fwd in time
-			for (let i = this.step; i < position; i++) {
+			for (let i = this.patch_position; i < position; i++) {
                 let diff = this.patches[i].diff
 				if (diff)
                     this.applyDiff(diff, changed)
-                this.step = i + 1
+                this.patch_position = i + 1
 				this.handleDuringTransition(this.patches[i])
 			}
 		}
@@ -98,14 +172,14 @@ class JointDataService extends EventEmitter {
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] != '_')
 				continue
-            this.setAddRemove(diff.cells[key])
+            this.handleAddRemove(diff.cells[key])
             changed.add(this.data.cells[key.slice(1)].id)
 		}
         jsondiffpatch.patch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] == '_')
 				continue
-            this.setAddRemove(diff.cells[key])
+            this.handleAddRemove(diff.cells[key])
             changed.add(this.data.cells[key].id)
 		}
     }
@@ -116,18 +190,18 @@ class JointDataService extends EventEmitter {
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] == '_')
 				continue
-            this.setAddRemove(diff.cells[key])
+            this.handleAddRemove(diff.cells[key])
             changed.add(this.data.cells[key].id)
 		}
         jsondiffpatch.unpatch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] != '_')
 				continue
-            this.setAddRemove(diff.cells[key])
+            this.handleAddRemove(diff.cells[key])
             changed.add(this.data.cells[key.slice(1)].id)
 		}
     }
-    protected setAddRemove(cell) {
+    protected handleAddRemove(cell) {
         this.last_scroll_add_remove = this.last_scroll_add_remove ||
             Array.isArray(cell) && cell.length !== 2
     }

@@ -16,6 +16,10 @@ import {
   RadioButton, RadioButtonGroup
 } from 'material-ui/RadioButton';
 import { ILogEntry } from '../network'
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import IconPlay from 'material-ui/svg-icons/svg-icons/av/play-arrow';
+import IconStop from 'material-ui/svg-icons/svg-icons/av/stop';
+import Chip from 'material-ui/Chip';
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -34,14 +38,19 @@ const muiTheme = getMuiTheme({
 });
 
 export type TLayoutProps = {
-  getPatchesCount(): number,
-  isDuringTransition(): boolean,
-  getPosition(): number,
-  getLogs(): ILogEntry[][],
-  onSlider: Function;
-  msg: string;
-  msgHidden: boolean;
-  connectionDialog?: any;
+  position_max: number
+  is_during_transition: boolean
+  position: number
+  is_playing: boolean
+  logs: ILogEntry[][]
+  msg: string
+  msgHidden: boolean
+  step_type: string
+  // listeners
+  onStepSlider: Function
+  onZoomSlider: Function
+  onStepType: Function
+  onPlayButton: Function
 }
 
 /**
@@ -82,14 +91,19 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
   }
 
   render() {
+    let d = this.props
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
+          <Chip id="step-counter">
+            {d.position / d.position_max}
+          </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
-          <section id="graph" className={this.props.isDuringTransition() && 'during-transition'} />
+          <section id="graph" className={this.props.is_during_transition && 'during-transition'} />
+          {/* TODO extract to a separate component */}
           <section id="side-bar">{(()=>{
             var container = []
-            var logs = this.props.getLogs()
+            var logs = this.props.logs
             for (let i = 0; i < logs.length; i++) {
                 for (let ii = 0; ii < logs[i].length; ii++) {
                   let entry = logs[i][ii]
@@ -101,20 +115,33 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
             return container
           })()}</section>
           <section id="bottom-bar">
+            <FloatingActionButton mini={true} style="margin-right: 1em"
+                onClick={d.onPlayButton}>
+              {this.props.is_playing ? <IconStop /> : <IconPlay />}
+            </FloatingActionButton>
             <Slider
               min={0}
-              max={this.props.getPatchesCount() || 1}
-              disabled={!this.props.getPatchesCount()}
+              max={this.props.position_max || 1}
+              disabled={!this.props.position_max}
               step={1}
-              value={this.props.getPosition()}
-              onChange={this.props.onSlider}
+              value={this.props.position}
+              onChange={this.props.onStepSlider}
             />
           </section>
 
-          <Slider id="zoom" style={{height: 100}} axis="y" defaultValue={0.5} />
+          <Slider id="zoom-slider"
+            style={{height: 100}}
+            min={20}
+            max={200}
+            step={10}
+            axis="y"
+            defaultValue={100}
+            onChange={d.onZoomSlider} />
 
           <section id="settings-bar">
-            <RadioButtonGroup labelPosition="left" name="step-type" defaultSelected="states">
+            <RadioButtonGroup labelPosition="left"
+                name="step-type" defaultSelected={this.props.step_type}
+                onChange={this.props.onStepType}>
               <RadioButton
                 value="states"
                 label="States"

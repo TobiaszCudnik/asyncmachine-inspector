@@ -33,6 +33,7 @@ export interface ILogEntry {
 }
 
 export enum PatchType {
+    // TODO STATE means STATE_CHANGED ???
     STATE,
     NEW_MACHINE,
     TRANSITION_START,
