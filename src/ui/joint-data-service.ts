@@ -22,6 +22,9 @@ export enum StepTypes {
     STATES,
 }
 
+/**
+ * TODO extract common logic to a super class
+ */
 class JointDataService extends EventEmitter {
     patches: IPatch[] = [];
     data: INetworkJson | null;
@@ -71,34 +74,40 @@ class JointDataService extends EventEmitter {
         this.data = data || null
     }
     addPatch(patch: IPatch) {
-        if (patch.type == PatchType.TRANSITION_END ||
-                patch.type == PatchType.STATE ||
+        if (patch.type == PatchType.STATE ||
                 patch.type == PatchType.NEW_MACHINE) {
             this.index.states.push(this.patches.length)
+            this.index.transitions.push(this.patches.length)
         }
         // TODO avoid nested transitions
         if (patch.type == PatchType.TRANSITION_END)
             this.index.transitions.push(this.patches.length)
+
         this.patches.push(patch)
     }
     setStepType(type: StepTypes) {
         let old_step_type = this.step_type
         this.step_type = type
-        // lower granularity
         if (type > old_step_type) {
+            // lower granularity (grouping)
             const positions = (type == StepTypes.STATES) ?
                 this.index.states : this.index.transitions
             // go back to the prev step
-            if (!positions.includes(this.patch_position)) {
+            if (!positions.includes(this.patch_position - 1)) {
                 let index = positions.findIndex(
-                    positions => positions > this.position )
-                this.scrollTo(Math.max(0, index))
+                    position => position+1 > this.position )
+                // scroll to one step before the found one
+                this.scrollTo(index)
             } else {
-                this.position = positions.indexOf(this.patch_position) + 1
+                this.position = positions.indexOf(this.patch_position - 1) + 1
             }
         } else if (type < old_step_type) {
             // higher granularity
-            // TODO
+            if (type == StepTypes.TRANSITIONS) {
+                this.position = this.index.transitions
+                    .indexOf(this.patch_position - 1) + 1
+            } else
+                this.position = this.patch_position
         }
     }
     /**
@@ -119,18 +128,20 @@ class JointDataService extends EventEmitter {
     // scrollBy(amount)
     scrollTo(position: number): Set<string> {
         // TODO ensure that the position is not out of range
+        if (position == this.position)
+            return new Set()
         const t = StepTypes
         let patch_position = position
         switch (this.step_type) {
             case t.STATES:
-                patch_position = this.index.states[position - 1]
+                patch_position = this.index.states[position - 1] + 1
                 break
             case t.TRANSITIONS:
-                patch_position = this.index.transitions[position - 1]
+                patch_position = this.index.transitions[position - 1] + 1
                 break
         }
-        this.position = position + 1
-        return this.scrollToPatch(patch_position + 1)
+        this.position = position
+        return this.scrollToPatch(patch_position)
     }
     /**
      * Slides data to specific point (0 == no patches applied).

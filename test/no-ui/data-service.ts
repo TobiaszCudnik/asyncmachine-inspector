@@ -142,49 +142,90 @@ describe('grouped step types', function() {
     let service: JointDataService
 
     beforeEach(function() {
-        service = new JointDataService({cells: []})
+        service = new JointDataService({ cells: [0] })
         sinon.mock(service, 'applyDiff')
         sinon.mock(service, 'unapplyDiff')
+        let diff = (num) => (
+            { cells: { '0': [ num ], _t: 'a', _0: [ num-1, 0, 0 ] } }
+        )
         // 1
-        service.addPatch({type: PatchType.NEW_MACHINE, diff: null})
-        service.addPatch({type: PatchType.STATE, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_START, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_STEP, diff: null})
+        service.addPatch({type: PatchType.NEW_MACHINE, diff: diff(1)})
+        service.addPatch({type: PatchType.STATE, diff: diff(2)})
+        service.addPatch({type: PatchType.TRANSITION_START, diff: diff(3)})
+        service.addPatch({type: PatchType.TRANSITION_STEP, diff: diff(4)})
         // 5
-        service.addPatch({type: PatchType.TRANSITION_STEP, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_END, diff: null})
-        service.addPatch({type: PatchType.STATE, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_START, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_STEP, diff: null})
+        service.addPatch({type: PatchType.TRANSITION_STEP, diff: diff(5)})
+        service.addPatch({type: PatchType.TRANSITION_END, diff: diff(6)})
+        service.addPatch({type: PatchType.STATE, diff: diff(7)})
+        service.addPatch({type: PatchType.TRANSITION_START, diff: diff(8)})
+        service.addPatch({type: PatchType.TRANSITION_STEP, diff: diff(9)})
         // 10
-        service.addPatch({type: PatchType.TRANSITION_STEP, diff: null})
-        service.addPatch({type: PatchType.TRANSITION_END, diff: null})
-        service.addPatch({type: PatchType.STATE, diff: null})
+        service.addPatch({type: PatchType.TRANSITION_STEP, diff: diff(10)})
+        service.addPatch({type: PatchType.TRANSITION_END, diff: diff(11)})
+        service.addPatch({type: PatchType.STATE, diff: diff(12)})
+    })
+
+    it('states index', function() {
+        expect(service.index.states).to.eql([0, 1, 6, 11])
+    })
+
+    it('transitions index', function() {
+        expect(service.index.transitions).to.eql([0, 1, 5, 6, 10, 11])
     })
 
     it('STEPS -> TRANSITIONS', function() {
         service.setStepType(StepTypes.STEPS)
         service.scrollTo(5)
+        expect(service.data).to.eql({cells: [5]})
+
         service.setStepType(StepTypes.TRANSITIONS)
         expect(service.position).to.eql(2)
         expect(service.patch_position).to.eql(2)
+        expect(service.data).to.eql({cells: [2]})
+
         service.scrollOne()
         expect(service.position).to.eql(3)
         expect(service.patch_position).to.eql(6)
+        expect(service.data).to.eql({cells: [6]})
     })
 
     it('STEPS -> STATES', function() {
         service.setStepType(StepTypes.STEPS)
         service.scrollTo(5)
+        expect(service.data).to.eql({cells: [5]})
+
         service.setStepType(StepTypes.STATES)
         expect(service.position).to.eql(2)
         expect(service.patch_position).to.eql(2)
+        expect(service.data).to.eql({cells: [2]})
+
         service.scrollOne()
         expect(service.position).to.eql(3)
         expect(service.patch_position).to.eql(7)
+        expect(service.data).to.eql({cells: [7]})
     })
 
-    it('StepType.TRANSITIONS')
+    it('STATES -> STEPS', function() {
+        service.scrollTo(3)
+        expect(service.position).to.eql(3)
+        expect(service.patch_position).to.eql(7)
+        expect(service.data).to.eql({cells: [7]})
 
-    it('StepType.STATES')
+        service.setStepType(StepTypes.STEPS)
+        expect(service.position).to.eql(7)
+        expect(service.patch_position).to.eql(7)
+        expect(service.data).to.eql({cells: [7]})
+    })
+
+    it('STATES -> TRANSITIONS', function() {
+        service.scrollTo(3)
+        expect(service.position).to.eql(3)
+        expect(service.patch_position).to.eql(7)
+        expect(service.data).to.eql({cells: [7]})
+
+        service.setStepType(StepTypes.TRANSITIONS)
+        expect(service.position).to.eql(4)
+        expect(service.patch_position).to.eql(7)
+        expect(service.data).to.eql({cells: [7]})
+    })
 })

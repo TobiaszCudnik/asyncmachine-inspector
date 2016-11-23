@@ -17,7 +17,7 @@ import 'core-js/es6/symbol'
 import {
 	default as JointDataService,
 	Direction,
-	StepType
+	StepTypes
 } from './joint-data-service'
 import * as debounce from 'throttle-debounce/debounce'
 import { TLayoutProps } from './layout'
@@ -27,6 +27,8 @@ import { TLayoutProps } from './layout'
  * TODO
  * - all of this has to be seriously rewritten (using AM, ideally)
  * - longer delay for msgs than for a step they come from
+ * - queue & merge scroll requests while rendering
+ *   - ideally cancel the current rendering
  */
 export default function() {
 	const frametime = 0.5
@@ -85,7 +87,7 @@ export default function() {
 		get is_during_transition() { return data_service.during_transition },
 		get position() { return data_service.position },
 		get step_type() {
-			let t = StepType
+			let t = StepTypes
 			switch (data_service.step_type) {
 				case t.TRANSITIONS: return 'transition'
 				case t.STEPS: return 'steps'
