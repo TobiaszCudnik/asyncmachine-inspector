@@ -14,5 +14,10 @@
         "src/logger.ts",
         "src/network.ts",
         "src/ui/web.tsx"
-    ]
+    ],
+    "awesomeTypescriptLoaderOptions": {
+      "useTranspileModule": true,
+      "transpileOnly": true,
+      "useCache": true
+    }
 }

@@ -17,8 +17,8 @@ import {
 } from 'material-ui/RadioButton';
 import { ILogEntry } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import IconPlay from 'material-ui/svg-icons/svg-icons/av/play-arrow';
-import IconStop from 'material-ui/svg-icons/svg-icons/av/stop';
+import IconPlay from 'material-ui/svg-icons/av/play-arrow';
+import IconStop from 'material-ui/svg-icons/av/stop';
 import Chip from 'material-ui/Chip';
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
@@ -95,8 +95,8 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
-          <Chip id="step-counter">
-            {d.position / d.position_max}
+          <Chip id="step-counter" position={d.position} position_max={d.position_max}>
+            {d.position} / {d.position_max}
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
           <section id="graph" className={this.props.is_during_transition && 'during-transition'} />
@@ -115,11 +115,12 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
             return container
           })()}</section>
           <section id="bottom-bar">
-            <FloatingActionButton mini={true} style="margin-right: 1em"
-                onClick={d.onPlayButton}>
+            <FloatingActionButton mini={true} style={{marginRight: '1em'}}
+                onClick={d.onPlayButton} id="play-button">
               {this.props.is_playing ? <IconStop /> : <IconPlay />}
             </FloatingActionButton>
             <Slider
+              id="step-slider"
               min={0}
               max={this.props.position_max || 1}
               disabled={!this.props.position_max}

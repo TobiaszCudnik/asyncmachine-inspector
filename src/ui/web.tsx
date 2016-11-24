@@ -72,6 +72,7 @@ export default function() {
 
 	// const onSlider = debounce(500, false, FUNC ))
 	let onSlider = debounce(500, false, (event, value) => {
+		// TODO handle is_rendering
 		// autoplay turns ON on the last step of the slider
 		if (data_service.is_latest)
 			autoplay(true)
@@ -98,13 +99,19 @@ export default function() {
 		onStepSlider: onSlider,
 		onZoomSlider: null, // TODO
 		onStepType: (event, value) => {
-			debugger
-			console.log(value)
 			data_service.setStepType(value)
+			render()
 		},
 		msg: null,
 		msgHidden: false,
-		get is_playing() { return timer && autoplay() }
+		get is_playing() { return timer && autoplay() },
+		onPlayButton() {
+			if (!timer)
+				play()
+			else
+				stop()
+			render()
+		}
 	}
 
 	function showMsg(msg) {
@@ -129,6 +136,47 @@ export default function() {
 			layoutData.msgHidden = false
 		} else
 			layoutData.msg = null
+	}
+
+	function play() {
+		if (autoplay() && !timer) {
+			const start = Date.now()
+			let last
+			let timer_fn
+			timer = setTimeout( timer_fn = () => {
+				if (!autoplay()) {
+					timer = null
+					return
+				}
+				if (is_rendering) {
+					setTimeout(timer_fn, frametime*1000)
+					return
+				}
+				// merged-step to catch up with the skipped frames
+				let framestimes_since_last = Math.round(
+					(Date.now() - last) / (frametime*1000))
+				if (framestimes_since_last > 1) {
+					data_service.scrollTo(Math.max(data_service.position_max,
+						data_service.position + framestimes_since_last))
+					render()
+					setTimeout(timer_fn, frametime*1000)
+				} else if (!data_service.is_latest) {
+					data_service.scrollOne()
+					render()
+					setTimeout(timer_fn, frametime*1000)
+				} else {
+					timer = null
+				}
+			}, frametime*1000)
+		}
+	}
+
+	function stop() {
+		if (!timer)
+			return
+		autoplay_ = false
+		clearTimeout(timer)
+		timer = null
 	}
 
 	document.addEventListener('DOMContentLoaded', () => {
@@ -177,37 +225,8 @@ export default function() {
 		socket.on('diff-sync', function(packet: IPatch) {
 			data_service.addPatch(packet)
 			console.log('diff', packet)
-			// auto render if slider at the end
-			if (autoplay() && !timer) {
-				const start = Date.now()
-				let last
-				let timer_fn
-				timer = setTimeout( timer_fn = () => {
-					if (!autoplay()) {
-						timer = null
-						return
-					}
-					if (is_rendering) {
-						setTimeout(timer_fn, frametime*1000)
-						return
-					}
-					// merged-step to catch up with the skipped frames
-					let framestimes_since_last = Math.round(
-						(Date.now() - last) / (frametime*1000))
-					if (framestimes_since_last > 1) {
-						data_service.scrollTo(Math.max(data_service.position_max,
-							data_service.position + framestimes_since_last))
-						render()
-						setTimeout(timer_fn, frametime*1000)
-					} else if (!data_service.is_latest) {
-						data_service.scrollOne()
-						render()
-						setTimeout(timer_fn, frametime*1000)
-					} else {
-						timer = null
-					}
-			}, frametime*1000)
-			}
+			// auto render if slider at the ended
+			play()
 		})
 	})
 }

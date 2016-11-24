@@ -31,5 +31,5 @@ module.exports = {
     libraryTarget: "umd"
   },
 
-  devtool: 'source-map',
+  devtool: 'eval',
 }
