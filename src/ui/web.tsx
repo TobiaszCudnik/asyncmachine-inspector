@@ -48,14 +48,15 @@ export class InspectorUI /*implements ITransitions*/ {
 	constructor(
 			public host = 'localhost',
 			public port = 3030) {
-    this.states.set(['AutoplayOn', 'Connecting'])
+    this.states.add(['AutoplayOn', 'Connecting'])
 		this.states.logLevel(3)
 
 		this.socket = io(`http://${this.host}:${this.port}/client`)
 		this.socket.on('full-sync', this.states.addByListener('FullSync'))
 		this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-		this.socket.on('connected', this.states.addByListener(
+		this.socket.on('connect', this.states.addByListener(
 			['Connected', 'Joining']))
+		// TODO connection_error event and bind retries to a state
 		this.socket.on('disconnected', this.states.addByListener('Disconnected'))
 		this.socket.on('loggers', (ids) => {
 			// TODO timer
@@ -65,11 +66,16 @@ export class InspectorUI /*implements ITransitions*/ {
 			})
 		})
 
+		window.document.addEventListener('DOMContentLoaded',
+			this.states.addByListener('DOMReady'))
+
 		this.data_service.on('scrolled', (position, changed_cells) => {
 			if (this.data_service.is_latest)
 				this.states.add('TimelineOnLast')
 			else if (this.data_service.position == 0)
 				this.states.add('TimelineOnFirst')
+			else
+				this.states.add('TimelineOnBetween')
 			this.graph.updateCells(changed_cells,
 				this.data_service.last_scroll_add_remove)
 			this.states.add('Rendered')
@@ -116,12 +122,13 @@ export class InspectorUI /*implements ITransitions*/ {
 	// TRANSITIONS
 
 	async FullSync_state(graph_data: INetworkJson) {
+		// TODO cancel if rendring here
 		this.states.add(['Joined', 'Rendering'])
 		// console.log('full-sync', Date.now() - start_join)
 		console.log('full-sync', graph_data)
 		this.data_service.data = graph_data
 		await this.graph.setData(graph_data)
-		this.states.add('InitialRenderDone')
+		this.states.add('Rendered')
   }
 
   FullSync_FullSync() {
@@ -133,7 +140,7 @@ export class InspectorUI /*implements ITransitions*/ {
 		console.log('diff', packet)
 	}
 
-	async StepTypeChanged_state(value: StepTypes) {
+	async StepTypeChanged_state(value: 'transitions' | 'states' | 'steps') {
 		if (this.states.is('Rendering')) {
 			const abort = this.states.getAbort('StepTypeChanged')
 			await this.states.when('Rendered')
@@ -141,7 +148,8 @@ export class InspectorUI /*implements ITransitions*/ {
 				return
 		}
 		const t = StepTypes
-		switch (value) {
+		const type = StepTypes[value.toUpperCase()]
+		switch (type) {
 			case t.STATES:
 				this.states.add('StepByStates')
 				break
@@ -152,8 +160,9 @@ export class InspectorUI /*implements ITransitions*/ {
 				this.states.add('StepBySteps')
 				break
 		}
-		this.data_service.setStepType(value)
+		this.data_service.setStepType(type)
 		this.renderUI()
+		this.states.drop('StepTypeChanged')
 	}
 
 	DOMReady_state() {
@@ -162,12 +171,18 @@ export class InspectorUI /*implements ITransitions*/ {
 		this.graph.render('#graph')
 	}
 
-  PlayStopClicked_state() {
-    this.states.drop('PlayStopClicked')
-    if (this.states.is('AutoplayOn'))
-      this.states.drop('AutoplayOn')
-    else
+  async PlayStopClicked_state() {
+		const abort = this.states.getAbort('PlayStopClicked')
+    if (this.states.is('AutoplayOn')) {
+			await new Promise(resolve => {
+				this.states.drop('AutoplayOn')
+				this.states.once('AutoplayOn_end', resolve)
+			})
+			if (abort()) return
+		} else
       this.states.add('AutoplayOn')
+    this.states.drop('PlayStopClicked')
+		this.renderUI()
   }
 
 	TimelineScrolled_state(value: number) {
@@ -201,7 +216,7 @@ export class InspectorUI /*implements ITransitions*/ {
 				this.renderUI()
 				setTimeout(timer_fn, this.frametime*1000)
 			} else {
-				this.step_timer = null
+				this.states.drop('Playing')
 			}
 		}, this.frametime*1000)
 	}

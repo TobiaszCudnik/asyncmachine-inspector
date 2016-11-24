@@ -55,8 +55,16 @@ class JointDataService extends EventEmitter {
             return null
         return this.patches[this.patch_position-1]
     }
-    get is_latest() {
-        return this.patch_position == this.position_max
+    // TODO test
+    get is_latest(): boolean {
+        const t = StepTypes
+        switch (this.step_type) {
+            case t.STATES:
+            case t.TRANSITIONS:
+                return this.position == this.position_max
+            case t.STEPS:
+                return this.patch_position == this.patches.length
+        }
     }
     get position_max() {
         const t = StepTypes

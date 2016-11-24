@@ -1,17 +1,16 @@
-import AsyncMachine from 'asyncmachine'
+import AsyncMachine from 'asyncmachine/src/asyncmachine'
 import {
   TStates,
   IState,
   IBind,
-  IEmit,
-  ITransitions
+  IEmit
 } from './states-types'
 
 export default class States
     extends AsyncMachine<TStates, IBind, IEmit> {
   AutoplayOn: IState = {};
   Playing: IState = {
-    require: ['AutoplayOn'],
+    require: ['AutoplayOn', 'InitialRenderDone'],
     auto: true
   };
   // graph render
@@ -21,15 +20,16 @@ export default class States
     drop: ['Rendered']
   };
   Rendered: IState = {
-    drop: ['Rendering']
+    drop: ['Rendering'],
+    add: ['InitialRenderDone']
   }
   InitialRenderDone: IState = {
-    require: ['FullSync'],
-    add: ['Rendered']
+    require: ['FullSync']
   };
   // connection
   Connecting: IState = {
-    drop: ['Connected', 'Disconnected']
+    drop: ['Connected', 'Disconnected'],
+    auto: true
   };
   Connected: IState = {
     drop: ['Connecting', 'Disconnected']
@@ -45,10 +45,13 @@ export default class States
   };
   // slider states
   TimelineOnFirst: IState = {
-    drop: ['TimelineOnLast']
+    drop: ['TimelineOnLast', 'TimelineOnBetween']
+  };
+  TimelineOnBetween: IState = {
+    drop: ['TimelineOnLast', 'TimelineOnFirst']
   };
   TimelineOnLast: IState = {
-    drop: ['Playing', 'TimelineOnFirst']
+    drop: ['Playing', 'TimelineOnFirst', 'TimelineOnBetween']
   };
   // TODO not needed?
   StepByStates: IState = {
@@ -68,7 +71,9 @@ export default class States
   FullSync: IState = {
     add: ['TimelineOnFirst']
   };
-  DiffSync: IState = {};
+  DiffSync: IState = {
+    multi: true
+  };
   // TODO later
   // LogBarVisible: IState = {};
   // LogBarClicked: IState = {};
@@ -78,5 +83,7 @@ export default class States
   constructor(target) {
     super(target)
     this.registerAll()
+    this.add('TimelineOnFirst')
+    this.id('')
   }
 }
