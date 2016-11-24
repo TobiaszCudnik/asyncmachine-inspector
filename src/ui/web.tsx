@@ -21,6 +21,8 @@ import {
 } from './joint-data-service'
 import * as debounce from 'throttle-debounce/debounce'
 import { TLayoutProps } from './layout'
+import States from './states'
+import { ITransitions } from './states-types'
 
 
 /**
@@ -29,204 +31,251 @@ import { TLayoutProps } from './layout'
  * - longer delay for msgs than for a step they come from
  * - queue & merge scroll requests while rendering
  *   - ideally cancel the current rendering
+ * - timers
  */
-export default function() {
-	const frametime = 0.5
-	var graph = new Graph(null)
-	var socket = io('http://localhost:3030/client');
-	var layout
-	var container: Element
-	let autoplay_ = true
-	let timer
-	let data_service = new JointDataService
-	function autoplay(state?) {
-		if (state === undefined)
-			return autoplay_
+export class InspectorUI /*implements ITransitions*/ {
+	states = new States(this);
+	data_service = new JointDataService
+	graph = new Graph(null)
+	layout_data: TLayoutProps;
+	frametime = 0.5
+	// TODO type
+	socket: io.Socket;
+	layout;
+	container: Element
+	step_timer: number;
 
-		autoplay_ = state
-		if (!state && timer)
-			clearInterval(timer)
-	}
-	
-	data_service.on('scrolled', (position, changed_cells) => {
-		graph.updateCells(changed_cells, data_service.last_scroll_add_remove)
-		handleTransitionMessage(data_service)
-	})
+	constructor(
+			public host = 'localhost',
+			public port = 3030) {
+    this.states.set(['AutoplayOn', 'Connecting'])
+		this.states.logLevel(3)
 
-	// global setter
-	// window.setJson = function(json) {
-	// 	data = json
-	// 	layoutData.graph = data.graph
-	// 	layoutData.diffs = data.patches
-	// 	layoutData.step = 0
-	// 	layoutData.duringTransition = false
-	// 	graph.setData(layoutData.graph)
-	// }
-
-	// window.getJson = function() {
-	// 	// TODO custom replaces for .leaves looking in indexOf(.nodes)
-	// 	console.log(JSON.stringify(data))
-	// }
-
-	let is_rendering = false
-
-	// const onSlider = debounce(500, false, FUNC ))
-	let onSlider = debounce(500, false, (event, value) => {
-		// TODO handle is_rendering
-		// autoplay turns ON on the last step of the slider
-		if (data_service.is_latest)
-			autoplay(true)
-		else 
-			autoplay_ = false
-		// TODO debounce
-		data_service.scrollTo(value)
-		render()
-	})
-
-	var layoutData: TLayoutProps = {
-		get position_max() { return data_service.position_max },
-		get is_during_transition() { return data_service.during_transition },
-		get position() { return data_service.position },
-		get step_type() {
-			let t = StepTypes
-			switch (data_service.step_type) {
-				case t.TRANSITIONS: return 'transition'
-				case t.STEPS: return 'steps'
-			}
-			return 'states'
-		},
-		get logs() { return data_service.getLogs() },
-		onStepSlider: onSlider,
-		onZoomSlider: null, // TODO
-		onStepType: (event, value) => {
-			data_service.setStepType(value)
-			render()
-		},
-		msg: null,
-		msgHidden: false,
-		get is_playing() { return timer && autoplay() },
-		onPlayButton() {
-			if (!timer)
-				play()
-			else
-				stop()
-			render()
-		}
-	}
-
-	function showMsg(msg) {
-		layoutData.msg = msg
-		render()
-	}
-
-	function render() {
-		layout = renderLayout(container, layoutData)
-	}
-
-	// TODO breaks when reversing inside nested active_transitions
-	function handleTransitionMessage(data_service) {
-		// TODO highlight the involved parts of the log view
-		// let reversed = (data_service.last_scroll_direction == Direction.BACK)
-		let packet = data_service.current_patch
-		if (packet && packet.type == PatchType.TRANSITION_START) {
-			layoutData.msg = `Transition started on ${packet.machine_id}`
-			layoutData.msgHidden = false
-		} else if (packet && packet.type == PatchType.TRANSITION_END) {
-			layoutData.msg = `Transition ended on ${packet.machine_id}`
-			layoutData.msgHidden = false
-		} else
-			layoutData.msg = null
-	}
-
-	function play() {
-		if (autoplay() && !timer) {
-			const start = Date.now()
-			let last
-			let timer_fn
-			timer = setTimeout( timer_fn = () => {
-				if (!autoplay()) {
-					timer = null
-					return
-				}
-				if (is_rendering) {
-					setTimeout(timer_fn, frametime*1000)
-					return
-				}
-				// merged-step to catch up with the skipped frames
-				let framestimes_since_last = Math.round(
-					(Date.now() - last) / (frametime*1000))
-				if (framestimes_since_last > 1) {
-					data_service.scrollTo(Math.max(data_service.position_max,
-						data_service.position + framestimes_since_last))
-					render()
-					setTimeout(timer_fn, frametime*1000)
-				} else if (!data_service.is_latest) {
-					data_service.scrollOne()
-					render()
-					setTimeout(timer_fn, frametime*1000)
-				} else {
-					timer = null
-				}
-			}, frametime*1000)
-		}
-	}
-
-	function stop() {
-		if (!timer)
-			return
-		autoplay_ = false
-		clearTimeout(timer)
-		timer = null
-	}
-
-	document.addEventListener('DOMContentLoaded', () => {
-		container = document.getElementById('app')
-		render()
-		graph.render('#graph')
-
-		let start_join
-		socket.on('loggers', function (ids) {
-			start_join = Date.now()
-
-			socket.emit('join', {
+		this.socket = io(`http://${this.host}:${this.port}/client`)
+		this.socket.on('full-sync', this.states.addByListener('FullSync'))
+		this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
+		this.socket.on('connected', this.states.addByListener(
+			['Connected', 'Joining']))
+		this.socket.on('disconnected', this.states.addByListener('Disconnected'))
+		this.socket.on('loggers', (ids) => {
+			// TODO timer
+			// start_join = Date.now()
+			this.socket.emit('join', {
 				loggerId: ids[0]
 			})
-
-			// TODO stream-based full-sync
-			// let full_sync_stream = new IterableEmitter<TCell>(
-			// 	socket as any as EventEmitter, 'full-sync')
-			// isSyncing = true
-
-			// socket.on('full-sync', data) {
-			// 	if (!data)
-			// 		isSyncing = false
-			// }
-
-			// await graph.setData(full_sync_stream, true)
-			// layoutData.graph =
-			// 	data.graph = graph.data
-			// showMsg('Connected')
 		})
 
-		socket.on('full-sync', async (graph_data: INetworkJson) => {
-			is_rendering = true
-			console.log('full-sync', Date.now() - start_join)
-			console.log('full-sync', graph_data)
-			data_service.data = graph_data
-			await graph.setData(graph_data)
-			showMsg('Connected')
-			is_rendering = false
+		this.data_service.on('scrolled', (position, changed_cells) => {
+			if (this.data_service.is_latest)
+				this.states.add('TimelineOnLast')
+			else if (this.data_service.position == 0)
+				this.states.add('TimelineOnFirst')
+			this.graph.updateCells(changed_cells,
+				this.data_service.last_scroll_add_remove)
+			this.states.add('Rendered')
+			this.handleTransitionMessage()
 		})
+		this.layout_data = this.buildLayoutData()
+	}
 
-		socket.on('disconnected', function() {
-			showMsg('Disconnected')
-		})
+	buildLayoutData() {
+		const self = this
+		return {
+			get position_max() { return self.data_service.position_max },
+			get is_during_transition() { return self.data_service.during_transition },
+			get position() { return self.data_service.position },
+			get step_type() {
+				let t = StepTypes
+				switch (self.data_service.step_type) {
+					case t.TRANSITIONS: return 'transition'
+					case t.STEPS: return 'steps'
+				}
+				return 'states'
+			},
+			get logs() { return self.data_service.getLogs() },
+			onTimelineSlider: debounce(500, false, (event, value) => {
+				self.states.add('TimelineScrolled', value)
+			}),
+			onZoomSlider: null, // TODO
+			onStepType: (event, value) => {
+				if (self.data_service.step_type != value)
+					self.states.add('StepTypeChanged', value)
+			},
+			msg: null,
+			msgHidden: false,
+			get is_playing() { return self.states.is('Playing') },
+			onPlayButton: this.states.addByListener('PlayStopClicked')
+				// if (!timer)
+				// 	play()
+				// else
+				// 	stop()
+				// render()
+		}
+	}
+
+	// TRANSITIONS
+
+	async FullSync_state(graph_data: INetworkJson) {
+		this.states.add(['Joined', 'Rendering'])
+		// console.log('full-sync', Date.now() - start_join)
+		console.log('full-sync', graph_data)
+		this.data_service.data = graph_data
+		await this.graph.setData(graph_data)
+		this.states.add('InitialRenderDone')
+  }
+
+  FullSync_FullSync() {
+		// reset and re-render everything
+  }
 		
-		socket.on('diff-sync', function(packet: IPatch) {
-			data_service.addPatch(packet)
-			console.log('diff', packet)
-			// auto render if slider at the ended
-			play()
-		})
-	})
+	DiffSync_state(packet: IPatch) {
+		this.data_service.addPatch(packet)
+		console.log('diff', packet)
+	}
+
+	async StepTypeChanged_state(value: StepTypes) {
+		if (this.states.is('Rendering')) {
+			const abort = this.states.getAbort('StepTypeChanged')
+			await this.states.when('Rendered')
+			if (abort())
+				return
+		}
+		const t = StepTypes
+		switch (value) {
+			case t.STATES:
+				this.states.add('StepByStates')
+				break
+			case t.TRANSITIONS:
+				this.states.add('StepByTransitions')
+				break
+			case t.STEPS:
+				this.states.add('StepBySteps')
+				break
+		}
+		this.data_service.setStepType(value)
+		this.renderUI()
+	}
+
+	DOMReady_state() {
+		this.container = document.getElementById('app')
+		this.renderUI()
+		this.graph.render('#graph')
+	}
+
+  PlayStopClicked_state() {
+    this.states.drop('PlayStopClicked')
+    if (this.states.is('AutoplayOn'))
+      this.states.drop('AutoplayOn')
+    else
+      this.states.add('AutoplayOn')
+  }
+
+	TimelineScrolled_state(value: number) {
+		// TODO debounce
+		this.data_service.scrollTo(value)
+		this.renderUI()
+		this.states.drop('TimelineScrolled')
+	}
+
+	Playing_state() {
+		const start = Date.now()
+		let last
+		let timer_fn
+		const abort = this.states.getAbort('Playing')
+		this.step_timer = setTimeout( timer_fn = async () => {
+			if (abort()) return;
+			if (this.states.is('Rendering')) {
+				await this.states.when('Rendered')
+				if (abort()) return;
+			}
+			// merged-step to catch up with the skipped frames
+			let framestimes_since_last = Math.round(
+				(Date.now() - last) / (this.frametime*1000))
+			if (framestimes_since_last > 1) {
+				this.data_service.scrollTo(Math.max(this.data_service.position_max,
+					this.data_service.position + framestimes_since_last))
+				this.renderUI()
+				setTimeout(timer_fn, this.frametime*1000)
+			} else if (!this.data_service.is_latest) {
+				this.data_service.scrollOne()
+				this.renderUI()
+				setTimeout(timer_fn, this.frametime*1000)
+			} else {
+				this.step_timer = null
+			}
+		}, this.frametime*1000)
+	}
+
+	Playing_end() {
+		clearTimeout(this.step_timer)
+		this.step_timer = null
+	}
+
+	Connected_state() {
+		this.showMsg('Connected')
+	}
+
+	Connected_end() {
+		this.showMsg('Disconnected')
+	}
+
+	// METHODS
+
+	renderUI() {
+		this.layout = renderLayout(this.container, this.layout_data)
+	}
+
+	showMsg(msg) {
+		this.layout_data.msg = msg
+		this.renderUI()
+	}
+
+	handleTransitionMessage() {
+		// TODO highlight the involved parts of the log view
+		// let reversed = (data_service.last_scroll_direction == Direction.BACK)
+		let packet = this.data_service.current_patch
+		let data = this.layout_data
+		if (packet && packet.type == PatchType.TRANSITION_START) {
+			data.msg = `Transition started on ${packet.machine_id}`
+			data.msgHidden = false
+		} else if (packet && packet.type == PatchType.TRANSITION_END) {
+			data.msg = `Transition ended on ${packet.machine_id}`
+			data.msgHidden = false
+		} else
+			data.msg = null
+	}
 }
+
+export default function() {
+	return new InspectorUI()
+}
+
+// global setter
+// window.setJson = function(json) {
+// 	data = json
+// 	layoutData.graph = data.graph
+// 	layoutData.diffs = data.patches
+// 	layoutData.step = 0
+// 	layoutData.duringTransition = false
+// 	graph.setData(layoutData.graph)
+// }
+
+// window.getJson = function() {
+// 	// TODO custom replaces for .leaves looking in indexOf(.nodes)
+// 	console.log(JSON.stringify(data))
+// }
+
+// TODO stream-based full-sync
+// let full_sync_stream = new IterableEmitter<TCell>(
+// 	socket as any as EventEmitter, 'full-sync')
+// isSyncing = true
+
+// socket.on('full-sync', data) {
+// 	if (!data)
+// 		isSyncing = false
+// }
+
+// await graph.setData(full_sync_stream, true)
+// layoutData.graph =
+// 	data.graph = graph.data
+// showMsg('Connected')

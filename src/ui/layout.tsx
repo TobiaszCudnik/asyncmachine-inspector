@@ -47,7 +47,7 @@ export type TLayoutProps = {
   msgHidden: boolean
   step_type: string
   // listeners
-  onStepSlider: Function
+  onTimelineSlider: Function
   onZoomSlider: Function
   onStepType: Function
   onPlayButton: Function
@@ -126,7 +126,7 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
               disabled={!this.props.position_max}
               step={1}
               value={this.props.position}
-              onChange={this.props.onStepSlider}
+              onChange={this.props.onTimelineSlider}
             />
           </section>
 

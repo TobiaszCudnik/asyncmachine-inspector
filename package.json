@@ -21,7 +21,7 @@
   "main": "build/logger.js",
   "browser": "build/ui.js",
   "dependencies": {
-    "asyncmachine": "^3.0.0",
+    "asyncmachine": "^3.1.0",
     "d3": "^3.1.0",
     "json-loader": "^0.5.4",
     "lodash": "latest",
