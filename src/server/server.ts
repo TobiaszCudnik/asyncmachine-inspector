@@ -46,12 +46,17 @@ export default function createServer() {
         loggerSockets.push(socket)
         // if this is the first logger, inform all the UIs
         if (loggerSockets.length == 1) {
-            for (let uiSocket of clientSockets)
-                uiSocket.emit('loggers', loggerSockets.map( socket => socket.loggerId ))
+            for (let uiSocket of clientSockets) {
+                uiSocket.emit('loggers', loggerSockets.map(
+                    socket => socket.loggerId ))
+            }
         }
         // handlers
         socket.on('disconnect', function() {
             loggerSockets = _.without(loggerSockets, socket)
+            for (let client of clientSockets)
+                client.leave(socket.loggerId)
+            // TODO clean clientsPerLogger
         })
         socket.on('diff-sync', function(diff) {
             console.log(`diff-sync from ${socket.loggerId}`)
@@ -93,6 +98,7 @@ export default function createServer() {
             // TODO group clients for this request
             loggerSocket.on('full-sync', function(json) {
                 console.log(`full-sync from ${loggerSocket.loggerId}`)
+                json.loggerId = event.loggerId
                 socket.emit('full-sync', json)
             })
             loggerSocket.emit('full-sync')

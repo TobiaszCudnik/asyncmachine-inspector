@@ -32,10 +32,11 @@ import { ITransitions } from './states-types'
  * - queue & merge scroll requests while rendering
  *   - ideally cancel the current rendering
  * - timers
+ * - renderUI() as a state
  */
 export class InspectorUI /*implements ITransitions*/ {
 	states = new States(this);
-	data_service = new JointDataService
+	data_service: JointDataService
 	graph = new Graph(null)
 	layout_data: TLayoutProps;
 	frametime = 0.5
@@ -43,7 +44,9 @@ export class InspectorUI /*implements ITransitions*/ {
 	socket: io.Socket;
 	layout;
 	container: Element
+	logger_id: string;
 	step_timer: number;
+	step_fn: Function;
 
 	constructor(
 			public host = 'localhost',
@@ -54,17 +57,10 @@ export class InspectorUI /*implements ITransitions*/ {
 		this.socket = io(`http://${this.host}:${this.port}/client`)
 		this.socket.on('full-sync', this.states.addByListener('FullSync'))
 		this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-		this.socket.on('connect', this.states.addByListener(
-			['Connected', 'Joining']))
+		this.socket.on('connect', this.states.addByListener('Connected'))
 		// TODO connection_error event and bind retries to a state
 		this.socket.on('disconnected', this.states.addByListener('Disconnected'))
-		this.socket.on('loggers', (ids) => {
-			// TODO timer
-			// start_join = Date.now()
-			this.socket.emit('join', {
-				loggerId: ids[0]
-			})
-		})
+		this.socket.on('loggers', this.states.addByListener('Joining'))
 
 		window.document.addEventListener('DOMContentLoaded',
 			this.states.addByListener('DOMReady'))
@@ -111,18 +107,14 @@ export class InspectorUI /*implements ITransitions*/ {
 			msgHidden: false,
 			get is_playing() { return self.states.is('Playing') },
 			onPlayButton: this.states.addByListener('PlayStopClicked')
-				// if (!timer)
-				// 	play()
-				// else
-				// 	stop()
-				// render()
 		}
 	}
 
 	// TRANSITIONS
 
 	async FullSync_state(graph_data: INetworkJson) {
-		// TODO cancel if rendring here
+		// TODO cancel the rendering here
+		this.logger_id = graph_data.loggerId
 		this.states.add(['Joined', 'Rendering'])
 		// console.log('full-sync', Date.now() - start_join)
 		console.log('full-sync', graph_data)
@@ -131,9 +123,17 @@ export class InspectorUI /*implements ITransitions*/ {
 		this.states.add('Rendered')
   }
 
-  FullSync_FullSync() {
-		// reset and re-render everything
-  }
+  Joining_state(ids: string[]) {
+		let id = ids[0]
+		if (this.logger_id != id)
+			this.graph.reset()
+		this.data_service = new JointDataService
+		// TODO timer
+		// start_join = Date.now()
+		this.socket.emit('join', {
+			loggerId: id
+		})
+	}
 		
 	DiffSync_state(packet: IPatch) {
 		this.data_service.addPatch(packet)
@@ -194,31 +194,25 @@ export class InspectorUI /*implements ITransitions*/ {
 
 	Playing_state() {
 		const start = Date.now()
-		let last
-		let timer_fn
+		this.step_fn = this.playStep.bind(this)
 		const abort = this.states.getAbort('Playing')
-		this.step_timer = setTimeout( timer_fn = async () => {
+		this.step_timer = setTimeout(this.step_fn, this.frametime*1000)
+	}
+
+	async playStep(abort: Function) {
+		let last
+		if (abort()) return;
+		if (this.states.is('Rendering')) {
+			await this.states.when('Rendered')
 			if (abort()) return;
-			if (this.states.is('Rendering')) {
-				await this.states.when('Rendered')
-				if (abort()) return;
-			}
-			// merged-step to catch up with the skipped frames
-			let framestimes_since_last = Math.round(
-				(Date.now() - last) / (this.frametime*1000))
-			if (framestimes_since_last > 1) {
-				this.data_service.scrollTo(Math.max(this.data_service.position_max,
-					this.data_service.position + framestimes_since_last))
-				this.renderUI()
-				setTimeout(timer_fn, this.frametime*1000)
-			} else if (!this.data_service.is_latest) {
-				this.data_service.scrollOne()
-				this.renderUI()
-				setTimeout(timer_fn, this.frametime*1000)
-			} else {
-				this.states.drop('Playing')
-			}
-		}, this.frametime*1000)
+		}
+		// merged-step to catch up with the skipped frames
+		let framestimes_since_last = Math.round(
+			(Date.now() - last) / (this.frametime*1000))
+		this.data_service.scrollTo(Math.max(this.data_service.position_max,
+			this.data_service.position + framestimes_since_last))
+		this.renderUI()
+		setTimeout(this.step_fn, this.frametime*1000)
 	}
 
 	Playing_end() {

@@ -69,6 +69,7 @@ export default class States
   StepTypeChanged: IState = {};
   // network inputs
   FullSync: IState = {
+    multi: true,
     add: ['TimelineOnFirst']
   };
   DiffSync: IState = {

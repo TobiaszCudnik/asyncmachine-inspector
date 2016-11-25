@@ -74,9 +74,19 @@ export default class Ui extends UiBase<INetworkJson> {
 			
 		super(data)
 		this.graph = new joint.dia.Graph();
-		this.graph_layout = new GraphLayout(this.graph)
+		this.initGraphLayout()
 		this.stylesheet = new Stylesheet
 		this.parseColors()
+	}
+
+	initGraphLayout() {
+		this.graph_layout = new GraphLayout(this.graph)
+	}
+
+	reset() {
+		this.graph.clear()
+		this.initGraphLayout();
+		// TODO reset stylesheet and color assignments
 	}
 
 	render(el) {

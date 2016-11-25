@@ -77,8 +77,10 @@ export default function createServer(json): SocketIO.Server {
         socket.on('error', console.error.bind(console))
         
         // send the list of loggers
-        if (loggerSockets.length)
-            socket.emit('loggers', loggerSockets.map( socket => socket.loggerId ))
+        if (loggerSockets.length) {
+            socket.emit('loggers', loggerSockets.map(
+                socket => socket.loggerId ))
+        }
     })
     
     return server
