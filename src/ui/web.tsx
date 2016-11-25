@@ -77,6 +77,7 @@ export class InspectorUI /*implements ITransitions*/ {
 			this.states.add('Rendered')
 			this.handleTransitionMessage()
 		})
+
 		this.layout_data = this.buildLayoutData()
 	}
 

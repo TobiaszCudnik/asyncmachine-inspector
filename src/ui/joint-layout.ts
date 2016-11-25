@@ -356,6 +356,9 @@ export default class GraphLayout {
     let cells = this.cells
     this.source_graph.startBatch('add')
 
+    // TODO use paper#addCells, view#onChangeAttrs
+    // use link positions from dagre, updateConnectionOnly
+    //   investigate updatePostponed
     let first_run = !this.source_graph.get('cells') 
       || !this.source_graph.get('cells').length
     let batch_cells = []

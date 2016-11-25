@@ -9,6 +9,7 @@ import {
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
 import * as joint from 'jointjs'
+import * as V from 'jointjs/dist/vectorizer'
 import * as $ from 'jquery'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -121,6 +122,8 @@ export default class Ui extends UiBase<INetworkJson> {
 			});
 			window.addEventListener('resize', debounce(500, false, 
 				() => this.autosize() ))
+
+			this.bindMouseZoom()
 		}
 
 		if (this.data)
@@ -354,5 +357,35 @@ export default class Ui extends UiBase<INetworkJson> {
 				view.toggleClass(classname, Boolean(state.get('step_style') & TransitionStepTypes[key]))
 			}
 		})
+	}
+
+	// TODO test
+	bindMouseZoom() {
+		this.paper.$el.on('mousewheel DOMMouseScroll', (e) => {
+			e.preventDefault();
+			let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
+
+			var delta = Math.max(-1, Math.min(1, (ev.wheelDelta || -ev.detail))) / 50;
+			var offsetX = (ev.offsetX || ev.clientX - $(this).offset().left);
+
+			var offsetY = (ev.offsetY || ev.clientY - $(this).offset().top);
+			var p = this.offsetToLocalPoint(offsetX, offsetY);
+			var newScale = V(this.paper.viewport).scale().sx + delta;
+			// console.log(' delta' + delta + ' ' + 'offsetX' + offsetX + 'offsety--' + offsetY + 'p' + p.x + 'newScale' + newScale)
+			if (newScale > 0.4 && newScale < 2) {
+				this.paper.setOrigin(0, 0);
+				this.paper.scale(newScale, newScale, p.x, p.y);
+			}
+		})
+	}
+
+	offsetToLocalPoint(x, y) {
+		var svgPoint = this.paper.svg.createSVGPoint();
+		svgPoint.x = x;
+		svgPoint.y = y;
+
+		var pointTransformed = svgPoint.matrixTransform(
+			this.paper.viewport.getCTM().inverse());
+		return pointTransformed;
 	}
 }
