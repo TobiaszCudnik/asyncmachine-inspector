@@ -23,6 +23,7 @@ import * as debounce from 'throttle-debounce/debounce'
 import { TLayoutProps } from './layout'
 import States from './states'
 import { ITransitions } from './states-types'
+import workerio from 'workerio/src/workerio/index'
 
 
 /**
@@ -65,50 +66,22 @@ export class InspectorUI /*implements ITransitions*/ {
 		window.document.addEventListener('DOMContentLoaded',
 			this.states.addByListener('DOMReady'))
 
-		this.data_service.on('scrolled', (position, changed_cells) => {
-			if (this.data_service.is_latest)
-				this.states.add('TimelineOnLast')
-			else if (this.data_service.position == 0)
-				this.states.add('TimelineOnFirst')
-			else
-				this.states.add('TimelineOnBetween')
-			this.graph.updateCells(changed_cells,
-				this.data_service.last_scroll_add_remove)
-			this.states.add('Rendered')
-			this.handleTransitionMessage()
-		})
-
 		this.layout_data = this.buildLayoutData()
+		this.initDataService()
+		// this.onDataServiceScrolled = this.onDataServiceScrolled.bind(this)
 	}
 
-	buildLayoutData() {
-		const self = this
-		return {
-			get position_max() { return self.data_service.position_max },
-			get is_during_transition() { return self.data_service.during_transition },
-			get position() { return self.data_service.position },
-			get step_type() {
-				let t = StepTypes
-				switch (self.data_service.step_type) {
-					case t.TRANSITIONS: return 'transition'
-					case t.STEPS: return 'steps'
-				}
-				return 'states'
-			},
-			get logs() { return self.data_service.getLogs() },
-			onTimelineSlider: debounce(500, false, (event, value) => {
-				self.states.add('TimelineScrolled', value)
-			}),
-			onZoomSlider: null, // TODO
-			onStepType: (event, value) => {
-				if (self.data_service.step_type != value)
-					self.states.add('StepTypeChanged', value)
-			},
-			msg: null,
-			msgHidden: false,
-			get is_playing() { return self.states.is('Playing') },
-			onPlayButton: this.states.addByListener('PlayStopClicked')
-		}
+	// TODO type
+	layout_worker: any;
+
+	// TODO support resetting
+	async InitializingLayoutWorker_state() {
+        // TODO basedir
+		const worker = new Worker('../../dist/worker-layout.umd.js')
+		let LayoutWorker = await workerio.getInterface(worker, 'shoutService')
+		this.layout_worker = new LayoutWorker()
+		this.graph.layout_worker = 
+		this.states.add('LayoutWorkerReady')
 	}
 
 	// TRANSITIONS
@@ -124,11 +97,15 @@ export class InspectorUI /*implements ITransitions*/ {
 		this.states.add('Rendered')
   }
 
+	FullSync_Joining() {
+		// re-init the data service on re-joining
+		this.initDataService()
+	}
+
   Joining_state(ids: string[]) {
 		let id = ids[0]
 		if (this.logger_id != id)
 			this.graph.reset()
-		this.data_service = new JointDataService
 		// TODO timer
 		// start_join = Date.now()
 		this.socket.emit('join', {
@@ -231,6 +208,36 @@ export class InspectorUI /*implements ITransitions*/ {
 
 	// METHODS
 
+	buildLayoutData() {
+		const self = this
+		return {
+			get position_max() { return self.data_service.position_max },
+			get is_during_transition() { return self.data_service.during_transition },
+			get position() { return self.data_service.position },
+			get step_type() {
+				let t = StepTypes
+				switch (self.data_service.step_type) {
+					case t.TRANSITIONS: return 'transition'
+					case t.STEPS: return 'steps'
+				}
+				return 'states'
+			},
+			get logs() { return self.data_service.getLogs() },
+			onTimelineSlider: debounce(500, false, (event, value) => {
+				self.states.add('TimelineScrolled', value)
+			}),
+			onZoomSlider: null, // TODO
+			onStepType: (event, value) => {
+				if (self.data_service.step_type != value)
+					self.states.add('StepTypeChanged', value)
+			},
+			msg: null,
+			msgHidden: false,
+			get is_playing() { return self.states.is('Playing') },
+			onPlayButton: this.states.addByListener('PlayStopClicked')
+		}
+	}
+
 	renderUI() {
 		this.layout = renderLayout(this.container, this.layout_data)
 	}
@@ -253,6 +260,26 @@ export class InspectorUI /*implements ITransitions*/ {
 			data.msgHidden = false
 		} else
 			data.msg = null
+	}
+
+	onDataServiceScrolled(position, changed_cells) {
+		if (this.data_service.is_latest)
+			this.states.add('TimelineOnLast')
+		else if (this.data_service.position == 0)
+			this.states.add('TimelineOnFirst')
+		else
+			this.states.add('TimelineOnBetween')
+		this.graph.updateCells(changed_cells,
+			this.data_service.last_scroll_add_remove)
+		this.states.add('Rendered')
+		this.handleTransitionMessage()
+	}
+
+	initDataService() {
+		if (this.data_service)
+			this.data_service.removeAllListeners('scrolled')
+		this.data_service = new JointDataService
+		this.data_service.on('scrolled', this.onDataServiceScrolled)
 	}
 }
 

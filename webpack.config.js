@@ -10,7 +10,8 @@ module.exports = {
   },
   entry: {
     inspector: "./src/ui/web",
-    logger: "./src/logger"
+    logger: "./src/logger",
+    "worker-layout": "./src/ui/worker-layout"
   },
   plugins: [
     new AsyncAwaitPlugin({})

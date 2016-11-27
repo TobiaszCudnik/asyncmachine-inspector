@@ -6,17 +6,20 @@ import {
   IEmit
 } from './states-types'
 
+
 export default class States
     extends AsyncMachine<TStates, IBind, IEmit> {
-  AutoplayOn: IState = {};
-  Playing: IState = {
-    require: ['AutoplayOn', 'InitialRenderDone'],
-    auto: true
+  // init
+  InitializingLayoutWorker: IState = {
+    drop: ['LayoutWorkerReady']
+  };
+  LayoutWorkerReady: IState = {
+    drop: ['InitializingLayoutWorker']
   };
   // graph render
   DOMReady: IState = {};
   Rendering: IState = {
-    require: ['FullSync', 'DOMReady'],
+    require: ['FullSync', 'DOMReady', 'LayoutWorkerReady'],
     drop: ['Rendered']
   };
   Rendered: IState = {
@@ -42,6 +45,12 @@ export default class States
   };
   Disconnected: IState = {
     drop: ['Connected', 'Connecting', 'Joining', 'Joined']
+  };
+  // UIStates
+  AutoplayOn: IState = {};
+  Playing: IState = {
+    require: ['AutoplayOn', 'InitialRenderDone'],
+    auto: true
   };
   // slider states
   TimelineOnFirst: IState = {

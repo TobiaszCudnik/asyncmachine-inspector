@@ -9,7 +9,7 @@ import {
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
 import * as joint from 'jointjs'
-import * as V from 'jointjs/dist/vectorizer'
+import * as V from 'jointjs/src/vectorizer'
 import * as $ from 'jquery'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -58,7 +58,8 @@ export default class Ui extends UiBase<INetworkJson> {
 
 	paper: joint.dia.Paper
 	graph: joint.dia.Graph
-	graph_layout: GraphLayout;
+	layout: GraphLayout;
+	layout_worker;
 
 	available_colors: string[] = [];
 	group_colors = {};
@@ -81,7 +82,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 
 	initGraphLayout() {
-		this.graph_layout = new GraphLayout(this.graph)
+		this.layout = new GraphLayout(this.graph)
 	}
 
 	reset() {
@@ -139,7 +140,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		let start = Date.now()
 
 		// TODO async
-		this.graph_layout.setData(this.data, changed_cells)
+		this.layout.setData(this.data, changed_cells)
 
 		if (this.paper._frameId) {
 			await new Promise(resolve => this.paper.once('render:done', () => {
@@ -147,8 +148,6 @@ export default class Ui extends UiBase<INetworkJson> {
 				resolve()
 			}))
 		}
-		
-		this.layout(changed_cells)
 
 		console.log(`Overall setData ${Date.now() - start}ms`)
 	}
@@ -156,10 +155,10 @@ export default class Ui extends UiBase<INetworkJson> {
 	updateCells(cells: Iterable<string>, was_add_remove: boolean = false) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
-			this.layout(cells)
 		} else {
 			this.setData(this.data, cells)
 		}
+		this.postUpdateLayout(cells)
 	}
 
 	patch_fields = ['step_style', 'is_set', 'is_touched']
@@ -185,8 +184,8 @@ export default class Ui extends UiBase<INetworkJson> {
 		let visible_width = this.container.width()
 		let visible_height = this.container.height()
 
-		let graph_width = this.graph_layout.clusters.graph().width
-		let graph_height = this.graph_layout.clusters.graph().height
+		let graph_width = this.layout.clusters.graph().width
+		let graph_height = this.layout.clusters.graph().height
 
 		let scale = Math.min(
         	Math.min(this.maxScale, Math.max(this.minScale, visible_width / graph_width)),
@@ -196,7 +195,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 
 	// TODO add scrolling by click-n-drag
-	layout(cells?) {
+	postUpdateLayout(cells?) {
 		// lay out the graph
 		// joint.layout.DirectedGraph.layout(this.graph, {
 		// 	// TODO check verticles from dagre
@@ -222,9 +221,9 @@ export default class Ui extends UiBase<INetworkJson> {
 		tmp1 = tmp2
 		tmp2 = Date.now()
 		console.log(`Assign colors ${tmp2- tmp1}ms`)
-		tmp2 = Date.now()
-		this.autosize()
-		console.log(`Autosize ${Date.now() - tmp2}ms`)
+		// tmp2 = Date.now()
+		// this.autosize()
+		// console.log(`Autosize ${Date.now() - tmp2}ms`)
 	}
 
 	parseColors() {
