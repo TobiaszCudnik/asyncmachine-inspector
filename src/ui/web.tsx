@@ -28,7 +28,7 @@ import workerio from 'workerio/src/workerio/index'
 
 /**
  * TODO
- * - all of this has to be seriously rewritten (using AM, ideally)
+ * - pre-render N next steps when playing (possibly in a pool of workers)
  * - longer delay for msgs than for a step they come from
  * - queue & merge scroll requests while rendering
  *   - ideally cancel the current rendering
@@ -78,7 +78,7 @@ export class InspectorUI /*implements ITransitions*/ {
 	async InitializingLayoutWorker_state() {
         // TODO basedir
 		const worker = new Worker('../../dist/worker-layout.umd.js')
-		let LayoutWorker = await workerio.getInterface(worker, 'shoutService')
+		let LayoutWorker = await workerio.getInterface(worker, 'api')
 		this.layout_worker = new LayoutWorker()
 		this.graph.layout_worker = 
 		this.states.add('LayoutWorkerReady')

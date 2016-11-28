@@ -130,11 +130,7 @@ export default class GraphLayout {
         jsondiffpatch.patch(graph, diff)
         cloned++
       } else {
-        let layout_data = {
-          _nodes: graph._nodes,
-          _edgeLabels: graph._edgeLabels,
-          _label: graph._label
-        }
+        let layout_data = this.graphToLayoutData(graph)
         let pre_layout = deepcopy(layout_data)
         layout(graph)
         graph_data.is_dirty = false
@@ -155,6 +151,38 @@ export default class GraphLayout {
       console.log(`Layout the cluster graph ${Date.now() - start}ms`)
     }
     return dirty
+  }
+
+  graphToLayoutData(graph: Graph): Object {
+    return {
+      _nodes: graph._nodes,
+      _edgeLabels: graph._edgeLabels,
+      _label: graph._label
+    }
+  }
+
+  /**
+   * Exports the whole layout data from all the graphs.
+   * 
+   * '_clusters' is a predefined key, everything else is an ID of a subgraph.
+   */
+  exportLayoutData(): Object {
+    let ret = {}
+    for (let [name, graph] of this.subgraphs.entries()) {
+      ret[name] = this.graphToLayoutData(graph)
+    }
+    ret._clusters = this.graphToLayoutData(this.clusters)
+    return ret
+  }
+
+  importLayoutData(data: Object) {
+    for (let [key, graph] of Object.entries(data)) {
+      if (key == '_clusters')
+        this.clusters = graph
+      else
+        this.subgraphs.set(key, graph)
+    }
+    // TODO GC old entries from @subgraphs
   }
 
   // TODO remove!
@@ -261,6 +289,8 @@ export default class GraphLayout {
     for (let cell_id of changed_cells) {
       if (cells.has(cell_id))
         continue
+      // TODO avoid accessing the source graph
+      // figure out the type from the syntax of the ID
       let cell = this.source_graph.getCell(cell_id)
       if (cell.get('embeds')) {
         clusters.removeNode(cell.id)
@@ -351,6 +381,10 @@ export default class GraphLayout {
   }
 
   syncSourceGraph(data: INetworkJson, changed_cells: Iterable<string> = []) {
+    // webworker instance
+    if (!this.source_graph)
+      return
+
     let subgraphs = this.subgraphs
     let clusters = this.clusters
     let cells = this.cells
@@ -386,6 +420,7 @@ export default class GraphLayout {
         size.width = node.width
         size.height = node.height
       }
+      // TODO sync links
 
       if (first_run) {
         // cell = deepcopy(cell)
