@@ -144,7 +144,7 @@ export default class Network extends EventEmitter {
     addMachine(machine: AsyncMachine) {
         // TODO check for duplicates first
         // TODO deterministic IDs!!!
-        var id = machine.id() || uuid.v4()
+        var id = machine.id(true) || uuid.v4()
         this.machines.set(machine, id)
         this.machine_ids[id] = machine
         this.statesToNodes(machine.states_all, id)

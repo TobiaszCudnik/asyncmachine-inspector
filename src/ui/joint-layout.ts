@@ -74,8 +74,6 @@ export default class GraphLayout {
   clusters: TClusterGraph;
   subgraphs: Map<string, TDagreGraph>;
 
-  // index by ID
-  cells: Map<string, TCell>;
   data: INetworkJson;
 
   /**
@@ -185,6 +183,14 @@ export default class GraphLayout {
     // TODO GC old entries from @subgraphs
   }
 
+  /**
+   * Sync the source graph with a layout data comming from another worker.
+   */
+  syncFromLayout(layout_data, data, changed_cells) {
+    this.importLayoutData(layout_data)
+    this.syncSourceGraph(data, changed_cells)
+  }
+
   // TODO remove!
   normalizeId(id: string) {
     return id.replace(/[^\w\d]/g, '-')
@@ -194,7 +200,7 @@ export default class GraphLayout {
   syncData(data: INetworkJson, changed_cells: Iterable<string> = []) {
     let subgraphs = this.subgraphs
     let clusters = this.clusters
-    let cells = this.cells = new Map<string, TCell>()
+    let cells = new Map<string, TCell>()
 
     // ADD / SET
 
@@ -223,7 +229,7 @@ export default class GraphLayout {
       } else if ((cell as TState).type == "fsa.State") {
         cell = cell as TState
         let [parent_id, id] = cell.id.split(':')
-        parent_id = this.normalizeId(parent_id)
+        // parent_id = this.normalizeId(parent_id)
         if (!subgraphs.get(parent_id).node(id)) {
           subgraphs.get(parent_id).graph().is_dirty = true
           subgraphs.get(parent_id).setNode(id, {
@@ -236,9 +242,9 @@ export default class GraphLayout {
       } else if ((cell as TLink).type == "fsa.Arrow") {
         cell = cell as TLink
         let [source_parent_id, source_id] = cell.source.id.split(':')
-        source_parent_id = this.normalizeId(source_parent_id)
+        // source_parent_id = this.normalizeId(source_parent_id)
         let [target_parent_id, target_id] = cell.target.id.split(':')
-        target_parent_id = this.normalizeId(target_parent_id)
+        // target_parent_id = this.normalizeId(target_parent_id)
         if (target_parent_id != source_parent_id) {
           // cluster to cluster
           let edge = {
@@ -291,14 +297,20 @@ export default class GraphLayout {
         continue
       // TODO avoid accessing the source graph
       // figure out the type from the syntax of the ID
-      let cell = this.source_graph.getCell(cell_id)
-      if (cell.get('embeds')) {
-        clusters.removeNode(cell.id)
+      let type
+      if (!cell_id.match(':'))
+        type = 'machine'
+      else if (!cell_id.match('::'))
+        type = 'state'
+      else
+        type = 'link'
+      if (type == 'machine') {
+        clusters.removeNode(cell_id)
         clusters.graph().is_dirty = true
-        subgraphs.delete(cell.id)
-      } else if (cell.get('type') == "fsa.State") {
-        let [parent_id, id] = cell.id.split(':')
-        parent_id = this.normalizeId(parent_id)
+        subgraphs.delete(cell_id)
+      } else if (type == 'state') {
+        let [parent_id, id] = cell_id.split(':')
+        // parent_id = this.normalizeId(parent_id)
         clusters.graph().is_dirty = true
         let graph = subgraphs.get(parent_id)
         if (!graph) {
@@ -307,11 +319,12 @@ export default class GraphLayout {
         }
         graph.removeNode(id)
         graph.graph().is_dirty = true
-      } else if (cell.get('type') == "fsa.Arrow") {
-        let [source_parent_id, source_id] = cell.get('source').id.split(':')
-        source_parent_id = this.normalizeId(source_parent_id)
-        let [target_parent_id, target_id] = cell.get('target').id.split(':')
-        target_parent_id = this.normalizeId(target_parent_id)
+      } else if (type == 'link') {
+        let [source, target] = cell_id.split('::')
+        let [source_parent_id, source_id] = source.split(':')
+        // source_parent_id = this.normalizeId(source_parent_id)
+        let [target_parent_id, target_id] = target.split(':')
+        // target_parent_id = this.normalizeId(target_parent_id)
         if (target_parent_id != source_parent_id) {
           // cluster to cluster
           let edge = {
@@ -321,8 +334,8 @@ export default class GraphLayout {
           let edge_data = clusters.edge(edge)
           if (!edge_data) 
             continue
-          if (edge_data.cells.has(cell.id)) {
-            edge_data.cells.delete(cell.id)
+          if (edge_data.cells.has(cell_id)) {
+            edge_data.cells.delete(cell_id)
             clusters.graph().is_dirty = true
             subgraphs.get(source_parent_id).graph().is_dirty = true
             subgraphs.get(target_parent_id).graph().is_dirty = true
@@ -338,7 +351,7 @@ export default class GraphLayout {
             continue
           }
           graph.graph().is_dirty = true
-          graph.removeEdge(source_id, target_id, this.removeParentIds(cell.id))
+          graph.removeEdge(source_id, target_id, this.removeParentIds(cell_id))
         }
       }
     }
@@ -359,8 +372,13 @@ export default class GraphLayout {
     }
   }
 
+  /**
+   * Removes parent IDs from links.
+   *
+   * parent:a::parent:b -> a::b
+   */
   removeParentIds(id: string) {
-    return id.replace(/(^|-).+?:/g, '$1')
+    return id.replace(/(^|::).+?:/g, '$1')
   }
 
   syncClusterSizes() {
@@ -387,8 +405,9 @@ export default class GraphLayout {
 
     let subgraphs = this.subgraphs
     let clusters = this.clusters
-    let cells = this.cells
+    let cells = new Map<string, TCell>()
     this.source_graph.startBatch('add')
+    let cells_to_add = []
 
     // TODO use paper#addCells, view#onChangeAttrs
     // use link positions from dagre, updateConnectionOnly
@@ -398,11 +417,12 @@ export default class GraphLayout {
     let batch_cells = []
 
     for (let cell of data.cells) {
+      cells.set(cell.id, cell)
       let position = {x: 0, y: 0}
       let size = {width: 0, height: 0}
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
-        let node = this.clusters.node(cell.id)
+        let node = this.clusters._nodes[cell.id]
 
         position.x = node.x
         position.y = node.y
@@ -411,9 +431,9 @@ export default class GraphLayout {
       } else if ((cell as TState).type == "fsa.State") {
         cell = cell as TState
         let [parent_id, id] = cell.id.split(':')
-        parent_id = this.normalizeId(parent_id)
-        let node = subgraphs.get(parent_id).node(id)
-        let cluster = clusters.node(parent_id)
+        // parent_id = this.normalizeId(parent_id)ß
+        let node = subgraphs.get(parent_id)._nodes[id]
+        let cluster = clusters._nodes[parent_id]
         
         position.x = node.x + cluster.x
         position.y = node.y + cluster.y
@@ -435,13 +455,16 @@ export default class GraphLayout {
       cell.position = position
       cell.size = size
       if (!model) {
-        this.source_graph.addCell((<any>cell) as joint.dia.Cell)
+        cells_to_add.push(cell)
       } else {
         model.set(cell)
       }
     }
 
     if (!first_run) {
+      if (cells_to_add) {
+        this.source_graph.addCells(cells_to_add)
+      }
       let cells_to_remove = [...changed_cells]
         .filter( id => !cells.has(id) )
         .map( id => this.source_graph.getCell(id) )

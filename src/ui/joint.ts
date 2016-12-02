@@ -135,7 +135,8 @@ export default class Ui extends UiBase<INetworkJson> {
 		// console.log(`DOM sync ${Date.now() - start}ms`)
 	}
 	
-	async setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
+	async setData(data: INetworkJson, layout_data,
+			changed_cells: Iterable<string> = null) {
 		this.data = data
 		let start = Date.now()
 
@@ -152,11 +153,12 @@ export default class Ui extends UiBase<INetworkJson> {
 		console.log(`Overall setData ${Date.now() - start}ms`)
 	}
 
-	updateCells(cells: Iterable<string>, was_add_remove: boolean = false) {
+	updateCells(cells: Iterable<string>, was_add_remove: boolean = false,
+			layout_data) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
 		} else {
-			this.setData(this.data, cells)
+			this.setData(this.data, layout_data, cells)
 		}
 		this.postUpdateLayout(cells)
 	}

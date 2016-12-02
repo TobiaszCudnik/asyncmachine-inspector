@@ -11,6 +11,7 @@ export default class States
     extends AsyncMachine<TStates, IBind, IEmit> {
   // init
   InitializingLayoutWorker: IState = {
+    auto: true,
     drop: ['LayoutWorkerReady']
   };
   LayoutWorkerReady: IState = {
@@ -18,6 +19,7 @@ export default class States
   };
   // graph render
   DOMReady: IState = {};
+  // TODO WorkerLayout require ['FullSync', 'LayoutWorkerReady']
   Rendering: IState = {
     require: ['FullSync', 'DOMReady', 'LayoutWorkerReady'],
     drop: ['Rendered']

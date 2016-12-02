@@ -28,7 +28,6 @@ export class NetworkJsonFactory
         this.json.cells.push(node)
 
         let machine = <TMachine>this.getNodeById(node.parent)
-        // TODO normalize ID !!!
         machine.embeds.push(node.id)
     }
     addLinkNode(node: TLink) {
@@ -40,8 +39,7 @@ export class NetworkJsonFactory
     createMachineNode(machine: AsyncMachine, machine_id: string): TMachine {
         return {
             type: 'uml.State',
-            // TODO normalize machine ID    
-            id: machine_id.replace(/[^\w\d]/g, '-'),
+            id: machine_id,
             attrs: { text: { text: machine.id() } },
             embeds: [],
             z: 1,
@@ -53,8 +51,7 @@ export class NetworkJsonFactory
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
-            // TODO normalize machine ID
-            parent: node.machine_id.replace(/[^\w\d]/g, '-'),
+            parent: node.machine_id,
             attrs: { text: { text: node.name } },
             z: 3,
             size: this.getNodeSize(node),
@@ -72,9 +69,9 @@ export class NetworkJsonFactory
             target: {
                 id: this.getStateNodeId(to)
             },
-            id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}`,
+            id: `${this.getStateNodeId(from)}::${this.getStateNodeId(to)}::${relation}`,
             labels: [{
-                id: `${this.getStateNodeId(from)}-${this.getStateNodeId(to)}-${relation}-label`,
+                id: `${this.getStateNodeId(from)}::${this.getStateNodeId(to)}::${relation}-label`,
                 position: 0.5,
                 attrs: {
                     text: { text: this.getLabelFromLinkType(relation)}
@@ -92,7 +89,7 @@ export class NetworkJsonFactory
     }
 
     protected getStateNodeId(node: GraphNode): string {
-        return `${node.machine_id}:${node.name}`
+        return `${node.machine_id}:${node.name.replace(/^\w/g, '-')}`
     }
 
     protected getNodeById(id: string): JsonNode {
