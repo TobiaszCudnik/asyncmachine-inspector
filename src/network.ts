@@ -277,20 +277,24 @@ export default class Network extends EventEmitter {
         }
     }
 
-    getNodeByName(name: string, machine_id: string): Node | null {
+    getNodeByName(name: string, machine_id: string): Node {
         // for (let node of this.graph.set) {
         var ret
         this.graph.set.forEach( node => {
-            if (node.name === name && node.machine_id === machine_id)
+            if (node.name.replace('^\w/g', '-') === name &&
+                    node.machine_id === machine_id)
                 ret = node
         })
+        if (!ret)
+            throw new Error(`Node not found ${name} from ${machine_id}`)
         return ret
     }
 
     getNodeByStruct(state: IStateStruct): Node | null {
         return this.getNodeByName(
             state[StateStructFields.STATE_NAME],
-            state[StateStructFields.MACHINE_ID])
+            // TODO extract normalize()
+            state[StateStructFields.MACHINE_ID].replace(/[^\w]/g, '-'))
     }
 
     protected linkPipedStates(machine: AsyncMachine) {

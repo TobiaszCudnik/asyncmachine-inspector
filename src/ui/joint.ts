@@ -9,7 +9,7 @@ import {
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
 import * as joint from 'jointjs'
-import * as V from 'jointjs/src/vectorizer'
+import 'jointjs/src/vectorizer' // V, Vectorizer
 import * as $ from 'jquery'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -153,12 +153,12 @@ export default class Ui extends UiBase<INetworkJson> {
 		console.log(`Overall setData ${Date.now() - start}ms`)
 	}
 
-	updateCells(cells: Iterable<string>, was_add_remove: boolean = false,
+	async updateCells(cells: Iterable<string>, was_add_remove: boolean = false,
 			layout_data) {
 		if (!was_add_remove) {
 			this.patchCells(cells)
 		} else {
-			this.setData(this.data, layout_data, cells)
+			await this.setData(this.data, layout_data, cells)
 		}
 		this.postUpdateLayout(cells)
 	}

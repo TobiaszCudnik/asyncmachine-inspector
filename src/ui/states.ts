@@ -21,6 +21,7 @@ export default class States
   DOMReady: IState = {};
   // TODO WorkerLayout require ['FullSync', 'LayoutWorkerReady']
   Rendering: IState = {
+    multi: true,
     require: ['FullSync', 'DOMReady', 'LayoutWorkerReady'],
     drop: ['Rendered']
   };
@@ -76,7 +77,9 @@ export default class States
   };
   // UI inputs
   PlayStopClicked: IState = {};
-  TimelineScrolled: IState = {};
+  TimelineScrolled: IState = {
+    add: ['Rendering']
+  };
   StepTypeChanged: IState = {};
   // network inputs
   FullSync: IState = {
