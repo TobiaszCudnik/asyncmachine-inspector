@@ -89,7 +89,8 @@ export class NetworkJsonFactory
     }
 
     protected getStateNodeId(node: GraphNode): string {
-        return `${node.machine_id}:${node.name.replace(/^\w/g, '-')}`
+        // TODO extract normalize()
+        return `${node.machine_id}:${node.name.replace(/[^\w]/g, '-')}`
     }
 
     protected getNodeById(id: string): JsonNode {

@@ -146,7 +146,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
 /**
  * TODO make it a stream
  */
-export abstract class JsonDiffFactory<T extends INetworkJsonFactory<Json>, Json> {
+export abstract class JsonDiffFactory
+        <T extends INetworkJsonFactory<Json>, Json> {
     diffpatcher: jsondiffpatch.IDiffPatch;
     previous_json: Json;
     

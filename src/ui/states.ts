@@ -41,9 +41,11 @@ export default class States
     drop: ['Connecting', 'Disconnected']
   };
   Joining: IState = {
+    require: ['Connected'],
     drop: ['Joined', 'Disconnected']
   };
   Joined: IState = {
+    require: ['Connected'],
     drop: ['Joining', 'Disconnected']
   };
   Disconnected: IState = {

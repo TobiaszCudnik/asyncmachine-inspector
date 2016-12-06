@@ -24,6 +24,9 @@ import { TLayoutProps } from './layout'
 import States from './states'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
+import * as url from 'url'
+import Logger from '../logger'
+import Network from '../network'
 
 
 /**
@@ -51,19 +54,24 @@ export class InspectorUI /*implements ITransitions*/ {
 	differ: jsondiffpatch;
 
 constructor(
-	public host = 'localhost',
-	public port = 3030) {
+		public host = 'localhost',
+		public port = 3030) {
 	this.states.add(['AutoplayOn', 'Connecting'])
-	this.states.logLevel(3)
+	this.states.logLevel(1)
 
 	this.socket = io(`http://${this.host}:${this.port}/client`)
 	this.socket.on('full-sync', this.states.addByListener('FullSync'))
 	this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-	this.socket.on('connect', this.states.addByListener('Connected'))
+	this.socket.on('connect', this.states.addByListener(
+			['Connected', 'Joined']))
 	// TODO connection_error event and bind retries to a state
 	this.socket.on('disconnected', this.states.addByListener('Disconnected'))
-	this.socket.on('loggers', this.states.addByListener('Joining'))
-
+	// this.socket.on('loggers', this.states.addByListener('Joining'))
+	if (port != 4040) {
+		const network = new Network()
+		network.addMachine(this.states)
+		const logger = new Logger(network, 'localhost:4040/logger')
+	}
 	window.document.addEventListener('DOMContentLoaded',
 		this.states.addByListener('DOMReady'))
 
@@ -87,15 +95,17 @@ async InitializingLayoutWorker_state() {
 // TRANSITIONS
 
 async FullSync_state(graph_data: INetworkJson) {
+	if (!this.states.to().includes('LayoutWorkerReady'))
+		await this.states.when('LayoutWorkerReady')
 	// TODO cancel the rendering here
 	this.logger_id = graph_data.loggerId
-	this.states.add(['Joined', 'Rendering'])
+	this.states.add(['Rendering'])
 	// console.log('full-sync', Date.now() - start_join)
 	console.log('full-sync', graph_data)
 	this.data_service.data = graph_data
 	let {
-		layout_data,
-		data_service
+			layout_data,
+			data_service
 		} = await this.layout_worker.setData(graph_data)
 	this.data_service = data_service
 	await this.graph.setData(graph_data, layout_data)
@@ -111,20 +121,12 @@ FullSync_Joining() {
 	this.layout_worker.reset()
 }
 
-Joining_state(ids: string[]) {
-	let id = ids[0]
-	if (this.logger_id != id)
-		this.graph.reset()
-	// TODO timer
-	// start_join = Date.now()
-	this.socket.emit('join', {
-		loggerId: id
-	})
-}
-
 async DiffSync_state(packet: IPatch) {
 	const abort = this.states.getAbort('DiffSync')
+	if (!this.states.to().includes('LayoutWorkerReady'))
+		await this.states.when('LayoutWorkerReady')
 	const data_service = await this.layout_worker.addPatch(packet)
+	console.log('DiffSync dataservice', data_service)
 	if (abort()) return
 	this.data_service = data_service
 	console.log('diff', packet)
@@ -203,7 +205,7 @@ Rendering_enter(position): boolean {
 }
 
 async Rendering_state(position) {
-	if (this.states.to().includes('InitialRenderDone')) {
+	if (position !== undefined) {
 		this.rendering_position = position
 		let {
 				layout_data,
@@ -229,6 +231,10 @@ async TimelineScrolled_state(value: number) {
 
 last_render: number;
 
+Playing_enter() {
+	return Boolean(this.data_service.position_max)
+}
+
 Playing_state() {
 	this.last_render = Date.now()
 	const abort = this.states.getAbort('Playing')
@@ -250,9 +256,13 @@ async playStep(abort: Function) {
 	if (framestimes_since_last) {
 		console.log('position', position)
 		this.states.add('Rendering', position)
+		// TODO move to render
 		this.last_render = Date.now()
 	}
-	setTimeout(this.step_fn, this.frametime*1000)
+	if (this.data_service.position + framestimes_since_last <
+			this.data_service.position_max) {
+		setTimeout(this.step_fn, this.frametime*1000)
+	}
 }
 
 Playing_end() {
@@ -352,8 +362,10 @@ async onDataServiceScrolled(layout_data, patch, changed_cells: string[]) {
 // }
 }
 
+
 export default function() {
-	return new InspectorUI()
+	const { query } = url.parse(window.document.location.toString(), true)
+	return new InspectorUI('localhost', query.port || 3030)
 }
 
 // global setter

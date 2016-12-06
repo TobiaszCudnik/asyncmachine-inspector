@@ -6,3 +6,5 @@ var port = process.argv[2] || 3030
 
 require('../src/server/server').default()
     .listen(port)
+
+console.log(`Listening on ${port}`)

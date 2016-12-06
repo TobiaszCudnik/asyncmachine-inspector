@@ -8,8 +8,10 @@ import {
 } from './joint-network'
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
+// TODO import only required parts
 import * as joint from 'jointjs'
-import 'jointjs/src/vectorizer' // V, Vectorizer
+import 'jointjs/src/vectorizer';
+declare const Vectorizer;
 import * as $ from 'jquery'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -68,8 +70,8 @@ export default class Ui extends UiBase<INetworkJson> {
 	width = 5000;
 	height = 3500;
 
-	minScale = 0.3;
-	maxScale = 1.5;
+	max_zoom = 1.5;
+	min_zoom = 0.1;
 
 	constructor(
 			public data: INetworkJson) {
@@ -117,12 +119,10 @@ export default class Ui extends UiBase<INetworkJson> {
 				// 		}
 				// 	}
 				// }),
-				interactive: {
+				interactive: {	
 					vertexAdd: false
 				}
 			});
-			window.addEventListener('resize', debounce(500, false, 
-				() => this.autosize() ))
 
 			this.bindMouseZoom()
 		}
@@ -367,16 +367,15 @@ export default class Ui extends UiBase<INetworkJson> {
 			let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
 
 			var delta = Math.max(-1, Math.min(1, (ev.wheelDelta || -ev.detail))) / 50;
-			var offsetX = (ev.offsetX || ev.clientX - $(this).offset().left);
-
-			var offsetY = (ev.offsetY || ev.clientY - $(this).offset().top);
-			var p = this.offsetToLocalPoint(offsetX, offsetY);
-			var newScale = V(this.paper.viewport).scale().sx + delta;
+			// var offsetX = (ev.offsetX || ev.clientX - $(this).offset().left);
+			// var offsetY = (ev.offsetY || ev.clientY - $(this).offset().top);
+			// var p = this.offsetToLocalPoint(offsetX, offsetY);
+			var newScale = Math.min(this.max_zoom, Math.max(this.min_zoom,
+					Vectorizer(this.paper.viewport).scale().sx + delta));
 			// console.log(' delta' + delta + ' ' + 'offsetX' + offsetX + 'offsety--' + offsetY + 'p' + p.x + 'newScale' + newScale)
-			if (newScale > 0.4 && newScale < 2) {
-				this.paper.setOrigin(0, 0);
-				this.paper.scale(newScale, newScale, p.x, p.y);
-			}
+			// this.paper.setOrigin(0, 0);
+			// this.paper.scale(newScale, newScale, p.x, p.y);
+			this.paper.scale(newScale, newScale);
 		})
 	}
 

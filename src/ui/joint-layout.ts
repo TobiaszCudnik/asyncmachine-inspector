@@ -5,7 +5,7 @@
 import { layout } from 'dagre'
 import * as jsondiffpatch from 'jsondiffpatch'
 import { IDelta } from 'jsondiffpatch'
-import { Graph } from 'ciena-graphlib'
+import { Graph } from 'graphlib'
 import * as joint from 'jointjs'
 import * as md5 from 'md5'
 import * as deepcopy from 'deepcopy'
@@ -138,7 +138,7 @@ export default class GraphLayout {
     }
     console.log(`Layout ${this.subgraphs.size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`)
     // sizes of clusters could've changed
-    if (this.clusters.graph().is_dirty) {
+    if (this.clusters.graph().is_dirty && this.clusters.nodes().length > 1) {
       // TODO support the hash based cache
       dirty++
       start = Date.now()

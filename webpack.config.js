@@ -13,9 +13,9 @@ module.exports = {
     logger: "./src/logger",
     "worker-layout": "./src/ui/worker-layout"
   },
-  plugins: [
-    new AsyncAwaitPlugin({})
-  ],
+  // plugins: [
+  //   new AsyncAwaitPlugin({})
+  // ],
   module: {
     loaders: [
       { test: /\.json$/, loader: "json-loader" },

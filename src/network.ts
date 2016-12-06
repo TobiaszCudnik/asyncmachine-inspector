@@ -34,8 +34,7 @@ export interface ILogEntry {
 }
 
 export enum PatchType {
-    // TODO STATE means STATE_CHANGED ???
-    STATE,
+    STATE_CHANGED,
     NEW_MACHINE,
     TRANSITION_START,
     TRANSITION_END,
@@ -143,8 +142,7 @@ export default class Network extends EventEmitter {
 
     addMachine(machine: AsyncMachine) {
         // TODO check for duplicates first
-        // TODO deterministic IDs!!!
-        var id = machine.id(true) || uuid.v4()
+        var id = machine.id(true)
         this.machines.set(machine, id)
         this.machine_ids[id] = machine
         this.statesToNodes(machine.states_all, id)
@@ -154,7 +152,7 @@ export default class Network extends EventEmitter {
             this.linkPipedStates(machine)
         }
 
-        this.emit('change', PatchType.NEW_MACHINE, machine.id())
+        this.emit('change', PatchType.NEW_MACHINE, machine.id(true))
     }
 
     isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
@@ -172,17 +170,17 @@ export default class Network extends EventEmitter {
         // - adding / removing a state
         // TODO unbind on dispose
         // TODO group the same changes emitted by couple of machines
-        // machine.on('change', () => this.emit('change', ChangeType.STATE))
+        machine.on('change', () => this.emit('change', PatchType.STATE_CHANGED))
         machine.on('pipe', () => {
             this.linkPipedStates(machine)
-            this.emit('change', PatchType.PIPE, machine.id())
+            this.emit('change', PatchType.PIPE, machine.id(true))
         })
         machine.on('transition-init', (transition) => {
             if (!this.transition_origin)
                 this.transition_origin = machine
-            this.machines_during_transition.add(machine.id())
+            this.machines_during_transition.add(machine.id(true))
             // TODO this fires too early and produces an empty diff
-            this.emit('change', PatchType.TRANSITION_START, machine.id())
+            this.emit('change', PatchType.TRANSITION_START, machine.id(true))
         })
         machine.on('transition-end', (transition) => {
             if (this.transition_origin === machine) {
@@ -193,7 +191,7 @@ export default class Network extends EventEmitter {
                 for (let node of this.graph.set)
                     node.step_style = null
             }
-            this.emit('change', PatchType.TRANSITION_END, machine.id())
+            this.emit('change', PatchType.TRANSITION_END, machine.id(true))
         })
         machine.on('transition-step', (...steps) => {
             this.parseTransitionSteps(machine.id(), ...steps)
@@ -203,8 +201,7 @@ export default class Network extends EventEmitter {
             if (level > 2)
                 return
             this.logs.push({
-                // TODO normalize ID
-                id: machine.id().replace(/[^\w\d]/g, '-'),
+                id: machine.id(true),
                 msg: msg
             })
         })
@@ -281,9 +278,11 @@ export default class Network extends EventEmitter {
         // for (let node of this.graph.set) {
         var ret
         this.graph.set.forEach( node => {
-            if (node.name.replace('^\w/g', '-') === name &&
-                    node.machine_id === machine_id)
+            // TODO extract normalize()
+            if (node.name.replace(/[^\w]/g, '-') === name &&
+                    node.machine_id === machine_id) {
                 ret = node
+            }
         })
         if (!ret)
             throw new Error(`Node not found ${name} from ${machine_id}`)

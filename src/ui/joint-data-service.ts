@@ -82,7 +82,7 @@ class JointDataService extends EventEmitter {
         this.data = data || null
     }
     addPatch(patch: IPatch) {
-        if (patch.type == PatchType.STATE ||
+        if (patch.type == PatchType.STATE_CHANGED ||
                 patch.type == PatchType.NEW_MACHINE) {
             this.index.states.push(this.patches.length)
             this.index.transitions.push(this.patches.length)
@@ -140,13 +140,15 @@ class JointDataService extends EventEmitter {
             return new Set()
         const t = StepTypes
         let patch_position = position
-        switch (this.step_type) {
-            case t.STATES:
-                patch_position = this.index.states[position - 1] + 1
-                break
-            case t.TRANSITIONS:
-                patch_position = this.index.transitions[position - 1] + 1
-                break
+        if (position) {
+            switch (this.step_type) {
+                case t.STATES:
+                    patch_position = this.index.states[position] + 1
+                    break
+                case t.TRANSITIONS:
+                    patch_position = this.index.transitions[position] + 1
+                    break
+            }
         }
         this.position = position
         return this.scrollToPatch(patch_position)
@@ -184,6 +186,7 @@ class JointDataService extends EventEmitter {
         this.emit('scrolled', position, changed)
         return changed
     }
+
     protected applyDiff(diff, changed: Set<string>): void {
 		if (!diff.cells)
 			return
@@ -192,14 +195,16 @@ class JointDataService extends EventEmitter {
 			if (key == '_t' || key[0] != '_')
 				continue
             this.handleAddRemove(diff.cells[key])
-            changed.add(this.data.cells[key.slice(1)].id)
+            if (this.data.cells[key.slice(1)])
+                changed.add(this.data.cells[key.slice(1)].id)
 		}
         jsondiffpatch.patch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] == '_')
 				continue
             this.handleAddRemove(diff.cells[key])
-            changed.add(this.data.cells[key].id)
+            if (this.data.cells[key])
+                changed.add(this.data.cells[key].id)
 		}
     }
     protected unapplyDiff(diff, changed: Set<string>): void {
@@ -210,14 +215,17 @@ class JointDataService extends EventEmitter {
 			if (key == '_t' || key[0] == '_')
 				continue
             this.handleAddRemove(diff.cells[key])
-            changed.add(this.data.cells[key].id)
+            if (this.data.cells[key])
+                changed.add(this.data.cells[key].id)
 		}
         jsondiffpatch.unpatch(this.data, diff)
 		for (let key of Object.keys(diff.cells)) {
 			if (key == '_t' || key[0] != '_')
 				continue
             this.handleAddRemove(diff.cells[key])
-            changed.add(this.data.cells[key.slice(1)].id)
+            // TODO handle missing elements when key == '_a'
+            if (this.data.cells[key.slice(1)])
+                changed.add(this.data.cells[key.slice(1)].id)
 		}
     }
     protected handleAddRemove(cell) {
