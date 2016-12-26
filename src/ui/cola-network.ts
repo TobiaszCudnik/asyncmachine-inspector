@@ -60,6 +60,7 @@ export default class NetworkJsonFactory
             y: null
         }
     }
+    
     createStateNode(node: GraphNode): State {
         return {
             object_type: OBJECT_TYPE.STATE,
