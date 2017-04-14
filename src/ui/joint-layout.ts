@@ -58,7 +58,7 @@ type TClusterData = {
 type TDagreGraph = Graph<TNode, TEdge, TGraphData>
 type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
 
-function cloneGraph(graph: Graph) {
+function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
   return deepcopy(graph, function (target) {
     if (target.constructor === Graph)
       return new Graph()
@@ -68,7 +68,7 @@ function cloneGraph(graph: Graph) {
 export default class GraphLayout {
   source_graph: joint.dia.Graph;
   options: {
-    setLinkVertices: boolean
+    syncLinks: boolean
   }
 
   clusters: TClusterGraph;
@@ -82,7 +82,8 @@ export default class GraphLayout {
   layouts_by_hash = new Map<string, IDelta>();
   differ: jsondiffpatch.IDiffPatch;
 
-  constructor(source_graph: joint.dia.Graph, options = {setLinkVertices: false}) {
+  constructor(source_graph: joint.dia.Graph, options =
+      {syncLinks: false}) {
     this.source_graph = source_graph
     this.options = options
     this.subgraphs = new Map<string, TDagreGraph>()
@@ -434,13 +435,24 @@ export default class GraphLayout {
         // parent_id = this.normalizeId(parent_id)ß
         let node = subgraphs.get(parent_id)._nodes[id]
         let cluster = clusters._nodes[parent_id]
-        
+
         position.x = node.x + cluster.x
         position.y = node.y + cluster.y
         size.width = node.width
         size.height = node.height
+      } else if ((cell as TLink).type == "fsa.Arrow"
+          && this.options.syncLinks) {
+        cell = cell as TLink
+        const [source_parent_id, source_id] = cell.source.id.split(':')
+        const [target_parent_id, target_id] = cell.target.id.split(':')
+        // sync link positions only within the same machine
+        if (source_parent_id != target_parent_id)
+            continue
+        const graph = subgraphs.get(source_parent_id)
+        const edge = graph.edge(source_id, target_id, this.removeParentIds(
+            cell.id))
+        cell.vertices = edge.points
       }
-      // TODO sync links
 
       if (first_run) {
         // cell = deepcopy(cell)

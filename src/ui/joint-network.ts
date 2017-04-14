@@ -36,7 +36,8 @@ export class NetworkJsonFactory
 
     // TODO queue size
     // TODO number of listeners
-    createMachineNode(machine: AsyncMachine<any, any, any>, machine_id: string): TMachine {
+    createMachineNode(machine: AsyncMachine<any, any, any>, machine_id:
+            string): TMachine {
         return {
             type: 'uml.State',
             id: machine_id,
@@ -59,7 +60,8 @@ export class NetworkJsonFactory
             step_style: node.step_style
         }
     }
-    createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE): TLink {
+    createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE):
+            TLink {
         return {
             type: 'fsa.Arrow',
             smooth: true,
@@ -69,6 +71,7 @@ export class NetworkJsonFactory
             target: {
                 id: this.getStateNodeId(to)
             },
+            relation,
             id: `${this.getStateNodeId(from)}::${this.getStateNodeId(to)}::${relation}`,
             labels: [{
                 id: `${this.getStateNodeId(from)}::${this.getStateNodeId(to)}::${relation}-label`,
