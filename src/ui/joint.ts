@@ -13,7 +13,7 @@ import * as joint from 'jointjs'
 import 'jointjs/src/vectorizer';
 declare const Vectorizer;
 import * as $ from 'jquery'
-import * as _ from 'underscore'
+import { throttle } from 'underscore'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as debounce from 'throttle-debounce/debounce'
@@ -76,7 +76,7 @@ export default class Ui extends UiBase<INetworkJson> {
 	zoom_max = 1.5;
 	zoom_min = 0.5;
 	zoom_factor = 30;
-	drag_debounce = 10;
+	drag_tick_ms = 10;
 	drag_start_pos: {x: number, y: number};
 
 	constructor(
@@ -368,8 +368,8 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 
 	bindMouseZoom() {
-		const drag_listener = _.debounce((e => this.dragScrollListener(e)),
-			this.drag_debounce, true)
+		const drag_listener = throttle((e => this.dragScrollListener(e)),
+			this.drag_tick_ms)
 		let drag_enabled = false
 		this.paper.on('blank:pointerdown', () => {
 			drag_enabled = true
