@@ -49,16 +49,20 @@ export class NetworkJsonFactory
         }
     }
     createStateNode(node: GraphNode): TState {
+        const ui_name = this.stateUiName(node.name)
         return {
             type: 'fsa.State',
             id: this.getStateNodeId(node),
             parent: node.machine_id,
-            attrs: { text: { text: node.name } },
+            attrs: { text: { text: ui_name } },
             z: 3,
-            size: this.getNodeSize(node),
+            size: this.getNodeSize(ui_name),
             is_set: node.is_set,
             step_style: node.step_style
         }
+    }
+    stateUiName(name): string {
+        return name.replace(/([a-z])([A-Z])/g, '$1\n$2')
     }
     createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE):
             TLink {
@@ -85,9 +89,10 @@ export class NetworkJsonFactory
         }
     }
 
-    getNodeSize(node: GraphNode) {
-        let name = node.name
-        let size = Math.max(50, name.length * 9)
+    getNodeSize(name: string) {
+        const lines = name.split('\n')
+        const longest = lines.reduce(((p, l) => Math.max(p, l.length)), 0)
+        let size = Math.max(50, longest * 10)
         return { width: size, height: size }
     }
 
