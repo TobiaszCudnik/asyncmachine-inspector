@@ -13,6 +13,7 @@ import * as joint from 'jointjs'
 import 'jointjs/src/vectorizer';
 declare const Vectorizer;
 import * as $ from 'jquery'
+import * as _ from 'underscore'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as debounce from 'throttle-debounce/debounce'
@@ -21,6 +22,7 @@ import * as colors from 'material-ui/styles/colors'
 import * as randomNumber from 'random-number'
 import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './joint-layout'
+import * as svgPanZoom from 'svg-pan-zoom'
 // import * as morphdom from 'morphdom'
 
 
@@ -67,11 +69,15 @@ export default class Ui extends UiBase<INetworkJson> {
 	group_colors = {};
 	stylesheet: Stylesheet;
 
+	// TODO responsive to the screen size
 	width = 5000;
 	height = 3500;
 
-	max_zoom = 1.5;
-	min_zoom = 0.1;
+	zoom_max = 1.5;
+	zoom_min = 0.5;
+	zoom_factor = 30;
+	drag_debounce = 10;
+	drag_start_pos: {x: number, y: number};
 
 	constructor(
 			public data: INetworkJson) {
@@ -93,7 +99,7 @@ export default class Ui extends UiBase<INetworkJson> {
 		// TODO reset stylesheet and color assignments
 	}
 
-	render(el) {
+	async render(el) {
 		this.container = $(el)
 		// this.container = $('<div/>')
 		assert(this.container)
@@ -128,13 +134,14 @@ export default class Ui extends UiBase<INetworkJson> {
 		}
 
 		if (this.data)
-			this.setData(this.data)
+			await this.setData(this.data)
 
 		// let start = Date.now()
 		// morphdom(this.container.get(0), this.vdom_container.get(0))
 		// console.log(`DOM sync ${Date.now() - start}ms`)
 	}
-	
+
+	// TODO layout_data?
 	async setData(data: INetworkJson, layout_data,
 			changed_cells: Iterable<string> = null) {
 		this.data = data
@@ -360,31 +367,59 @@ export default class Ui extends UiBase<INetworkJson> {
 		})
 	}
 
-	// TODO test
 	bindMouseZoom() {
-		this.paper.$el.on('mousewheel DOMMouseScroll', (e) => {
-			e.preventDefault();
-			let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
-
-			var delta = Math.max(-1, Math.min(1, (ev.wheelDelta || -ev.detail))) / 50;
-			// var offsetX = (ev.offsetX || ev.clientX - $(this).offset().left);
-			// var offsetY = (ev.offsetY || ev.clientY - $(this).offset().top);
-			// var p = this.offsetToLocalPoint(offsetX, offsetY);
-			var newScale = Math.min(this.max_zoom, Math.max(this.min_zoom,
-					Vectorizer(this.paper.viewport).scale().sx + delta));
-			// console.log(' delta' + delta + ' ' + 'offsetX' + offsetX + 'offsety--' + offsetY + 'p' + p.x + 'newScale' + newScale)
-			// this.paper.setOrigin(0, 0);
-			// this.paper.scale(newScale, newScale, p.x, p.y);
-			this.paper.scale(newScale, newScale);
+		const drag_listener = _.debounce((e => this.dragScrollListener(e)),
+			this.drag_debounce, true)
+		let drag_enabled = false
+		this.paper.on('blank:pointerdown', () => {
+			drag_enabled = true
+			this.container.mousemove(drag_listener)
 		})
+		this.container.on('mousedown', (event, x, y) => {
+			if (!drag_enabled)
+				return
+			const el = this.container.get(0)
+			this.drag_start_pos = {
+				x: event.clientX + el.scrollLeft,
+				y: event.clientY + el.scrollTop
+			}
+		})
+		this.paper.on('cell:pointerup blank:pointerup', () => {
+			this.drag_start_pos = null
+			drag_enabled = false
+			this.container.unbind('mousemove', drag_listener)
+		})
+		this.paper.$el.on('mousewheel DOMMouseScroll', (e) => this.mouseZoomListener(e))
+	}
+
+	dragScrollListener(e) {
+		assert(this.drag_start_pos)
+		const el = this.container.get(0)
+		el.scrollLeft += this.drag_start_pos.x - e.offsetX
+		el.scrollTop += this.drag_start_pos.y - e.offsetY
+	}
+
+	mouseZoomListener(e) {
+		e.preventDefault();
+		let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
+		let delta = Math.max(-1, Math.min(1, (ev.wheelDelta || -ev.detail)))
+			/ this.zoom_factor;
+		let offsetX = (e.offsetX || e.clientX - $(this).offset().left);
+		let offsetY = (e.offsetY || e.clientY - $(this).offset().top);
+		let p = this.offsetToLocalPoint(offsetX, offsetY);
+		let newScale = Vectorizer(this.paper.viewport).scale().sx + delta;
+		if (newScale > this.zoom_min && newScale < this.zoom_max) {
+			this.paper.setOrigin(0, 0);
+			this.paper.scale(newScale, newScale, p.x, p.y);
+		}
 	}
 
 	offsetToLocalPoint(x, y) {
-		var svgPoint = this.paper.svg.createSVGPoint();
+		let svgPoint = this.paper.svg.createSVGPoint();
 		svgPoint.x = x;
 		svgPoint.y = y;
 
-		var pointTransformed = svgPoint.matrixTransform(
+		let pointTransformed = svgPoint.matrixTransform(
 			this.paper.viewport.getCTM().inverse());
 		return pointTransformed;
 	}
