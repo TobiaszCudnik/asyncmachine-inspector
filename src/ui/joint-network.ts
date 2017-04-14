@@ -9,7 +9,7 @@ import {
     OBJECT_TYPE,
     NODE_LINK_TYPE
 } from '../network-json'
-import AsyncMachine from 'asyncmachine'
+import AsyncMachine, {TransitionStepTypes} from 'asyncmachine'
 import * as _ from "underscore"
 
 
@@ -36,7 +36,7 @@ export class NetworkJsonFactory
 
     // TODO queue size
     // TODO number of listeners
-    createMachineNode(machine: AsyncMachine, machine_id: string): TMachine {
+    createMachineNode(machine: AsyncMachine<any, any, any>, machine_id: string): TMachine {
         return {
             type: 'uml.State',
             id: machine_id,
@@ -113,7 +113,6 @@ export type TMachine = {
     type: 'uml.State',
     embeds: string[],
     id: MachineId,
-    name: string,
     z?: number,
     position?: {
         x: number,
@@ -123,6 +122,8 @@ export type TMachine = {
         width: number,
         height: number,
     },
+    attrs: {text: {text: string}},
+    is_touched?: boolean
 }
 
 export type TState = {
@@ -147,6 +148,7 @@ export type TState = {
         x: number,
         y: number,
     },
+    step_style: TransitionStepTypes
 }
 
 export type TLink = {
@@ -177,6 +179,7 @@ export type TLink = {
         width: number,
         height: number,
     },
+    is_touched?: boolean
 }
 
 type JsonNode = TMachine | TState | TLink
