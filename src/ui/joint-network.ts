@@ -92,7 +92,7 @@ export class NetworkJsonFactory
     getNodeSize(name: string) {
         const lines = name.split('\n')
         const longest = lines.reduce(((p, l) => Math.max(p, l.length)), 0)
-        let size = Math.max(50, longest * 10)
+        let size = Math.max(100, longest * 10)
         return { width: size, height: size }
     }
 

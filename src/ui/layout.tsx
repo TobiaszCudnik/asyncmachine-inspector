@@ -15,6 +15,7 @@ import Snackbar from 'material-ui/Snackbar';
 import {
   RadioButton, RadioButtonGroup
 } from 'material-ui/RadioButton';
+import Drawer from 'material-ui/Drawer';
 import { ILogEntry } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import IconPlay from 'material-ui/svg-icons/av/play-arrow';
@@ -67,12 +68,13 @@ export type TLayoutProps = {
  *   - space pause/resume
  *   - left/right patch left right
  */
-export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
+export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: boolean}> {
   constructor(props, context) {
     super(props, context);
 
     this.state = {
-      msgHidden: false
+      msgHidden: false,
+      sidebar: true,
     };
   }
 
@@ -90,6 +92,12 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
     }
   }
 
+  // TODO
+  handleToggleSidebar() {
+    console.log('handleToggleSidebar')
+    this.setState({sidebar: !this.state.sidebar})
+  }
+
   render() {
     let d = this.props
     return (
@@ -101,19 +109,24 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean}> {
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
           <section id="graph" className={this.props.is_during_transition && 'during-transition'} />
           {/* TODO extract to a separate component */}
-          <section id="side-bar">{(()=>{
-            var container = []
-            var logs = this.props.logs
-            for (let i = 0; i < logs.length; i++) {
+
+          <Drawer className="sidebar-container" open={this.state.sidebar} openSecondary={true}>
+            <div id="side-bar">
+              <button onClick={this.handleToggleSidebar.bind(this)}>Hide</button>
+              {(()=>{
+              var container = []
+              var logs = this.props.logs
+              for (let i = 0; i < logs.length; i++) {
                 for (let ii = 0; ii < logs[i].length; ii++) {
                   let entry = logs[i][ii]
                   let key = `log-${i}-${ii}`
                   let className = `group-${entry.id}`
                   container.push(<span className={className} key={key}>{entry.msg}<br /></span>)
                 }
-            }
-            return container
-          })()}</section>
+              }
+              return container
+            })()}</div>
+          </Drawer>
           <section id="bottom-bar">
             <FloatingActionButton mini={true} style={{marginRight: '1em'}}
                 onClick={d.onPlayButton} id="play-button">

@@ -199,14 +199,18 @@
             right: 0;
         }
 
-        section#side-bar {
+        .sidebar-container {
+            opacity: 0.9;
+        }
+
+        #side-bar {
             background: #272822;
             color: white;
             position: absolute;
             top: 0;
             right: 0;
             bottom: 0;
-            left: 70%;
+            left: 0;
             border-width: 0 0 0 1px;
             border-color: gray;
             border-style: solid;
@@ -219,15 +223,18 @@
             padding-bottom: 10%;
             top: 0;
             left: 0;
-            right: 30%;
-            overflow: auto;
+            right: 0;
+            overflow: hidden;
         }
 
+        section#bottom-bar.shrink-right {
+            right: 31%;
+        }
         section#bottom-bar {
             position: absolute;
-            right: 31%;
             bottom: 2em;
             left: 0;
+            right: 0;
             height: 5em;
             padding-left: 2em;
             padding-right: 2em;
