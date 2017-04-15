@@ -286,10 +286,11 @@ buildLayoutData() {
 		get position_max() { return self.data_service.position_max },
 		get is_during_transition() { return self.data_service.during_transition },
 		get position() { return self.data_service.position },
+		// TODO enum it
 		get step_type() {
 			let t = StepTypes
 			switch (self.data_service.step_type) {
-				case t.TRANSITIONS: return 'transition'
+				case t.TRANSITIONS: return 'transitions'
 				case t.STEPS: return 'steps'
 			}
 			return 'states'
@@ -300,7 +301,7 @@ buildLayoutData() {
 			self.states.add('TimelineScrolled', value)
 		}),
 		onZoomSlider: null, // TODO
-		onStepType: (event, value) => {
+		onStepType: (event, index, value) => {
 			if (self.data_service.step_type != value)
 				self.states.add('StepTypeChanged', value)
 		},

@@ -216,7 +216,18 @@
             border-style: solid;
         }
 
-        section#graph {
+        #graph-wrapper {
+            background: gray;
+            position: absolute;
+            bottom: 0;
+            padding-bottom: 10%;
+            top: 55px;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+        }
+
+        #graph {
             background: gray;
             position: absolute;
             bottom: 0;
@@ -225,6 +236,14 @@
             left: 0;
             right: 0;
             overflow: hidden;
+        }
+
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1;
         }
 
         section#bottom-bar.shrink-right {
@@ -241,22 +260,23 @@
         }
 
         section#settings-bar {
+            padding-top: 55px;
             position: absolute;
             right: 31%;
             bottom: 5em;
             width: 11em;
         }
 
-        #zoom {
-            height: 100px;
-            position: absolute;
-            right: 32%;
-            top: 0;
-        }
-
         #step-slider {
             margin-left: 60px;
             margin-top: -50px;
+        }
+
+        #step-counter {
+            position: absolute !important;
+            left: 48%;
+            bottom: 7px;
+            z-index: 1;
         }
 
     </style>

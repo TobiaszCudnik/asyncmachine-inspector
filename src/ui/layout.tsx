@@ -12,15 +12,17 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
 import Snackbar from 'material-ui/Snackbar';
-import {
-  RadioButton, RadioButtonGroup
-} from 'material-ui/RadioButton';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
+import Toggle from 'material-ui/Toggle';
 import Drawer from 'material-ui/Drawer';
+import * as injectTapEventPlugin from "react-tap-event-plugin";
 import { ILogEntry } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import IconPlay from 'material-ui/svg-icons/av/play-arrow';
 import IconStop from 'material-ui/svg-icons/av/stop';
 import Chip from 'material-ui/Chip';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -31,6 +33,10 @@ const styles = {
     paddingTop: 200,
   },
 };
+
+
+// TODO move somewhere
+injectTapEventPlugin();
 
 const muiTheme = getMuiTheme({
   palette: {
@@ -100,33 +106,67 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
 
   render() {
     let d = this.props
+    console.log(d);
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
+          <Toolbar className="toolbar">
+            <ToolbarGroup firstChild={true}>
+              <SelectField
+                  style={{paddingLeft: '1em'}}
+                  floatingLabelText="Granularity"
+                  value={this.props.step_type}
+                  onChange={this.props.onStepType}
+              >
+                <MenuItem value="states" primaryText="States" />
+                <MenuItem value="transitions" primaryText="Transitions" />
+                <MenuItem value="steps" primaryText="Steps" />
+              </SelectField>
+            </ToolbarGroup>
+            <ToolbarGroup>
+              {/*TODO css */}
+              <div style={{width: '9em', padding: '2em'}}>
+                <Toggle
+                    label="Autoplay"
+                    defaultToggled={true}
+                />
+              </div>
+              <div style={{width: '7em'}}>
+                <Toggle
+                    label="Logs"
+                    defaultToggled={true}
+                    onToggle={this.handleToggleSidebar.bind(this)}
+                />
+              </div>
+              {/*<RaisedButton label="Logs" onClick={this.handleToggleSidebar.bind(this)}/>*/}
+            </ToolbarGroup>
+          </Toolbar>
           <Chip id="step-counter" position={d.position} position_max={d.position_max}>
             {d.position} / {d.position_max}
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
-          <section id="graph" className={this.props.is_during_transition && 'during-transition'} />
-          {/* TODO extract to a separate component */}
+          <div id="graph-wrapper">
+            <div id="graph" className={this.props.is_during_transition && 'during-transition'} />
 
-          <Drawer className="sidebar-container" open={this.state.sidebar} openSecondary={true}>
-            <div id="side-bar">
-              <button onClick={this.handleToggleSidebar.bind(this)}>Hide</button>
-              {(()=>{
-              var container = []
-              var logs = this.props.logs
-              for (let i = 0; i < logs.length; i++) {
-                for (let ii = 0; ii < logs[i].length; ii++) {
-                  let entry = logs[i][ii]
-                  let key = `log-${i}-${ii}`
-                  let className = `group-${entry.id}`
-                  container.push(<span className={className} key={key}>{entry.msg}<br /></span>)
-                }
-              }
-              return container
-            })()}</div>
-          </Drawer>
+            {/* TODO extract to a separate component */}
+            <Drawer className="sidebar-container" open={this.state.sidebar} openSecondary={true}>
+              <div id="side-bar">
+                {(()=>{
+                  var container = []
+                  var logs = this.props.logs
+                  for (let i = 0; i < logs.length; i++) {
+                    for (let ii = 0; ii < logs[i].length; ii++) {
+                      let entry = logs[i][ii]
+                      let key = `log-${i}-${ii}`
+                      let className = `group-${entry.id}`
+                      container.push(<span className={className} key={key}>{entry.msg}<br /></span>)
+                    }
+                  }
+                  return container
+                })()}</div>
+            </Drawer>
+          </div>
+
           <section id="bottom-bar">
             <FloatingActionButton mini={true} style={{marginRight: '1em'}}
                 onClick={d.onPlayButton} id="play-button">
@@ -142,35 +182,6 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
               onChange={this.props.onTimelineSlider}
             />
           </section>
-
-          <Slider id="zoom-slider"
-            style={{height: 100}}
-            min={20}
-            max={200}
-            step={10}
-            axis="y"
-            defaultValue={100}
-            onChange={d.onZoomSlider} />
-
-          <section id="settings-bar">
-            <RadioButtonGroup labelPosition="left"
-                name="step-type" defaultSelected={this.props.step_type}
-                onChange={this.props.onStepType}>
-              <RadioButton
-                value="states"
-                label="States"
-              />
-              <RadioButton
-                value="transitions"
-                label="Transitions"
-              />
-              <RadioButton
-                value="steps"
-                label="Steps"
-              />
-            </RadioButtonGroup>
-          </section>
-
 
           <Snackbar
             open={(!!this.props.msg && !this.state.msgHidden)}
