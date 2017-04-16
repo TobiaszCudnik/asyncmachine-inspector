@@ -12,7 +12,9 @@
         "src/server/server.ts",
         "src/logger.ts",
         "src/ui/web.tsx",
-        "src/ui/worker-layout.ts"
+        "src/ui/worker-layout.ts",
+        "test/ui-joint/mock-logger.ts",
+        "test/ui-joint/mock-server.ts"
     ],
     "awesomeTypescriptLoaderOptions": {
       "useTranspileModule": true,

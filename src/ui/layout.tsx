@@ -57,6 +57,7 @@ export type TLayoutProps = {
   onTimelineSlider: Function
   onZoomSlider: Function
   onStepType: Function
+  onAutoplayToggle: Function
   onPlayButton: Function
 }
 
@@ -106,7 +107,7 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
 
   render() {
     let d = this.props
-    console.log(d);
+    console.log('render() data', d);
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>

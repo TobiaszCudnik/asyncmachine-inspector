@@ -54,8 +54,7 @@ export default class States
   // UIStates
   AutoplayOn: IState = {};
   Playing: IState = {
-    require: ['AutoplayOn', 'InitialRenderDone'],
-    auto: true
+    require: ['InitialRenderDone']
   };
   // slider states
   TimelineOnFirst: IState = {

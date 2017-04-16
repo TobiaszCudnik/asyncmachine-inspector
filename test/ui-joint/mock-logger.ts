@@ -1,10 +1,12 @@
 require('source-map-support').install()
 var am = require('asyncmachine')
-var Logger = require('../../build/logger').default
-var Network = require('../../build/network').default
+var Logger = require('../../src/logger').default
+var Network = require('../../src/network').default
 const repl = require('repl')
 
 global.am = am
+
+global.network = new Network
 
 global.machine1 = am.factory(['A', 'B', 'C', 'D', 'E'])
 global.machine2 = am.factory(['F', 'G', 'H'])
@@ -20,6 +22,10 @@ machine2.F = {drop: ['G']}
 
 machine3.id('machine 3 I-J')
 machine3.I = {drop: ['J']}
+
+network.addMachine(machine1)
+network.addMachine(machine2)
+network.addMachine(machine3)
 
 // TODO check this piping
 machine1.pipe('A', machine2, 'F', am.PipeFlags.INVERT)
@@ -59,11 +65,6 @@ global.test2 = test2
 global.test4 = test4
 global.test5 = test5
 global.test6 = test6
-
-global.network = new Network
-network.addMachine(machine1)
-network.addMachine(machine2)
-network.addMachine(machine3)
 
 global.logger = new Logger(network, 'http://localhost:3030/logger')
 

@@ -285,7 +285,7 @@ export default class Network extends EventEmitter {
             }
         })
         if (!ret)
-            throw new Error(`Node not found ${name} from ${machine_id}`)
+            throw new Error(`Node not found ${name} from '${machine_id}'`)
         return ret
     }
 

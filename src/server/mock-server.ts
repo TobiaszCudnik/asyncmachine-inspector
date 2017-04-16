@@ -12,7 +12,7 @@ import * as io from 'socket.io'
 import * as _ from 'underscore'
 import * as assert from 'assert/'
 import {EventEmitter} from "events"
-import './polyfill'
+// import '../polyfill'
 // import AsyncMachine from 'asyncmachine'
 
 

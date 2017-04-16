@@ -162,84 +162,84 @@ class JointDataService extends EventEmitter {
     protected scrollToPatch(position: number): Set<string> {
         this.last_scroll_add_remove = false
         let changed = new Set<string>()
-		if (position < this.patch_position) {
+        if (position < this.patch_position) {
             this.last_scroll_direction = Direction.BACK
-			// go back in time
-			for (let i = this.patch_position; i > position; i--) {
+            // go back in time
+            for (let i = this.patch_position; i > position; i--) {
                 let diff = this.patches[i-1].diff
-				if (diff)
+                if (diff)
                     this.unapplyDiff(diff, changed)
                 this.patch_position = i - 1
-				this.handleDuringTransition(this.patches[i-1], true)
-			}
-		} else if (position > this.patch_position) {
+                this.handleDuringTransition(this.patches[i-1], true)
+            }
+        } else if (position > this.patch_position) {
             this.last_scroll_direction = Direction.FWD
-			// go fwd in time
-			for (let i = this.patch_position; i < position; i++) {
+            // go fwd in time
+            for (let i = this.patch_position; i < position; i++) {
                 let diff = this.patches[i].diff
-				if (diff)
+                if (diff)
                     this.applyDiff(diff, changed)
                 this.patch_position = i + 1
-				this.handleDuringTransition(this.patches[i])
-			}
-		}
+                this.handleDuringTransition(this.patches[i])
+            }
+        }
         this.emit('scrolled', position, changed)
         return changed
     }
 
     protected applyDiff(diff, changed: Set<string>): void {
-		if (!diff.cells)
-			return
+        if (!diff.cells)
+            return
 
-		for (let key of Object.keys(diff.cells)) {
-			if (key == '_t' || key[0] != '_')
-				continue
+        for (let key of Object.keys(diff.cells)) {
+            if (key == '_t' || key[0] != '_')
+                continue
             this.handleAddRemove(diff.cells[key])
             if (this.data.cells[key.slice(1)])
                 changed.add(this.data.cells[key.slice(1)].id)
-		}
+        }
         jsondiffpatch.patch(this.data, diff)
-		for (let key of Object.keys(diff.cells)) {
-			if (key == '_t' || key[0] == '_')
-				continue
+        for (let key of Object.keys(diff.cells)) {
+            if (key == '_t' || key[0] == '_')
+                continue
             this.handleAddRemove(diff.cells[key])
             if (this.data.cells[key])
                 changed.add(this.data.cells[key].id)
-		}
+        }
     }
     protected unapplyDiff(diff, changed: Set<string>): void {
-		if (!diff.cells)
-			return
+        if (!diff.cells)
+          return
 
-		for (let key of Object.keys(diff.cells)) {
-			if (key == '_t' || key[0] == '_')
-				continue
+        for (let key of Object.keys(diff.cells)) {
+            if (key == '_t' || key[0] == '_')
+                continue
             this.handleAddRemove(diff.cells[key])
             if (this.data.cells[key])
                 changed.add(this.data.cells[key].id)
-		}
+        }
         jsondiffpatch.unpatch(this.data, diff)
-		for (let key of Object.keys(diff.cells)) {
-			if (key == '_t' || key[0] != '_')
-				continue
+        for (let key of Object.keys(diff.cells)) {
+            if (key == '_t' || key[0] != '_')
+                continue
             this.handleAddRemove(diff.cells[key])
             // TODO handle missing elements when key == '_a'
             if (this.data.cells[key.slice(1)])
                 changed.add(this.data.cells[key.slice(1)].id)
-		}
+        }
     }
     protected handleAddRemove(cell) {
         this.last_scroll_add_remove = this.last_scroll_add_remove ||
             Array.isArray(cell) && cell.length !== 2
     }
-	// TODO breaks when reversing inside nested active_transitions
-	handleDuringTransition(packet, reversed = false) {
+  // TODO breaks when reversing inside nested active_transitions
+  handleDuringTransition(packet, reversed = false) {
         // TODO expose data for messages
-		if (packet.type == PatchType.TRANSITION_START)
-			this.active_transitions += reversed ? -1 : 1
-		else if (packet.type == PatchType.TRANSITION_END)
-			this.active_transitions += reversed ? 1 : -1
-	}
+    if (packet.type == PatchType.TRANSITION_START)
+      this.active_transitions += reversed ? -1 : 1
+    else if (packet.type == PatchType.TRANSITION_END)
+      this.active_transitions += reversed ? 1 : -1
+  }
 }
 
 export default JointDataService
