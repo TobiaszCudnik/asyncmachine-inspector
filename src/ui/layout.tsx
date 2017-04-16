@@ -130,6 +130,7 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
                 <Toggle
                     label="Autoplay"
                     defaultToggled={true}
+                    onToggle={this.props.onAutoplayToggle}
                 />
               </div>
               <div style={{width: '7em'}}>

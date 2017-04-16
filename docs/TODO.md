@@ -1,5 +1,13 @@
 # TODO
 
+#### Bugs
+- machine's name duplicated inside of the background
+- new machine lacks the style
+- scrolling mixes up step_types
+- autoplay stops before the last position
+- grab scroll shifts the position to the bottom 
+  - coz of padding / margin?
+
 #### UI
 - counters
 - grab to scroll

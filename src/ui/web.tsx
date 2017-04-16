@@ -291,7 +291,7 @@ export class InspectorUI /*implements ITransitions*/ {
 
   // METHODS
 
-  buildLayoutData() {
+  buildLayoutData(): TLayoutProps {
     const self = this
     return {
       get position_max() { return self.data_service.position_max },
@@ -319,7 +319,13 @@ export class InspectorUI /*implements ITransitions*/ {
       msg: null,
       msgHidden: false,
       get is_playing() { return self.states.is('Playing') },
-      onPlayButton: this.states.addByListener('PlayStopClicked')
+      onPlayButton: this.states.addByListener('PlayStopClicked'),
+      onAutoplayToggle: ()=>{
+        if (this.states.is('AutoplayOn'))
+          this.states.drop('AutoplayOn')
+        else
+          this.states.add('AutoplayOn')
+      }
     }
   }
 
