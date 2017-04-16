@@ -121,7 +121,7 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
               >
                 <MenuItem value="states" primaryText="States" />
                 <MenuItem value="transitions" primaryText="Transitions" />
-                <MenuItem value="steps" primaryText="Steps" />
+                <MenuItem value="steps" primaryText="Transition steps" />
               </SelectField>
             </ToolbarGroup>
             <ToolbarGroup>

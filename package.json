@@ -50,6 +50,7 @@
     "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
     "material-ui": "^0.17.4",
     "mocha": "^2.2.5",
+    "nesh": "^1.7.0",
     "node-uuid": "^1.4.7",
     "random-number": "0.0.7",
     "react": "^15.3.0",

@@ -2,7 +2,7 @@ require('source-map-support').install()
 var am = require('asyncmachine')
 var Logger = require('../../src/logger').default
 var Network = require('../../src/network').default
-const repl = require('repl')
+const repl = require('nesh')
 
 global.am = am
 
@@ -37,15 +37,13 @@ machine2.pipe('F', machine3, 'I')
 // init env
 machine1.add('A')
 
-global.network = new Network
-
 function test1() {
   var test = am.factory(['X', 'Y'])
   network.addMachine(test)
 }
 
 function test2() {
-  machine1.pipe('A', machine4, 'F')
+  machine1.pipe('A', machine2, 'F')
 }
 
 function test4() {
@@ -68,6 +66,7 @@ global.test6 = test6
 
 global.logger = new Logger(network, 'http://localhost:3030/logger')
 
+// repl.loadLanguage('es6')
 repl.start({
   prompt: 'logger> ',
   input: process.stdin,
