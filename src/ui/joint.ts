@@ -420,10 +420,13 @@ export default class Ui extends UiBase<INetworkJson> {
 	}
 
 	dragScrollListener(e) {
-		assert(this.drag_start_pos)
+		// assert(this.drag_start_pos)
+		if (!this.drag_start_pos)
+			return
 		const el = this.container.get(0)
 		el.scrollLeft += this.drag_start_pos.x - e.offsetX
 		el.scrollTop += this.drag_start_pos.y - e.offsetY
+				- $('.toolbar').get(0).clientHeight
 	}
 
 	mouseZoomListener(e) {
