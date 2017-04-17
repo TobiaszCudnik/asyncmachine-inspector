@@ -65,6 +65,9 @@ function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
   })
 }
 
+// const log = console.log.bind(console)
+const log = ()=>{}
+
 export default class GraphLayout {
   source_graph: joint.dia.Graph;
   options: {
@@ -103,12 +106,12 @@ export default class GraphLayout {
   setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
     let start = Date.now()
     this.syncData(data, changed_cells)
-    console.log(`Sync data ${Date.now() - start}ms`)
+    log(`Sync data ${Date.now() - start}ms`)
     if (!this.layout())
       return
     start = Date.now()
     this.syncSourceGraph(data, changed_cells)
-    console.log(`Update the source graph ${Date.now() - start}ms`)
+    log(`Update the source graph ${Date.now() - start}ms`)
   }
 
   /**
@@ -137,7 +140,7 @@ export default class GraphLayout {
         this.layouts_by_hash.set(graph_data.hash, diff)
       }
     }
-    console.log(`Layout ${this.subgraphs.size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`)
+    log(`Layout ${this.subgraphs.size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`)
     // sizes of clusters could've changed
     if (this.clusters.graph().is_dirty && this.clusters.nodes().length > 1) {
       // TODO support the hash based cache
@@ -147,7 +150,7 @@ export default class GraphLayout {
       this.syncClusterSizes()
       layout(this.clusters)
       this.clusters.graph().is_dirty = false
-      console.log(`Layout the cluster graph ${Date.now() - start}ms`)
+      log(`Layout the cluster graph ${Date.now() - start}ms`)
     }
     return dirty
   }
@@ -168,7 +171,8 @@ export default class GraphLayout {
   exportLayoutData(): Object {
     let ret = {}
     for (let [name, graph] of this.subgraphs.entries()) {
-      ret[name] = this.graphToLayoutData(graph)
+      // TODO use a symbol?
+      ret[name || ' '] = this.graphToLayoutData(graph)
     }
     ret._clusters = this.graphToLayoutData(this.clusters)
     return ret
@@ -315,7 +319,7 @@ export default class GraphLayout {
         clusters.graph().is_dirty = true
         let graph = subgraphs.get(parent_id)
         if (!graph) {
-          console.log(`Missing graph ${parent_id}`)
+          log(`Missing graph ${parent_id}`)
           continue
         }
         graph.removeNode(id)
@@ -348,7 +352,7 @@ export default class GraphLayout {
           clusters.graph().is_dirty = true
           let graph = subgraphs.get(source_parent_id)
           if (!graph) {
-            console.log(`Missing graph ${source_parent_id}`)
+            log(`Missing graph ${source_parent_id}`)
             continue
           }
           graph.graph().is_dirty = true
@@ -477,7 +481,7 @@ export default class GraphLayout {
       if (cells_to_add) {
         this.source_graph.addCells(cells_to_add)
       }
-      let cells_to_remove = [...changed_cells]
+      let cells_to_remove = [...changed_cells||[]]
         .filter( id => !cells.has(id) )
         .map( id => this.source_graph.getCell(id) )
         .filter( cell => cell )

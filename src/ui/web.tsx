@@ -27,6 +27,7 @@ import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
 import Logger from '../logger'
 import Network from '../network'
+import * as deepcopy from 'deepcopy'
 
 
 /**
@@ -40,7 +41,7 @@ import Network from '../network'
  */
 export class InspectorUI /*implements ITransitions*/ {
 	states = new States(this);
-	data_service: JointDataService
+  private data_service_: JointDataService
 	graph = new Graph(null)
 	layout_data: TLayoutProps;
 	frametime = 0.5
@@ -81,6 +82,15 @@ export class InspectorUI /*implements ITransitions*/ {
 
   // TODO type
   layout_worker: any;
+
+  set data_service(value) {
+    this.data_service_ = value
+    this.updateTimelineStates()
+  }
+
+  get data_service() {
+    return this.data_service_
+  }
 
   // TODO support resetting
   async InitializingLayoutWorker_state() {
@@ -209,7 +219,8 @@ export class InspectorUI /*implements ITransitions*/ {
           position < this.rendering_position) {
         return false
       } else {
-        this.states.on('Rendering_end', this.states.addByListener(
+        // TODO GC
+        this.states.once('Rendering_end', this.states.addByListener(
             'Rendering', position))
         return false
       }
@@ -300,6 +311,7 @@ export class InspectorUI /*implements ITransitions*/ {
       // TODO enum it
       get step_type() {
         let t = StepTypes
+        // TODO enum
         switch (self.data_service.step_type) {
           case t.TRANSITIONS: return 'transitions'
           case t.STEPS: return 'steps'
@@ -308,6 +320,8 @@ export class InspectorUI /*implements ITransitions*/ {
       },
       // get logs() { return self.data_service.getLogs() },
       get logs() { return [] },
+      get is_connected() { return self.states.is('Connected') },
+      get on_last() { return self.data_service.is_latest },
       onTimelineSlider: debounce(500, false, (event, value) => {
         self.states.add('TimelineScrolled', value)
       }),
@@ -353,23 +367,27 @@ export class InspectorUI /*implements ITransitions*/ {
       data.msg = null
   }
 
-  async onDataServiceScrolled(layout_data, patch, changed_cells: string[]) {
-    console.dir('onDataServiceScrolled', this.data_service)
+  async onDataServiceScrolled(layout_data: TLayoutProps, patch, changed_cells: string[]) {
+    console.log('onDataServiceScrolled', deepcopy(this.data_service))
+    this.updateTimelineStates()
+    jsondiffpatch.patch(this.graph.data, patch)
+    if (changed_cells && [...changed_cells].length) {
+      await this.graph.updateCells(changed_cells, this.data_service
+          .last_scroll_add_remove, layout_data)
+      this.handleTransitionMessage()
+    }
+    // if (abort && abort())
+    // 	return
+    this.states.add('Rendered')
+  }
+
+  updateTimelineStates() {
     if (this.data_service.is_latest)
       this.states.add('TimelineOnLast')
     else if (this.data_service.position == 0)
       this.states.add('TimelineOnFirst')
     else
       this.states.add('TimelineOnBetween')
-    jsondiffpatch.patch(this.graph.data, patch);
-    if (changed_cells) {
-      await this.graph.updateCells(changed_cells, layout_data,
-        this.data_service.last_scroll_add_remove)
-      this.handleTransitionMessage()
-    }
-    // if (abort && abort())
-    // 	return
-    this.states.add('Rendered')
   }
 
 // initDataService() {

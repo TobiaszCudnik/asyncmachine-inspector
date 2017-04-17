@@ -78,6 +78,7 @@ workerio.publishInterface(self, 'api', {
         data_service.scrollTo(position)
     },
     layout(position: number): ISync {
+        // TODO copy all the patches?!
         const data = deepcopy(data_service.data)
         let ids = data_service.scrollTo(position)
         layout.layout()

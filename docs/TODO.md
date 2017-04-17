@@ -7,6 +7,7 @@
 - autoplay stops before the last position
 - grab scroll shifts the position to the bottom 
   - coz of padding / margin?
+- clicking play shows the bottom message "Connected"
 
 #### UI
 - counters
@@ -17,6 +18,7 @@
 - save / load from file
 - server config form
 - scroll zooms into the cursor position
+- sticky graphs (define position once dragged by a user)
 - fix bottom layout
   - text backgrounds
   - paddings

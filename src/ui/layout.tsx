@@ -20,7 +20,7 @@ import * as injectTapEventPlugin from "react-tap-event-plugin";
 import { ILogEntry } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import IconPlay from 'material-ui/svg-icons/av/play-arrow';
-import IconStop from 'material-ui/svg-icons/av/stop';
+import IconPause from 'material-ui/svg-icons/av/pause';
 import Chip from 'material-ui/Chip';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 // TODO undelete and branch
@@ -114,7 +114,7 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
           <Toolbar className="toolbar">
             <ToolbarGroup firstChild={true}>
               <SelectField
-                  style={{paddingLeft: '1em'}}
+                  style={{margin: '0 1em'}}
                   floatingLabelText="Granularity"
                   value={this.props.step_type}
                   onChange={this.props.onStepType}
@@ -123,6 +123,8 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
                 <MenuItem value="transitions" primaryText="Transitions" />
                 <MenuItem value="steps" primaryText="Transition steps" />
               </SelectField>
+              <ToolbarTitle text={this.props.is_connected
+                  ?'Connected':'Disconnected'} />
             </ToolbarGroup>
             <ToolbarGroup>
               {/*TODO css */}
@@ -171,8 +173,10 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
 
           <section id="bottom-bar">
             <FloatingActionButton mini={true} style={{marginRight: '1em'}}
-                onClick={d.onPlayButton} id="play-button">
-              {this.props.is_playing ? <IconStop /> : <IconPlay />}
+                onClick={d.onPlayButton} id="play-button"
+                disabled={this.props.on_last}>
+              {this.props.is_playing ? <IconPause /> : <IconPlay />}
+
             </FloatingActionButton>
             <Slider
               id="step-slider"
@@ -185,12 +189,12 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
             />
           </section>
 
-          <Snackbar
-            open={(!!this.props.msg && !this.state.msgHidden)}
-            message={this.props.msg || ''}
-            autoHideDuration={2000}
-            onRequestClose={this.handleCloseNotifications.bind(this)}
-          />
+          {/*<Snackbar*/}
+            {/*open={(!!this.props.msg && !this.state.msgHidden)}*/}
+            {/*message={this.props.msg || ''}*/}
+            {/*autoHideDuration={2000}*/}
+            {/*onRequestClose={this.handleCloseNotifications.bind(this)}*/}
+          {/*/>*/}
         </main>
       </MuiThemeProvider>
     );

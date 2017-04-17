@@ -98,6 +98,12 @@ export default class Ui extends UiBase<INetworkJson> {
 		this.layout = new GraphLayout(this.graph)
 	}
 
+	log(...args) {
+		// TODO logger
+		return
+		console.log(...args)
+	}
+
 	reset() {
 		this.graph.clear()
 		this.initGraphLayout();
@@ -178,7 +184,7 @@ export default class Ui extends UiBase<INetworkJson> {
 				adjustVertices(this.graph, cell)
 		}
 
-		console.log(`Overall setData ${Date.now() - start}ms`)
+		this.log(`Overall setData ${Date.now() - start}ms`)
 	}
 
 	async updateCells(cells: Iterable<string>, was_add_remove: boolean = false,
@@ -246,14 +252,14 @@ export default class Ui extends UiBase<INetworkJson> {
 		let tmp1 = start
 		this.syncClasses(cells ? [...cells] : null)
 		let tmp2 = Date.now()
-		console.log(`Sync classes ${tmp2- tmp1}ms`)
+		this.log(`Sync classes ${tmp2- tmp1}ms`)
 		this.assignColors()
 		tmp1 = tmp2
 		tmp2 = Date.now()
-		console.log(`Assign colors ${tmp2- tmp1}ms`)
+		this.log(`Assign colors ${tmp2- tmp1}ms`)
 		// tmp2 = Date.now()
 		// this.autosize()
-		// console.log(`Autosize ${Date.now() - tmp2}ms`)
+		// this.log(`Autosize ${Date.now() - tmp2}ms`)
 	}
 
 	parseColors() {
