@@ -48,6 +48,8 @@ export type TLayoutProps = {
   position_max: number
   is_during_transition: boolean
   position: number
+  is_connected: boolean
+  on_last: boolean
   is_playing: boolean
   logs: ILogEntry[][]
   msg: string
@@ -156,8 +158,8 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
             <Drawer className="sidebar-container" open={this.state.sidebar} openSecondary={true}>
               <div id="side-bar">
                 {(()=>{
-                  var container = []
-                  var logs = this.props.logs
+                  let container = []
+                  const logs = this.props.logs
                   for (let i = 0; i < logs.length; i++) {
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       let entry = logs[i][ii]
@@ -204,6 +206,8 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
 export default function(container, props) {
   var layout = <Main {...props} />
   render(layout, container)
+  // scroll to the bottom
+  document.getElementById('side-bar').scrollTop = 99999;
 
   return layout
 }

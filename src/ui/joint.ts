@@ -39,6 +39,8 @@ joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
 // distance between multiple links
 const link_gap = 40
 
+const log = (...args) => {}
+
 /**
  * Fiddles:
  * http://jsfiddle.net/user/kumilingus/fiddles/3/
@@ -96,12 +98,6 @@ export default class Ui extends UiBase<INetworkJson> {
 
 	initGraphLayout() {
 		this.layout = new GraphLayout(this.graph)
-	}
-
-	log(...args) {
-		// TODO logger
-		return
-		console.log(...args)
 	}
 
 	reset() {
@@ -184,7 +180,7 @@ export default class Ui extends UiBase<INetworkJson> {
 				adjustVertices(this.graph, cell)
 		}
 
-		this.log(`Overall setData ${Date.now() - start}ms`)
+		log(`Overall setData ${Date.now() - start}ms`)
 	}
 
 	async updateCells(cells: Iterable<string>, was_add_remove: boolean = false,
@@ -252,14 +248,14 @@ export default class Ui extends UiBase<INetworkJson> {
 		let tmp1 = start
 		this.syncClasses(cells ? [...cells] : null)
 		let tmp2 = Date.now()
-		this.log(`Sync classes ${tmp2- tmp1}ms`)
+		log(`Sync classes ${tmp2- tmp1}ms`)
 		this.assignColors()
 		tmp1 = tmp2
 		tmp2 = Date.now()
-		this.log(`Assign colors ${tmp2- tmp1}ms`)
+		log(`Assign colors ${tmp2- tmp1}ms`)
 		// tmp2 = Date.now()
 		// this.autosize()
-		// this.log(`Autosize ${Date.now() - tmp2}ms`)
+		// log(`Autosize ${Date.now() - tmp2}ms`)
 	}
 
 	parseColors() {

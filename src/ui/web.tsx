@@ -8,8 +8,9 @@ import { INetworkJson } from './joint-network'
 import * as io from 'socket.io-client'
 import { IDelta } from 'jsondiffpatch'
 import {
-	IPatch,
-	PatchType
+  ILogEntry,
+  IPatch,
+  PatchType
 } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
@@ -29,6 +30,7 @@ import Logger from '../logger'
 import Network from '../network'
 import * as deepcopy from 'deepcopy'
 
+const log = (...args) => {}
 
 /**
  * TODO
@@ -53,13 +55,14 @@ export class InspectorUI /*implements ITransitions*/ {
 	step_timer: number;
 	step_fn: Function;
 	differ: jsondiffpatch;
+  logs: ILogEntry[][] = [];
 
   constructor(
       public host = 'localhost',
       public port = 3030) {
     this.states.id('Inspector')
     this.states.add(['AutoplayOn', 'Connecting'])
-    this.states.logLevel(1)
+    this.states.logLevel(3)
 
     this.socket = io(`http://${this.host}:${this.port}/client`)
     this.socket.on('full-sync', this.states.addByListener('FullSync'))
@@ -85,6 +88,7 @@ export class InspectorUI /*implements ITransitions*/ {
   layout_worker: any;
 
   set data_service(value) {
+    log('synced the data_service', value)
     this.data_service_ = value
     this.updateTimelineStates()
   }
@@ -112,7 +116,7 @@ export class InspectorUI /*implements ITransitions*/ {
     this.logger_id = graph_data.loggerId
     this.states.add(['Rendering'])
     // console.log('full-sync', Date.now() - start_join)
-    console.log('full-sync', graph_data)
+    log('full-sync', graph_data)
     this.data_service.data = graph_data
     let {
         layout_data,
@@ -140,6 +144,7 @@ export class InspectorUI /*implements ITransitions*/ {
     const abort = states.getAbort('DiffSync')
     if (!states.to().includes('LayoutWorkerReady'))
       await states.when('LayoutWorkerReady')
+    this.logs.push(packet.logs)
     const data_service = await this.layout_worker.addPatch(packet)
     const now = Date.now()
     const force_refresh = now - this.data_service_last_sync
@@ -147,13 +152,13 @@ export class InspectorUI /*implements ITransitions*/ {
     // TODO extract to AutoplayOn_DiffSync (and handle async dataservice sync)
     const play = states.is('AutoplayOn') && (!this.data_service.position_max
         || states.is('TimelineOnLast'))
-    console.log('play', play)
+    log('play', play)
     if (abort() && !force_refresh)
       return
     this.data_service_last_sync = now
     this.data_service = data_service
     if (play) {
-      console.log('Autoplay from DiffSync')
+      log('Autoplay from DiffSync')
       states.add('Playing')
     }
     this.renderUI()
@@ -278,7 +283,7 @@ export class InspectorUI /*implements ITransitions*/ {
     let position = Math.min(this.data_service.position_max,
         this.data_service.position + framestimes_since_last)
     if (framestimes_since_last) {
-      console.log('position', position)
+      log('merge jump to position', position)
       this.states.add('Rendering', position)
       // TODO move to render
       this.last_render = Date.now()
@@ -321,8 +326,8 @@ export class InspectorUI /*implements ITransitions*/ {
         }
         return 'states'
       },
-      // get logs() { return self.data_service.getLogs() },
-      get logs() { return [] },
+      get logs() { return self.logs.slice(0,
+          self.data_service.patch_position) },
       get is_connected() { return self.states.is('Connected') },
       get on_last() { return self.data_service.is_latest },
       onTimelineSlider: debounce(500, false, (event, value) => {
@@ -373,7 +378,7 @@ export class InspectorUI /*implements ITransitions*/ {
   }
 
   async onDataServiceScrolled(layout_data: TLayoutProps, patch, changed_cells: string[]) {
-    console.log('onDataServiceScrolled', deepcopy(this.data_service))
+    log('onDataServiceScrolled', deepcopy(this.data_service))
     this.updateTimelineStates()
     jsondiffpatch.patch(this.graph.data, patch)
     if (changed_cells && [...changed_cells].length) {

@@ -32,9 +32,7 @@ class JointDataService extends EventEmitter {
   patches: IPatch[] =
       [{diff: null, type: PatchType.FULL_SYNC, machine_id: null}];
   data: INetworkJson | null;
-  // 0 mean initial, non-patched data
-  protected patch_position = 0;
-  /** 0 mean initial, non-patched data */
+  patch_position = 0;
   position = 0;
   active_transitions = 0;
   /** Did the last scroll add or remove any cells? */
@@ -162,20 +160,18 @@ class JointDataService extends EventEmitter {
     // TODO ensure that the position is not out of range
     if (position == this.position)
       return new Set()
-    const t = StepTypes
-    let patch_position = position
-    if (position) {
-      switch (this.step_type) {
-        case t.STATES:
-          patch_position = this.index.states[position]
-          break
-        case t.TRANSITIONS:
-          patch_position = this.index.transitions[position]
-          break
-      }
-    }
     this.position = position
-    return this.scrollToPatch(patch_position)
+    return this.scrollToPatch(this.positionToPatchPosition(position))
+  }
+
+  positionToPatchPosition(position: number): number {
+    const t = StepTypes
+    switch (this.step_type) {
+      case t.STATES:
+        return this.index.states[position]
+      case t.TRANSITIONS:
+        return this.index.transitions[position]
+    }
   }
 
   /**
@@ -268,10 +264,10 @@ class JointDataService extends EventEmitter {
     const reversed = this.last_scroll_direction == Direction.BACK
     let count = this.active_transitions
     if (packet.type == PatchType.TRANSITION_START) {
-      log('start', reversed ? -1 : 1)
+      log('transition start', reversed ? -1 : 1)
       this.active_transitions += reversed ? -1 : 1
     } else if (packet.type == PatchType.TRANSITION_END) {
-      log('end', reversed ? -1 : 1)
+      log('transition end', reversed ? -1 : 1)
       this.active_transitions += reversed ? 1 : -1
     }
     log('this.active_transitions ', this.active_transitions - count,
