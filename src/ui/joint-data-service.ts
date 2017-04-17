@@ -23,11 +23,14 @@ export enum StepTypes {
   STATES,
 }
 
+const log = (...args) => console.log(...args)
+
 /**
  * TODO extract common logic to a super class
  */
 class JointDataService extends EventEmitter {
-  patches: IPatch[] = [{diff: null, type: PatchType.FULL_SYNC}];
+  patches: IPatch[] =
+      [{diff: null, type: PatchType.FULL_SYNC, machine_id: null}];
   data: INetworkJson | null;
   // 0 mean initial, non-patched data
   protected patch_position = 0;
@@ -192,7 +195,7 @@ class JointDataService extends EventEmitter {
         let diff = this.patches[i].diff
         if (diff)
           this.unapplyDiff(diff, changed)
-        this.handleDuringTransition(this.patches[i], true)
+        this.handleDuringTransition(this.patches[i])
       }
     } else if (position > this.patch_position) {
       this.last_scroll_direction = Direction.FWD
@@ -265,13 +268,13 @@ class JointDataService extends EventEmitter {
     const reversed = this.last_scroll_direction == Direction.BACK
     let count = this.active_transitions
     if (packet.type == PatchType.TRANSITION_START) {
-      console.log('start', reversed ? -1 : 1)
+      log('start', reversed ? -1 : 1)
       this.active_transitions += reversed ? -1 : 1
     } else if (packet.type == PatchType.TRANSITION_END) {
-      console.log('end', reversed ? -1 : 1)
+      log('end', reversed ? -1 : 1)
       this.active_transitions += reversed ? 1 : -1
     }
-    console.log('this.active_transitions ', this.active_transitions - count,
+    log('this.active_transitions ', this.active_transitions - count,
         '==', this.active_transitions)
   }
 }

@@ -3,26 +3,17 @@
 #### Bugs
 - machine's name duplicated inside of the background
 - new machine lacks the style
-- scrolling mixes up step_types
-- autoplay stops before the last position
 - grab scroll shifts the position to the bottom 
   - coz of padding / margin?
 - clicking play shows the bottom message "Connected"
+- Transitions view is broken
 
 #### UI
-- counters
-- grab to scroll
 - right panel 
-  - collapsable
   - size change
 - save / load from file
 - server config form
-- scroll zooms into the cursor position
 - sticky graphs (define position once dragged by a user)
-- fix bottom layout
-  - text backgrounds
-  - paddings
-  - slider size / background
 - legend
   - colors
   - transition styles (only during a transition)
@@ -39,8 +30,6 @@
 - divide the UI class to several machines
 
 #### Graph
-- split camel names `FooBar` to `Foo Bar`
-- prevent link overlapping between graph nodes
 - update to jointjs 2.1
 - better colors
 - descriptive transition styles

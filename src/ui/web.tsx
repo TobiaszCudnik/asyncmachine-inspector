@@ -57,6 +57,7 @@ export class InspectorUI /*implements ITransitions*/ {
   constructor(
       public host = 'localhost',
       public port = 3030) {
+    this.states.id('Inspector')
     this.states.add(['AutoplayOn', 'Connecting'])
     this.states.logLevel(1)
 
