@@ -206,6 +206,7 @@ export class InspectorUI /*implements ITransitions*/ {
     else if (this.data_service.position_max
         && !this.states.is('TimelineOnLast'))
       this.states.add('Playing')
+    this.states.drop('PlayStopClicked')
     this.renderUI()
   }
 
@@ -304,6 +305,7 @@ export class InspectorUI /*implements ITransitions*/ {
 
   buildLayoutData(): TLayoutProps {
     const self = this
+    let playstop = this.states.addByListener('PlayStopClicked')
     return {
       get position_max() { return self.data_service.position_max },
       get is_during_transition() { return self.data_service.during_transition },
@@ -333,7 +335,9 @@ export class InspectorUI /*implements ITransitions*/ {
       msg: null,
       msgHidden: false,
       get is_playing() { return self.states.is('Playing') },
-      onPlayButton: this.states.addByListener('PlayStopClicked'),
+      onPlayButton: () => {
+        playstop()
+      },
       onAutoplayToggle: ()=>{
         if (this.states.is('AutoplayOn'))
           this.states.drop('AutoplayOn')

@@ -47,7 +47,7 @@ class JointDataService extends EventEmitter {
   } = {
     // `[0]` means initial full sync
     states: [0],
-    transitions: []
+    transitions: [0]
   }
   get during_transition(): boolean {
     return Boolean(this.active_transitions)
@@ -90,9 +90,15 @@ class JointDataService extends EventEmitter {
     // if (patch.type == PatchType.STATE_CHANGED ||
     const prev_patch_state_change = this.patches.length
         && this.patches[this.patches.length-1].type == PatchType.STATE_CHANGED
-    if ((patch.type == PatchType.TRANSITION_END && prev_patch_state_change)
-        || patch.type == PatchType.NEW_MACHINE) {
-      this.index.states.push(this.patches.length)
+    const prev_patch_transition_end = this.patches.length
+        && this.patches[this.patches.length-1].type == PatchType.TRANSITION_END
+    if (patch.type == PatchType.TRANSITION_END && (prev_patch_state_change
+        || prev_patch_transition_end) || patch.type == PatchType.NEW_MACHINE) {
+      // keep states index on the most outer transition
+      if (prev_patch_transition_end)
+        this.index.states[this.index.states.length - 1] = this.patches.length
+      else
+        this.index.states.push(this.patches.length)
       this.index.transitions.push(this.patches.length)
     }
     // TODO avoid nested transitions
@@ -126,6 +132,9 @@ class JointDataService extends EventEmitter {
       } else
         this.position = this.patch_position
     }
+    // TODO required?
+    // if (type == StepTypes.STEPS)
+    //   this.active_transitions = 0
   }
 
   /**
@@ -188,7 +197,7 @@ class JointDataService extends EventEmitter {
     } else if (position > this.patch_position) {
       this.last_scroll_direction = Direction.FWD
       // go fwd in time
-      for (let i = this.patch_position; i <= position; i++) {
+      for (let i = this.patch_position + 1; i <= position; i++) {
         let diff = this.patches[i].diff
         if (diff)
           this.applyDiff(diff, changed)
@@ -249,14 +258,21 @@ class JointDataService extends EventEmitter {
   }
 
   // TODO breaks when reversing inside nested active_transitions
-  handleDuringTransition(packet, reversed = false) {
-    if (this.step_type == StepTypes.STATES)
-      return
+  handleDuringTransition(packet) {
+    // if (this.step_type != StepTypes.STEPS)
+    //   return
     // TODO expose data for messages
-    if (packet.type == PatchType.TRANSITION_START)
+    const reversed = this.last_scroll_direction == Direction.BACK
+    let count = this.active_transitions
+    if (packet.type == PatchType.TRANSITION_START) {
+      console.log('start', reversed ? -1 : 1)
       this.active_transitions += reversed ? -1 : 1
-    else if (packet.type == PatchType.TRANSITION_END)
+    } else if (packet.type == PatchType.TRANSITION_END) {
+      console.log('end', reversed ? -1 : 1)
       this.active_transitions += reversed ? 1 : -1
+    }
+    console.log('this.active_transitions ', this.active_transitions - count,
+        '==', this.active_transitions)
   }
 }
 
