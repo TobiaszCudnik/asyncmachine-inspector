@@ -3,8 +3,6 @@
 #### Bugs
 - machine's name duplicated inside of the background
 - new machine lacks the style
-- grab scroll shifts the position to the bottom 
-  - coz of padding / margin?
 - clicking play shows the bottom message "Connected"
 - Transitions view is broken
 

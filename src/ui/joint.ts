@@ -33,7 +33,7 @@ type IDelta = jsondiffpatch.IDeltas
 // simplify the link markup
 // TODO put into the right place
 joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
-    markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
+  markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
 });
 
 // distance between multiple links
@@ -145,6 +145,8 @@ export default class Ui extends UiBase<INetworkJson> {
 			// was changed
 			this.graph.on('add remove change:source change:target', myAdjustVertices);
 
+			// TODO bind to on machine drag
+
 			// also when an user stops interacting with an element.
 			this.paper.on('cell:pointerup', myAdjustVertices);
 		}
@@ -220,8 +222,8 @@ export default class Ui extends UiBase<INetworkJson> {
 		let graph_height = this.layout.clusters.graph().height
 
 		let scale = Math.min(
-        	Math.min(this.maxScale, Math.max(this.minScale, visible_width / graph_width)),
-        	Math.min(this.maxScale, Math.max(this.minScale, visible_height / graph_height))
+    	Math.min(this.maxScale, Math.max(this.minScale, visible_width / graph_width)),
+    	Math.min(this.maxScale, Math.max(this.minScale, visible_height / graph_height))
 		)
 		this.paper.scale(scale, scale);
 	}
@@ -459,7 +461,12 @@ function adjustVertices(graph, cell) {
 	// If the cell is a view, find its model.
 	cell = cell.model || cell;
 
-	if (cell instanceof joint.dia.Element) {
+	if (cell instanceof joint.shapes.uml.State) {
+    for (const child of cell.getEmbeddedCells())
+      adjustVertices(graph, child)
+
+    return;
+	} else if (cell instanceof joint.dia.Element) {
 
 		_.chain(graph.getConnectedLinks(cell)).groupBy(function(link) {
 			// the key of the group is the model id of the link's source or target, but not our cell id.

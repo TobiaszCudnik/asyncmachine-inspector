@@ -142,7 +142,7 @@ export default class GraphLayout {
     }
     log(`Layout ${this.subgraphs.size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`)
     // sizes of clusters could've changed
-    if (this.clusters.graph().is_dirty && this.clusters.nodes().length > 1) {
+    if (this.clusters.graph().is_dirty && this.clusters.nodes()) {
       // TODO support the hash based cache
       dirty++
       start = Date.now()
