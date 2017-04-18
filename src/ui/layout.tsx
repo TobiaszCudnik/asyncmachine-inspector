@@ -7,7 +7,7 @@
 import * as React from 'react';
 import { render } from 'react-dom';
 import { Component } from 'react'
-import {deepOrange500} from 'material-ui/styles/colors'; 
+import {deepOrange500} from 'material-ui/styles/colors';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Slider from 'material-ui/Slider';
@@ -23,6 +23,9 @@ import IconPlay from 'material-ui/svg-icons/av/play-arrow';
 import IconPause from 'material-ui/svg-icons/av/pause';
 import Chip from 'material-ui/Chip';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import IconButton from 'material-ui/IconButton';
+import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
+import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -49,6 +52,7 @@ export type TLayoutProps = {
   is_during_transition: boolean
   position: number
   is_connected: boolean
+  is_snapshot: boolean
   on_last: boolean
   is_playing: boolean
   logs: ILogEntry[][]
@@ -56,6 +60,7 @@ export type TLayoutProps = {
   msgHidden: boolean
   step_type: string
   // listeners
+  onDownloadSnapshot: Function
   onTimelineSlider: Function
   onZoomSlider: Function
   onStepType: Function
@@ -125,8 +130,21 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
                 <MenuItem value="transitions" primaryText="Transitions" />
                 <MenuItem value="steps" primaryText="Transition steps" />
               </SelectField>
-              <ToolbarTitle text={this.props.is_connected
+              <ToolbarTitle text={this.props.is_snapshot?'Snapshot':this.props.is_connected
                   ?'Connected':'Disconnected'} />
+
+              <IconButton
+                  tooltip="Upload a snapshot"
+                  containerElement="label"
+                  onClick={this.props.onUploadSnapshot}
+              >
+                <FileUploadIcon />
+                <input type="file" id="snapshot-upload"/>
+              </IconButton>
+              <IconButton
+                  tooltip="Download a snapshot"
+                  onClick={this.props.onDownloadSnapshot}
+              ><FileDownloadIcon /></IconButton>
             </ToolbarGroup>
             <ToolbarGroup>
               {/*TODO css */}

@@ -29,6 +29,8 @@ import * as url from 'url'
 import Logger from '../logger'
 import Network from '../network'
 import * as deepcopy from 'deepcopy'
+import * as downloadAsFile from 'download-as-file'
+import * as onFileUpload from 'upload-element'
 
 const log = (...args) => {}
 
@@ -56,6 +58,8 @@ export class InspectorUI /*implements ITransitions*/ {
 	step_fn: Function;
 	differ: jsondiffpatch;
   logs: ILogEntry[][] = [];
+  // kept for exporting
+  full_sync: INetworkJson;
 
   constructor(
       public host = 'localhost',
@@ -117,6 +121,7 @@ export class InspectorUI /*implements ITransitions*/ {
     this.states.add(['Rendering'])
     // console.log('full-sync', Date.now() - start_join)
     log('full-sync', graph_data)
+    this.full_sync = graph_data
     this.data_service.data = graph_data
     let {
         layout_data,
@@ -312,7 +317,7 @@ export class InspectorUI /*implements ITransitions*/ {
   buildLayoutData(): TLayoutProps {
     const self = this
     let playstop = this.states.addByListener('PlayStopClicked')
-    return {
+    let data = {
       get position_max() { return self.data_service.position_max },
       get is_during_transition() { return self.data_service.during_transition },
       get position() { return self.data_service.position },
@@ -330,6 +335,20 @@ export class InspectorUI /*implements ITransitions*/ {
           self.data_service.patch_position) },
       get is_connected() { return self.states.is('Connected') },
       get on_last() { return self.data_service.is_latest },
+      onDownloadSnapshot: async function() {
+        const { patches } = await self.layout_worker.export()
+        const content = JSON.stringify({
+          full_sync: self.full_sync,
+          patches,
+          logs: this.logs
+        })
+        downloadAsFile({
+          data: content,
+          // TODO format the date
+          filename: `inspector-snapshot-${Date.now()}.json`
+        })
+      },
+      // TODO type the export data
       onTimelineSlider: debounce(500, false, (event, value) => {
         self.states.add('TimelineScrolled', value)
       }),
@@ -351,10 +370,32 @@ export class InspectorUI /*implements ITransitions*/ {
           this.states.add('AutoplayOn')
       }
     }
+    return data
   }
 
   renderUI() {
+    const first = !this.layout
     this.layout = renderLayout(this.container, this.layout_data)
+    if (first)
+      this.handleSnapshotUpload()
+  }
+
+  handleSnapshotUpload() {
+    onFileUpload(document.getElementById('snapshot-upload'), { type: 'text' },
+        (err, files) => {
+      for (const file of files) {
+        const snapshot = JSON.parse(file.target.result)
+        // TODO make it a state
+        this.layout_data.is_snapshot = true
+        this.states.drop('AutoplayOn')
+        this.states.add('FullSync', snapshot.full_sync)
+        for (const patch of snapshot.patches)
+          this.states.add('DiffSync', patch)
+        // TODO merge in the logs
+        break;
+      }
+    })
+    this.renderUI()
   }
 
   showMsg(msg) {

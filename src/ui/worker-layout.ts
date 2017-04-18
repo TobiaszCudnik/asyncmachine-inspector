@@ -83,5 +83,11 @@ workerio.publishInterface(self, 'api', {
     let ids = data_service.scrollTo(position)
     layout.layout()
     return sync(data, ids)
+  },
+  export() {
+    return {
+      // skip the fake full sync patch
+      patches: data_service.patches.slice(1)
+    }
   }
 })
