@@ -59,6 +59,8 @@ export class NetworkJsonFactory
       z: 3,
       size: this.getNodeSize(ui_name),
       is_set: node.is_set,
+      is_auto: node.is_auto,
+      is_multi: node.is_multi,
       step_style: node.step_style
     }
   }
@@ -148,6 +150,8 @@ export type TState = {
     }
   },
   is_set?: boolean,
+  is_auto?: boolean,
+  is_multi?: boolean,
   z?: number,
   size?: {
     width: number,

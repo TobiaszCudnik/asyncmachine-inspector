@@ -5,6 +5,7 @@
 - new machine lacks the style
 - clicking play shows the bottom message "Connected"
 - Transitions view is broken
+- when dragging a node/machine the double-links remain sticky
 
 #### UI
 - right panel 

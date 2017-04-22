@@ -376,11 +376,13 @@ export default class Ui extends UiBase<INetworkJson> {
 			// state = state as joint.dia.Cell
 			if (!this.paper.findViewByModel(state))
 				return
-			let view = joint.V(this.paper.findViewByModel(state).el)
+      const view = this.paper.findViewByModel(state)
+			const el = joint.V(this.paper.findViewByModel(state).el)
 			// active state
-			view.toggleClass('is-set', Boolean(state.get('is_set')))
+      for (const type of ['set', 'multi', 'auto'])
+        el.toggleClass('is-'+type, Boolean(state.get('is_'+type)))
 			// touched state
-			view.toggleClass('is-touched', Boolean(state.get('step_style')))
+			el.toggleClass('is-touched', Boolean(state.get('step_style')))
 			// step type classes
 			for (let key of Object.keys(TransitionStepTypes)) {
 				// skip labels
@@ -388,7 +390,8 @@ export default class Ui extends UiBase<INetworkJson> {
 					continue
 				let classname = 'step-' + key.toLowerCase()
 						.replace('_', '-')
-				view.toggleClass(classname, Boolean(state.get('step_style') & TransitionStepTypes[key]))
+				el.toggleClass(classname, Boolean(state.get('step_style')
+            & TransitionStepTypes[key]))
 			}
 		})
 	}

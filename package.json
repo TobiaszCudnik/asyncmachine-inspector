@@ -60,7 +60,6 @@
     "sinon": "^1.17.2",
     "socket.io": "^1.4.8",
     "socket.io-client": "^1.4.8",
-    "throttle-debounce": "^1.0.1",
     "underscore": "^1.8.3",
     "upload-element": "^1.0.1",
     "vinyl-buffer": "^1.0.0",

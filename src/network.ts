@@ -66,6 +66,14 @@ export class Node {
       ? this.machine.transition.before.includes(this.name)
       : this.machine.is(this.name)
   }
+
+  get is_multi(): boolean {
+    return this.machine.get(this.name).multi
+  }
+
+  get is_auto(): boolean {
+    return this.machine.get(this.name).auto
+  }
   
   get full_name(): string {
     return `${this.machine_id}:${this.name}`

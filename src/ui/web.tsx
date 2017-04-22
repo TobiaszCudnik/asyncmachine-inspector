@@ -20,7 +20,7 @@ import {
 	Direction,
 	StepTypes
 } from './joint-data-service'
-import * as throttle from 'throttle-debounce/debounce'
+import { throttle } from 'underscore'
 import { TLayoutProps } from './layout'
 import States from './states'
 import { ITransitions } from './states-types'
@@ -76,7 +76,8 @@ export class InspectorUI /*implements ITransitions*/ {
     // TODO connection_error event and bind retries to a state
     this.socket.on('disconnected', this.states.addByListener('Disconnected'))
     // this.socket.on('loggers', this.states.addByListener('Joining'))
-    if (port != 4040) {
+    // predefined debugger port
+    if (port != 4040 && window.location.search.match(/debug=1/)) {
       const network = new Network()
       network.addMachine(this.states)
       const logger = new Logger(network, 'localhost:4040/logger')
@@ -350,9 +351,9 @@ export class InspectorUI /*implements ITransitions*/ {
         })
       },
       // TODO type the export data
-      onTimelineSlider: throttle(500, false, (event, value) => {
+      onTimelineSlider: throttle((event, value) => {
         self.states.add('TimelineScrolled', value)
-      }, true),
+      }, 100),
       onZoomSlider: null, // TODO
       onStepType: (event, index, value) => {
         if (self.data_service.step_type != value)
