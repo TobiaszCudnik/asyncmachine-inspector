@@ -44,7 +44,8 @@ function sync(data, changed_ids): ISync {
 
 function syncDataService(): IDataServiceSync {
   return _.pick(data_service, 'position', 'position_max', 'step_type',
-    'during_transition', 'is_latest', 'current_patch', 'patch_position')
+    'during_transition', 'is_latest', 'current_patch', 'patch_position',
+    'last_scroll_add_remove')
 }
 
 workerio.publishInterface(self, 'api', {
@@ -54,6 +55,7 @@ workerio.publishInterface(self, 'api', {
   },
   setData(json, reset = false) {
     data_service.data = json
+    layout.setData(json)
     layout.layout()
     return {
       layout_data: layout.exportLayoutData(),
@@ -78,9 +80,9 @@ workerio.publishInterface(self, 'api', {
     data_service.scrollTo(position)
   },
   layout(position: number): ISync {
-    // TODO copy all the patches?!
     const data = deepcopy(data_service.data)
     let ids = data_service.scrollTo(position)
+    layout.setData(data_service.data)
     layout.layout()
     return sync(data, ids)
   },

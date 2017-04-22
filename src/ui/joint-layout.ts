@@ -58,7 +58,7 @@ type TClusterData = {
 type TDagreGraph = Graph<TNode, TEdge, TGraphData>
 type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
 
-function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
+function cloneGraph<T,  L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
   return deepcopy(graph, function (target) {
     if (target.constructor === Graph)
       return new Graph()
@@ -66,7 +66,7 @@ function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
 }
 
 // const log = console.log.bind(console)
-const log = ()=>{}
+const log = (...args)=>{}
 
 export default class GraphLayout {
   source_graph: joint.dia.Graph;
@@ -155,7 +155,7 @@ export default class GraphLayout {
     return dirty
   }
 
-  graphToLayoutData(graph: Graph): Object {
+  graphToLayoutData(graph: Graph<any, any, any>): Object {
     return {
       _nodes: graph._nodes,
       _edgeLabels: graph._edgeLabels,
@@ -190,6 +190,8 @@ export default class GraphLayout {
 
   /**
    * Sync the source graph with a layout data comming from another worker.
+   *
+   * TODO: rename to import()?
    */
   syncFromLayout(layout_data, data, changed_cells) {
     this.importLayoutData(layout_data)

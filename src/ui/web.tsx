@@ -122,6 +122,7 @@ export class InspectorUI /*implements ITransitions*/ {
     // console.log('full-sync', Date.now() - start_join)
     log('full-sync', graph_data)
     this.full_sync = graph_data
+    // TODO reset?
     this.data_service.data = graph_data
     let {
         layout_data,

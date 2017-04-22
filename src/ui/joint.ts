@@ -70,7 +70,6 @@ export default class Ui extends UiBase<INetworkJson> {
 	paper: joint.dia.Paper
 	graph: joint.dia.Graph
 	layout: GraphLayout;
-	layout_worker;
 
 	available_colors: string[] = [];
 	group_colors = {};
@@ -168,7 +167,8 @@ export default class Ui extends UiBase<INetworkJson> {
 		let start = Date.now()
 
 		// TODO async
-		this.layout.setData(this.data, changed_cells)
+		// this.layout.setData(this.data, changed_cells)
+    this.layout.syncFromLayout(layout_data, data, changed_cells)
 
 		if (this.paper._frameId) {
 			await new Promise(resolve => this.paper.once('render:done', () => {
@@ -462,8 +462,11 @@ function adjustVertices(graph, cell) {
 	cell = cell.model || cell;
 
 	if (cell instanceof joint.shapes.uml.State) {
-    for (const child of cell.getEmbeddedCells())
+    for (const child of cell.getEmbeddedCells()) {
+      if (!child)
+        continue;
       adjustVertices(graph, child)
+    }
 
     return;
 	} else if (cell instanceof joint.dia.Element) {
