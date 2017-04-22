@@ -66,7 +66,6 @@ export class InspectorUI /*implements ITransitions*/ {
       public port = 3030) {
     this.states.id('Inspector')
     this.states.add(['AutoplayOn', 'Connecting'])
-    this.states.logLevel(3)
 
     this.socket = io(`http://${this.host}:${this.port}/client`)
     this.socket.on('full-sync', this.states.addByListener('FullSync'))
@@ -78,6 +77,7 @@ export class InspectorUI /*implements ITransitions*/ {
     // this.socket.on('loggers', this.states.addByListener('Joining'))
     // predefined debugger port
     if (port != 4040 && window.location.search.match(/debug=1/)) {
+      this.states.logLevel(3)
       const network = new Network()
       network.addMachine(this.states)
       const logger = new Logger(network, 'localhost:4040/logger')
@@ -253,6 +253,7 @@ export class InspectorUI /*implements ITransitions*/ {
         } = await this.layout_worker.layout(position)
       this.data_service = data_service
       await this.onDataServiceScrolled(layout_data, patch, changed_ids)
+      this.states.add('Rendered')
       this.renderUI()
     }
   }
@@ -420,7 +421,8 @@ export class InspectorUI /*implements ITransitions*/ {
       data.msg = null
   }
 
-  async onDataServiceScrolled(layout_data: TLayoutProps, patch, changed_cells: string[]) {
+  async onDataServiceScrolled(layout_data: TLayoutProps, patch,
+        changed_cells: string[]) {
     log('onDataServiceScrolled', deepcopy(this.data_service))
     this.updateTimelineStates()
     jsondiffpatch.patch(this.graph.data, patch)
@@ -429,9 +431,6 @@ export class InspectorUI /*implements ITransitions*/ {
           .last_scroll_add_remove, layout_data)
       this.handleTransitionMessage()
     }
-    // if (abort && abort())
-    // 	return
-    this.states.add('Rendered')
   }
 
   updateTimelineStates() {

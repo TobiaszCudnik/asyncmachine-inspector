@@ -6,6 +6,8 @@
 - clicking play shows the bottom message "Connected"
 - Transitions view is broken
 - when dragging a node/machine the double-links remain sticky
+- require highlighted after the target state
+  - target state - add - another state, not highlighted as separate steps
 
 #### UI
 - right panel 
