@@ -20,7 +20,7 @@ import {
 	Direction,
 	StepTypes
 } from './joint-data-service'
-import * as debounce from 'throttle-debounce/debounce'
+import * as throttle from 'throttle-debounce/debounce'
 import { TLayoutProps } from './layout'
 import States from './states'
 import { ITransitions } from './states-types'
@@ -350,9 +350,9 @@ export class InspectorUI /*implements ITransitions*/ {
         })
       },
       // TODO type the export data
-      onTimelineSlider: debounce(500, false, (event, value) => {
+      onTimelineSlider: throttle(500, false, (event, value) => {
         self.states.add('TimelineScrolled', value)
-      }),
+      }, true),
       onZoomSlider: null, // TODO
       onStepType: (event, index, value) => {
         if (self.data_service.step_type != value)

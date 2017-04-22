@@ -172,6 +172,7 @@ class JointDataService extends EventEmitter {
       case t.TRANSITIONS:
         return this.index.transitions[position]
     }
+    return position
   }
 
   /**

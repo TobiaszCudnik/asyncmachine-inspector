@@ -171,6 +171,7 @@ export default class Ui extends UiBase<INetworkJson> {
     this.layout.syncFromLayout(layout_data, data, changed_cells)
 
 		if (this.paper._frameId) {
+		  // TODO use a lib
 			await new Promise(resolve => this.paper.once('render:done', () => {
 				// TODO mutex on setdata till here
 				resolve()

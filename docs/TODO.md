@@ -23,6 +23,7 @@
     - abort functions count
   - currently processing machine
 - minimap
+- new machine should be a 2 step highlighted transition
   
 #### Refactoring
 - divide the UI class to several machines
