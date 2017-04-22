@@ -100,6 +100,11 @@ class JointDataService extends EventEmitter {
         this.index.states[this.index.states.length - 1] = this.patches.length
       else
         this.index.states.push(this.patches.length)
+
+      // add also the prev step
+      if (this.index.transitions[this.index.transitions.length-1]
+          != this.patches.length-1)
+        this.index.transitions.push(this.patches.length-1)
       this.index.transitions.push(this.patches.length)
     }
     // TODO avoid nested transitions
