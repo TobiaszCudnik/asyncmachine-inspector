@@ -86,19 +86,24 @@ class JointDataService extends EventEmitter {
     this.data = data || null
   }
 
+  patches_active_transitions = 0;
+
   addPatch(patch: IPatch) {
     // TODO assert integrity somehow
-    // if (patch.type == PatchType.STATE_CHANGED ||
+    this.patches_active_transitions += patch.type == PatchType.TRANSITION_START
+      ? 1 : patch.type == PatchType.TRANSITION_END ? -1 : 0;
     const prev_patch_state_change = this.patches.length
         && this.patches[this.patches.length-1].type == PatchType.STATE_CHANGED
     const prev_patch_transition_end = this.patches.length
         && this.patches[this.patches.length-1].type == PatchType.TRANSITION_END
-    if (patch.type == PatchType.TRANSITION_END && (prev_patch_state_change
-        || prev_patch_transition_end) || patch.type == PatchType.NEW_MACHINE) {
-      // keep states index on the most outer transition
-      if (prev_patch_transition_end)
-        this.index.states[this.index.states.length - 1] = this.patches.length
-      else
+    if (patch.type == PatchType.TRANSITION_END
+        && !this.patches_active_transitions
+        || patch.type == PatchType.NEW_MACHINE) {
+      // keep states index on the most outer (recent) transition
+      // TODO skips only the first nested
+      // if (prev_patch_transition_end)
+      //   this.index.states[this.index.states.length - 1] = this.patches.length
+      // else
         this.index.states.push(this.patches.length)
 
       // add also the prev step

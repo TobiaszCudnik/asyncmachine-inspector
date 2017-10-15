@@ -1,19 +1,16 @@
 # TODO
 
 #### Bugs
-- machine's name duplicated inside of the background
-- new machine lacks the style
-- clicking play shows the bottom message "Connected"
-- Transitions view is broken
 - when dragging a node/machine the double-links remain sticky
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
+- transition start should be merged with the first change
+- zoom level too low
 
 #### UI
 - right panel 
   - size change
-- save / load from file
-- server config form
+- server config form¡
 - sticky graphs (define position once dragged by a user)
 - legend
   - colors
@@ -27,6 +24,8 @@
   - currently processing machine
 - minimap
 - new machine should be a 2 step highlighted transition
+- touched states during transition (not a relation) should have a temp links
+  from the source
   
 #### Refactoring
 - divide the UI class to several machines

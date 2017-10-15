@@ -34,6 +34,12 @@ import * as onFileUpload from 'upload-element'
 
 const log = (...args) => {}
 
+export enum STEP_TYPE_CHANGE {
+  TRANSITION = 'transitions',
+  STATES = 'states',
+  STEPS = 'steps',
+}
+
 /**
  * TODO
  * - pre-render N next steps when playing (possibly in a pool of workers)
@@ -43,7 +49,7 @@ const log = (...args) => {}
  * - timers
  * - renderUI() as a state
  */
-export class InspectorUI /*implements ITransitions*/ {
+export class InspectorUI implements ITransitions {
 	states = new States(this);
   private data_service_: JointDataService
 	graph = new Graph(null)
@@ -173,7 +179,7 @@ export class InspectorUI /*implements ITransitions*/ {
     console.log('updated dataservice', data_service)
   }
 
-  async StepTypeChanged_state(value: 'transitions' | 'states' | 'steps') {
+  async StepTypeChanged_state(value: STEP_TYPE_CHANGE) {
     if (this.states.is('Rendering')) {
       const abort = this.states.getAbort('StepTypeChanged')
       await this.states.when('Rendered')
@@ -371,7 +377,8 @@ export class InspectorUI /*implements ITransitions*/ {
           this.states.drop('AutoplayOn')
         else
           this.states.add('AutoplayOn')
-      }
+      },
+      is_snapshot: false,
     }
     return data
   }
@@ -441,13 +448,6 @@ export class InspectorUI /*implements ITransitions*/ {
     else
       this.states.add('TimelineOnBetween')
   }
-
-// initDataService() {
-// 	if (this.data_service)
-// 		this.data_service.removeAllListeners('scrolled')
-// 	this.data_service = new JointDataService
-// 	this.data_service.on('scrolled', this.onDataServiceScrolled)
-// }
 }
 
 
@@ -455,33 +455,3 @@ export default function() {
 	const { query } = url.parse(window.document.location.toString(), true)
 	return new InspectorUI('localhost', query.port || 3030)
 }
-
-// global setter
-// window.setJson = function(json) {
-// 	data = json
-// 	layoutData.graph = data.graph
-// 	layoutData.diffs = data.patches
-// 	layoutData.step = 0
-// 	layoutData.duringTransition = false
-// 	graph.setData(layoutData.graph)
-// }
-
-// window.getJson = function() {
-// 	// TODO custom replaces for .leaves looking in indexOf(.nodes)
-// 	console.log(JSON.stringify(data))
-// }
-
-// TODO stream-based full-sync
-// let full_sync_stream = new IterableEmitter<TCell>(
-// 	socket as any as EventEmitter, 'full-sync')
-// isSyncing = true
-
-// socket.on('full-sync', data) {
-// 	if (!data)
-// 		isSyncing = false
-// }
-
-// await graph.setData(full_sync_stream, true)
-// layoutData.graph =
-// 	data.graph = graph.data
-// showMsg('Connected')
