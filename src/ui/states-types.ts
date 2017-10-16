@@ -1,4 +1,4 @@
-import { STEP_TYPE_CHANGE } from './web'
+import { STEP_TYPE_CHANGE } from './inspector'
 import { IState as IStateBase } from 'asyncmachine/src/types'
 import { INetworkJson } from './joint-network'
 import { IPatch } from '../network'
