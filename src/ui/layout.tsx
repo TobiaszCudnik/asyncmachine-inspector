@@ -215,6 +215,39 @@ export class Main extends Component<TLayoutProps, {msgHidden: boolean, sidebar: 
             {/*autoHideDuration={2000}*/}
             {/*onRequestClose={this.handleCloseNotifications.bind(this)}*/}
           {/*/>*/}
+
+
+          <div className="legend">
+            <ul className="states">
+              <li>
+                <span>
+                  <svg>
+                    <circle stroke-width="3" fill="#ffffff"
+                      stroke="#000000" r="30" cx="30" cy="30"></circle>
+                  </svg>
+                </span>
+                <span>Test 1</span>
+              </li>
+              <li>
+                <span>
+                  <svg>
+                    <circle stroke-width="3" fill="#ffffff"
+                      stroke="#000000" r="30" cx="30" cy="30"></circle>
+                  </svg>
+                </span>
+                <span>Test 2</span>
+              </li>
+              <li>
+                <span>
+                  <svg>
+                    <circle stroke-width="3" fill="#ffffff"
+                      stroke="#000000" r="30" cx="30" cy="30"></circle>
+                  </svg>
+                </span>
+                <span>Test 3</span>
+              </li>
+            </ul>
+          </div>
         </main>
       </MuiThemeProvider>
     );

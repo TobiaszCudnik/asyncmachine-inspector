@@ -307,6 +307,42 @@
             height: 90% !important;
         }
 
+        .legend {
+            /*display: none;*/
+            position: fixed;
+            background: gray;
+            border: 2px solid black;
+            border-radius: 5px;
+            top: 7em;
+            bottom: 3em;
+            left: 3em;
+            right: 3em;
+            padding: 1em;
+            z-index: 100;
+        }
+
+        .legend svg {
+            height: 65px;
+            width: 65px;
+            margin-right: 1em;
+        }
+
+        .legend ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        .legend ul.states li {
+            list-style: none;
+            margin-bottom: 0.5em;
+        }
+
+        .legend ul.states li span {
+            vertical-align: middle;
+            display: inline-block;
+            color: seashell;
+        }
+
     </style>
     <script src="../../dist/inspector.umd.js"></script>
     <script>inspector.default()</script>

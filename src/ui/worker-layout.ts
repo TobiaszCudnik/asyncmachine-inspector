@@ -1,34 +1,30 @@
-import {
-  default as DataService,
-  StepTypes
-} from './joint-data-service'
+import { default as DataService, StepTypes } from './joint-data-service'
 import Layout from './joint-layout'
 import workerio from 'workerio/src/workerio/index'
 import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as deepcopy from 'deepcopy'
-import {IDelta} from "jsondiffpatch";
-
+import { IDelta } from 'jsondiffpatch'
 
 export interface IDataServiceSync {
-  position: number,
-  positino_max: number,
-  step_type: StepTypes,
-  during_transition: boolean,
-  is_latest: boolean,
-  current_patch: Object,
+  position: number
+  positino_max: number
+  step_type: StepTypes
+  during_transition: boolean
+  is_latest: boolean
+  current_patch: Object
   logs: string[]
 }
 
 export interface ISync {
-  layout_data: Object,
-  patch: IDelta,
-  data_service: IDataServiceSync,
-  changed_ids: string[],
+  layout_data: Object
+  patch: IDelta
+  data_service: IDataServiceSync
+  changed_ids: string[]
 }
 
-let data_service = new DataService;
-const layout = new Layout(null);
+let data_service = new DataService()
+const layout = new Layout(null)
 const differ = jsondiffpatch.create({
   objectHash: obj => obj.id
 })
@@ -43,15 +39,23 @@ function sync(data, changed_ids): ISync {
 }
 
 function syncDataService(): IDataServiceSync {
-  return _.pick(data_service, 'position', 'position_max', 'step_type',
-    'during_transition', 'is_latest', 'current_patch', 'patch_position',
-    'last_scroll_add_remove')
+  return _.pick(
+    data_service,
+    'position',
+    'position_max',
+    'step_type',
+    'during_transition',
+    'is_latest',
+    'current_patch',
+    'patch_position',
+    'last_scroll_add_remove'
+  )
 }
 
 workerio.publishInterface(self, 'api', {
   reset() {
     data_service.removeAllListeners('scrolled')
-    data_service = new DataService
+    data_service = new DataService()
   },
   setData(json, reset = false) {
     data_service.data = json
@@ -59,7 +63,7 @@ workerio.publishInterface(self, 'api', {
     layout.layout()
     return {
       layout_data: layout.exportLayoutData(),
-      data_service: syncDataService(),
+      data_service: syncDataService()
     }
   },
   addPatch(patch): IDataServiceSync {

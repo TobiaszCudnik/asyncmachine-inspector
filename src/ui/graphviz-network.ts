@@ -1,89 +1,86 @@
 import * as jsondiffpatch from 'jsondiffpatch'
-import Network, {
-    Node as GraphNode
-} from "../network";
+import Network, { Node as GraphNode } from '../network'
 import * as assert from 'assert/'
 import {
-    NetworkJsonFactory as NetworkJsonFactoryBase,
-    JsonDiffFactory as JsonDiffFactoryBase,
-    OBJECT_TYPE,
-    NODE_LINK_TYPE
+  NetworkJsonFactory as NetworkJsonFactoryBase,
+  JsonDiffFactory as JsonDiffFactoryBase,
+  OBJECT_TYPE,
+  NODE_LINK_TYPE
 } from '../network-json'
 import AsyncMachine from 'asyncmachine'
-import * as _ from "underscore"
+import * as _ from 'underscore'
 
-export class JsonDiffFactory 
-        extends JsonDiffFactoryBase<NetworkJsonFactory, INetworkJson> {
-    diffpatcher: jsondiffpatch.IDiffPatch;
-    previous_json: INetworkJson;
+export class JsonDiffFactory extends JsonDiffFactoryBase<
+  NetworkJsonFactory,
+  INetworkJson
+> {
+  diffpatcher: jsondiffpatch.IDiffPatch
+  previous_json: INetworkJson
 
-    objectHash() {
-        return objectHash;
-    }
+  objectHash() {
+    return objectHash
+  }
 }
 
-export default class NetworkJsonFactory 
-        extends NetworkJsonFactoryBase<INetworkJson, Machine, State, Link> {
-    initJson() {
-        this.piped = []
-        return []
-    }
+export default class NetworkJsonFactory extends NetworkJsonFactoryBase<
+  INetworkJson,
+  Machine,
+  State,
+  Link
+> {
+  initJson() {
+    this.piped = []
+    return []
+  }
 
-    json: any[];
+  json: any[]
 
-    addMachineNode(node: Machine) {
-    }
-    addStateNode(node: State) {
-    }
-    addLinkNode(node: Link) {
-    }
+  addMachineNode(node: Machine) {}
+  addStateNode(node: State) {}
+  addLinkNode(node: Link) {}
 
-    // TODO queue size
-    // TODO number of listeners
-    createMachineNode(machine: AsyncMachine, machine_id: string) {
-        this.json[id(machine_id)] = [
-            `label = "${machine.id()}";`
-        ]
+  // TODO queue size
+  // TODO number of listeners
+  createMachineNode(machine: AsyncMachine, machine_id: string) {
+    this.json[id(machine_id)] = [`label = "${machine.id()}";`]
+  }
+  createStateNode(node: GraphNode) {}
+  createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE) {
+    let link = `${id(from.full_name)} -> ${id(to.full_name)};`
+    if (from.machine_id != to.machine_id) {
+      // pipes
+      this.piped.push(link)
+    } else {
+      this.json[id(from.machine_id)].push(link)
     }
-    createStateNode(node: GraphNode) {
-    }
-    createLinkNode(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE) {
-        let link = `${id(from.full_name)} -> ${id(to.full_name)};`
-        if (from.machine_id != to.machine_id) {
-            // pipes
-            this.piped.push(link)
-        } else {
-            this.json[id(from.machine_id)].push(link)
-        }
-    }
+  }
 
-    getNodeSize(node: GraphNode) {
-        let name = node.name
-        let size = Math.max(50, name.length * 9)
-        return { width: size, height: size }
-    }
+  getNodeSize(node: GraphNode) {
+    let name = node.name
+    let size = Math.max(50, name.length * 9)
+    return { width: size, height: size }
+  }
 
-    piped: string[];
+  piped: string[]
 
-    generateJson() {
-        super.generateJson()
-        let json = 'digraph G {'
-        for (let i of Object.keys(this.json)) {
-            json += `subgraph ${i} {
-                ${this.json[i].join("\n")}
+  generateJson() {
+    super.generateJson()
+    let json = 'digraph G {'
+    for (let i of Object.keys(this.json)) {
+      json += `subgraph ${i} {
+                ${this.json[i].join('\n')}
             }`
-        }
-        return json + this.piped.join("\n") + "\n}";
     }
+    return json + this.piped.join('\n') + '\n}'
+  }
 }
 
 function id(text) {
-    return text.replace(/[^\w\d]/g, '')
+  return text.replace(/[^\w\d]/g, '')
 }
 
-
 export function objectHash(obj) {
-    return obj
+  return obj
 }
 
 /*

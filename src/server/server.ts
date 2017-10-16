@@ -14,47 +14,46 @@ import * as assert from 'assert/'
 // import '../polyfill'
 // import AsyncMachine from 'asyncmachine'
 
-
 interface IJoinEvent {
-    loggerId: string;
+  loggerId: string
 }
 
 export interface LoggerSocket extends SocketIO.Socket {
-    loggerId: string;
+  loggerId: string
 }
 
 export default function createServer() {
-    const server = io()
+  const server = io()
 
-    // LOGGER ENDPOINT
+  // LOGGER ENDPOINT
 
-    var loggerEndpoint = server.of('/logger')
-    var loggerSockets: LoggerSocket[] = []
+  var loggerEndpoint = server.of('/logger')
+  var loggerSockets: LoggerSocket[] = []
 
-    loggerEndpoint.on('connection', function(socket: LoggerSocket) {
-        console.log('logger connected')
-        socket.on('diff-sync', function(diff) {
-            console.dir(diff)
-            uiEndpoint.emit('diff-sync', diff)
-        })
-        socket.on('full-sync', function(full) {
-            uiEndpoint.emit('full-sync', full)
-        })
-        socket.on('error', console.error.bind(console))
+  loggerEndpoint.on('connection', function(socket: LoggerSocket) {
+    console.log('logger connected')
+    socket.on('diff-sync', function(diff) {
+      console.dir(diff)
+      uiEndpoint.emit('diff-sync', diff)
     })
-
-    // UI ENDPOINT
-
-    type clientSocket = SocketIO.Socket
-    var uiEndpoint = server.of('/client')
-    var clientSockets: clientSocket[] = []
-
-    uiEndpoint.on('connection', function(socket: clientSocket) {
-        loggerEndpoint.emit('full-sync')
-        // constructor
-        console.log('new ui connected')
-        socket.on('error', console.error.bind(console))
+    socket.on('full-sync', function(full) {
+      uiEndpoint.emit('full-sync', full)
     })
-    
-    return server
+    socket.on('error', console.error.bind(console))
+  })
+
+  // UI ENDPOINT
+
+  type clientSocket = SocketIO.Socket
+  var uiEndpoint = server.of('/client')
+  var clientSockets: clientSocket[] = []
+
+  uiEndpoint.on('connection', function(socket: clientSocket) {
+    loggerEndpoint.emit('full-sync')
+    // constructor
+    console.log('new ui connected')
+    socket.on('error', console.error.bind(console))
+  })
+
+  return server
 }
