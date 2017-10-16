@@ -11,7 +11,6 @@
 import * as io from 'socket.io'
 import * as _ from 'underscore'
 import * as assert from 'assert/'
-// import '../polyfill'
 // import AsyncMachine from 'asyncmachine'
 
 interface IJoinEvent {

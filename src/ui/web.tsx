@@ -1,5 +1,4 @@
 import renderLayout from './layout'
-// import '../polyfill'
 // UI type
 import Graph from './joint'
 import { INetworkJson } from './joint-network'

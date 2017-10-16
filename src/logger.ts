@@ -4,7 +4,6 @@
 import Network, {
     PatchType
 } from "./network"
-// import './polyfill'
 import * as io from 'socket.io-client'
 // import NetworkJson, {
 //     JsonDiffFactory
