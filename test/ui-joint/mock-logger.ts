@@ -1,6 +1,6 @@
 require('source-map-support').install()
 var am = require('asyncmachine')
-var Logger = require('../../src/logger').default
+var Logger = require('../../src/logger-client').default
 var Network = require('../../src/network').default
 const repl = require('nesh')
 

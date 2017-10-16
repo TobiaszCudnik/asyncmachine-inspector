@@ -9,8 +9,9 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
   entry: {
-    inspector: "./src/ui/web",
-    logger: "./src/logger",
+    inspector: "./src/ui/inspector",
+    "logger-file": "./src/logger-file",
+    "logger-client": "./src/logger-client",
     "worker-layout": "./src/ui/worker-layout"
   },
   // plugins: [

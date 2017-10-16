@@ -14,7 +14,9 @@ build-watch:
 	node_modules/.bin/tsc --watch
 
 format:
+	prettier --single-quote --no-semi --write src/**.ts
 	prettier --single-quote --no-semi --write src/**/*.ts
+	prettier --single-quote --no-semi --write src/**/*.tsx
 
 state-types:
 	node $(STATES_TYPES_BIN) src/ui/states.js -s
