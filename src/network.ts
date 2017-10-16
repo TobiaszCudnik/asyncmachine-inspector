@@ -16,20 +16,20 @@ import * as uuid from 'node-uuid'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
-import { NODE_LINK_TYPE } from "./network-json";
+import { NODE_LINK_TYPE } from './network-json'
 
-export type MachinesMap = Map<AsyncMachine, string>;
+export type MachinesMap = Map<AsyncMachine, string>
 export type NodeGraph = Graph<Node>
 
 export interface IPatch {
   diff: IDelta
-  type: PatchType,
-  logs?: ILogEntry[],
-  machine_id: string,
+  type: PatchType
+  logs?: ILogEntry[]
+  machine_id: string
 }
 
 export interface ILogEntry {
-  id: string,
+  id: string
   msg: string
 }
 
@@ -44,12 +44,11 @@ export enum PatchType {
 }
 
 export interface ExternalNode {
-  node: Node;
-  machine: AsyncMachine;
+  node: Node
+  machine: AsyncMachine
 }
 
 export class Node {
-
   /**
    * Get the original state definition.
    */
@@ -74,7 +73,7 @@ export class Node {
   get is_auto(): boolean {
     return this.machine.get(this.name).auto
   }
-  
+
   get full_name(): string {
     return `${this.machine_id}:${this.name}`
   }
@@ -82,14 +81,14 @@ export class Node {
   constructor(
     public name: string,
     public machine: AsyncMachine,
-    public machine_id: string) {
-  }
+    public machine_id: string
+  ) {}
 
   /**
    * Bit mask with all the step types for this state during the current
    * transition.
    */
-  step_style: TransitionStepTypes | null = null;
+  step_style: TransitionStepTypes | null = null
 
   updateStepStyle(type: TransitionStepTypes) {
     // add this step type to the bit mask
@@ -104,18 +103,18 @@ export class Node {
   }
 
   relations(node: Node | string): StateRelations[] {
-    var name = node instanceof Node
-      ? node.name : node.toString()
+    var name = node instanceof Node ? node.name : node.toString()
     return this.machine.getRelationsOf(this.name, name)
   }
 
   isFromState(state_struct: IStateStruct): boolean {
     let f = StateStructFields
-    return (state_struct[f.MACHINE_ID] == this.machine_id
-      && state_struct[f.STATE_NAME] == this.name)
+    return (
+      state_struct[f.MACHINE_ID] == this.machine_id &&
+      state_struct[f.STATE_NAME] == this.name
+    )
   }
 }
-
 
 /**
  * TODO inherit from Graph
@@ -125,14 +124,14 @@ export class Node {
  * TODO use jsongraph/json-graph-specification
  */
 export default class Network extends EventEmitter {
-  id: string;
-  graph: NodeGraph;
-  machines: MachinesMap;
-  machine_ids: { [index: string]: AsyncMachine };
+  id: string
+  graph: NodeGraph
+  machines: MachinesMap
+  machine_ids: { [index: string]: AsyncMachine }
   logs: ILogEntry[] = []
-  machines_during_transition: Set<string> = new Set
+  machines_during_transition: Set<string> = new Set()
   private transition_links = new Map<Node, Set<Node>>()
-  transition_origin: AsyncMachine;
+  transition_origin: AsyncMachine
 
   get states() {
     return [...this.graph.set]
@@ -167,8 +166,9 @@ export default class Network extends EventEmitter {
 
   isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
     // TODO handle the relation param
-    return (this.transition_links.has(from)
-      && this.transition_links.get(from).has(to))
+    return (
+      this.transition_links.has(from) && this.transition_links.get(from).has(to)
+    )
   }
 
   private bindToMachine(machine: AsyncMachine) {
@@ -185,31 +185,28 @@ export default class Network extends EventEmitter {
       this.linkPipedStates(machine)
       this.emit('change', PatchType.PIPE, machine.id(true))
     })
-    machine.on('transition-init', (transition) => {
-      if (!this.transition_origin)
-        this.transition_origin = machine
+    machine.on('transition-init', transition => {
+      if (!this.transition_origin) this.transition_origin = machine
       this.machines_during_transition.add(machine.id(true))
       // TODO this fires too early and produces an empty diff
       this.emit('change', PatchType.TRANSITION_START, machine.id(true))
     })
-    machine.on('transition-end', (transition) => {
+    machine.on('transition-end', transition => {
       if (this.transition_origin === machine) {
         // if the first transition ended, cleanup everything
         this.transition_origin = null
         this.machines_during_transition.clear()
         this.transition_links.clear()
-        for (let node of this.graph.set)
-          node.step_style = null
+        for (let node of this.graph.set) node.step_style = null
       }
       this.emit('change', PatchType.TRANSITION_END, machine.id(true))
     })
     machine.on('transition-step', (...steps) => {
       this.parseTransitionSteps(machine.id(), ...steps)
     })
-    machine.logHandler( (msg, level) => {
+    machine.logHandler((msg, level) => {
       machine.logHandlerDefault(msg.toString(), level)
-      if (level > 2)
-        return
+      if (level > 2) return
       this.logs.push({
         id: machine.id(true),
         msg: msg
@@ -221,8 +218,10 @@ export default class Network extends EventEmitter {
     // TODO unbind listeners
   }
 
-  private parseTransitionSteps(machine_id: string,
-      ...steps: ITransitionStep[]) {
+  private parseTransitionSteps(
+    machine_id: string,
+    ...steps: ITransitionStep[]
+  ) {
     let fields = TransitionStepFields
     let types = TransitionStepTypes
     for (let step of steps) {
@@ -233,8 +232,7 @@ export default class Network extends EventEmitter {
 
       if (step[fields.SOURCE_STATE]) {
         // TODO handle the "Any" state
-        let source_node = this.getNodeByStruct(
-          step[fields.SOURCE_STATE])
+        let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
         if (type != types.PIPE)
           // dont mark the source node as piped, as it already has
           // styles
@@ -266,8 +264,7 @@ export default class Network extends EventEmitter {
 
     // get edges from relations
     // all the nodes have to be parsed prior to this
-    for (let node of new_nodes)
-      this.getRelationsFromNode(node, machine_id)
+    for (let node of new_nodes) this.getRelationsFromNode(node, machine_id)
   }
 
   private getRelationsFromNode(node: Node, machine_id: string) {
@@ -287,15 +284,16 @@ export default class Network extends EventEmitter {
   getNodeByName(name: string, machine_id: string): Node {
     // for (let node of this.graph.set) {
     var ret
-    this.graph.set.forEach( node => {
+    this.graph.set.forEach(node => {
       // TODO extract normalize()
-      if (node.name.replace(/[^\w]/g, '-') === name &&
-          node.machine_id === machine_id) {
+      if (
+        node.name.replace(/[^\w]/g, '-') === name &&
+        node.machine_id === machine_id
+      ) {
         ret = node
       }
     })
-    if (!ret)
-      throw new Error(`Node not found ${name} from '${machine_id}'`)
+    if (!ret) throw new Error(`Node not found ${name} from '${machine_id}'`)
     return ret
   }
 
@@ -303,18 +301,19 @@ export default class Network extends EventEmitter {
     return this.getNodeByName(
       state[StateStructFields.STATE_NAME],
       // TODO extract normalize()
-      state[StateStructFields.MACHINE_ID].replace(/[^\w]/g, '-'))
+      state[StateStructFields.MACHINE_ID].replace(/[^\w]/g, '-')
+    )
   }
 
   protected linkPipedStates(machine: AsyncMachine) {
     for (let state in machine.piped) {
       for (let target of machine.piped[state]) {
-
         let source_state = this.getNodeByName(state, this.machines.get(machine))
-        let target_state = this.getNodeByName(target.state,
-          this.machines.get(target.machine))
-        if (!target_state)
-          continue
+        let target_state = this.getNodeByName(
+          target.state,
+          this.machines.get(target.machine)
+        )
+        if (!target_state) continue
         this.graph.link(source_state, target_state)
       }
     }
