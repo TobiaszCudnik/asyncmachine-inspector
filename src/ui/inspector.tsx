@@ -4,8 +4,7 @@ import Graph from './joint'
 import { INetworkJson } from './joint-network'
 // import Graph from './cola'
 // import { INetworkJson } from './cola-network'
-import * as io from 'socket.io-client'
-import { IDelta, default as jsondiffpatch } from 'jsondiffpatch'
+// import * as io from 'socket.io-client'
 import { ILogEntry, IPatch, PatchType } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
@@ -51,7 +50,7 @@ export class InspectorUI implements ITransitions {
   layout_data: TLayoutProps
   frametime = 0.5
   // TODO type
-  socket: io.Socket
+  // socket: io.Socket
   layout
   container: Element
   logger_id: string
@@ -66,15 +65,15 @@ export class InspectorUI implements ITransitions {
     this.states.id('Inspector')
     this.states.add(['AutoplayOn', 'Connecting'])
 
-    this.socket = io(`http://${this.host}:${this.port}/client`)
-    this.socket.on('full-sync', this.states.addByListener('FullSync'))
-    this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-    this.socket.on(
-      'connect',
-      this.states.addByListener(['Connected', 'Joined'])
-    )
+    // this.socket = io(`http://${this.host}:${this.port}/client`)
+    // this.socket.on('full-sync', this.states.addByListener('FullSync'))
+    // this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
+    // this.socket.on(
+    //   'connect',
+    //   this.states.addByListener(['Connected', 'Joined'])
+    // )
     // TODO connection_error event and bind retries to a state
-    this.socket.on('disconnected', this.states.addByListener('Disconnected'))
+    // this.socket.on('disconnected', this.states.addByListener('Disconnected'))
     // this.socket.on('loggers', this.states.addByListener('Joining'))
     // predefined debugger port
     if (port != 4040 && window.location.search.match(/debug=1/)) {

@@ -10,9 +10,9 @@ import {
   IStateStruct
 } from 'asyncmachine/src/types'
 // TODO remove once fixed in webstorm
-import Transition from '../node_modules/asyncmachine/build/transition'
+// import Transition from '../node_modules/asyncmachine/build/transition'
 import Graph from 'graphs'
-import * as uuid from 'node-uuid'
+import * as uuid from 'uuid/v5'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'

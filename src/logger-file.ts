@@ -2,7 +2,7 @@
  * TODO network-to-ui-json should be handled by the server
  */
 import Network, { PatchType } from './network'
-import * as io from 'socket.io-client'
+// import * as io from 'socket.io-client'
 // import NetworkJson, {
 //     JsonDiffFactory
 // } from "./ui/cola-network"
@@ -24,14 +24,10 @@ export default class LoggerFile {
   base_version: INetworkJson
   packets = []
 
-  constructor(public network: Network, public serverHost) {}
-
-  onConnected() {
-    console.log(`Logger connected to ${this.serverHost}`)
-    this.connected = true
+  constructor(public network: Network, public serverHost) {
+    console.log(`Logger active`)
     this.diff.generateJson()
     this.base_version = this.diff.previous_json
-    this.io.emit('full-sync', this.base_version)
 
     this.json.network.on('change', (type, machine_id, ...params) =>
       this.onGraphChange(type, machine_id, ...params)
