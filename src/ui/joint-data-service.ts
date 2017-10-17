@@ -35,7 +35,7 @@ class JointDataService extends EventEmitter {
   last_scroll_direction: Direction | null = null
   step_type: StepTypes = StepTypes.STATES
   /**
-   * Index of patches of a certain type (values map directly to this.patches)*/
+     * Index of patches of a certain type (values map directly to this.patches)*/
   index: {
     states: number[]
     transitions: number[]
@@ -150,8 +150,8 @@ class JointDataService extends EventEmitter {
   }
 
   /**
-   * Returns all the logs till the current position.
-   */
+     * Returns all the logs till the current position.
+     */
   getLogs(): ILogEntry[][] {
     return this.patches
       .slice(0, Math.max(0, this.patch_position - 1))
@@ -185,11 +185,11 @@ class JointDataService extends EventEmitter {
   }
 
   /**
-   * Slides data to specific point (0 == no patches applied).
-   * 
-   * Returns a list of affected nodes (in their latest form (
-   * in the scroll direction)).
-   */
+     * Slides data to specific point (0 == no patches applied).
+     * 
+     * Returns a list of affected nodes (in their latest form (
+     * in the scroll direction)).
+     */
   protected scrollToPatch(position: number): Set<string> {
     assert(typeof position == 'number')
     this.last_scroll_add_remove = false

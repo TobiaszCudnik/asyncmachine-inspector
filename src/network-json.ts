@@ -73,8 +73,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   }
 
   /**
-     * create a link for every relation
-     */
+       * create a link for every relation
+       */
   parseLink(from: GraphNode, to: GraphNode) {
     // state relations
     if (from.machine_id == to.machine_id) {

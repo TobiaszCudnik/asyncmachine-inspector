@@ -76,9 +76,9 @@ workerio.publishInterface(self, 'api', {
     return sync(data, ids)
   },
   /**
-   * Used to reset the position to the last rendered one, to guarantee the
-   * diff integrity.
-   */
+     * Used to reset the position to the last rendered one, to guarantee the
+     * diff integrity.
+     */
   blindSetPosition(type: StepTypes, position: number) {
     data_service.setStepType(type)
     data_service.scrollTo(position)
