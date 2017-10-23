@@ -1,4 +1,5 @@
 const AsyncAwaitPlugin = require('webpack-async-await')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const path = require('path')
 
 
@@ -17,6 +18,7 @@ module.exports = {
   // plugins: [
   //   new AsyncAwaitPlugin({})
   // ],
+  // plugins: [new BundleAnalyzerPlugin()],
   module: {
     loaders: [
       { test: /\.json$/, loader: "json-loader" },
@@ -33,5 +35,6 @@ module.exports = {
     libraryTarget: "umd"
   },
 
+  // devtool: 'source-map',
   devtool: 'eval',
 }

@@ -10,6 +10,9 @@ import NetworkJson, { JsonDiffFactory, INetworkJson } from './ui/joint-network'
 // import NetworkJson, {
 //     JsonDiffFactory
 // } from "./ui/graphviz-network"
+// TODO save as file (download on keystroke & filesystem)
+// import * as downloadAsFile from 'download-as-file'
+// import * as key from 'keymaster'
 
 type MachineId = string
 

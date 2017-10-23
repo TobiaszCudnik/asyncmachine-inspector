@@ -19,12 +19,12 @@ import States from './states'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
-// import Logger from '../logger'
 import Logger from '../logger-file'
 import Network from '../network'
 import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
+import * as key from 'keymaster'
 
 const log = (...args) => {}
 
@@ -221,7 +221,6 @@ export class InspectorUI implements ITransitions {
     )
       this.states.add('Playing')
     this.states.drop('PlayStopClicked')
-    this.renderUI()
   }
 
   rendering_position = 0
@@ -282,6 +281,7 @@ export class InspectorUI implements ITransitions {
     const abort = this.states.getAbort('Playing')
     this.step_fn = this.playStep.bind(this, abort)
     this.step_timer = setTimeout(this.step_fn, this.frametime * 1000)
+    this.renderUI()
   }
 
   async playStep(abort: Function) {
@@ -315,6 +315,7 @@ export class InspectorUI implements ITransitions {
   Playing_end() {
     clearTimeout(this.step_timer)
     this.step_timer = null
+    this.renderUI()
   }
 
   Connected_state() {
@@ -388,14 +389,13 @@ export class InspectorUI implements ITransitions {
       get is_playing() {
         return self.states.is('Playing')
       },
-      onPlayButton: () => {
-        playstop()
-      },
+      onPlayButton: playstop,
       onAutoplayToggle: () => {
         if (this.states.is('AutoplayOn')) this.states.drop('AutoplayOn')
         else this.states.add('AutoplayOn')
       },
-      is_snapshot: false
+      is_snapshot: false,
+      is_legend_visible: false
     }
     return data
   }
@@ -403,10 +403,20 @@ export class InspectorUI implements ITransitions {
   renderUI() {
     const first = !this.layout
     this.layout = renderLayout(this.container, this.layout_data)
-    if (first) this.handleSnapshotUpload()
+    if (first) {
+      this.initSnapshotUpload()
+      this.initShortcuts();
+    }
   }
 
-  handleSnapshotUpload() {
+  initShortcuts() {
+    key('shift + /', () => {
+      this.layout_data.is_legend_visible = !this.layout_data.is_legend_visible
+      this.renderUI()
+    })
+  }
+
+  initSnapshotUpload() {
     onFileUpload(
       document.getElementById('snapshot-upload'),
       { type: 'text' },

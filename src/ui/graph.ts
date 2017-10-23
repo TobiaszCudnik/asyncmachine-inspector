@@ -5,7 +5,7 @@ abstract class Ui<T> {
 
   abstract render(el: Element | string)
 
-  abstract setData(data)
+  abstract setData(data: any)
 }
 
 export default Ui
