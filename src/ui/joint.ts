@@ -12,14 +12,9 @@ import g from '../vendor/geometry'
 import * as _ from 'underscore'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
-import * as debounce from 'throttle-debounce/debounce'
-import * as deepcopy from 'deepcopy'
 import * as colors from 'material-ui/styles/colors'
-import * as randomNumber from 'random-number'
 import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './joint-layout'
-import * as svgPanZoom from 'svg-pan-zoom'
-// import * as morphdom from 'morphdom'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -151,7 +146,7 @@ export default class Ui extends UiBase<INetworkJson> {
   // TODO layout_data?
   async setData(
     data: INetworkJson,
-    layout_data,
+    layout_data?,
     changed_cells: Iterable<string> = null
   ) {
     const first_run = !this.data
@@ -208,27 +203,6 @@ export default class Ui extends UiBase<INetworkJson> {
   getDataCellsByIds(cell_ids: Iterable<string>): TCell[] {
     let ids = [...cell_ids]
     return this.data.cells.filter(cell => ids.includes(cell.id))
-  }
-
-  // TODO buggy, the svg element doesnt get expanded after a min scale has been achieved
-  autosize() {
-    let visible_width = this.container.width()
-    let visible_height = this.container.height()
-
-    let graph_width = this.layout.clusters.graph().width
-    let graph_height = this.layout.clusters.graph().height
-
-    let scale = Math.min(
-      Math.min(
-        this.maxScale,
-        Math.max(this.minScale, visible_width / graph_width)
-      ),
-      Math.min(
-        this.maxScale,
-        Math.max(this.minScale, visible_height / graph_height)
-      )
-    )
-    this.paper.scale(scale, scale)
   }
 
   // TODO add scrolling by click-n-drag
@@ -472,7 +446,7 @@ function adjustVertices(graph, cell) {
       })
       .each(function(group, key) {
         // If the member of the group has both source and target model adjust vertices.
-        if (key !== 'undefined') adjustVertices(graph, _.first(group))
+        if (key !== undefined) adjustVertices(graph, _.first(group))
       })
 
     return
