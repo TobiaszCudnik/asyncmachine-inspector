@@ -308,7 +308,8 @@
         }
 
         .legend {
-            /*display: none;*/
+            opacity: 0.8;
+            display: none;
             position: fixed;
             background: gray;
             border: 2px solid black;
@@ -319,6 +320,14 @@
             right: 3em;
             padding: 1em;
             z-index: 100;
+        }
+
+        .legend > div {
+            vertical-align: top;    
+        }
+
+        .legend h4 {
+            font-size: 1.7em;
         }
 
         .legend svg {

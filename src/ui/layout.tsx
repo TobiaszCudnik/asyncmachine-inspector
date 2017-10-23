@@ -68,6 +68,7 @@ export type TLayoutProps = {
   onStepType: Function
   onAutoplayToggle: Function
   onPlayButton: Function
+  is_legend_visible: boolean
 }
 
 /**
@@ -86,7 +87,7 @@ export type TLayoutProps = {
  */
 export class Main extends Component<
   TLayoutProps,
-  { msgHidden: boolean; sidebar: boolean }
+  { msgHidden?: boolean; sidebar?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
@@ -248,54 +249,431 @@ export class Main extends Component<
           {/*onRequestClose={this.handleCloseNotifications.bind(this)}*/}
           {/*/>*/}
 
-          <div className="legend">
-            <ul className="states">
-              <li>
-                <span>
-                  <svg>
-                    <circle
-                      stroke-width="3"
-                      fill="#ffffff"
-                      stroke="#000000"
-                      r="30"
-                      cx="30"
-                      cy="30"
-                    />
-                  </svg>
-                </span>
-                <span>Test 1</span>
-              </li>
-              <li>
-                <span>
-                  <svg>
-                    <circle
-                      stroke-width="3"
-                      fill="#ffffff"
-                      stroke="#000000"
-                      r="30"
-                      cx="30"
-                      cy="30"
-                    />
-                  </svg>
-                </span>
-                <span>Test 2</span>
-              </li>
-              <li>
-                <span>
-                  <svg>
-                    <circle
-                      stroke-width="3"
-                      fill="#ffffff"
-                      stroke="#000000"
-                      r="30"
-                      cx="30"
-                      cy="30"
-                    />
-                  </svg>
-                </span>
-                <span>Test 3</span>
-              </li>
-            </ul>
+          <div className="legend" style={{display: this.props.is_legend_visible?'block':'none'}}>
+            <div style={{ width: '50%', display: 'inline-block' }}>
+              <h4>Non-transition states</h4>
+              <ul className="states">
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A non-set state</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element is-auto"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A non-set auto-state</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element is-set"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A set state</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element is-multi is-set"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A set multi-state</span>
+                </li>
+              </ul>
+            </div>
+            <div style={{ width: '50%', display: 'inline-block' }}>
+              <h4>Transition states</h4>
+              <ul className="states">
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element step-requested"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A requested state</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element step-requested step-pipe"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A requested state (piped)</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element step-set"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A state to be set</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element step-drop"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>A state to be unset</span>
+                </li>
+                <li>
+                  <span>
+                    <svg>
+                      <g
+                        id="j_19"
+                        className="joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element step-cancel"
+                        data-type="fsa.State"
+                        fill="#ffffff"
+                        stroke="none"
+                      >
+                        <g className="rotatable" id="v-168">
+                          <g className="scalable" id="v-169">
+                            <circle
+                              strokeWidth="3"
+                              fill="#ffffff"
+                              stroke="#000000"
+                              r="30"
+                              cx="32"
+                              cy="32"
+                            />
+                          </g>
+                          <text
+                            id="v-171"
+                            y="0.8em"
+                            space="preserve"
+                            font-weight="800"
+                            font-size="14"
+                            text-anchor="middle"
+                            fill="#000000"
+                            font-family="Arial, helvetica, sans-serif"
+                            transform="translate(7, 21)"
+                          >
+                            {/*
+                          <tspan id="v-174" dy="0em" x="0" class="v-line">
+                            Requested
+                          </tspan>
+                          <tspan id="v-175" dy="1em" x="0" class="v-line">
+                            and Set
+                          </tspan>*/}
+                          </text>
+                        </g>
+                      </g>
+                    </svg>
+                  </span>
+                  <span>Transition cancelled</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </main>
       </MuiThemeProvider>
