@@ -5,16 +5,16 @@
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
-- zoom level too low
+- zoom-out level too low
 
 #### UI
-- right panel 
+- save as file / download a log on a hotkey
+- right panel
+  - bold log level 1
   - size change
-- server config form¡
+- change background to white and align other colors
 - sticky graphs (define position once dragged by a user)
 - legend
-  - colors
-  - transition styles (only during a transition)
   - background
 - left sidebar
   - machine stats
@@ -26,6 +26,7 @@
 - new machine should be a 2 step highlighted transition
 - touched states during transition (not a relation) should have a temp links
   from the source
+- server config form
   
 #### Refactoring
 - divide the UI class to several machines
@@ -41,4 +42,3 @@
   - machines are nodes, states are leafs
   
 #### Project
-- run script (server, httpserver, browser UI)
