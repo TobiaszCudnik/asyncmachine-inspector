@@ -13,6 +13,15 @@ build:
 build-watch:
 	node_modules/.bin/tsc --watch
 
+dist:
+	webpack
+
+dist-watch:
+	webpack --watch
+
+dist-opt:
+	webpack --optimize-minimize
+
 format:
 	prettier --single-quote --no-semi --write src/**.ts
 	prettier --single-quote --no-semi --write src/**/*.ts
@@ -25,4 +34,4 @@ state-types:
 test:
 	$(MOCHA) test/no-ui/
 
-.PHONY: test break build
+.PHONY: test break build dist
