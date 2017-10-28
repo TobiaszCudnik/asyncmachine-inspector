@@ -3,6 +3,11 @@
 /// <reference path="../../typings/modules/react-dom/index.d.ts" />
 /// <reference path="../../typings/modules/material-ui/index.d.ts" />
 
+/*
+* TODO:
+* - extract the template
+*/
+
 import * as React from 'react'
 import { render } from 'react-dom'
 import { Component } from 'react'
@@ -30,6 +35,8 @@ import {
 import IconButton from 'material-ui/IconButton'
 import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
 import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
+import joint_css from './joint.css'
+import inspector_css from './inspector.css'
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -71,6 +78,9 @@ export type TLayoutProps = {
   is_legend_visible: boolean
 }
 
+const log = (...args) =>{};
+// const log = (...args) => console.log(...args)
+
 /**
  * TODO
  * - legend with state meanings (WHILE during transition)
@@ -96,12 +106,9 @@ export class Main extends Component<
       msgHidden: false,
       sidebar: true
     }
-  }
 
-  handleCloseNotifications() {
-    this.setState({
-      msgHidden: true
-    })
+    // Dummy call to not get stylesheets stripped out by webpack
+    const a = inspector_css+joint_css;
   }
 
   componentWillReceiveProps(props) {
@@ -120,7 +127,7 @@ export class Main extends Component<
 
   render() {
     let d = this.props
-    console.log('render() data', d)
+    log('render() data', d)
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
         <main>
@@ -277,12 +284,12 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -323,12 +330,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -369,12 +375,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -415,12 +420,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -466,12 +470,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -512,12 +515,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -532,7 +534,7 @@ export class Main extends Component<
                       </g>
                     </svg>
                   </span>
-                  <span>A requested state (piped)</span>
+                  <span>A piped state</span>
                 </li>
                 <li>
                   <span>
@@ -558,12 +560,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -604,12 +605,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*
@@ -650,12 +650,11 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            space="preserve"
-                            font-weight="800"
-                            font-size="14"
-                            text-anchor="middle"
+                            fontWeight="800"
+                            fontSize="14"
+                            textAnchor="middle"
                             fill="#000000"
-                            font-family="Arial, helvetica, sans-serif"
+                            fontFamily="Arial, helvetica, sans-serif"
                             transform="translate(7, 21)"
                           >
                             {/*

@@ -21,11 +21,12 @@ module.exports = {
   // plugins: [new BundleAnalyzerPlugin()],
   module: {
     loaders: [
-      { test: /\.json$/, loader: "json-loader" },
+      {test: /\.css$/, loader: "style-loader!css-loader"},
+      {test: /\.json$/, loader: "json-loader" },
       {
         test: /\.tsx?$/,
         loader: 'awesome-typescript-loader'
-      }
+      },
     ]
   },
   output: {
