@@ -3,7 +3,7 @@ import {
   TransitionStepTypes,
   TransitionStepFields,
   StateRelations
-} from 'asyncmachine/src/asyncmachine'
+} from 'asyncmachine/build/asyncmachine'
 import {
   AsyncMachine,
   ITransitionStep,
@@ -31,6 +31,7 @@ export interface IPatch {
 export interface ILogEntry {
   id: string
   msg: string
+  level?: number
 }
 
 export enum PatchType {
@@ -209,7 +210,8 @@ export default class Network extends EventEmitter {
       if (level > 2) return
       this.logs.push({
         id: machine.id(true),
-        msg: msg
+        msg: msg,
+        level
       })
     })
   }

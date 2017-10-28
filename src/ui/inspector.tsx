@@ -331,7 +331,7 @@ export class InspectorUI implements ITransitions {
   buildLayoutData(): TLayoutProps {
     const self = this
     let playstop = this.states.addByListener('PlayStopClicked')
-    let data = {
+    let data: TLayoutProps = {
       get position_max() {
         return self.data_service.position_max
       },
@@ -405,14 +405,22 @@ export class InspectorUI implements ITransitions {
     this.layout = renderLayout(this.container, this.layout_data)
     if (first) {
       this.initSnapshotUpload()
-      this.initShortcuts();
+      this.initKeystrokes();
     }
   }
 
-  initShortcuts() {
+  initKeystrokes() {
     key('shift + /', () => {
       this.layout_data.is_legend_visible = !this.layout_data.is_legend_visible
       this.renderUI()
+    })
+    key('left', () => {
+      const val = this.data_service.position
+      this.states.add('Rendering', val-1)
+    })
+    key('right', () => {
+      const val = this.data_service.position
+      this.states.add('Rendering', val+1)
     })
   }
 
