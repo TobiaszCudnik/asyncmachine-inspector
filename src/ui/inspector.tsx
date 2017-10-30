@@ -405,7 +405,7 @@ export class InspectorUI implements ITransitions {
     this.layout = renderLayout(this.container, this.layout_data)
     if (first) {
       this.initSnapshotUpload()
-      this.initKeystrokes();
+      this.initKeystrokes()
     }
   }
 
@@ -416,11 +416,11 @@ export class InspectorUI implements ITransitions {
     })
     key('left', () => {
       const val = this.data_service.position
-      this.states.add('Rendering', val-1)
+      this.states.add('Rendering', val - 1)
     })
     key('right', () => {
       const val = this.data_service.position
-      this.states.add('Rendering', val+1)
+      this.states.add('Rendering', val + 1)
     })
   }
 
