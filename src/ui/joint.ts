@@ -391,9 +391,8 @@ export default class Ui extends UiBase<INetworkJson> {
   fitContent() {
     const margin = 20
     const footer_height = 40
-    let vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
     while (true) {
-      vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
+      let vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
       let scale = Vectorizer(this.paper.viewport).scale().sx
       const el = this.container.get(0)
       if (
@@ -424,25 +423,10 @@ export default class Ui extends UiBase<INetworkJson> {
     let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
     let delta =
       Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail)) / this.zoom_factor
-    let offsetX = e.offsetX || e.clientX - $(this).offset().left
-    let offsetY = e.offsetY || e.clientY - $(this).offset().top
-    let p = this.offsetToLocalPoint(offsetX, offsetY)
-    let newScale = Vectorizer(this.paper.viewport).scale().sx + delta
-    if (newScale > this.zoom_min && newScale < this.zoom_max) {
-      this.paper.setOrigin(0, 0)
-      this.paper.scale(newScale, newScale, p.x, p.y)
+    let new_scale = Vectorizer(this.paper.viewport).scale().sx + delta
+    if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
+      this.paper.scale(new_scale)
     }
-  }
-
-  offsetToLocalPoint(x, y) {
-    let svgPoint = this.paper.svg.createSVGPoint()
-    svgPoint.x = x
-    svgPoint.y = y
-
-    let pointTransformed = svgPoint.matrixTransform(
-      this.paper.viewport.getCTM().inverse()
-    )
-    return pointTransformed
   }
 }
 
