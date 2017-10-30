@@ -16,7 +16,8 @@ export enum StepTypes {
   STATES
 }
 
-const log = (...args) => console.log(...args)
+const log = (...args) =>{};
+// const log = (...args) => console.log(...args)
 
 /**
  * TODO extract common logic to a super class
