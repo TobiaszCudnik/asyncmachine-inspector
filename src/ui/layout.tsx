@@ -104,7 +104,7 @@ export class Main extends Component<
 
     this.state = {
       msgHidden: false,
-      sidebar: true
+      sidebar: false
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
@@ -178,7 +178,7 @@ export class Main extends Component<
               <div style={{ width: '7em' }}>
                 <Toggle
                   label="Logs"
-                  defaultToggled={true}
+                  defaultToggled={false}
                   onToggle={this.handleToggleSidebar.bind(this)}
                 />
               </div>

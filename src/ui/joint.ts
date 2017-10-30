@@ -170,6 +170,7 @@ export default class Ui extends UiBase<INetworkJson> {
 
     if (first_run) {
       for (const cell of this.graph.getCells()) adjustVertices(this.graph, cell)
+      this.fitContent()
     }
 
     log(`Overall setData ${Date.now() - start}ms`)
@@ -384,6 +385,29 @@ export default class Ui extends UiBase<INetworkJson> {
     this.paper.$el.on('mousewheel DOMMouseScroll', e =>
       this.mouseZoomListener(e)
     )
+  }
+
+  // TODO support scaling up
+  fitContent() {
+    const margin = 20
+    const footer_height = 40
+    let vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
+    while (true) {
+      vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
+      let scale = Vectorizer(this.paper.viewport).scale().sx
+      const el = this.container.get(0)
+      if (
+        vbox.width * scale > el.clientWidth - margin * 2 &&
+        vbox.height * scale > el.clientHeight - margin * 2 - footer_height
+      ) {
+        this.paper.scale(scale * 0.9)
+        continue
+      }
+      el.scrollLeft = vbox.x * scale
+      el.scrollLeft -= (el.clientWidth - vbox.width * scale) / 2
+      el.scrollTop = vbox.y * scale - margin
+      break
+    }
   }
 
   dragScrollListener(e) {
