@@ -406,6 +406,8 @@ export class InspectorUI implements ITransitions {
     if (first) {
       this.initSnapshotUpload()
       this.initKeystrokes()
+      if (localStorage.getItem('last_snapshot'))
+        this.loadSnapshot(JSON.parse(localStorage.getItem('last_snapshot')))
     }
   }
 
@@ -430,19 +432,22 @@ export class InspectorUI implements ITransitions {
       { type: 'text' },
       (err, files) => {
         for (const file of files) {
+          localStorage.setItem('last_snapshot', file.target.result)
           const snapshot = JSON.parse(file.target.result)
-          // TODO make it a state
-          this.layout_data.is_snapshot = true
-          this.states.drop('AutoplayOn')
-          this.states.add('FullSync', snapshot.full_sync)
-          for (const patch of snapshot.patches)
-            this.states.add('DiffSync', patch)
-          // TODO merge in the logs
+          this.loadSnapshot(snapshot)
           break
         }
       }
     )
     this.renderUI()
+  }
+
+  loadSnapshot(snapshot) {
+    // TODO make it a state
+    this.layout_data.is_snapshot = true
+    this.states.drop('AutoplayOn')
+    this.states.add('FullSync', snapshot.full_sync)
+    for (const patch of snapshot.patches) this.states.add('DiffSync', patch)
   }
 
   showMsg(msg) {
