@@ -192,8 +192,8 @@ export class Inspector implements ITransitions {
       states.add('Playing')
     }
     this.renderUI()
-    // console.log('diff', packet)
-    console.log('updated dataservice', data_service)
+    log('diff', packet)
+    log('updated dataservice', data_service)
   }
 
   async StepTypeChanged_state(value: STEP_TYPE_CHANGE) {

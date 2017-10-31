@@ -34,7 +34,8 @@ export default class LoggerFile extends EventEmitter {
     this.diff = new JsonDiffFactory(this.json)
     this.diff.generateJson()
     this.base_version = this.diff.previous_json
-    this.emit('full-sync', this.base_version)
+    // TODO too early
+    // this.emit('full-sync', this.base_version)
 
     this.json.network.on('change', (type, machine_id, ...params) =>
       this.onGraphChange(type, machine_id, ...params)
