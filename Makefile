@@ -22,6 +22,9 @@ dist-watch:
 dist-opt:
 	webpack --optimize-minimize
 
+dist-stackblitz:
+	webpack --config webpack-stackblitz.config.js
+
 format:
 	prettier --single-quote --no-semi --write src/**.ts
 	prettier --single-quote --no-semi --write src/**/*.ts
@@ -35,7 +38,7 @@ test:
 	$(MOCHA) test/no-ui/
 
 cjs-to-es6:
-	sed 's/^exports\["inspector"\]/let def/' dist/inspector.commonjs.js > dist/inspector.es6.js
-	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector.es6.js
+	sed 's/^exports\["inspector"\]/let def/' dist/inspector-cjs.js > dist/inspector-es6.js
+	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector-es6.js
 
 .PHONY: test break build dist
