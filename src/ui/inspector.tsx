@@ -25,6 +25,7 @@ import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as key from 'keymaster'
+import './worker-layout'
 
 const log = (...args) => {}
 
@@ -43,7 +44,7 @@ export enum STEP_TYPE_CHANGE {
  * - timers
  * - renderUI() as a state
  */
-export class InspectorUI implements ITransitions {
+export class Inspector implements ITransitions {
   states = new States(this)
   private data_service_: JointDataService
   graph = new Graph(null)
@@ -60,8 +61,14 @@ export class InspectorUI implements ITransitions {
   logs: ILogEntry[][] = []
   // kept for exporting
   full_sync: INetworkJson
+  private use_webworker = true
 
-  constructor(public host = 'localhost', public port = 3030) {
+  constructor(
+    public container_selector = 'am-inspector',
+    public host = 'localhost',
+    public port = 3030,
+    debug = false
+  ) {
     this.states.id('Inspector')
     this.states.add(['AutoplayOn', 'Connecting'])
 
@@ -75,20 +82,25 @@ export class InspectorUI implements ITransitions {
     // TODO connection_error event and bind retries to a state
     // this.socket.on('disconnected', this.states.addByListener('Disconnected'))
     // this.socket.on('loggers', this.states.addByListener('Joining'))
-    // predefined debugger port
-    if (port != 4040 && window.location.search.match(/debug=1/)) {
+    // predefined debugger port true)
+    // TODO
+    if (port != 4040 && debug) {
       this.states.logLevel(3)
       const network = new Network()
       network.addMachine(this.states)
-      const logger = new Logger(network, 'localhost:4040/logger')
+      window.logger = new Logger(network, 'localhost:4040/logger')
     }
-    window.document.addEventListener(
-      'DOMContentLoaded',
-      this.states.addByListener('DOMReady')
-    )
 
     this.layout_data = this.buildLayoutData()
     this.data_service = new JointDataService()
+
+    if (document.readyState == 'complete') this.states.add('DOMReady')
+    else {
+      window.document.addEventListener(
+        'DOMContentLoaded',
+        this.states.addByListener('DOMReady')
+      )
+    }
   }
 
   // TODO type
@@ -105,10 +117,18 @@ export class InspectorUI implements ITransitions {
   }
 
   // TODO support resetting
+  // TODO basedir
   async InitializingLayoutWorker_state() {
-    // TODO basedir
-    const worker = new Worker('../../dist/worker-layout.umd.js')
-    let LayoutWorker = await workerio.getInterface(worker, 'api')
+    let worker, LayoutWorker
+    // TODO https://github.com/stackblitz/core/issues/72
+    if (location.hostname.includes('stackblitz') || !Worker)
+      this.use_webworker = false
+    if (this.use_webworker) {
+      worker = new Worker('../../dist/worker-layout.umd.js')
+      LayoutWorker = await workerio.getInterface(worker, 'api')
+    } else {
+      LayoutWorker = await workerio.getInterface(window, 'api')
+    }
     // TODO keep in the graph class?
     this.layout_worker = new LayoutWorker()
     this.states.add('LayoutWorkerReady')
@@ -207,8 +227,9 @@ export class InspectorUI implements ITransitions {
   }
 
   DOMReady_state() {
-    this.container = document.getElementById('app')
+    this.container = document.getElementById(this.container_selector)
     this.renderUI()
+    // TODO bind via a random ID
     this.graph.render('#graph')
   }
 
@@ -494,7 +515,7 @@ export class InspectorUI implements ITransitions {
   }
 }
 
-export default function() {
+export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  return new InspectorUI('localhost', query.port || 3030)
+  return new Inspector(container_selector, query.host, query.port, query.debug)
 }

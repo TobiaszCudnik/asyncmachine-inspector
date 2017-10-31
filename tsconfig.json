@@ -20,7 +20,6 @@
     "awesomeTypescriptLoaderOptions": {
       "useTranspileModule": true,
       "transpileOnly": true,
-      "useCache": true,
-        "module": "es6"
+      "useCache": true
     }
 }

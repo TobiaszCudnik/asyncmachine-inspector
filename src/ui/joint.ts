@@ -386,6 +386,7 @@ export default class Ui extends UiBase<INetworkJson> {
   }
 
   // TODO support scaling up
+  // TODO detect V overflow
   fitContent() {
     const margin = 20
     const footer_height = 40

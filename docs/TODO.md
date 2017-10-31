@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- double links dont repaint after dragging a machine
 - when dragging a node/machine the double-links remain sticky
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps

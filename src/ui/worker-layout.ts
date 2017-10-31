@@ -52,7 +52,7 @@ function syncDataService(): IDataServiceSync {
   )
 }
 
-workerio.publishInterface(self, 'api', {
+workerio.publishInterface(self||window, 'api', {
   reset() {
     data_service.removeAllListeners('scrolled')
     data_service = new DataService()

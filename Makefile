@@ -34,4 +34,8 @@ state-types:
 test:
 	$(MOCHA) test/no-ui/
 
+cjs-to-es6:
+	sed 's/^exports\["inspector"\]/let def/' dist/inspector.commonjs.js > dist/inspector.es6.js
+	echo '\nexport const Inspector = def.Inspector\ndef = def.default\nexport default def' >> dist/inspector.es6.js
+
 .PHONY: test break build dist
