@@ -19,8 +19,14 @@ dist:
 dist-watch:
 	webpack --watch
 
-dist-opt:
-	webpack --optimize-minimize
+dist-debug:
+	webpack --devtool sourcemap
+
+dist-debug-watch:
+	webpack --devtool sourcemap --watch
+
+dist-production:
+	webpack --devtool none --optimize-minimize
 
 dist-stackblitz:
 	webpack --config webpack-stackblitz.config.js
