@@ -9,14 +9,14 @@ import {
   ITransitionStep,
   IStateStruct
 } from 'asyncmachine/src/types'
-// TODO remove once fixed in webstorm
-// import Transition from '../node_modules/asyncmachine/build/transition'
 import Graph from 'graphs'
-import * as uuid from 'uuid/v5'
+import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from './network-json'
+// TODO remove once fixed in webstorm
+// import Transition from '../node_modules/asyncmachine/build/transition'
 
 export type MachinesMap = Map<AsyncMachine, string>
 export type NodeGraph = Graph<Node>
@@ -146,7 +146,7 @@ export default class Network extends EventEmitter {
     this.graph = new Graph() as NodeGraph
     this.machines = new Map() as MachinesMap
     this.machine_ids = {}
-    this.id = uuid.v4()
+    this.id = uuid()
   }
 
   addMachine(machine: AsyncMachine) {

@@ -29,6 +29,8 @@ import './worker-layout'
 
 const log = (...args) => {}
 
+export {Logger, Network}
+
 export enum STEP_TYPE_CHANGE {
   TRANSITION = 'transitions',
   STATES = 'states',
@@ -64,7 +66,7 @@ export class Inspector implements ITransitions {
   private use_webworker = true
 
   constructor(
-    public container_selector = 'am-inspector',
+    public container_selector = '#am-inspector',
     public host = 'localhost',
     public port = 3030,
     debug = false
@@ -227,7 +229,7 @@ export class Inspector implements ITransitions {
   }
 
   DOMReady_state() {
-    this.container = document.getElementById(this.container_selector)
+    this.container = document.querySelector(this.container_selector)
     this.renderUI()
     // TODO bind via a random ID
     this.graph.render('#graph')
