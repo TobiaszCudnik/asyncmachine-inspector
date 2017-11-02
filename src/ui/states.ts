@@ -91,7 +91,6 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   constructor(target) {
     super(target)
     this.registerAll()
-    this.add('TimelineOnFirst')
     this.id('')
   }
 }
