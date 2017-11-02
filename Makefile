@@ -47,4 +47,8 @@ cjs-to-es6:
 	sed 's/^exports\["inspector"\]/let def/' dist/inspector-cjs.js > dist/inspector-es6.js
 	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector-es6.js
 
+publish:
+	make dist
+	make dist-stackblitz
+
 .PHONY: test break build dist
