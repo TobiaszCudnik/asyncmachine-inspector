@@ -422,9 +422,24 @@ export default class Ui extends UiBase<INetworkJson> {
     let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
     let delta =
       Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail)) / this.zoom_factor
+    let offset_x = e.offsetX || e.clientX - $(this).offset().left
+    let offset_y = e.offsetY || e.clientY - $(this).offset().top
+    let p = this.offsetToLocalPoint(offset_x, offset_y)
     let new_scale = Vectorizer(this.paper.viewport).scale().sx + delta
     if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
-      this.paper.scale(new_scale)
+      this.paper.setOrigin(0, 0)
+      this.paper.scale(new_scale, new_scale, p.x, p.y)
     }
+  }
+
+  offsetToLocalPoint(x, y) {
+    let svgPoint = this.paper.svg.createSVGPoint()
+    svgPoint.x = x
+    svgPoint.y = y
+
+    let pointTransformed = svgPoint.matrixTransform(
+      this.paper.viewport.getCTM().inverse()
+    )
+    return pointTransformed
   }
 }
