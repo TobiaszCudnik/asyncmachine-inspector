@@ -63,9 +63,5 @@
     "webpack-shell-plugin": "^0.5.0",
     "workerio": "TobiaszCudnik/workerio",
     "typescript": "^2.5.3"
-  },
-  "peerDependencies": {
-    "d3": "^3.1.0",
-    "webcola": "^3.1.3"
   }
 }
