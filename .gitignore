@@ -5,8 +5,6 @@
 /build/
 /build*/
 /node_modules/*
-!/node_modules/graphs/
-/node_modules/graphs/node_modules/
 /dist/
 /src/**/*.js
 /src/**/*.d.ts

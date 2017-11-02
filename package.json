@@ -1,6 +1,6 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.2.0",
+  "version": "0.2.0.1"
   "description": "Live inspector for asyncmachine graphs",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -12,7 +12,6 @@
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
   },
   "scripts": {
-    "prepublish": "make publish"
   },
   "license": "MIT",
   "engines": {
