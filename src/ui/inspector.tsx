@@ -61,9 +61,9 @@ export class Inspector implements ITransitions {
   step_fn: Function
   differ: jsondiffpatch
   logs: ILogEntry[][] = []
-  // kept for exporting
+  // TODO type
+  layout_worker: any
   full_sync: INetworkJson
-  private use_webworker = true
 
   constructor(
     public container_selector = '#am-inspector',
@@ -72,7 +72,7 @@ export class Inspector implements ITransitions {
     debug = false
   ) {
     this.states.id('Inspector')
-    this.states.add(['AutoplayOn', 'Connecting'])
+    this.states.add(['TimelineOnFirst', 'AutoplayOn', 'Connecting'])
 
     // this.socket = io(`http://${this.host}:${this.port}/client`)
     // this.socket.on('full-sync', this.states.addByListener('FullSync'))
@@ -105,9 +105,6 @@ export class Inspector implements ITransitions {
     }
   }
 
-  // TODO type
-  layout_worker: any
-
   set data_service(value) {
     log('synced the data_service', value)
     this.data_service_ = value
@@ -123,9 +120,7 @@ export class Inspector implements ITransitions {
   async InitializingLayoutWorker_state() {
     let worker, LayoutWorker
     // TODO https://github.com/stackblitz/core/issues/72
-    if (location.hostname.includes('stackblitz') || !Worker)
-      this.use_webworker = false
-    if (this.use_webworker) {
+    if (!location.hostname.includes('stackblitz') && Worker) {
       worker = new Worker('../../dist/worker-layout.umd.js')
       LayoutWorker = await workerio.getInterface(worker, 'api')
     } else {
@@ -380,7 +375,7 @@ export class Inspector implements ITransitions {
         return self.logs.slice(0, self.data_service.patch_position)
       },
       get is_connected() {
-        return self.states.is('Connected')
+        return self.states.is('Connected') || self.states.is('FullSync')
       },
       get on_last() {
         return self.data_service.is_latest
