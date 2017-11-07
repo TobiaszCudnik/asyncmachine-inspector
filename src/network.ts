@@ -310,7 +310,9 @@ export default class Network extends EventEmitter {
   protected linkPipedStates(machine: AsyncMachine) {
     for (let state in machine.piped) {
       for (let target of machine.piped[state]) {
-        let source_state = this.getNodeByName(state, this.machines.get(machine))
+        const source_state = this.getNodeByName(state, this.machines.get(machine))
+        const target_machine = this.machines.get(target.machine)
+        if (!target_machine) continue
         let target_state = this.getNodeByName(
           target.state,
           this.machines.get(target.machine)
