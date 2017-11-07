@@ -30,8 +30,8 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: `[name].umd.js`,
-    library: '[name]',
+    filename: `am_[name].umd.js`,
+    library: 'am_[name]',
     libraryTarget: 'umd'
   },
 

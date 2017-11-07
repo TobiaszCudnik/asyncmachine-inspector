@@ -1,6 +1,6 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.2.0-1",
+  "version": "0.2.0-3",
   "description": "Live inspector for asyncmachine graphs",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -12,14 +12,14 @@
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
   },
   "scripts": {
-    "prepublish": "make publish"
+    "prepublish": "make dist"
   },
   "license": "MIT",
   "engines": {
     "node": ">=0.10.0"
   },
-  "main": "dist/logger-file.umd.js",
-  "browser": "dist/inspector.umd.js",
+  "main": "dist/am_logger-file.umd.js",
+  "browser": "dist/am_inspector.umd.js",
   "dependencies": {
     "socket.io": "^1.4.8"
   },

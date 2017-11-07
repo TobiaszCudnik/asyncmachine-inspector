@@ -6,7 +6,7 @@
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
-- zoom-out level too low
+- rewinding should pause
 
 #### UI
 - save as file / download a log on a hotkey

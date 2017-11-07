@@ -48,7 +48,6 @@ cjs-to-es6:
 	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector-es6.js
 
 publish:
-	make dist
-	make dist-stackblitz
+	npm publish
 
 .PHONY: test break build dist
