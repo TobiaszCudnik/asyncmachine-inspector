@@ -30,6 +30,7 @@
 - server config form
   
 #### Refactoring
+- extract RemoteInspector with socket io
 - divide the UI class to several machines
 
 #### Graph
