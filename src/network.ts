@@ -41,7 +41,8 @@ export enum PatchType {
   TRANSITION_END,
   TRANSITION_STEP,
   PIPE,
-  FULL_SYNC
+  FULL_SYNC,
+  MACHINE_REMOVED
 }
 
 export interface ExternalNode {
@@ -150,9 +151,10 @@ export default class Network extends EventEmitter {
   }
 
   addMachine(machine: AsyncMachine) {
-    // TODO check for duplicates first
     assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
+    if (this.machine_ids[id])
+      return
     this.machines.set(machine, id)
     this.machine_ids[id] = machine
     this.statesToNodes(machine.states_all, id)
@@ -162,7 +164,21 @@ export default class Network extends EventEmitter {
       this.linkPipedStates(machine)
     }
 
-    this.emit('change', PatchType.NEW_MACHINE, machine.id(true))
+    this.emit('change', PatchType.NEW_MACHINE, id)
+  }
+
+  // TODO
+  removeMachine(machine: AsyncMachine) {
+    assert(machine.id(), 'Machine ID required')
+    const id = machine.id(true)
+    if (!this.machine_ids[id])
+      return
+    this.machines.delete(machine)
+    delete this.machine_ids[id]
+    this.unbindFromMachine(machine)
+    this.unlinkPipedStates(machine)
+
+    this.emit('change', PatchType.MACHINE_REMOVED, id)
   }
 
   isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
