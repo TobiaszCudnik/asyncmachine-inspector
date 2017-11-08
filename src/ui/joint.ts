@@ -398,6 +398,8 @@ export default class Ui extends UiBase<INetworkJson> {
         vbox.width * scale > el.clientWidth - margin * 2 &&
         vbox.height * scale > el.clientHeight - margin * 2 - footer_height
       ) {
+        if (scale < this.zoom_min)
+          break;
         this.paper.scale(scale * 0.9)
         continue
       }
