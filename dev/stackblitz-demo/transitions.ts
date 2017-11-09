@@ -1,15 +1,27 @@
 import {Restaurant, Customer} from './schema'
+import random from 'random-int'
+import delay from 'delay'
 
 export default function(restaurant: Restaurant) {
   // keep new customers coming in a random interval, 5 max
-  newCustomer(restaurant)
+  produceCustomers(restaurant, 1)
 }
 
-function newCustomer(restaurant) {
-  const delay = Math.random()*10000;
-  if (restaurant.customers.length<5) {
-    const name = String(delay).substr(0, 3)
-    restaurant.addCustomer(new Customer(name))
+async function produceCustomers(restaurant, max) {
+  while (restaurant.customers.length < max) {
+    const number = restaurant.customers.length + 1
+    const customer = new Customer(number)
+    restaurant.addCustomer(customer)
+    onNewCustomer(customer, number)
+    await delay(random(3, 10)*1000)
   }
-  setTimeout(newCustomer.bind(null, restaurant), delay)
+}
+
+async function onNewCustomer(customer: Customer, number: number) {
+  if (number == 2) {
+    // the second customer will leave before getting his meal
+    await customer.when('WaitingForMeal')
+    await delay(1000)
+    customer.add('Leave')
+  }
 }
