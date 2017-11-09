@@ -4,7 +4,7 @@ import delay from 'delay'
 
 export default function(restaurant: Restaurant) {
   // keep new customers coming in a random interval, 5 max
-  produceCustomers(restaurant, 1)
+  produceCustomers(restaurant, 5)
 }
 
 async function produceCustomers(restaurant, max) {
@@ -12,7 +12,7 @@ async function produceCustomers(restaurant, max) {
     const number = restaurant.customers.length + 1
     const customer = new Customer(number)
     restaurant.addCustomer(customer)
-    onNewCustomer(customer, number)
+    // onNewCustomer(customer, number)
     await delay(random(3, 10)*1000)
   }
 }
@@ -22,6 +22,6 @@ async function onNewCustomer(customer: Customer, number: number) {
     // the second customer will leave before getting his meal
     await customer.when('WaitingForMeal')
     await delay(1000)
-    customer.add('Leave')
+    customer.add('Left')
   }
 }
