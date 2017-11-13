@@ -12,7 +12,7 @@ async function produceCustomers(restaurant, max) {
     const number = restaurant.customers.length + 1
     const customer = new Customer(number)
     restaurant.addCustomer(customer)
-    // onNewCustomer(customer, number)
+    onNewCustomer(customer, number)
     await delay(random(3, 10)*1000)
   }
 }

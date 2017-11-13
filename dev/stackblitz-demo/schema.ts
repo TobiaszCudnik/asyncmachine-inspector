@@ -1,6 +1,4 @@
-// import AsyncMachine, {PipeFlags} from '../../node_modules/asyncmachine/build/asyncmachine.es6.js'
-// import {IState} from '../../node_modules/asyncmachine/build/types.js'
-import AsyncMachine, {PipeFlags} from 'asyncmachine'
+import AsyncMachine, {PipeFlags} from './asyncmachine'
 import {IState} from 'asyncmachine/src/types'
 import _ from 'lodash'
 import delay from 'delay'
@@ -35,7 +33,7 @@ export class Chef extends AsyncMachine<any, any, any> {
 
 export class Waiter extends AsyncMachine<any, any, any> {
   Waiting = { drop: ['Busy'], auto: true }
-  Busy = { drop: ['Waiting'] }
+  Busy = { drop: ['Waiting'], auto: true }
   TakingOrder = { add: ['Busy'], drop: ['Waiting', 'RequestingMeal', 'DeliveringMeal'] }
   RequestingMeal = { add: ['Busy'], drop: ['TakingOrder', 'DeliveringMeal'] }
   DeliveringMeal = { add: ['Busy'], drop: ['Waiting', 'TakingOrder'] }
@@ -47,6 +45,10 @@ export class Waiter extends AsyncMachine<any, any, any> {
     this.id(`Waiter ${name}`)
     this.logLevel(LOG_LEVEL)
     this.registerAll()
+  }
+
+  TakingOrder_enter(customer: Customer) {
+    return Boolean(customer.is('WaitingToOrder'))
   }
 
   async TakingOrder_state(customer: Customer) {
@@ -67,13 +69,23 @@ export class Waiter extends AsyncMachine<any, any, any> {
     this.restaurant.drop(this, ['RequestingMeal', 'Busy'])
   }
 
-  async DeliveringMeal_state(customer_id: string) {
-    // TODO check if customer exists (didnt leave)
-    await delay(random(1, 2)*1000)
-    // TODO check the abort function
+  DeliveringMeal_enter() {
+    return Boolean(this.restaurant.meals_pending.length)
+  }
+
+  async DeliveringMeal_state() {
+    const customer_id = this.restaurant.meals_pending.shift()
     const customer = _.find(this.restaurant.customers, c => c.id() == customer_id)
-    this.restaurant.add(customer, 'Eating')
+    // check if the customer exists (didnt leave)
+    if (customer && !customer.is('Left')) {
+      await delay(random(1, 2)*1000)
+      // TODO check the abort function
+      this.restaurant.add(customer, 'Eating')
+    } else
+      this.restaurant.add('WastedMeal')
     this.restaurant.drop(this, ['DeliveringMeal', 'Busy'])
+    if (this.restaurant.meals_pending.length)
+      this.restaurant.add(this, 'DeliveringMeal')
   }
 }
 
@@ -105,6 +117,7 @@ export class Restaurant extends AsyncMachine<any, any, any> {
   CustomerEating = {multi: true}
   MealReady = {multi: true, drop: ['ServingCustomer']}
   ServingCustomer = { require: ['WaiterAvailable', 'CustomerWaiting'], auto: true }
+  WastedMeal = {}
 
   chefs: Chef[] = []
   waiters: Waiter[] = []
@@ -117,7 +130,7 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     super()
     this.id(`Restaurant`)
     this.logLevel(LOG_LEVEL)
-    this.register('WaiterAvailable', 'ChefAvailable', 'CustomerWaiting', 'CustomerEating', 'ServingCustomer', 'MealReady')
+    this.register('WaiterAvailable', 'ChefAvailable', 'CustomerWaiting', 'CustomerEating', 'ServingCustomer', 'MealReady', 'WastedMeal')
     network.addMachine(this)
   }
 
@@ -144,21 +157,28 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     this.add(customer, 'WaitingToOrder')
   }
 
+  WastedMeal_state() {
+    this.drop('WastedMeal')
+  }
+
   async MealReady_state(customer_id: string) {
+    this.meals_pending.push(customer_id)
     const waiter = _.find(this.waiters, w => w.is('Waiting'))
-    if (!waiter)
-      this.meals_pending.push(customer_id)
-    else
-      this.add(waiter, 'DeliveringMeal', customer_id)
+    if (waiter)
+      this.add(waiter, 'DeliveringMeal')
     this.drop('MealReady')
   }
 
   WaiterAvailable_enter() {
     const waiter = _.find(this.waiters, w => w.is('Waiting'))
     if (this.meals_pending.length) {
-      this.add(waiter, 'DeliveringMeal', this.meals_pending.shift())
+      this.add(waiter, 'DeliveringMeal')
       return false
     }
+  }
+
+  WaiterAvailable_exit() {
+    return Boolean(!this.waiters.some(w => w.is('Waiting')))
   }
 
   ServingCustomer_enter() {
