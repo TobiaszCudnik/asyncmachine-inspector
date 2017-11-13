@@ -7,6 +7,7 @@
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
 - rewinding should pause
+- cancelled transition are shown as regular ones
 
 #### UI
 - save as file / download a log on a hotkey
