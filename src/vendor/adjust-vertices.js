@@ -1,5 +1,5 @@
 // http://resources.jointjs.com/tutorial/multiple-links-between-elements
-import g from "./geometry";
+import * as g from 'jointjs/dist/geometry'
 import * as joint from 'jointjs'
 
 // distance between multiple links

@@ -29,7 +29,7 @@ import './worker-layout'
 
 const log = (...args) => {}
 
-export {Logger, Network}
+export { Logger, Network }
 
 export enum STEP_TYPE_CHANGE {
   TRANSITION = 'transitions',
@@ -86,6 +86,7 @@ export class Inspector implements ITransitions {
     // this.socket.on('loggers', this.states.addByListener('Joining'))
     // predefined debugger port true)
     // TODO
+    // this.states.logLevel(3)
     if (port != 4040 && debug) {
       this.states.logLevel(3)
       const network = new Network()
@@ -121,7 +122,8 @@ export class Inspector implements ITransitions {
     let worker, LayoutWorker
     // TODO https://github.com/stackblitz/core/issues/72
     if (!location.hostname.includes('stackblitz') && Worker) {
-      worker = new Worker('../../dist/worker-layout.umd.js')
+      // TODO make this configurable, handle 404s
+      worker = new Worker('../../dist/am_worker-layout.umd.js')
       LayoutWorker = await workerio.getInterface(worker, 'api')
     } else {
       LayoutWorker = await workerio.getInterface(window, 'api')
@@ -136,7 +138,8 @@ export class Inspector implements ITransitions {
   async FullSync_state(graph_data: INetworkJson) {
     if (!this.states.to().includes('LayoutWorkerReady'))
       await this.states.when('LayoutWorkerReady')
-    // TODO cancel the rendering here
+    // TODO check LayoutWorkerReady (use while)
+    // TODO cancel the rendering here (if there was an existing FullSync)
     this.logger_id = graph_data.loggerId
     this.states.add(['Rendering'])
     // console.log('full-sync', Date.now() - start_join)
@@ -424,8 +427,13 @@ export class Inspector implements ITransitions {
     if (first) {
       this.initSnapshotUpload()
       this.initKeystrokes()
-      if (localStorage.getItem('last_snapshot'))
+      // TODO !this.states.willBe('FullSync')
+      if (
+        !this.states.is('FullSync') &&
+        localStorage.getItem('last_snapshot')
+      ) {
         this.loadSnapshot(JSON.parse(localStorage.getItem('last_snapshot')))
+      }
     }
   }
 

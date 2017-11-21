@@ -24,12 +24,8 @@
     "socket.io": "^1.4.8"
   },
   "devDependencies": {
-    "asyncmachine": "^3.1.0",
-    "keymaster": "^1.6.2",
-    "lodash": "latest",
-    "md5": "^2.2.1",
-    "stylesheet.js": "^1.1.1",
     "acorn": "^4.0.3",
+    "asyncmachine": "^3.1.0",
     "awesome-typescript-loader": "^3.2.3",
     "chai": "^3.0.0",
     "chai-xml": "^0.3.0",
@@ -40,18 +36,23 @@
     "download-as-file": "^1.1.0",
     "eventemitter3": "^1.1.1",
     "graphs": "TobiaszCudnik/graphs",
-    "jointjs": "TobiaszCudnik/joint",
+    "jointjs": "^2.0.1",
+    "json-loader": "^0.5.4",
     "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
+    "keymaster": "^1.6.2",
+    "lodash": "latest",
     "material-ui": "^0.17.4",
+    "md5": "^2.2.1",
     "mocha": "^2.2.5",
     "random-number": "0.0.7",
     "react": "^15.3.0",
-    "json-loader": "^0.5.4",
     "react-dom": "^15.3.0",
     "react-tap-event-plugin": "^2.0.1",
     "sinon": "^1.17.2",
     "socket.io-client": "^1.4.8",
     "style-loader": "^0.19.0",
+    "stylesheet.js": "^1.1.1",
+    "typescript": "^2.5.3",
     "underscore": "^1.8.3",
     "upload-element": "^1.0.1",
     "uuid": "^3.1.0",
@@ -61,7 +62,6 @@
     "webpack-async-await": "^1.1.0",
     "webpack-bundle-analyzer": "^2.9.0",
     "webpack-shell-plugin": "^0.5.0",
-    "workerio": "TobiaszCudnik/workerio",
-    "typescript": "^2.5.3"
+    "workerio": "TobiaszCudnik/workerio"
   }
 }

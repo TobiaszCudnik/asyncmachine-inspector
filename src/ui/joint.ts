@@ -4,11 +4,9 @@ import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from './graph'
 // TODO import only required parts
 import * as joint from 'jointjs'
-import 'jointjs/src/vectorizer'
-declare const Vectorizer
+import * as vectorizer from 'jointjs/dist/vectorizer'
 import * as $ from 'jquery'
 import { throttle } from 'underscore'
-import g from '../vendor/geometry'
 import * as _ from 'underscore'
 import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -391,8 +389,8 @@ export default class Ui extends UiBase<INetworkJson> {
     const margin = 20
     const footer_height = 40
     while (true) {
-      let vbox = Vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
-      let scale = Vectorizer(this.paper.viewport).scale().sx
+      let vbox = vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
+      let scale = vectorizer(this.paper.viewport).scale().sx
       const el = this.container.get(0)
       if (
         vbox.width * scale > el.clientWidth - margin * 2 &&
@@ -427,7 +425,7 @@ export default class Ui extends UiBase<INetworkJson> {
     let offset_x = e.offsetX || e.clientX - $(this).offset().left
     let offset_y = e.offsetY || e.clientY - $(this).offset().top
     let p = this.offsetToLocalPoint(offset_x, offset_y)
-    let new_scale = Vectorizer(this.paper.viewport).scale().sx + delta
+    let new_scale = vectorizer(this.paper.viewport).scale().sx + delta
     if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
       this.paper.setOrigin(0, 0)
       this.paper.scale(new_scale, new_scale, p.x, p.y)

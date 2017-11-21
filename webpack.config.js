@@ -28,6 +28,11 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    alias: {
+      g: "jointjs/dist/geometry.js"
+    }
+  },
   output: {
     path: path.join(__dirname, 'dist'),
     filename: `am_[name].umd.js`,

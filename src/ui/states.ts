@@ -1,4 +1,4 @@
-import AsyncMachine from 'asyncmachine/src/asyncmachine'
+import AsyncMachine from 'asyncmachine'
 import { TStates, IState, IBind, IEmit } from './states-types'
 
 export default class States extends AsyncMachine<TStates, IBind, IEmit> {
