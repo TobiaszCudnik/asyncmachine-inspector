@@ -25,4 +25,4 @@ transitions(restaurant)
 const inspector = render('#app')
 const logger = new Logger(network);
 inspector.states.add('FullSync', logger.base_version)
-logger.on('diff-sync', inspector.states.addByListener('DiffSync'));
+logger.on('diff-sync', inspector.states.addByListener('DiffSync'))

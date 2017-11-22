@@ -1,0 +1,13 @@
+{
+  "name": "stackblitz-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "am_demo.umd.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "delay": "^2.0.0",
+    "random-int": "^1.0.0",
+    "lodash": "^4.17.4"
+  }
+}

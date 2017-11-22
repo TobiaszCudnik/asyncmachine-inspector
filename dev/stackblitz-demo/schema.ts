@@ -1,10 +1,9 @@
-import AsyncMachine, {PipeFlags} from './asyncmachine'
-import {IState} from 'asyncmachine/src/types'
+import AsyncMachine, {PipeFlags} from 'asyncmachine'
 import _ from 'lodash'
 import delay from 'delay'
 import random from 'random-int'
 
-const LOG_LEVEL = 3
+const LOG_LEVEL = 0
 
 export class Chef extends AsyncMachine<any, any, any> {
   Waiting = {auto: true}
@@ -161,7 +160,7 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     this.drop('WastedMeal')
   }
 
-  async MealReady_state(customer_id: string) {
+  MealReady_state(customer_id: string) {
     this.meals_pending.push(customer_id)
     const waiter = _.find(this.waiters, w => w.is('Waiting'))
     if (waiter)
