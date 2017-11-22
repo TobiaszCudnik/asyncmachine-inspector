@@ -128,7 +128,8 @@ export default class Ui extends UiBase<INetworkJson> {
 
       // adjust vertices when a cell is removed or its source/target
       // was changed
-      this.graph.on('add remove change:source change:target', myAdjustVertices)
+      this.graph.on(`add remove change:source change:target change:position 
+        change:size`, myAdjustVertices)
 
       // TODO bind to on machine drag
 
@@ -206,7 +207,6 @@ export default class Ui extends UiBase<INetworkJson> {
     return this.data.cells.filter(cell => ids.includes(cell.id))
   }
 
-  // TODO add scrolling by click-n-drag
   postUpdateLayout(cells?) {
     // lay out the graph
     // joint.layout.DirectedGraph.layout(this.graph, {

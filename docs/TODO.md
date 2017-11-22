@@ -2,7 +2,6 @@
 
 #### Bugs
 - double links dont repaint after dragging a machine
-- repaint double links when a new machine enters the graph
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
