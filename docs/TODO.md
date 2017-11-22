@@ -8,6 +8,8 @@
 - transition start should be merged with the first change
 - rewinding should pause
 - cancelled transition are shown as regular ones
+- render the graph in the center
+  - dagre related, different than fitting content via the zoom level
 
 #### UI
 - save as file / download a log on a hotkey

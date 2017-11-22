@@ -69,6 +69,10 @@ export default class Ui extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
+  get scroll_element(): Element {
+    return this.container.parent().get(0)
+  }
+
   constructor(public data: INetworkJson) {
     super(data)
     this.graph = new joint.dia.Graph()
@@ -367,7 +371,7 @@ export default class Ui extends UiBase<INetworkJson> {
     })
     this.container.on('mousedown', (event, x, y) => {
       if (!drag_enabled) return
-      const el = this.container.get(0)
+      const el = this.scroll_element
       this.drag_start_pos = {
         x: event.clientX + el.scrollLeft,
         y: event.clientY + el.scrollTop
@@ -381,6 +385,17 @@ export default class Ui extends UiBase<INetworkJson> {
     this.paper.$el.on('mousewheel DOMMouseScroll', e =>
       this.mouseZoomListener(e)
     )
+  }
+
+  dragScrollListener(e) {
+    // assert(this.drag_start_pos)
+    if (!this.drag_start_pos) return
+    const el = this.scroll_element
+    el.scrollLeft += this.drag_start_pos.x - e.offsetX
+    // el.scrollTop +=
+    //   this.drag_start_pos.y - e.offsetY - $('.toolbar').get(0).clientHeight
+    el.scrollTop +=
+      this.drag_start_pos.y - e.offsetY
   }
 
   // TODO support scaling up
@@ -406,15 +421,6 @@ export default class Ui extends UiBase<INetworkJson> {
       el.scrollTop = vbox.y * scale - margin
       break
     }
-  }
-
-  dragScrollListener(e) {
-    // assert(this.drag_start_pos)
-    if (!this.drag_start_pos) return
-    const el = this.container.get(0)
-    el.scrollLeft += this.drag_start_pos.x - e.offsetX
-    el.scrollTop +=
-      this.drag_start_pos.y - e.offsetY - $('.toolbar').get(0).clientHeight
   }
 
   mouseZoomListener(e) {

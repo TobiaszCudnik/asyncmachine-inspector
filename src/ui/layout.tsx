@@ -193,11 +193,13 @@ export class Main extends Component<
             {d.position} / {d.position_max}
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
-          <div id="graph-wrapper">
-            <div
-              id="graph"
-              className={this.props.is_during_transition && 'during-transition'}
-            />
+          <div id="graph-container">
+            <div id="graph-scroller">
+              <div
+                id="graph"
+                className={this.props.is_during_transition && 'during-transition'}
+              />
+            </div>
 
             {/* TODO extract to a separate component */}
             <Drawer

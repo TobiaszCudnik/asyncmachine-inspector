@@ -86,7 +86,7 @@ export class Inspector implements ITransitions {
     // this.socket.on('loggers', this.states.addByListener('Joining'))
     // predefined debugger port true)
     // TODO
-    // this.states.logLevel(3)
+    this.states.logLevel(3)
     if (port != 4040 && debug) {
       this.states.logLevel(3)
       const network = new Network()
