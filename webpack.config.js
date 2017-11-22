@@ -4,10 +4,6 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
 const path = require('path')
 
 module.exports = {
-  // Currently we need to add '.ts' to the resolve.extensions array.
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
-  },
   entry: {
     inspector: './src/ui/inspector',
     'logger-file': './src/logger-file',
@@ -29,6 +25,7 @@ module.exports = {
     ]
   },
   resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       g: "jointjs/dist/geometry.js"
     }
