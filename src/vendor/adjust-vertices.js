@@ -17,18 +17,22 @@ export default function adjustVertices(graph, cell) {
 
     return
   } else if (cell instanceof joint.dia.Element) {
-    _.chain(graph.getConnectedLinks(cell))
-      .groupBy(function(link) {
-        // the key of the group is the model id of the link's source or target, but not our cell id.
-        return _.omit(
-          [link.get('source').id, link.get('target').id],
-          cell.id
-        )[0]
-      })
-      .each(function(group, key) {
-        // If the member of the group has both source and target model adjust vertices.
-        if (key !== undefined) adjustVertices(graph, _.first(group))
-      })
+    let links = graph.getConnectedLinks(cell) || []
+    links = _.groupBy(links, function(link) {
+      // the key of the group is the model id of the link's source or target, but not our cell id.
+      return _.omit(
+        [link.get('source').id, link.get('target').id],
+        cell.id
+      )[0]
+    })
+    for (let [key, group] of Object.entries(links)) {
+      if (key !== undefined)
+        adjustVertices(graph, _.first(group))
+    }
+    // .each(function(group, key) {
+    //   // If the member of the group has both source and target model adjust vertices.
+    //   if (key !== undefined) adjustVertices(graph, _.first(group))
+    // })
 
     return
   }
