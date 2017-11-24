@@ -159,6 +159,10 @@ export default class Ui extends UiBase<INetworkJson> {
     // this.layout.setData(this.data, changed_cells)
     this.layout.syncFromLayout(layout_data, data, changed_cells)
 
+    // TODO wait for a full render when playing, so certain frames are fully
+    // painted and cancel in other cases (like scrolling)
+    // if (!first_run)
+    //   this.paper.cancelRenderViews()
     if (this.paper._frameId) {
       // TODO use a lib
       await new Promise(resolve =>
