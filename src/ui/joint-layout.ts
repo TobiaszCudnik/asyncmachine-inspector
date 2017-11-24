@@ -1,7 +1,7 @@
 /// <reference path="../../typings/modules/jointjs/index.d.ts" />
 
 // import { layout } from 'ciena-dagre/dist/dagre'
-import { layout } from 'dagre'
+import { layout } from 'ciena-dagre'
 import * as jsondiffpatch from 'jsondiffpatch'
 import { IDelta } from 'jsondiffpatch'
 import { Graph } from 'graphlib'
@@ -86,7 +86,9 @@ export default class GraphLayout {
     this.clusters.setGraph({
       width: 0,
       height: 0,
-      is_dirty: true
+      is_dirty: true,
+      // TODO remove once overlapping in dagre gets fixed
+      ranksep: 200
     })
     this.differ = jsondiffpatch.create({
       objectHash: (obj: TCell) => obj.id
@@ -104,9 +106,8 @@ export default class GraphLayout {
   }
 
   /**
-     * 
-     * @return Number of changed graphs.
-     */
+   * Returns the number of changed graphs.
+   */
   layout(): number {
     let start = Date.now()
     let cloned = 0
@@ -214,7 +215,10 @@ export default class GraphLayout {
           width: 0,
           height: 0,
           hash: null,
-          is_dirty: true
+          is_dirty: true,
+          marginx: 20,
+          marginy: 20,
+          ranksep: 50
         })
         // TODO this may not be safe
         clusters.setNode(cell.id, {
