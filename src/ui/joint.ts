@@ -403,26 +403,23 @@ export default class Ui extends UiBase<INetworkJson> {
   }
 
   // TODO support scaling up
-  // TODO detect V overflow
   fitContent() {
     const margin = 20
     const footer_height = 40
     while (true) {
-      let vbox = vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
+      let box = vectorizer(this.paper.viewport).bbox(true, this.paper.svg)
       let scale = vectorizer(this.paper.viewport).scale().sx
-      const el = this.container.get(0)
+      const el = this.scroll_element
       if (
-        vbox.width * scale > el.clientWidth - margin * 2 &&
-        vbox.height * scale > el.clientHeight - margin * 2 - footer_height
+        scale > this.zoom_min && (
+        box.width * scale > el.clientWidth - margin * 2 ||
+        box.height * scale > el.clientHeight - margin * 2 - footer_height)
       ) {
-        if (scale < this.zoom_min)
-          break;
         this.paper.scale(scale * 0.9)
         continue
       }
-      el.scrollLeft = vbox.x * scale
-      el.scrollLeft -= (el.clientWidth - vbox.width * scale) / 2
-      el.scrollTop = vbox.y * scale - margin
+      el.scrollLeft = box.x * scale - margin
+      el.scrollTop = box.y * scale - margin
       break
     }
   }
