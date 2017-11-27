@@ -32,6 +32,7 @@ dist-stackblitz:
 	webpack --config webpack-stackblitz.config.js
 
 format:
+	prettier --single-quote --no-semi --write dev/stackblitz-demo/*.ts
 	prettier --single-quote --no-semi --write src/**.ts
 	prettier --single-quote --no-semi --write src/**/*.ts
 	prettier --single-quote --no-semi --write src/**/*.tsx

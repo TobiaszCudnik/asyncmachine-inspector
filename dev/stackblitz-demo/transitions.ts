@@ -1,4 +1,4 @@
-import {Restaurant, Customer} from './schema'
+import { Restaurant, Customer } from './schema'
 import random from 'random-int'
 import delay from 'delay'
 
@@ -13,7 +13,7 @@ async function produceCustomers(restaurant, max) {
     const customer = new Customer(number)
     restaurant.addCustomer(customer)
     onNewCustomer(customer, number)
-    await delay(random(3, 10)*1000)
+    await delay(random(3, 10) * 1000)
   }
 }
 

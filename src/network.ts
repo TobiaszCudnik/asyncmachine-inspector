@@ -153,8 +153,7 @@ export default class Network extends EventEmitter {
   addMachine(machine: AsyncMachine) {
     assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
-    if (this.machine_ids[id])
-      return
+    if (this.machine_ids[id]) return
     this.machines.set(machine, id)
     this.machine_ids[id] = machine
     this.statesToNodes(machine.states_all, id)
@@ -171,8 +170,7 @@ export default class Network extends EventEmitter {
   removeMachine(machine: AsyncMachine) {
     assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
-    if (!this.machine_ids[id])
-      return
+    if (!this.machine_ids[id]) return
     this.machines.delete(machine)
     delete this.machine_ids[id]
     this.unbindFromMachine(machine)
@@ -326,7 +324,10 @@ export default class Network extends EventEmitter {
   protected linkPipedStates(machine: AsyncMachine) {
     for (let state in machine.piped) {
       for (let target of machine.piped[state]) {
-        const source_state = this.getNodeByName(state, this.machines.get(machine))
+        const source_state = this.getNodeByName(
+          state,
+          this.machines.get(machine)
+        )
         const target_machine = this.machines.get(target.machine)
         if (!target_machine) continue
         let target_state = this.getNodeByName(

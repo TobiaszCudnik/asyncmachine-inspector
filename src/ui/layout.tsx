@@ -78,7 +78,7 @@ export type TLayoutProps = {
   is_legend_visible: boolean
 }
 
-const log = (...args) =>{};
+const log = (...args) => {}
 // const log = (...args) => console.log(...args)
 
 /**
@@ -108,7 +108,7 @@ export class Main extends Component<
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
-    const a = inspector_css+joint_css;
+    const a = inspector_css + joint_css
   }
 
   componentWillReceiveProps(props) {
@@ -197,7 +197,9 @@ export class Main extends Component<
             <div id="graph-scroller">
               <div
                 id="graph"
-                className={this.props.is_during_transition && 'during-transition'}
+                className={
+                  this.props.is_during_transition && 'during-transition'
+                }
               />
             </div>
 
@@ -258,7 +260,10 @@ export class Main extends Component<
           {/*onRequestClose={this.handleCloseNotifications.bind(this)}*/}
           {/*/>*/}
 
-          <div className="legend" style={{display: this.props.is_legend_visible?'block':'none'}}>
+          <div
+            className="legend"
+            style={{ display: this.props.is_legend_visible ? 'block' : 'none' }}
+          >
             <div style={{ width: '50%', display: 'inline-block' }}>
               <h4>Non-transition states</h4>
               <ul className="states">
@@ -286,7 +291,6 @@ export class Main extends Component<
                           <text
                             id="v-171"
                             y="0.8em"
-                            
                             fontWeight="800"
                             fontSize="14"
                             textAnchor="middle"

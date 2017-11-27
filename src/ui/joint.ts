@@ -128,8 +128,10 @@ export default class Ui extends UiBase<INetworkJson> {
 
       // adjust vertices when a cell is removed or its source/target
       // was changed
-      this.graph.on(`add remove change:source change:target change:position 
-        change:size`, myAdjustVertices)
+      this.graph.on(
+        `add remove change:source change:target change:position change:size`,
+        myAdjustVertices
+      )
 
       // TODO bind to on machine drag
 
@@ -398,8 +400,7 @@ export default class Ui extends UiBase<INetworkJson> {
     el.scrollLeft += this.drag_start_pos.x - e.offsetX
     // el.scrollTop +=
     //   this.drag_start_pos.y - e.offsetY - $('.toolbar').get(0).clientHeight
-    el.scrollTop +=
-      this.drag_start_pos.y - e.offsetY
+    el.scrollTop += this.drag_start_pos.y - e.offsetY
   }
 
   // TODO support scaling up
@@ -411,9 +412,9 @@ export default class Ui extends UiBase<INetworkJson> {
       let scale = vectorizer(this.paper.viewport).scale().sx
       const el = this.scroll_element
       if (
-        scale > this.zoom_min && (
-        box.width * scale > el.clientWidth - margin * 2 ||
-        box.height * scale > el.clientHeight - margin * 2 - footer_height)
+        scale > this.zoom_min &&
+        (box.width * scale > el.clientWidth - margin * 2 ||
+          box.height * scale > el.clientHeight - margin * 2 - footer_height)
       ) {
         this.paper.scale(scale * 0.9)
         continue

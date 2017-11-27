@@ -60,6 +60,6 @@ export default class LoggerFile extends EventEmitter {
     }
     this.packets.push({ ...packet, logs: [...this.network.logs] })
     this.network.logs = []
-    this.emit('diff-sync', this.packets[this.packets.length-1])
+    this.emit('diff-sync', this.packets[this.packets.length - 1])
   }
 }
