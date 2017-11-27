@@ -84,7 +84,7 @@ export class Waiter extends AsyncMachine<any, any, any> {
       await delay(random(1, 2) * 1000)
       // TODO check the abort function
       this.restaurant.add(customer, 'Eating')
-    } else this.restaurant.add('WastedMeal')
+    } else this.restaurant.add('MealWasted')
     this.restaurant.drop(this, ['DeliveringMeal', 'Busy'])
     if (this.restaurant.meals_pending.length)
       this.restaurant.add(this, 'DeliveringMeal')
@@ -122,7 +122,7 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     require: ['WaiterAvailable', 'CustomerWaiting'],
     auto: true
   }
-  WastedMeal = {}
+  MealWasted = {}
 
   chefs: Chef[] = []
   waiters: Waiter[] = []
@@ -142,7 +142,7 @@ export class Restaurant extends AsyncMachine<any, any, any> {
       'CustomerEating',
       'ServingCustomer',
       'MealReady',
-      'WastedMeal'
+      'MealWasted'
     )
     network.addMachine(this)
   }
@@ -167,11 +167,16 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     this.customers.push(customer)
     this.network.addMachine(customer)
     customer.pipe('WaitingToOrder', this, 'CustomerWaiting')
+    customer.pipe('Eating', this, 'CustomerEating')
     this.add(customer, 'WaitingToOrder')
   }
 
-  WastedMeal_state() {
-    this.drop('WastedMeal')
+  CustomerEating_exit() {
+    return !this.customers.some(c => c.is('Eating'))
+  }
+
+  MealWasted_state() {
+    this.drop('MealWasted')
   }
 
   MealReady_state(customer_id: string) {

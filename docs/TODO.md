@@ -1,14 +1,14 @@
 # TODO
 
 #### Bugs
-- double links dont repaint after dragging a machine
+- rewinding should pause
+- set multi states sometimes get temporarily (visually) unset, then suddenly get
+  back to the proper (set) state
+- cancelled transition are shown as regular ones (reproduce)
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
-- rewinding should pause
-- cancelled transition are shown as regular ones
-- render the graph in the center
-  - dagre related, different than fitting content via the zoom level
+  - avoid empty steps with nested transitions
 
 #### UI
 - save as file / download a log on a hotkey
@@ -30,10 +30,11 @@
 - touched states during transition (not a relation) should have a temp links
   from the source
 - server config form
+- rewrite to grid & flex
   
 #### Refactoring
 - extract RemoteInspector with socket io
-- divide the UI class to several machines
+- divide the UI class into several machines
 
 #### Graph
 - update to jointjs 2.1
