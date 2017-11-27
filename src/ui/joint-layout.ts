@@ -189,11 +189,6 @@ export default class GraphLayout {
     this.syncSourceGraph(data, changed_cells)
   }
 
-  // TODO remove!
-  normalizeId(id: string) {
-    return id.replace(/[^\w\d]/g, '-')
-  }
-
   // TODO split!
   syncData(data: INetworkJson, changed_cells: Iterable<string> = []) {
     let subgraphs = this.subgraphs
@@ -231,7 +226,6 @@ export default class GraphLayout {
       } else if ((cell as TState).type == 'fsa.State') {
         cell = cell as TState
         let [parent_id, id] = cell.id.split(':')
-        // parent_id = this.normalizeId(parent_id)
         if (!subgraphs.get(parent_id).node(id)) {
           subgraphs.get(parent_id).graph().is_dirty = true
           subgraphs.get(parent_id).setNode(id, {
@@ -244,9 +238,7 @@ export default class GraphLayout {
       } else if ((cell as TLink).type == 'fsa.Arrow') {
         cell = cell as TLink
         let [source_parent_id, source_id] = cell.source.id.split(':')
-        // source_parent_id = this.normalizeId(source_parent_id)
         let [target_parent_id, target_id] = cell.target.id.split(':')
-        // target_parent_id = this.normalizeId(target_parent_id)
         if (target_parent_id != source_parent_id) {
           // cluster to cluster
           let edge = {
@@ -308,7 +300,6 @@ export default class GraphLayout {
         subgraphs.delete(cell_id)
       } else if (type == 'state') {
         let [parent_id, id] = cell_id.split(':')
-        // parent_id = this.normalizeId(parent_id)
         clusters.graph().is_dirty = true
         let graph = subgraphs.get(parent_id)
         if (!graph) {
@@ -320,9 +311,7 @@ export default class GraphLayout {
       } else if (type == 'link') {
         let [source, target] = cell_id.split('::')
         let [source_parent_id, source_id] = source.split(':')
-        // source_parent_id = this.normalizeId(source_parent_id)
         let [target_parent_id, target_id] = target.split(':')
-        // target_parent_id = this.normalizeId(target_parent_id)
         if (target_parent_id != source_parent_id) {
           // cluster to cluster
           let edge = {
@@ -427,7 +416,6 @@ export default class GraphLayout {
       } else if ((cell as TState).type == 'fsa.State') {
         cell = cell as TState
         let [parent_id, id] = cell.id.split(':')
-        // parent_id = this.normalizeId(parent_id)ß
         let node = subgraphs.get(parent_id)._nodes[id]
         let cluster = clusters._nodes[parent_id]
 
