@@ -101,7 +101,7 @@ export class Customer extends AsyncMachine<any, any, any> {
   constructor(name) {
     super()
     this.id(`Customer ${name}`)
-    this.logLevel(3)
+    this.logLevel(LOG_LEVEL)
     this.registerAll()
   }
 
@@ -194,8 +194,12 @@ export class Restaurant extends AsyncMachine<any, any, any> {
     }
   }
 
+  ChefAvailable_exit() {
+    return !this.chefs.some(w => w.is('Waiting'))
+  }
+
   WaiterAvailable_exit() {
-    return Boolean(!this.waiters.some(w => w.is('Waiting')))
+    return !this.waiters.some(w => w.is('Waiting'))
   }
 
   ServingCustomer_enter() {
