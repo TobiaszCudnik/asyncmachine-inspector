@@ -1,4 +1,4 @@
-import { default as DataService, StepTypes } from './joint-data-service'
+import DataService, { StepTypes } from './joint-data-service'
 import Layout from './joint-layout'
 import workerio from 'workerio/src/workerio/index'
 import * as _ from 'underscore'
@@ -8,7 +8,7 @@ import { IDelta } from 'jsondiffpatch'
 
 export interface IDataServiceSync {
   position: number
-  positino_max: number
+  position_max: number
   step_type: StepTypes
   during_transition: boolean
   is_latest: boolean

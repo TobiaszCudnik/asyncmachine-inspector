@@ -52,18 +52,19 @@ export interface ExternalNode {
 
 export class Node {
   /**
-     * Get the original state definition.
-     */
+   * Get the original state definition.
+   */
   get state() {
     return this.machine.get(this.name)
   }
 
   /**
-     * Is the state currently set?
-     */
+   * Is the state currently set?
+   */
   get is_set(): boolean {
-    // TODO somehow handle transition executed by an external queue
-    return this.machine.transition
+    // TODO make sure this shows proper states with "Transition steps"
+    // granularity on both an external queue and a nested queue
+    return this.machine.transition && this.machine.transition.machine == this.machine
       ? this.machine.transition.before.includes(this.name)
       : this.machine.is(this.name)
   }
@@ -87,9 +88,9 @@ export class Node {
   ) {}
 
   /**
-     * Bit mask with all the step types for this state during the current
-     * transition.
-     */
+   * Bit mask with all the step types for this state during the current
+   * transition.
+   */
   step_style: TransitionStepTypes | null = null
 
   updateStepStyle(type: TransitionStepTypes) {
@@ -140,8 +141,8 @@ export default class Network extends EventEmitter {
   }
 
   /**
-     * TODO accept machines in the constructor
-     */
+   * TODO accept machines in the constructor
+   */
   constructor() {
     super()
     this.graph = new Graph() as NodeGraph

@@ -2,9 +2,6 @@
 
 #### Bugs
 - rewinding should pause
-- set multi states sometimes get temporarily (visually) unset, then suddenly get
-  back to the proper (set) state
-- cancelled transition are shown as regular ones (reproduce)
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
