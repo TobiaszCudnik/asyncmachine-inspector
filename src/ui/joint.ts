@@ -69,6 +69,8 @@ export default class Ui extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
+  patch_fields = ['step_style', 'is_set', 'is_touched', 'name']
+
   get scroll_element(): Element {
     return this.container.parent().get(0)
   }
@@ -195,8 +197,6 @@ export default class Ui extends UiBase<INetworkJson> {
     }
     this.postUpdateLayout(cells)
   }
-
-  patch_fields = ['step_style', 'is_set', 'is_touched']
 
   patchCells(cell_ids: Iterable<string>) {
     for (let cell of this.getDataCellsByIds(cell_ids)) {

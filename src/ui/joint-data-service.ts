@@ -217,6 +217,9 @@ class JointDataService extends EventEmitter {
     return changed
   }
 
+  /**
+   * Place where the array of changed cells is build.
+   */
   protected applyDiff(diff, changed: Set<string>): void {
     if (!diff.cells) return
 

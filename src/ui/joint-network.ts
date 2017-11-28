@@ -43,7 +43,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         : '';
     return {
       type: 'uml.State',
-      name: machine.id() + queue,
+      name: machine.id() + ' ' + queue,
       id: machine_id,
       embeds: [],
       z: 1,

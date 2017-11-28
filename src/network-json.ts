@@ -58,7 +58,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   parseNode(graph_node: GraphNode) {
     const machine = graph_node.machine
 
-    // if (!this.machine_ids.has(graph_node.machine_id))
+    if (!this.machine_ids.has(graph_node.machine_id))
       this.parseMachine(machine)
 
     const node = this.createStateNode(graph_node)
@@ -71,8 +71,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   }
 
   /**
-       * create a link for every relation
-       */
+   * create a link for every relation
+   */
   parseLink(from: GraphNode, to: GraphNode) {
     // state relations
     if (from.machine_id == to.machine_id) {
