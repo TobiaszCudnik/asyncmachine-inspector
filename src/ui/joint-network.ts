@@ -9,6 +9,7 @@ import {
 } from '../network-json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
+import {StateChangeTypes} from "asyncmachine/build/types";
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,
@@ -35,20 +36,23 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     this.json.cells.push(node)
   }
 
-  // TODO queue size
   // TODO number of listeners
-  createMachineNode(
-    machine: AsyncMachine<any, any, any>,
-    machine_id: string
-  ): TMachine {
+  createMachineNode(machine: AsyncMachine<any, any, any>): TMachine {
+    const machine_id = machine.id(true)
+    const queue = machine.queue().length ? `(Q: ${machine.queue().length})`
+        : '';
     return {
       type: 'uml.State',
-      name: machine.id(),
+      name: machine.id() + queue,
       id: machine_id,
-      // attrs: { text: { text: machine.id() } },
       embeds: [],
       z: 1,
-      is_touched: this.network.machines_during_transition.has(machine_id)
+      is_touched: this.network.machines_during_transition.has(machine_id),
+      queue: machine.queue().map(r => ({
+        machine: r[4].id(true),
+        states: r[1],
+        type: r[0]
+      }))
     }
   }
   createStateNode(node: GraphNode): TState {
@@ -133,6 +137,7 @@ export type StateName = string
 
 export type TMachine = {
   type: 'uml.State'
+  name: string
   embeds: string[]
   id: MachineId
   z?: number
@@ -144,8 +149,9 @@ export type TMachine = {
     width: number
     height: number
   }
-  attrs: { text: { text: string } }
+  // attrs: { text: { text: string } }
   is_touched?: boolean
+  queue: {machine?: string, states: StateName[], type: StateChangeTypes}[]
 }
 
 export type TState = {
@@ -153,7 +159,7 @@ export type TState = {
   id: MachineId
   parent: string
   attrs: {
-    text: { text: string }
+    text: { text: StateName }
     circle?: {
       fill?: string
       stroke?: string

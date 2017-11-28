@@ -47,8 +47,9 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   }
 
   // TODO machine_id probably duplicates machine.id() now
-  parseMachine(machine: AsyncMachine, machine_id: string) {
-    const machine_node = this.createMachineNode(machine, machine_id)
+  parseMachine(machine: AsyncMachine) {
+    const machine_id = machine.id(true)
+    const machine_node = this.createMachineNode(machine)
     this.addMachineNode(machine_node)
     this.machine_ids.add(machine_id)
     this.machine_nodes[machine_id] = machine_node
@@ -57,8 +58,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   parseNode(graph_node: GraphNode) {
     const machine = graph_node.machine
 
-    if (!this.machine_ids.has(graph_node.machine_id))
-      this.parseMachine(machine, graph_node.machine_id)
+    // if (!this.machine_ids.has(graph_node.machine_id))
+      this.parseMachine(machine)
 
     const node = this.createStateNode(graph_node)
 
@@ -139,7 +140,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   abstract addStateNode(node: State)
   abstract addLinkNode(node: Link)
 
-  abstract createMachineNode(machine: AsyncMachine, machine_id: string): Machine
+  abstract createMachineNode(machine: AsyncMachine): Machine
   abstract createStateNode(node: GraphNode): State
   abstract createLinkNode(
     from: GraphNode,

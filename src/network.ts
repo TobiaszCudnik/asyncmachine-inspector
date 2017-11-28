@@ -42,7 +42,8 @@ export enum PatchType {
   TRANSITION_STEP,
   PIPE,
   FULL_SYNC,
-  MACHINE_REMOVED
+  MACHINE_REMOVED,
+  QUEUE_CHANGED
 }
 
 export interface ExternalNode {
@@ -220,6 +221,7 @@ export default class Network extends EventEmitter {
     machine.on('transition-step', (...steps) => {
       this.parseTransitionSteps(machine.id(), ...steps)
     })
+    machine.on('queue-changed', () => this.emit('change', PatchType.QUEUE_CHANGED))
     machine.logHandler((msg, level) => {
       machine.logHandlerDefault(msg.toString(), level)
       if (level > 2) return

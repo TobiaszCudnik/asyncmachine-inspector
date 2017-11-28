@@ -468,7 +468,12 @@ export default class GraphLayout {
         .filter(id => !cells.has(id))
         .map(id => this.source_graph.getCell(id))
         .filter(cell => cell)
-      this.source_graph.removeCells(cells_to_remove)
+      // remove cells in a reversed order, so the parent machine gets removed
+      // at the end
+      if (cells_to_remove.length) {
+        cells_to_remove.reverse()
+        this.source_graph.removeCells(cells_to_remove)
+      }
     } else {
       this.source_graph.resetCells(batch_cells)
     }
