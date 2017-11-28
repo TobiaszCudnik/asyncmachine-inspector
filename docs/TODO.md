@@ -2,6 +2,7 @@
 
 #### Bugs
 - rewinding should pause
+  - rewinding behind the end causes an exception
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
