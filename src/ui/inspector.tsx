@@ -376,6 +376,17 @@ export class Inspector implements ITransitions {
       get logs() {
         return self.logs.slice(0, self.data_service.patch_position)
       },
+      get queues() {
+        let ret = {}
+        if (!self.graph.data)
+          return ret
+        for (let node of self.graph.data.cells) {
+          if (node.type != 'uml.State' || !node.queue || !node.queue.length)
+            continue
+          ret[node.id] = node.queue
+        }
+        return ret
+      },
       get is_connected() {
         return self.states.is('Connected') || self.states.is('FullSync')
       },

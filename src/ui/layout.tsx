@@ -37,6 +37,8 @@ import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
 import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
+import * as md5 from 'md5'
+import {StateChangeTypes} from "asyncmachine/build/types";
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -75,7 +77,8 @@ export type TLayoutProps = {
   onStepType: Function
   onAutoplayToggle: Function
   onPlayButton: Function
-  is_legend_visible: boolean
+  is_legend_visible: boolean,
+  queues: {}
 }
 
 const log = (...args) => {}
@@ -97,14 +100,15 @@ const log = (...args) => {}
  */
 export class Main extends Component<
   TLayoutProps,
-  { msgHidden?: boolean; sidebar?: boolean }
+  { msgHidden?: boolean; sidebar?: boolean, sidebar_left?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
 
     this.state = {
       msgHidden: false,
-      sidebar: false
+      sidebar: false,
+      sidebar_left: false
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
@@ -121,8 +125,12 @@ export class Main extends Component<
 
   // TODO
   handleToggleSidebar() {
-    console.log('handleToggleSidebar')
     this.setState({ sidebar: !this.state.sidebar })
+  }
+
+  // TODO
+  handleToggleSidebarLeft() {
+    this.setState({ sidebar_left: !this.state.sidebar_left })
   }
 
   render() {
@@ -133,6 +141,13 @@ export class Main extends Component<
         <main>
           <Toolbar className="toolbar">
             <ToolbarGroup firstChild={true}>
+              <div style={{ width: '7em', padding: '2em' }}>
+                <Toggle
+                  label="Machines"
+                  defaultToggled={false}
+                  onToggle={this.handleToggleSidebarLeft.bind(this)}
+                />
+              </div>
               <SelectField
                 style={{ margin: '0 1em' }}
                 floatingLabelText="Granularity"
@@ -205,11 +220,64 @@ export class Main extends Component<
 
             {/* TODO extract to a separate component */}
             <Drawer
+              className="sidebar-container left"
+              open={this.state.sidebar_left}
+              style={{position: 'absolute'}}
+            >
+              <div className="sidebar left">
+                {(() => {
+                  let container = []
+                  let queues = Object.entries(this.props.queues)
+                  for (let [machine_id, queue] of queues) {
+                    let class_name = `group-${machine_id}`
+                    container.push(<h3 className={class_name}
+                      key={md5(machine_id+Date.now())}>{machine_id} (Q:
+                      {queue.length})</h3>)
+                    let type
+                    let queue_reversed = [...queue]
+                    queue_reversed.reverse()
+                    for (let entry of queue) {
+                      switch(entry.type) {
+                        case StateChangeTypes.ADD: type = '[add]';
+                          break;
+                        case StateChangeTypes.DROP: type = '[drop]';
+                          break;
+                        case StateChangeTypes.SET: type = '[set]';
+                          break;
+                      }
+                      // TODO get the real machine name
+                      let target_states = ''
+                      if (entry.machine != machine_id) {
+                        let class_name = `group-${entry.machine}`
+                        target_states = <span className={class_name}>
+                          [{entry.machine}] {entry.states.join(' ')}</span>
+                      } else {
+                        target_states = <span>{entry.states.join(' ')}</span>
+                      }
+                      // TODO use a [key] and UL>LI
+                      // TODO inline-block
+                      // TODO recognize auto states (prepended to the queue)
+                      container.push(
+                        <span className={class_name} key={md5(machine_id+
+                            JSON.stringify(entry)+Date.now()}>
+                          {type} {target_states}
+                          <br />
+                        </span>
+                      )
+                    }
+                  }
+                  return container
+                })()}
+              </div>
+            </Drawer>
+
+            {/* TODO extract to a separate component */}
+            <Drawer
               className="sidebar-container"
               open={this.state.sidebar}
               openSecondary={true}
             >
-              <div id="side-bar">
+              <div className="sidebar right">
                 {(() => {
                   let container = []
                   const logs = this.props.logs
@@ -217,9 +285,10 @@ export class Main extends Component<
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       let entry = logs[i][ii]
                       let key = `log-${i}-${ii}`
-                      let className = `group-${entry.id}`
+                      let class_name = `group-${entry.id}`
+                      // TODO inline-block
                       container.push(
-                        <span className={className} key={key}>
+                        <span className={class_name} key={key}>
                           {entry.msg}
                           <br />
                         </span>
@@ -690,7 +759,7 @@ export default function(container, props) {
   var layout = <Main {...props} />
   render(layout, container)
   // scroll to the bottom
-  document.getElementById('side-bar').scrollTop = 99999
+  document.querySelector('.sidebar.right').scrollTop = 99999
 
   return layout
 }

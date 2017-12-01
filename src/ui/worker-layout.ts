@@ -83,6 +83,7 @@ workerio.publishInterface(self || window, 'api', {
     data_service.setStepType(type)
     data_service.scrollTo(position)
   },
+  // rename to syncWorker or something
   layout(position: number): ISync {
     const data = deepcopy(data_service.data)
     let ids = data_service.scrollTo(position)

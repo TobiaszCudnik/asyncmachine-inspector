@@ -204,7 +204,7 @@ main {
     opacity: 0.9;
 }
 
-#side-bar {
+.sidebar {
     background: #272822;
     color: white;
     position: absolute;
@@ -212,13 +212,15 @@ main {
     right: 0;
     bottom: 0;
     left: 0;
-    border-width: 0 0 0 1px;
-    border-color: gray;
-    border-style: solid;
-    padding: 58px 5px 5px 5px;
+    padding: 5px;
+    margin-top: 56px;
     overflow: auto;
     white-space: nowrap;
     font-family: monospace;
+}
+
+.sidebar.left {
+    padding-top: 0;
 }
 
 #graph-container {
