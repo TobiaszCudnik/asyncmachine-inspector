@@ -2,31 +2,42 @@
 
 #### Bugs
 - rewinding should pause
-  - rewinding behind the end causes an exception
+  - rewinding behind the start/end causes an exception
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
   - avoid empty steps with nested transitions
+- changing the granularity from Transition Steps to States leaves artifacts
+  - state_style, is_touched, .during-transition
 
 #### UI
 - save as file / download a log on a hotkey
-- right panel
-  - bold log level 1
-  - size change
+- log sidebar
+  - filters
+    - by log level / query text
+    - bold or fade the matched entries or the rest
+  - count transition requests ([add|set|drop])
+    - counters outside of the panel, on the left, aligned to the right
 - change background to white and align other colors
 - sticky graphs (define position once dragged by a user)
 - legend
-  - background
+  - grouping
+  - descriptions
+  - better background, dimmed out
+  - close button
 - left sidebar
   - machine stats
     - queue size
     - listeners count
     - abort functions count
   - currently processing machine
+- sidebars
+  - size change
 - minimap
+  - using clusters graph positions
+  - render as div[width,height], use the colors
+  - skip relations
 - new machine should be a 2 step highlighted transition
-- touched states during transition (not a relation) should have a temp links
-  from the source
 - server config form
 - rewrite to grid & flex
   
@@ -35,9 +46,13 @@
 - divide the UI class into several machines
 
 #### Graph
-- update to jointjs 2.1
 - better colors
 - descriptive transition styles
+- pipe isnt exactly like add, nor pipe invert like drop, although shown like that
+- take advantage of canceling async rendering available in the latest jointjs
+- include state counters
+- visualize the queue and listeners size
+- visualize an active queue
 
 #### Transition Tree
 - show transition as a tree
