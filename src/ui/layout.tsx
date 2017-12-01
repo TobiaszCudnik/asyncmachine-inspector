@@ -200,11 +200,7 @@ export class Main extends Component<
               {/*<RaisedButton label="Logs" onClick={this.handleToggleSidebar.bind(this)}/>*/}
             </ToolbarGroup>
           </Toolbar>
-          <Chip
-            id="step-counter"
-            position={d.position}
-            position_max={d.position_max}
-          >
+          <Chip id="step-counter" style={{border: '1px solid #808080'}}>
             {d.position} / {d.position_max}
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
@@ -257,7 +253,10 @@ export class Main extends Component<
                     return <div>{items}</div>
                   }
 
-                  // TODO show the most recent transition
+                  // TODO transition info
+                  // - most recent transition
+                  // - touched machines & states
+                  // - parent transitions, if any
                   let container = []
                   for (let machine of this.props.machines) {
                     let class_name = `group-${machine.id}`

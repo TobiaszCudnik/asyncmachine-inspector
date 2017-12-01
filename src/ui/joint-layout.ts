@@ -83,10 +83,12 @@ export default class GraphLayout {
     this.clusters = new Graph({
       directed: false
     }) as TClusterGraph
+    // TODO memorize the last position through DnD
     this.clusters.setGraph({
       width: 0,
       height: 0,
       is_dirty: true,
+      marginx: 500,
       // TODO remove once overlapping in dagre gets fixed
       ranksep: 200
     })
