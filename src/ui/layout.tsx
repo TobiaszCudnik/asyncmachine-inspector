@@ -226,26 +226,19 @@ export class Main extends Component<
             >
               <div className="sidebar left">
                 {(() => {
-                  let container = []
-                  let queues = Object.entries(this.props.queues)
-                  for (let [machine_id, queue] of queues) {
+                  function QueueList({machine_id, queue}) {
                     let class_name = `group-${machine_id}`
-                    container.push(<h3 className={class_name}
-                      key={md5(machine_id+Date.now())}>{machine_id} (Q:
-                      {queue.length})</h3>)
-                    let type
-                    let queue_reversed = [...queue]
-                    queue_reversed.reverse()
-                    for (let entry of queue) {
+                    const items = queue.map( (entry, i) => {
+                      let type
+                      let auto = entry.auto ? ':auto' : ''
                       switch(entry.type) {
-                        case StateChangeTypes.ADD: type = '[add]';
+                        case StateChangeTypes.ADD: type = `[add${auto}]`;
                           break;
-                        case StateChangeTypes.DROP: type = '[drop]';
+                        case StateChangeTypes.DROP: type = `[drop${auto}]`;
                           break;
-                        case StateChangeTypes.SET: type = '[set]';
+                        case StateChangeTypes.SET: type = `[set${auto}]`;
                           break;
                       }
-                      // TODO get the real machine name
                       let target_states = ''
                       if (entry.machine != machine_id) {
                         let class_name = `group-${entry.machine}`
@@ -254,17 +247,31 @@ export class Main extends Component<
                       } else {
                         target_states = <span>{entry.states.join(' ')}</span>
                       }
-                      // TODO use a [key] and UL>LI
-                      // TODO inline-block
-                      // TODO recognize auto states (prepended to the queue)
-                      container.push(
-                        <span className={class_name} key={md5(machine_id+
-                            JSON.stringify(entry)+Date.now()}>
+                      return (
+                        <span className={class_name} key={i}>
                           {type} {target_states}
                           <br />
                         </span>
                       )
-                    }
+                    })
+                    return <div>{items}</div>
+                  }
+
+                  // TODO show the most recent transition
+                  let container = []
+                  for (let machine of this.props.machines) {
+                    let class_name = `group-${machine.id}`
+                    container.push(
+                      <div key={machine.id} className={class_name}>
+                        <h3>{machine.name}</h3>
+                        Queue: {machine.queue.length}<br />
+                        Listeners: {machine.listeners}<br />
+                        During transition: {machine.is_touched ? 'YES' : 'no'}<br />
+                        Queue active: {machine.processing_queue ? 'YES' : 'no'}<br />
+                        <br />
+                        <QueueList machine_id={machine.id} queue={machine.queue} />
+                      </div>
+                    )
                   }
                   return container
                 })()}

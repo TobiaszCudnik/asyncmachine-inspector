@@ -9,7 +9,7 @@ import {
 } from '../network-json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
-import {StateChangeTypes} from "asyncmachine/build/types";
+import {QueueRowFields, StateChangeTypes} from "asyncmachine/build/types";
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,
@@ -43,16 +43,20 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         : '';
     return {
       type: 'uml.State',
-      name: machine.id() + ' ' + queue,
+      name: machine.id(),
       id: machine_id,
       embeds: [],
       z: 1,
       is_touched: this.network.machines_during_transition.has(machine_id),
       queue: machine.queue().map(r => ({
-        machine: r[4].id(true),
-        states: r[1],
-        type: r[0]
-      }))
+        machine: (r[QueueRowFields.TARGET]||machine).id(true),
+        states: r[QueueRowFields.STATES],
+        type: r[QueueRowFields.STATE_CHANGE_TYPE],
+        auto: r[QueueRowFields.AUTO]
+      })),
+      processing_queue: machine.lock_queue,
+      listeners: Object.values(machine._events || {}).map( e => e.length || 1 )
+        .reduce( (count, num) => (count||0) + num)
     }
   }
   createStateNode(node: GraphNode): TState {

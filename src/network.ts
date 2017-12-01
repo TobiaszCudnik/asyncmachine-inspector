@@ -196,17 +196,19 @@ export default class Network extends EventEmitter {
     // - transition end / cancel
     // - adding / removing a state
     // TODO unbind on dispose
-    // TODO group the same changes emitted by couple of machines
+    // TODO group the same changes emitted by a couple of machines
+    const id = machine.id(true);
     machine.on('change', () => this.emit('change', PatchType.STATE_CHANGED))
     machine.on('pipe', () => {
       this.linkPipedStates(machine)
-      this.emit('change', PatchType.PIPE, machine.id(true))
+      this.emit('change', PatchType.PIPE, id)
     })
     machine.on('transition-init', transition => {
       if (!this.transition_origin) this.transition_origin = machine
-      this.machines_during_transition.add(machine.id(true))
+
+      this.machines_during_transition.add(id)
       // TODO this fires too early and produces an empty diff
-      this.emit('change', PatchType.TRANSITION_START, machine.id(true))
+      this.emit('change', PatchType.TRANSITION_START, id)
     })
     machine.on('transition-end', transition => {
       if (this.transition_origin === machine) {
@@ -216,7 +218,7 @@ export default class Network extends EventEmitter {
         this.transition_links.clear()
         for (let node of this.graph.set) node.step_style = null
       }
-      this.emit('change', PatchType.TRANSITION_END, machine.id(true))
+      this.emit('change', PatchType.TRANSITION_END, id)
     })
     machine.on('transition-step', (...steps) => {
       this.parseTransitionSteps(machine.id(), ...steps)
@@ -224,12 +226,9 @@ export default class Network extends EventEmitter {
     machine.on('queue-changed', () => this.emit('change', PatchType.QUEUE_CHANGED))
     machine.logHandler((msg, level) => {
       machine.logHandlerDefault(msg.toString(), level)
+      // TODO no hardcoded level
       if (level > 2) return
-      this.logs.push({
-        id: machine.id(true),
-        msg: msg,
-        level
-      })
+      this.logs.push({id, msg, level})
     })
   }
 
