@@ -72,7 +72,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   PlayStopClicked: IState = {}
   TimelineScrolled: IState = {
     add: ['Rendering'],
-    drop: ['AutoplayOn']
+    drop: ['Playing']
   }
   StepTypeChanged: IState = {}
   // network inputs

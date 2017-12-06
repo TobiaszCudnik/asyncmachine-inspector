@@ -341,6 +341,8 @@ export class Inspector implements ITransitions {
     const self = this
     let playstop = this.states.addByListener('PlayStopClicked')
     let data: TLayoutProps = {
+      is_snapshot: false,
+      is_legend_visible: false,
       get position_max() {
         return self.data_service.position_max
       },
@@ -350,10 +352,8 @@ export class Inspector implements ITransitions {
       get position() {
         return self.data_service.position
       },
-      // TODO enum it
       get step_type() {
         let t = StepTypes
-        // TODO enum
         switch (self.data_service.step_type) {
           case t.TRANSITIONS:
             return 'transitions'
@@ -397,18 +397,17 @@ export class Inspector implements ITransitions {
         if (self.data_service.step_type != value)
           self.states.add('StepTypeChanged', value)
       },
-      msg: null,
-      msgHidden: false,
       get is_playing() {
         return self.states.is('Playing')
       },
       onPlayButton: playstop,
       onAutoplayToggle: () => {
-        if (this.states.is('AutoplayOn')) this.states.drop('AutoplayOn')
-        else this.states.add('AutoplayOn')
-      },
-      is_snapshot: false,
-      is_legend_visible: false
+        if (this.states.is('AutoplayOn')) {
+          this.states.drop('AutoplayOn')
+        } else {
+          this.states.add('AutoplayOn')
+        }
+      }
     }
     return data
   }
@@ -435,15 +434,15 @@ export class Inspector implements ITransitions {
       this.renderUI()
     })
     key('left', () => {
-      const val = this.data_service.position
-      this.states.add('Rendering', Math.max(0, val - 1))
+      const next_pos = Math.max(0, this.data_service.position - 1)
+      this.states.add('TimelineScrolled', next_pos)
     })
     key('right', () => {
-      const val = this.data_service.position
-      this.states.add(
-        'Rendering',
-        Math.min(val + 1, this.data_service.position_max)
+      const next_pos = Math.min(
+        this.data_service.position + 1,
+        this.data_service.position_max
       )
+      this.states.add('TimelineScrolled', next_pos)
     })
   }
 
