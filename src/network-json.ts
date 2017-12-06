@@ -46,7 +46,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     return this.json
   }
 
-  // TODO machine_id probably duplicates machine.id() now
   parseMachine(machine: AsyncMachine) {
     const machine_id = machine.id(true)
     const machine_node = this.createMachineNode(machine)

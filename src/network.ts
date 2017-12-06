@@ -221,7 +221,7 @@ export default class Network extends EventEmitter {
       this.emit('change', PatchType.TRANSITION_END, id)
     })
     machine.on('transition-step', (...steps) => {
-      this.parseTransitionSteps(machine.id(), ...steps)
+      this.parseTransitionSteps(machine.id(true), ...steps)
     })
     machine.on('queue-changed', () => this.emit('change', PatchType.QUEUE_CHANGED))
     machine.logHandler((msg, level) => {
@@ -300,26 +300,21 @@ export default class Network extends EventEmitter {
   }
 
   getNodeByName(name: string, machine_id: string): Node {
-    // for (let node of this.graph.set) {
-    var ret
-    this.graph.set.forEach(node => {
-      // TODO extract normalize()
+    for (let node of this.graph.set) {
       if (
-        node.name.replace(/[^\w]/g, '-') === name &&
+        node.name === name &&
         node.machine_id === machine_id
       ) {
-        ret = node
+        return node
       }
-    })
-    if (!ret) throw new Error(`Node not found ${name} from '${machine_id}'`)
-    return ret
+    }
+    throw new Error(`Node not found ${name} from '${machine_id}'`)
   }
 
   getNodeByStruct(state: IStateStruct): Node | null {
     return this.getNodeByName(
       state[StateStructFields.STATE_NAME],
-      // TODO extract normalize()
-      state[StateStructFields.MACHINE_ID].replace(/[^\w]/g, '-')
+      state[StateStructFields.MACHINE_ID]
     )
   }
 
