@@ -65,7 +65,8 @@ export class Node {
   get is_set(): boolean {
     // TODO make sure this shows proper states with "Transition steps"
     // granularity on both an external queue and a nested queue
-    return this.machine.transition && this.machine.transition.machine == this.machine
+    return this.machine.transition &&
+      this.machine.transition.machine == this.machine
       ? this.machine.transition.before.includes(this.name)
       : this.machine.is(this.name)
   }
@@ -197,7 +198,7 @@ export default class Network extends EventEmitter {
     // - adding / removing a state
     // TODO unbind on dispose
     // TODO group the same changes emitted by a couple of machines
-    const id = machine.id(true);
+    const id = machine.id(true)
     machine.on('change', () => this.emit('change', PatchType.STATE_CHANGED))
     machine.on('pipe', () => {
       this.linkPipedStates(machine)
@@ -223,12 +224,16 @@ export default class Network extends EventEmitter {
     machine.on('transition-step', (...steps) => {
       this.parseTransitionSteps(machine.id(true), ...steps)
     })
-    machine.on('queue-changed', () => this.emit('change', PatchType.QUEUE_CHANGED))
+    machine.on('queue-changed', () =>
+      this.emit('change', PatchType.QUEUE_CHANGED)
+    )
     machine.logHandler((msg, level) => {
       machine.logHandlerDefault(msg.toString(), level)
       // TODO no hardcoded level
-      if (level > 2) return
-      this.logs.push({id, msg, level})
+      if (level > 2) {
+        return
+      }
+      this.logs.push({ id, msg, level })
     })
   }
 
@@ -301,10 +306,7 @@ export default class Network extends EventEmitter {
 
   getNodeByName(name: string, machine_id: string): Node {
     for (let node of this.graph.set) {
-      if (
-        node.name === name &&
-        node.machine_id === machine_id
-      ) {
+      if (node.name === name && node.machine_id === machine_id) {
         return node
       }
     }

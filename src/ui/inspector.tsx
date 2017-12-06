@@ -1,17 +1,17 @@
-import renderLayout, {TLayoutProps} from './layout'
+import renderLayout, { TLayoutProps } from './layout'
 // UI type
 import Graph from './joint'
-import {INetworkJson} from './joint-network'
+import { INetworkJson } from './joint-network'
 // import Graph from './cola'
 // import { INetworkJson } from './cola-network'
 // import * as io from 'socket.io-client'
-import Network, {ILogEntry, IPatch, PatchType} from '../network'
+import Network, { ILogEntry, IPatch, PatchType } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
-import {default as JointDataService, StepTypes} from './joint-data-service'
-import {throttle} from 'underscore'
+import { default as JointDataService, StepTypes } from './joint-data-service'
+import { throttle } from 'underscore'
 import States from './states'
-import {ITransitions} from './states-types'
+import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
 import Logger from '../logger-file'
@@ -366,9 +366,8 @@ export class Inspector implements ITransitions {
         return self.logs.slice(0, self.data_service.patch_position)
       },
       get machines() {
-        if (!self.graph.data)
-          return []
-        return self.graph.data.cells.filter(c => c.type == 'uml.State' )
+        if (!self.graph.data) return []
+        return self.graph.data.cells.filter(c => c.type == 'uml.State')
       },
       get is_connected() {
         return self.states.is('Connected') || self.states.is('FullSync')
@@ -441,7 +440,10 @@ export class Inspector implements ITransitions {
     })
     key('right', () => {
       const val = this.data_service.position
-      this.states.add('Rendering', Math.min(val + 1, this.data_service.position_max))
+      this.states.add(
+        'Rendering',
+        Math.min(val + 1, this.data_service.position_max)
+      )
     })
   }
 

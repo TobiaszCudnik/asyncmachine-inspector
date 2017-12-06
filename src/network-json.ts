@@ -57,8 +57,9 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   parseNode(graph_node: GraphNode) {
     const machine = graph_node.machine
 
-    if (!this.machine_ids.has(graph_node.machine_id))
+    if (!this.machine_ids.has(graph_node.machine_id)) {
       this.parseMachine(machine)
+    }
 
     const node = this.createStateNode(graph_node)
 

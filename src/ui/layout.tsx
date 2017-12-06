@@ -38,7 +38,7 @@ import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
 import * as md5 from 'md5'
-import {StateChangeTypes} from "asyncmachine/build/types";
+import { StateChangeTypes } from 'asyncmachine/build/types'
 // TODO undelete and branch
 // import ConnectionDialog from './connection-dialog'
 
@@ -77,7 +77,7 @@ export type TLayoutProps = {
   onStepType: Function
   onAutoplayToggle: Function
   onPlayButton: Function
-  is_legend_visible: boolean,
+  is_legend_visible: boolean
   queues: {}
 }
 
@@ -100,7 +100,7 @@ const log = (...args) => {}
  */
 export class Main extends Component<
   TLayoutProps,
-  { msgHidden?: boolean; sidebar?: boolean, sidebar_left?: boolean }
+  { msgHidden?: boolean; sidebar?: boolean; sidebar_left?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
@@ -200,7 +200,7 @@ export class Main extends Component<
               {/*<RaisedButton label="Logs" onClick={this.handleToggleSidebar.bind(this)}/>*/}
             </ToolbarGroup>
           </Toolbar>
-          <Chip id="step-counter" style={{border: '1px solid #808080'}}>
+          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
             {d.position} / {d.position_max}
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
@@ -218,28 +218,34 @@ export class Main extends Component<
             <Drawer
               className="sidebar-container left"
               open={this.state.sidebar_left}
-              style={{position: 'absolute'}}
+              style={{ position: 'absolute' }}
             >
               <div className="sidebar left">
                 {(() => {
-                  function QueueList({machine_id, queue}) {
+                  function QueueList({ machine_id, queue }) {
                     let class_name = `group-${machine_id}`
-                    const items = queue.map( (entry, i) => {
+                    const items = queue.map((entry, i) => {
                       let type
                       let auto = entry.auto ? ':auto' : ''
-                      switch(entry.type) {
-                        case StateChangeTypes.ADD: type = `[add${auto}]`;
-                          break;
-                        case StateChangeTypes.DROP: type = `[drop${auto}]`;
-                          break;
-                        case StateChangeTypes.SET: type = `[set${auto}]`;
-                          break;
+                      switch (entry.type) {
+                        case StateChangeTypes.ADD:
+                          type = `[add${auto}]`
+                          break
+                        case StateChangeTypes.DROP:
+                          type = `[drop${auto}]`
+                          break
+                        case StateChangeTypes.SET:
+                          type = `[set${auto}]`
+                          break
                       }
                       let target_states = ''
                       if (entry.machine != machine_id) {
                         let class_name = `group-${entry.machine}`
-                        target_states = <span className={class_name}>
-                          [{entry.machine}] {entry.states.join(' ')}</span>
+                        target_states = (
+                          <span className={class_name}>
+                            [{entry.machine}] {entry.states.join(' ')}
+                          </span>
+                        )
                       } else {
                         target_states = <span>{entry.states.join(' ')}</span>
                       }
@@ -263,12 +269,19 @@ export class Main extends Component<
                     container.push(
                       <div key={machine.id} className={class_name}>
                         <h3>{machine.name}</h3>
-                        Queue: {machine.queue.length}<br />
-                        Listeners: {machine.listeners}<br />
-                        During transition: {machine.is_touched ? 'YES' : 'no'}<br />
-                        Queue active: {machine.processing_queue ? 'YES' : 'no'}<br />
+                        Queue: {machine.queue.length}
                         <br />
-                        <QueueList machine_id={machine.id} queue={machine.queue} />
+                        Listeners: {machine.listeners}
+                        <br />
+                        During transition: {machine.is_touched ? 'YES' : 'no'}
+                        <br />
+                        Queue active: {machine.processing_queue ? 'YES' : 'no'}
+                        <br />
+                        <br />
+                        <QueueList
+                          machine_id={machine.id}
+                          queue={machine.queue}
+                        />
                       </div>
                     )
                   }

@@ -9,7 +9,7 @@ import {
 } from '../network-json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
-import {QueueRowFields, StateChangeTypes} from "asyncmachine/build/types";
+import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,
@@ -39,8 +39,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   // TODO number of listeners
   createMachineNode(machine: AsyncMachine<any, any, any>): TMachine {
     const machine_id = machine.id(true)
-    const queue = machine.queue().length ? `(Q: ${machine.queue().length})`
-        : '';
+    const queue = machine.queue().length ? `(Q: ${machine.queue().length})` : ''
     return {
       type: 'uml.State',
       name: machine.id(),
@@ -49,14 +48,15 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       z: 1,
       is_touched: this.network.machines_during_transition.has(machine_id),
       queue: machine.queue().map(r => ({
-        machine: (r[QueueRowFields.TARGET]||machine).id(true),
+        machine: (r[QueueRowFields.TARGET] || machine).id(true),
         states: r[QueueRowFields.STATES],
         type: r[QueueRowFields.STATE_CHANGE_TYPE],
         auto: r[QueueRowFields.AUTO]
       })),
       processing_queue: machine.lock_queue,
-      listeners: Object.values(machine._events || {}).map( e => e.length || 1 )
-        .reduce( (count, num) => (count||0) + num)
+      listeners: Object.values(machine._events || {})
+        .map(e => e.length || 1)
+        .reduce((count, num) => (count || 0) + num)
     }
   }
   createStateNode(node: GraphNode): TState {
@@ -155,7 +155,7 @@ export type TMachine = {
   }
   // attrs: { text: { text: string } }
   is_touched?: boolean
-  queue: {machine?: string, states: StateName[], type: StateChangeTypes}[]
+  queue: { machine?: string; states: StateName[]; type: StateChangeTypes }[]
 }
 
 export type TState = {
