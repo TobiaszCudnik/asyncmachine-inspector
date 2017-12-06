@@ -1,26 +1,20 @@
-import renderLayout from './layout'
+import renderLayout, {TLayoutProps} from './layout'
 // UI type
 import Graph from './joint'
-import { INetworkJson } from './joint-network'
+import {INetworkJson} from './joint-network'
 // import Graph from './cola'
 // import { INetworkJson } from './cola-network'
 // import * as io from 'socket.io-client'
-import { ILogEntry, IPatch, PatchType } from '../network'
+import Network, {ILogEntry, IPatch, PatchType} from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
-import {
-  default as JointDataService,
-  Direction,
-  StepTypes
-} from './joint-data-service'
-import { throttle } from 'underscore'
-import { TLayoutProps } from './layout'
+import {default as JointDataService, StepTypes} from './joint-data-service'
+import {throttle} from 'underscore'
 import States from './states'
-import { ITransitions } from './states-types'
+import {ITransitions} from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
 import Logger from '../logger-file'
-import Network from '../network'
 import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
@@ -64,6 +58,9 @@ export class Inspector implements ITransitions {
   // TODO type
   layout_worker: any
   full_sync: INetworkJson
+  last_render: number
+  data_service_sync_max_skip = 500
+  data_service_last_sync = 0
 
   constructor(
     public container_selector = '#am-inspector',
@@ -162,9 +159,6 @@ export class Inspector implements ITransitions {
     // TODO async
     this.layout_worker.reset()
   }
-
-  data_service_sync_max_skip = 500
-  data_service_last_sync = 0
 
   async DiffSync_state(packet: IPatch) {
     const states = this.states
@@ -283,14 +277,9 @@ export class Inspector implements ITransitions {
   }
 
   async TimelineScrolled_state(value: number) {
-    // this.data_service.scrollTo(value)
-    // TODO propagate the current position to the worker first
-    // TODO merge the common parts with #playStep
     this.states.add('Rendering', value)
     this.states.drop('TimelineScrolled')
   }
-
-  last_render: number
 
   Playing_enter() {
     return Boolean(this.data_service.position_max)
