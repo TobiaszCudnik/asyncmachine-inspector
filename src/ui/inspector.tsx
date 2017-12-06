@@ -437,11 +437,11 @@ export class Inspector implements ITransitions {
     })
     key('left', () => {
       const val = this.data_service.position
-      this.states.add('Rendering', val - 1)
+      this.states.add('Rendering', Math.max(0, val - 1))
     })
     key('right', () => {
       const val = this.data_service.position
-      this.states.add('Rendering', val + 1)
+      this.states.add('Rendering', Math.min(val + 1, this.data_service.position_max))
     })
   }
 
