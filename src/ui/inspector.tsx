@@ -447,6 +447,12 @@ export class Inspector implements ITransitions {
       )
       this.states.add('TimelineScrolled', next_pos)
     })
+    key('space', () => {
+      if (this.states.is('Playing'))
+        this.states.drop('Playing')
+      else
+        this.states.add('Playing')
+    })
   }
 
   initSnapshotUpload() {

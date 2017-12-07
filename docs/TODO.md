@@ -1,7 +1,6 @@
 # TODO
 
 #### Bugs
-- space should pause
 - non-normalized machine names in the machines sidebar
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
