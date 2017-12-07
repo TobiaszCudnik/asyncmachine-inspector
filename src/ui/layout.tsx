@@ -21,7 +21,7 @@ import MenuItem from 'material-ui/MenuItem'
 import Toggle from 'material-ui/Toggle'
 import Drawer from 'material-ui/Drawer'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import { ILogEntry } from '../network'
+import { ILogEntry, ITransitionData } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import IconPlay from 'material-ui/svg-icons/av/play-arrow'
 import IconPause from 'material-ui/svg-icons/av/pause'
@@ -70,6 +70,7 @@ export type TLayoutProps = {
   msg: string
   msgHidden: boolean
   step_type: string
+  active_transitions: ITransitionData[]
   // listeners
   onDownloadSnapshot: Function
   onTimelineSlider: Function
@@ -222,22 +223,25 @@ export class Main extends Component<
             >
               <div className="sidebar left">
                 {(() => {
+                  function getTransitionType(entry: {
+                    type: StateChangeTypes
+                    auto: boolean
+                  }) {
+                    let auto = entry.auto ? ':auto' : ''
+                    switch (entry.type) {
+                      case StateChangeTypes.ADD:
+                        return `[add${auto}]`
+                      case StateChangeTypes.DROP:
+                        return `[drop${auto}]`
+                      case StateChangeTypes.SET:
+                        return `[set${auto}]`
+                    }
+                  }
+
                   function QueueList({ machine_id, queue }) {
                     let class_name = `group-${machine_id}`
                     const items = queue.map((entry, i) => {
-                      let type
-                      let auto = entry.auto ? ':auto' : ''
-                      switch (entry.type) {
-                        case StateChangeTypes.ADD:
-                          type = `[add${auto}]`
-                          break
-                        case StateChangeTypes.DROP:
-                          type = `[drop${auto}]`
-                          break
-                        case StateChangeTypes.SET:
-                          type = `[set${auto}]`
-                          break
-                      }
+                      let type = getTransitionType(entry)
                       let target_states = ''
                       if (entry.machine != machine_id) {
                         let class_name = `group-${entry.machine}`
@@ -259,11 +263,54 @@ export class Main extends Component<
                     return <div>{items}</div>
                   }
 
+                  // TODO merge QueueList and ActiveTransitionsList
+                  function ActiveTransitionsList({
+                    transitions
+                  }: {
+                    transitions: ITransitionData[]
+                  }) {
+                    transitions = [...transitions]
+                    transitions.reverse()
+                    const items = transitions.map((entry, i) => {
+                      let class_name = `group-${entry.queue_machine_id}`
+                      let type = getTransitionType(entry)
+                      let target_states = ''
+                      if (entry.machine_id != entry.queue_machine_id) {
+                        let class_name = `group-${entry.machine_id}`
+                        target_states = (
+                          <span className={class_name}>
+                            [{entry.machine_id}] {entry.states.join(' ')}
+                          </span>
+                        )
+                      } else {
+                        target_states = <span>{entry.states.join(' ')}</span>
+                      }
+                      return (
+                        <span className={class_name} key={i}>
+                          {type} {target_states}
+                          <br />
+                        </span>
+                      )
+                    })
+                    return items.length ? <div>{items}</div> : null
+                  }
+
                   // TODO transition info
                   // - most recent transition
                   // - touched machines & states
                   // - parent transitions, if any
                   let container = []
+                  container.push(
+                    <div key="active-transitions">
+                      <h3>
+                        Active transitions:{' '}
+                        {this.props.active_transitions.length}
+                      </h3>
+                      <ActiveTransitionsList
+                        transitions={this.props.active_transitions}
+                      />
+                    </div>
+                  )
                   for (let machine of this.props.machines) {
                     let class_name = `group-${machine.id}`
                     container.push(

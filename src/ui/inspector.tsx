@@ -347,7 +347,7 @@ export class Inspector implements ITransitions {
         return self.data_service.position_max
       },
       get is_during_transition() {
-        return self.data_service.during_transition
+        return Boolean(self.data_service.active_transitions.length)
       },
       get position() {
         return self.data_service.position
@@ -375,6 +375,12 @@ export class Inspector implements ITransitions {
       get on_last() {
         return self.data_service.is_latest
       },
+      get is_playing() {
+        return self.states.is('Playing')
+      },
+      get active_transitions() {
+        return self.data_service.active_transitions
+      },
       onDownloadSnapshot: async function() {
         const { patches } = await self.layout_worker.export()
         const content = JSON.stringify({
@@ -396,9 +402,6 @@ export class Inspector implements ITransitions {
       onStepType: (event, index, value) => {
         if (self.data_service.step_type != value)
           self.states.add('StepTypeChanged', value)
-      },
-      get is_playing() {
-        return self.states.is('Playing')
       },
       onPlayButton: playstop,
       onAutoplayToggle: () => {

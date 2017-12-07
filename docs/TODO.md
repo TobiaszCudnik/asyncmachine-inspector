@@ -1,8 +1,8 @@
 # TODO
 
 #### Bugs
-- rewinding should pause
-  - rewinding behind the start/end causes an exception
+- space should pause
+- non-normalized machine names in the machines sidebar
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
@@ -11,6 +11,7 @@
   - state_style, is_touched, .during-transition
 
 #### UI
+- memorize the latest state of Log Sidebar and Machines Sidebar
 - save as file / download a log on a hotkey
 - log sidebar
   - filters
@@ -21,16 +22,11 @@
 - change background to white and align other colors
 - sticky graphs (define position once dragged by a user)
 - legend
+  - list hotkeys
   - grouping
   - descriptions
   - better background, dimmed out
   - close button
-- left sidebar
-  - machine stats
-    - queue size
-    - listeners count
-    - abort functions count
-  - currently processing machine
 - sidebars
   - size change
 - minimap

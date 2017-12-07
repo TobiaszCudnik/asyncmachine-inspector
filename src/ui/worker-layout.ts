@@ -5,12 +5,13 @@ import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as deepcopy from 'deepcopy'
 import { IDelta } from 'jsondiffpatch'
+import { ITransitionData } from '../network'
 
 export interface IDataServiceSync {
   position: number
   position_max: number
   step_type: StepTypes
-  during_transition: boolean
+  active_transitions: ITransitionData[]
   is_latest: boolean
   current_patch: Object
   logs: string[]
@@ -44,7 +45,7 @@ function syncDataService(): IDataServiceSync {
     'position',
     'position_max',
     'step_type',
-    'during_transition',
+    'active_transitions',
     'is_latest',
     'current_patch',
     'patch_position',

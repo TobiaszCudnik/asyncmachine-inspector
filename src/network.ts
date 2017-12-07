@@ -15,6 +15,7 @@ import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from './network-json'
+import { StateChangeTypes } from 'asyncmachine/build/types'
 // TODO remove once fixed in webstorm
 // import Transition from '../node_modules/asyncmachine/build/transition'
 
@@ -24,8 +25,17 @@ export type NodeGraph = Graph<Node>
 export interface IPatch {
   diff: IDelta
   type: PatchType
-  logs?: ILogEntry[]
   machine_id: string
+  logs?: ILogEntry[]
+  data?: ITransitionData
+}
+
+export interface ITransitionData {
+  type: StateChangeTypes
+  states: string[]
+  queue_machine_id: string
+  machine_id: string
+  auto: boolean
 }
 
 export interface ILogEntry {
@@ -209,7 +219,14 @@ export default class Network extends EventEmitter {
 
       this.machines_during_transition.add(id)
       // TODO this fires too early and produces an empty diff
-      this.emit('change', PatchType.TRANSITION_START, id)
+      const transition_data: ITransitionData = {
+        machine_id: transition.machine.id(true),
+        queue_machine_id: transition.source_machine.id(true),
+        states: transition.requested_states,
+        auto: transition.auto,
+        type: transition.type
+      }
+      this.emit('change', PatchType.TRANSITION_START, id, transition_data)
     })
     machine.on('transition-end', transition => {
       if (this.transition_origin === machine) {

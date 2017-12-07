@@ -20,7 +20,7 @@ const log = (...args) => {}
 // const log = (...args) => console.log(...args)
 
 /**
- * TODO extract common logic to a super class
+ * TODO extract common logic into a super class (low prio)
  */
 class JointDataService extends EventEmitter {
   patches: IPatch[] = [
@@ -29,14 +29,16 @@ class JointDataService extends EventEmitter {
   data: INetworkJson | null
   patch_position = 0
   position = 0
-  active_transitions = 0
+  // TODO only transition_start|end
+  active_transitions: IPatch[] = []
   /** Did the last scroll add or remove any cells? */
   // TODO binary flags for all of the last scrolls props
   last_scroll_add_remove = false
   last_scroll_direction: Direction | null = null
   step_type: StepTypes = StepTypes.STATES
   /**
-     * Index of patches of a certain type (values map directly to this.patches)*/
+   * Index of patches of a certain type (values map directly to this.patches)
+   */
   index: {
     states: number[]
     transitions: number[]
@@ -44,9 +46,6 @@ class JointDataService extends EventEmitter {
     // `[0]` means initial full sync
     states: [0],
     transitions: [0]
-  }
-  get during_transition(): boolean {
-    return Boolean(this.active_transitions)
   }
   get current_patch(): IPatch | null {
     if (!this.patch_position) return null
@@ -186,11 +185,11 @@ class JointDataService extends EventEmitter {
   }
 
   /**
-     * Slides data to specific point (0 == no patches applied).
-     * 
-     * Returns a list of affected nodes (in their latest form (
-     * in the scroll direction)).
-     */
+   * Slides data to specific point (0 == no patches applied).
+   *
+   * Returns a list of affected nodes (in their latest form (
+   * in the scroll direction)).
+   */
   protected scrollToPatch(position: number): Set<string> {
     assert(typeof position == 'number')
     this.last_scroll_add_remove = false
@@ -201,7 +200,7 @@ class JointDataService extends EventEmitter {
       for (let i = this.patch_position; i > position; i--) {
         let diff = this.patches[i].diff
         if (diff) this.unapplyDiff(diff, changed)
-        this.handleDuringTransition(this.patches[i])
+        this.handleDuringTransition(this.patches[i], i)
       }
     } else if (position > this.patch_position) {
       this.last_scroll_direction = Direction.FWD
@@ -209,7 +208,7 @@ class JointDataService extends EventEmitter {
       for (let i = this.patch_position + 1; i <= position; i++) {
         let diff = this.patches[i].diff
         if (diff) this.applyDiff(diff, changed)
-        this.handleDuringTransition(this.patches[i])
+        this.handleDuringTransition(this.patches[i], i)
       }
     }
     this.patch_position = position
@@ -260,23 +259,46 @@ class JointDataService extends EventEmitter {
       this.last_scroll_add_remove || (Array.isArray(cell) && cell.length !== 2)
   }
 
-  // TODO breaks when reversing inside nested active_transitions
-  handleDuringTransition(packet) {
+  // TODO breaks when reversing inside nested active_transitions (reproduce)
+  // TODO this should be executed once, at the end and reverse as much back
+  // as needed to zero the counter of the active transitions
+  handleDuringTransition(packet: IPatch, position: number) {
     // if (this.step_type != StepTypes.STEPS)
     //   return
     // TODO expose data for messages
     const reversed = this.last_scroll_direction == Direction.BACK
-    let count = this.active_transitions
+    let count = this.active_transitions.length
     if (packet.type == PatchType.TRANSITION_START) {
       log('transition start', reversed ? -1 : 1)
-      this.active_transitions += reversed ? -1 : 1
+      // this.active_transitions += reversed ? -1 : 1
+      if (reversed) {
+        this.active_transitions.pop()
+      } else {
+        this.active_transitions.push(packet.data)
+      }
     } else if (packet.type == PatchType.TRANSITION_END) {
       log('transition end', reversed ? -1 : 1)
-      this.active_transitions += reversed ? 1 : -1
+      // this.active_transitions += reversed ? 1 : -1
+      if (reversed) {
+        // find the last transition_start (from the current position)
+        let latest_transition
+        for (let i = position; i >= 0; i--) {
+          if (this.patches[i].type == PatchType.TRANSITION_START) {
+            latest_transition = this.patches[i]
+            break
+          }
+        }
+        if (!latest_transition) {
+          throw Error('Missing TRANSITION_START')
+        }
+        this.active_transitions.push(latest_transition.data)
+      } else {
+        this.active_transitions.pop()
+      }
     }
     log(
       'this.active_transitions ',
-      this.active_transitions - count,
+      this.active_transitions.length - count,
       '==',
       this.active_transitions
     )

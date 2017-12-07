@@ -1,7 +1,7 @@
 /**
  * TODO network-to-ui-json should be handled by the server
  */
-import Network, { PatchType } from './network'
+import Network, { ITransitionData, PatchType } from './network'
 import * as io from 'socket.io-client'
 // import NetworkJson, {
 //     JsonDiffFactory
@@ -51,13 +51,12 @@ export default class Logger {
     this.base_version = this.diff.previous_json
     this.io.emit('full-sync', this.base_version)
 
-    this.json.network.on('change', (type, machine_id, ...params) =>
-      this.onGraphChange(type, machine_id, ...params)
+    this.json.network.on('change', (type, machine_id, data) =>
+      this.onGraphChange(type, machine_id, data)
     )
   }
 
-  // TODO merge many empty transition-end events into 1
-  onGraphChange(type: PatchType, machine_id, ...params) {
+  onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
     let diff = this.diff.generateDiff()
     let packet = {
       diff,
@@ -65,6 +64,7 @@ export default class Logger {
       machine_id,
       logs: this.network.logs
     }
+    if (data) packet.data = data
     // skip empty steps
     if (
       type == PatchType.TRANSITION_STEP &&
@@ -74,7 +74,6 @@ export default class Logger {
       return
     }
     this.io.emit('diff-sync', packet)
-    // console.dir(diff && diff.cells)
     this.network.logs = []
   }
 }
