@@ -1,8 +1,12 @@
 # TODO
 
 #### Bugs
+- reversing on Transition Steps gives a diff result than going from the 
+  beginning of the transition
+  - difference in requested transitions
 - pause, change step type - starts playing
-- non-normalized machine names in the machines sidebar
+- transaction's source machine (the active queue) should also be marked as touched
+- machines sidebar should use full machine names
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - transition start should be merged with the first change
@@ -23,6 +27,7 @@
   - close button
   - generate the graph elements using the graph engine
 - save as file / download a log on a hotkey
+- split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - log sidebar
   - filters
     - by log level / query text
