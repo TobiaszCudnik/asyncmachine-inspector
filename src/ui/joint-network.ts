@@ -137,6 +137,7 @@ export class JsonDiffFactory extends JsonDiffFactoryBase<
 // TYPES
 
 export type MachineId = string
+export type MachineStateId = string
 export type StateName = string
 
 export type TMachine = {
@@ -156,11 +157,13 @@ export type TMachine = {
   // attrs: { text: { text: string } }
   is_touched?: boolean
   queue: { machine?: string; states: StateName[]; type: StateChangeTypes }[]
+  processing_queue: boolean
+  listeners: number
 }
 
 export type TState = {
   type: 'fsa.State'
-  id: MachineId
+  id: MachineStateId
   parent: string
   attrs: {
     text: { text: StateName }

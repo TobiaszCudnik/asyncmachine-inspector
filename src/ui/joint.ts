@@ -345,7 +345,6 @@ export default class Ui extends UiBase<INetworkJson> {
       .forEach(state => {
         // state = state as joint.dia.Cell
         if (!this.paper.findViewByModel(state)) return
-        const view = this.paper.findViewByModel(state)
         const el = joint.V(this.paper.findViewByModel(state).el)
         // active state
         for (const type of ['set', 'multi', 'auto'])
