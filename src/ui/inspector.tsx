@@ -19,6 +19,7 @@ import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as key from 'keymaster'
+import deepMerge from 'deepmerge'
 import './worker-layout'
 
 const log = (...args) => {}
@@ -83,6 +84,7 @@ export class Inspector implements ITransitions {
     // this.socket.on('loggers', this.states.addByListener('Joining'))
     // predefined debugger port true)
     // TODO
+    // this.states.logLevel(3)
     if (port != 4040 && debug) {
       this.states.logLevel(3)
       const network = new Network()
@@ -160,6 +162,19 @@ export class Inspector implements ITransitions {
     this.layout_worker.reset()
   }
 
+  shouldPlay() {
+    return (
+      this.states.is('AutoplayOn') &&
+      (!this.data_service.position_max || this.states.is('TimelineOnLast'))
+    )
+  }
+
+  InitialRenderDone_state() {
+    if (this.states.is('AutoplayOn')) {
+      this.states.add('Playing')
+    }
+  }
+
   async DiffSync_state(packet: IPatch) {
     const states = this.states
     const abort = states.getAbort('DiffSync')
@@ -171,9 +186,7 @@ export class Inspector implements ITransitions {
     const force_refresh =
       now - this.data_service_last_sync > this.data_service_sync_max_skip
     // TODO extract to AutoplayOn_DiffSync (and handle async dataservice sync)
-    const play =
-      states.is('AutoplayOn') &&
-      (!this.data_service.position_max || states.is('TimelineOnLast'))
+    const play = this.shouldPlay()
     log('play', play)
     if (abort() && !force_refresh) return
     this.data_service_last_sync = now
@@ -228,12 +241,14 @@ export class Inspector implements ITransitions {
 
   async PlayStopClicked_state() {
     const abort = this.states.getAbort('PlayStopClicked')
-    if (this.states.is('Playing')) this.states.drop('Playing')
-    else if (
+    if (this.states.is('Playing')) {
+      this.states.drop('Playing')
+    } else if (
       this.data_service.position_max &&
       !this.states.is('TimelineOnLast')
-    )
+    ) {
       this.states.add('Playing')
+    }
     this.states.drop('PlayStopClicked')
   }
 
@@ -366,8 +381,16 @@ export class Inspector implements ITransitions {
         return self.logs.slice(0, self.data_service.patch_position)
       },
       get machines() {
-        if (!self.graph.data) return []
-        return self.graph.data.cells.filter(c => c.type == 'uml.State')
+        // TODO dont query the layout graph directly
+        let ret = {}
+        if (!self.graph.data) return ret
+        const machines = self.graph.data.cells.filter(
+          c => c.type == 'uml.State'
+        )
+        for (let cell of machines) {
+          ret[cell.id] = cell
+        }
+        return ret
       },
       get is_connected() {
         return self.states.is('Connected') || self.states.is('FullSync')
@@ -380,6 +403,36 @@ export class Inspector implements ITransitions {
       },
       get active_transitions() {
         return self.data_service.active_transitions
+      },
+      get active_transitions_touched() {
+        // TODO dont query the layout graph directly
+        let ret = {}
+        if (!self.graph.data) return ret
+        for (let cell of self.graph.data.cells) {
+          if (cell.type == 'fsa.State') {
+            if (!cell.step_style) continue
+            const [machine_id] = cell.id.split(':')
+            if (!ret[machine_id]) ret[machine_id] = []
+            ret[machine_id].push(cell.attrs.text.text)
+          } else if (cell.type == 'uml.State') {
+            if (!cell.is_touched) continue
+            if (!ret[cell.id]) ret[cell.id] = []
+          }
+        }
+        return ret
+      },
+      get prev_transitions() {
+        return self.data_service.prev_transitions
+      },
+      get prev_transitions_touched() {
+        let ret = {}
+        function removeDuplicates(dest, src) {
+          return _.uniq([...dest, src])
+        }
+        for (let transition of self.data_service.prev_transitions) {
+          ret = deepMerge(ret, transition.touched, removeDuplicates)
+        }
+        return ret
       },
       onDownloadSnapshot: async function() {
         const { patches } = await self.layout_worker.export()
@@ -448,10 +501,8 @@ export class Inspector implements ITransitions {
       this.states.add('TimelineScrolled', next_pos)
     })
     key('space', () => {
-      if (this.states.is('Playing'))
-        this.states.drop('Playing')
-      else
-        this.states.add('Playing')
+      if (this.states.is('Playing')) this.states.drop('Playing')
+      else this.states.add('Playing')
     })
   }
 
