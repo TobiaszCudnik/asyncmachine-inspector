@@ -53,7 +53,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         type: r[QueueRowFields.STATE_CHANGE_TYPE],
         auto: r[QueueRowFields.AUTO]
       })),
-      processing_queue: machine.lock_queue,
+      processing_queue: machine.queue().length,
       listeners: Object.values(machine._events || {})
         .map(e => e.length || 1)
         .reduce((count, num) => (count || 0) + num)

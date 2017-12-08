@@ -32,6 +32,7 @@ import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
 import { StateChangeTypes } from 'asyncmachine/build/types'
+// TODO this shouldnt be here
 import { TMachine } from './joint-network'
 import * as deepCopy from 'deepcopy'
 
@@ -346,10 +347,9 @@ export class Main extends Component<
                     let class_name = `group-${machine.id}`
                     let queue
                     if (machine.processing_queue) {
-                      let pending = machine.queue.length ? ':' : ''
                       queue = (
                         <div key={'queue'}>
-                          - EXECUTING QUEUE{pending}
+                          - EXECUTING QUEUE:
                           <QueueList
                             machine_id={machine.id}
                             queue={machine.queue}
@@ -359,7 +359,7 @@ export class Main extends Component<
                     } else if (machine.queue.length) {
                       queue = (
                         <div key={'queue'}>
-                          - pending queue ({machine.queue.length})
+                          - pending queue:
                           <QueueList
                             machine_id={machine.id}
                             queue={machine.queue}
