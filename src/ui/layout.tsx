@@ -2,12 +2,6 @@
 /// <reference path="../../typings/modules/react/index.d.ts" />
 /// <reference path="../../typings/modules/react-dom/index.d.ts" />
 /// <reference path="../../typings/modules/material-ui/index.d.ts" />
-
-/*
-* TODO:
-* - extract the template
-*/
-
 import * as React from 'react'
 import { render } from 'react-dom'
 import { Component } from 'react'
@@ -37,10 +31,9 @@ import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
 import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
-import * as md5 from 'md5'
 import { StateChangeTypes } from 'asyncmachine/build/types'
-// TODO undelete and branch
-// import ConnectionDialog from './connection-dialog'
+import { TMachine } from './joint-network'
+import * as deepCopy from 'deepcopy'
 
 const styles = {
   container: {
@@ -58,6 +51,8 @@ const muiTheme = getMuiTheme({
   }
 })
 
+type TTouchedNodes = { [machine_id: string]: string }
+
 export type TLayoutProps = {
   position_max: number
   is_during_transition: boolean
@@ -67,10 +62,13 @@ export type TLayoutProps = {
   on_last: boolean
   is_playing: boolean
   logs: ILogEntry[][]
-  msg: string
-  msgHidden: boolean
   step_type: string
+  // TODO dont use a layout specific type
+  machines: { [machine_id: string]: TMachine }
   active_transitions: ITransitionData[]
+  active_transitions_touched: { [machine_id: string]: string[] }
+  prev_transitions: ITransitionData[]
+  prev_transitions_touched: { [machine_id: string]: string[] }
   // listeners
   onDownloadSnapshot: Function
   onTimelineSlider: Function
@@ -85,29 +83,16 @@ export type TLayoutProps = {
 const log = (...args) => {}
 // const log = (...args) => console.log(...args)
 
-/**
- * TODO
- * - legend with state meanings (WHILE during transition)
- * - step by
- *   - states
- *   - transitions
- *   - steps
- * - step counter
- * - play/pause button
- * - zoom in/out slider (+background dragging)
- * - keystrokes
- *   - space pause/resume
- *   - left/right patch left right
- */
 export class Main extends Component<
   TLayoutProps,
-  { msgHidden?: boolean; sidebar?: boolean; sidebar_left?: boolean }
+  { sidebar?: boolean; sidebar_left?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
 
+    // TODO read those from localstorage
+    // TODO add step_style to states
     this.state = {
-      msgHidden: false,
       sidebar: false,
       sidebar_left: false
     }
@@ -116,20 +101,10 @@ export class Main extends Component<
     const a = inspector_css + joint_css
   }
 
-  componentWillReceiveProps(props) {
-    if (props.msg) {
-      this.setState({
-        msgHidden: false
-      })
-    }
-  }
-
-  // TODO
   handleToggleSidebar() {
     this.setState({ sidebar: !this.state.sidebar })
   }
 
-  // TODO
   handleToggleSidebarLeft() {
     this.setState({ sidebar_left: !this.state.sidebar_left })
   }
@@ -198,7 +173,6 @@ export class Main extends Component<
                   onToggle={this.handleToggleSidebar.bind(this)}
                 />
               </div>
-              {/*<RaisedButton label="Logs" onClick={this.handleToggleSidebar.bind(this)}/>*/}
             </ToolbarGroup>
           </Toolbar>
           <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
@@ -247,7 +221,8 @@ export class Main extends Component<
                         let class_name = `group-${entry.machine}`
                         target_states = (
                           <span className={class_name}>
-                            [{entry.machine}] {entry.states.join(' ')}
+                            [{machineName(entry.machine)}]{' '}
+                            {entry.states.join(' ')}
                           </span>
                         )
                       } else {
@@ -264,7 +239,7 @@ export class Main extends Component<
                   }
 
                   // TODO merge QueueList and ActiveTransitionsList
-                  function ActiveTransitionsList({
+                  function TransitionsList({
                     transitions
                   }: {
                     transitions: ITransitionData[]
@@ -279,7 +254,8 @@ export class Main extends Component<
                         let class_name = `group-${entry.machine_id}`
                         target_states = (
                           <span className={class_name}>
-                            [{entry.machine_id}] {entry.states.join(' ')}
+                            [{machineName(entry.machine_id)}]{' '}
+                            {entry.states.join(' ')}
                           </span>
                         )
                       } else {
@@ -295,41 +271,120 @@ export class Main extends Component<
                     return items.length ? <div>{items}</div> : null
                   }
 
-                  // TODO transition info
-                  // - most recent transition
-                  // - touched machines & states
-                  // - parent transitions, if any
+                  // magic....
+                  const machineName = ((machines, id: string) =>
+                    machines[id].name).bind(null, this.props.machines)
+
+                  function TouchedNodes({
+                    touched,
+                    transitions
+                  }: {
+                    touched: TTouchedNodes
+                    transitions?: ITransitionData[]
+                  }) {
+                    touched = deepCopy(touched)
+                    // show touched only when not directly requested
+                    for (let trans of transitions || []) {
+                      if (!touched[trans.machine_id]) continue
+                      touched[trans.machine_id] = _.difference(
+                        touched[trans.machine_id],
+                        trans.states
+                      )
+                      if (!touched[trans.machine_id].length)
+                        delete touched[trans.machine_id]
+                    }
+                    const items = Object.entries(
+                      touched
+                    ).map(([machine_id, states]) => {
+                      let class_name = `group-${machine_id}`
+                      return (
+                        <div key={machine_id} className={class_name}>
+                          - <strong>{machineName(machine_id)}</strong>
+                          {states.length ? ': ' + states.join(', ') : ''}
+                        </div>
+                      )
+                    })
+                    return items.length ? (
+                      <div>
+                        <br />
+                        <strong>Involved</strong>
+                        {items}
+                      </div>
+                    ) : null
+                  }
+
                   let container = []
-                  container.push(
-                    <div key="active-transitions">
-                      <h3>
-                        Active transitions:{' '}
-                        {this.props.active_transitions.length}
-                      </h3>
-                      <ActiveTransitionsList
-                        transitions={this.props.active_transitions}
-                      />
-                    </div>
-                  )
-                  for (let machine of this.props.machines) {
-                    let class_name = `group-${machine.id}`
+                  if (this.props.active_transitions.length) {
                     container.push(
-                      <div key={machine.id} className={class_name}>
-                        <h3>{machine.name}</h3>
-                        Queue: {machine.queue.length}
-                        <br />
-                        Listeners: {machine.listeners}
-                        <br />
-                        During transition: {machine.is_touched ? 'YES' : 'no'}
-                        <br />
-                        Queue active: {machine.processing_queue ? 'YES' : 'no'}
-                        <br />
-                        <br />
-                        <QueueList
-                          machine_id={machine.id}
-                          queue={machine.queue}
+                      <div key="active-transitions">
+                        <h2>Current transition</h2>
+                        <TransitionsList
+                          transitions={this.props.active_transitions}
+                        />
+                        <TouchedNodes
+                          touched={this.props.active_transitions_touched}
+                          transitions={this.props.active_transitions}
                         />
                       </div>
+                    )
+                  }
+                  if (this.props.prev_transitions.length) {
+                    container.push(
+                      <div key="previous-transition">
+                        <h2>Previous transition</h2>
+                        <TransitionsList
+                          transitions={this.props.prev_transitions}
+                        />
+                        <TouchedNodes
+                          touched={this.props.prev_transitions_touched}
+                          transitions={this.props.prev_transitions}
+                        />
+                      </div>
+                    )
+                  }
+                  function MachineEntry({ machine }: { machine: TMachine }) {
+                    let class_name = `group-${machine.id}`
+                    let queue
+                    if (machine.processing_queue) {
+                      let pending = machine.queue.length ? ':' : ''
+                      queue = (
+                        <div key={'queue'}>
+                          - EXECUTING QUEUE{pending}
+                          <QueueList
+                            machine_id={machine.id}
+                            queue={machine.queue}
+                          />
+                        </div>
+                      )
+                    } else if (machine.queue.length) {
+                      queue = (
+                        <div key={'queue'}>
+                          - pending queue ({machine.queue.length})
+                          <QueueList
+                            machine_id={machine.id}
+                            queue={machine.queue}
+                          />
+                        </div>
+                      )
+                    }
+                    return (
+                      <div key={machine.id} className={class_name}>
+                        <h3 style={{ marginBottom: '0' }}>{machine.name}</h3>
+                        - listeners: {machine.listeners}
+                        <br />
+                        {machine.is_touched ? (
+                          <div>- during transition</div>
+                        ) : (
+                          ''
+                        )}
+                        {queue}
+                      </div>
+                    )
+                  }
+                  container.push(<h2 key={'machines'}>Machines</h2>)
+                  for (let machine of Object.values(this.props.machines)) {
+                    container.push(
+                      <MachineEntry key={machine.id} machine={machine} />
                     )
                   }
                   return container

@@ -221,6 +221,7 @@ main {
 
 .sidebar.left {
     padding-top: 0;
+    white-space: normal;
 }
 
 #graph-container {
