@@ -16,8 +16,7 @@ import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from './network-json'
 import { StateChangeTypes } from 'asyncmachine/build/types'
-// TODO remove once fixed in webstorm
-// import Transition from '../node_modules/asyncmachine/build/transition'
+import Transition from 'asyncmachine/build/transition'
 
 export type MachinesMap = Map<AsyncMachine, string>
 export type NodeGraph = Graph<Node>
@@ -36,6 +35,7 @@ export interface ITransitionData {
   queue_machine_id: string
   machine_id: string
   auto: boolean
+  touched?: { [machine_id: string]: string[] }
 }
 
 export interface ILogEntry {
@@ -56,6 +56,7 @@ export enum PatchType {
   QUEUE_CHANGED
 }
 
+// TODO not needed?
 export interface ExternalNode {
   node: Node
   machine: AsyncMachine
@@ -214,11 +215,11 @@ export default class Network extends EventEmitter {
       this.linkPipedStates(machine)
       this.emit('change', PatchType.PIPE, id)
     })
-    machine.on('transition-init', transition => {
-      if (!this.transition_origin) this.transition_origin = machine
-
+    machine.on('transition-init', (transition: Transition) => {
+      if (!this.transition_origin) {
+        this.transition_origin = machine
+      }
       this.machines_during_transition.add(id)
-      // TODO this fires too early and produces an empty diff
       const transition_data: ITransitionData = {
         machine_id: transition.machine.id(true),
         queue_machine_id: transition.source_machine.id(true),
@@ -226,17 +227,32 @@ export default class Network extends EventEmitter {
         auto: transition.auto,
         type: transition.type
       }
+      // TODO this fires too early and produces an empty diff (reproduce)
       this.emit('change', PatchType.TRANSITION_START, id, transition_data)
     })
-    machine.on('transition-end', transition => {
+    machine.on('transition-end', (transition: Transition) => {
+      let touched = {}
       if (this.transition_origin === machine) {
         // if the first transition ended, cleanup everything
         this.transition_origin = null
         this.machines_during_transition.clear()
         this.transition_links.clear()
-        for (let node of this.graph.set) node.step_style = null
+        for (let node of this.graph.values()) {
+          if (!node.step_style) continue
+          if (!touched[node.machine_id]) touched[node.machine_id] = []
+          touched[node.machine_id].push(node.name)
+          node.step_style = null
+        }
       }
-      this.emit('change', PatchType.TRANSITION_END, id)
+      const transition_data: ITransitionData = {
+        machine_id: transition.machine.id(true),
+        queue_machine_id: transition.source_machine.id(true),
+        states: transition.requested_states,
+        auto: transition.auto,
+        type: transition.type,
+        touched: touched
+      }
+      this.emit('change', PatchType.TRANSITION_END, id, transition_data)
     })
     machine.on('transition-step', (...steps) => {
       this.parseTransitionSteps(machine.id(true), ...steps)
