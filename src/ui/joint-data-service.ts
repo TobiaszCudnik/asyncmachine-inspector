@@ -2,8 +2,9 @@ import { IDelta } from 'jsondiffpatch'
 import * as jsondiffpatch from 'jsondiffpatch'
 import { INetworkJson, TCell } from './joint-network'
 import { EventEmitter } from 'events'
-import { IPatch, PatchType, ILogEntry } from '../network'
+import { IPatch, PatchType, ILogEntry, ITransitionData } from '../network'
 import * as assert from 'assert/'
+import { sortedIndex } from 'underscore'
 
 export enum Direction {
   FWD,
@@ -21,6 +22,7 @@ const log = (...args) => {}
 
 /**
  * TODO extract common logic into a super class (low prio)
+ * - include the list from syncDataService
  */
 class JointDataService extends EventEmitter {
   patches: IPatch[] = [
@@ -29,8 +31,11 @@ class JointDataService extends EventEmitter {
   data: INetworkJson | null
   patch_position = 0
   position = 0
-  // TODO only transition_start|end
-  active_transitions: IPatch[] = []
+  // TODO type as only TRANSITION_START
+  active_transitions: ITransitionData[] = []
+  // not all the previous transitions, just the last 1 or a set of nested ones
+  // TODO type as only TRANSITION_END
+  prev_transitions: ITransitionData[] = []
   /** Did the last scroll add or remove any cells? */
   // TODO binary flags for all of the last scrolls props
   last_scroll_add_remove = false
@@ -212,6 +217,7 @@ class JointDataService extends EventEmitter {
       }
     }
     this.patch_position = position
+    this.buildPrevTransitions()
     this.emit('scrolled', position, changed)
     return changed
   }
@@ -302,6 +308,36 @@ class JointDataService extends EventEmitter {
       '==',
       this.active_transitions
     )
+  }
+  // TODO accept a params and return a value
+  buildPrevTransitions() {
+    this.prev_transitions = []
+    // find the last transition end in the index
+    let current_transition_pos = _.sortedIndex(
+      this.index.transitions,
+      this.patch_position
+    )
+    current_transition_pos--
+    if (current_transition_pos <= 0) return
+    let pos = this.index.transitions[current_transition_pos]
+    // always show a prev transition
+    if (
+      this.index.transitions[current_transition_pos + 1] == this.patch_position
+    )
+      pos++
+    // there was no prev transition
+    let active = 0
+    do {
+      let type = this.patches[pos].type
+      if (type == PatchType.TRANSITION_END) {
+        this.prev_transitions.unshift(this.patches[pos].data)
+        active++
+      } else if (type == PatchType.TRANSITION_START) {
+        active--
+      }
+      pos--
+    } while (active)
+    // TODO cache if needed
   }
 }
 
