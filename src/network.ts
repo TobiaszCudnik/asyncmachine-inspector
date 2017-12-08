@@ -237,6 +237,9 @@ export default class Network extends EventEmitter {
         this.transition_origin = null
         this.machines_during_transition.clear()
         this.transition_links.clear()
+        // TODO potentially skips other queue sources (from nested transitions)
+        const source_machine = transition.source_machine.id(true)
+        if (!touched[source_machine]) touched[source_machine] = []
         for (let node of this.graph.values()) {
           if (!node.step_style) continue
           if (!touched[node.machine_id]) touched[node.machine_id] = []
