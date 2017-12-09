@@ -412,11 +412,15 @@ export class Inspector implements ITransitions {
           if (cell.type == 'fsa.State') {
             if (!cell.step_style) continue
             const [machine_id] = cell.id.split(':')
-            if (!ret[machine_id]) ret[machine_id] = []
-            ret[machine_id].push(cell.attrs.text.text)
+            if (!ret[machine_id]) {
+              ret[machine_id] = []
+            }
+            ret[machine_id].push(cell.attrs.text.text.replace(' ', ''))
           } else if (cell.type == 'uml.State') {
             if (!cell.is_touched) continue
-            if (!ret[cell.id]) ret[cell.id] = []
+            if (!ret[cell.id]) {
+              ret[cell.id] = []
+            }
           }
         }
         return ret

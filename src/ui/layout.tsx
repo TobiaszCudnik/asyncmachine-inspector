@@ -35,7 +35,7 @@ import { StateChangeTypes } from 'asyncmachine/build/types'
 // TODO this shouldnt be here
 import { TMachine } from './joint-network'
 import * as deepCopy from 'deepcopy'
-import {partial} from 'underscore'
+import { partial } from 'underscore'
 
 const styles = {
   container: {
@@ -95,20 +95,23 @@ export class Main extends Component<
     // TODO read those from localstorage
     // TODO add step_style to states
     this.state = {
-      sidebar: false,
-      sidebar_left: false
+      sidebar: localStorage.getItem('ami-show-logs') == 'true' || false,
+      sidebar_left: localStorage.getItem('ami-show-machines') == 'true' || false
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
+    // TODO
     const a = inspector_css + joint_css
   }
 
   handleToggleSidebar() {
     this.setState({ sidebar: !this.state.sidebar })
+    localStorage.setItem('ami-show-logs', !this.state.sidebar)
   }
 
   handleToggleSidebarLeft() {
     this.setState({ sidebar_left: !this.state.sidebar_left })
+    localStorage.setItem('ami-show-machines', !this.state.sidebar_left)
   }
 
   render() {
@@ -122,7 +125,7 @@ export class Main extends Component<
               <div style={{ width: '7em', padding: '2em' }}>
                 <Toggle
                   label="Machines"
-                  defaultToggled={false}
+                  defaultToggled={this.state.sidebar_left}
                   onToggle={this.handleToggleSidebarLeft.bind(this)}
                 />
               </div>
@@ -171,7 +174,7 @@ export class Main extends Component<
               <div style={{ width: '7em' }}>
                 <Toggle
                   label="Logs"
-                  defaultToggled={false}
+                  defaultToggled={this.state.sidebar}
                   onToggle={this.handleToggleSidebar.bind(this)}
                 />
               </div>
