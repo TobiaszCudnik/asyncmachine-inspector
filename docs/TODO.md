@@ -15,8 +15,11 @@
   - state_style, is_touched, .during-transition
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
+- grab & scroll "jumps" after grabbing
 
 #### UI
+- machines sidebar
+  - show the next transition
 - memorize the latest state of Log Sidebar and Machines Sidebar, Step Type
 - sticky graphs (define position once dragged by a user)
 - legend
@@ -88,3 +91,5 @@
 - comments in the stackblitz demo file
   - Restaurant class should have a separate target
 - short screencasts showing off specific features
+- maybe - extract the cluster graph, worker-based dagre layout for jointjs
+  into a module
