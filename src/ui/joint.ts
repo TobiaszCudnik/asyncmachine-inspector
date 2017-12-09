@@ -126,26 +126,22 @@ export default class Ui extends UiBase<INetworkJson> {
 
       this.bindMouseZoom()
 
-      var myAdjustVertices = _.partial(adjustVertices, this.graph)
-
       // adjust vertices when a cell is removed or its source/target
       // was changed
       this.graph.on(
-        `add remove change:source change:target change:position change:size`,
-        myAdjustVertices
+        'add remove change:source change:target change:position change:size',
+        _.partial(adjustVertices, this.graph)
       )
-
-      // TODO bind to on machine drag
-
       // also when an user stops interacting with an element.
-      this.paper.on('cell:pointerup', myAdjustVertices)
+      this.paper.on('cell:pointerup', _.partial(adjustVertices, this.graph))
+
+      // memorize dragged position
+      this.paper.on('cell:pointerup', cell => this.memorizePosition(cell))
     }
 
-    if (this.data) await this.setData(this.data)
-
-    // let start = Date.now()
-    // morphdom(this.container.get(0), this.vdom_container.get(0))
-    // console.log(`DOM sync ${Date.now() - start}ms`)
+    if (this.data) {
+      await this.setData(this.data)
+    }
   }
 
   // TODO layout_data?
@@ -448,5 +444,13 @@ export default class Ui extends UiBase<INetworkJson> {
       this.paper.viewport.getCTM().inverse()
     )
     return pointTransformed
+  }
+
+  // TODO support forgetting
+  // TODO support state cells
+  memorizePosition(cell) {
+    cell = cell.model || cell
+    if (!(cell instanceof joint.shapes.uml.State)) return
+    cell.set('fixed-position', true)
   }
 }

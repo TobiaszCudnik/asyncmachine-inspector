@@ -35,6 +35,7 @@ import { StateChangeTypes } from 'asyncmachine/build/types'
 // TODO this shouldnt be here
 import { TMachine } from './joint-network'
 import * as deepCopy from 'deepcopy'
+import {partial} from 'underscore'
 
 const styles = {
   container: {
@@ -272,9 +273,11 @@ export class Main extends Component<
                     return items.length ? <div>{items}</div> : null
                   }
 
-                  // magic....
-                  const machineName = ((machines, id: string) =>
-                    machines[id].name).bind(null, this.props.machines)
+                  // TODO make it less bad
+                  const machineName = partial(
+                    (machines, id: string) => machines[id].name,
+                    this.props.machines
+                  )
 
                   function TouchedNodes({
                     touched,
@@ -301,7 +304,7 @@ export class Main extends Component<
                       return (
                         <div key={machine_id} className={class_name}>
                           - <strong>{machineName(machine_id)}</strong>
-                          {states.length ? ': ' + states.join(', ') : ''}
+                          {states.length ? ': ' + states.join(' ') : ''}
                         </div>
                       )
                     })

@@ -114,6 +114,7 @@ export default class GraphLayout {
     let start = Date.now()
     let cloned = 0
     let dirty = 0
+    // layout the subgraphs (states)
     for (let [id, graph] of this.subgraphs.entries()) {
       let graph_data = graph.graph()
       if (!graph_data.is_dirty) continue
@@ -136,7 +137,7 @@ export default class GraphLayout {
         .size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() -
         start}ms`
     )
-    // sizes of clusters could've changed
+    // layout the clusters (machines)
     if (this.clusters.graph().is_dirty && this.clusters.nodes()) {
       // TODO support the hash based cache
       dirty++
@@ -175,8 +176,11 @@ export default class GraphLayout {
 
   importLayoutData(data: Object) {
     for (let [key, graph] of Object.entries(data)) {
-      if (key == '_clusters') this.clusters = graph
-      else this.subgraphs.set(key, graph)
+      if (key == '_clusters') {
+        this.clusters = graph
+      } else {
+        this.subgraphs.set(key, graph)
+      }
     }
     // TODO GC old entries from @subgraphs
   }
@@ -370,7 +374,7 @@ export default class GraphLayout {
 
   syncClusterSizes() {
     for (let [id, graph] of this.subgraphs.entries()) {
-      // add half of the size of the biggest node (to both axis)
+      // add a half of the size of the biggest node (to both axis)
       let biggest_radius = graph.nodes().reduce((ret, node: string) => {
         let width = graph.node(node).width
         return width > ret ? width : ret
@@ -458,6 +462,15 @@ export default class GraphLayout {
       if (!model) {
         cells_to_add.push(cell)
       } else {
+        const is_state = cell.type == 'fsa.State'
+        if (model.get('fixed-position')) {
+          delete cell.position
+        } else if (
+          is_state &&
+          this.source_graph.getCell(cell.parent).get('fixed-position')
+        ) {
+          delete cell.position
+        }
         model.set(cell)
       }
     }
