@@ -16,35 +16,44 @@
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
 - grab & scroll "jumps" after grabbing
+- new machine should be a 2 step highlighted transition
 
 #### UI
 - machines sidebar
   - show the next transition
-- memorize the latest state of Log Sidebar and Machines Sidebar, Step Type
-- sticky graphs (define position once dragged by a user)
+  - sort by queue length, length, index
+- keep in local storage
+  - Log Sidebar open state
+  - Machines Sidebar open state
+  - Step Type open state
+  - fixed-position states (based on url & machine IDs)
+  - introduce "reset" menu, resetting each or all of the above
 - legend
-  - list hotkeys
-  - grouping
+  - list of hotkeys
+  - grouping by type
+    - active states
+    - non active states
+    - transition states
+    - hotkeys
   - descriptions
   - better background, dimmed out
-  - close button
+  - a close button
   - generate the graph elements using the graph engine
 - save as file / download a log on a hotkey
-- split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - log sidebar
   - filters
     - by log level / query text
     - bold or fade the matched entries or the rest
   - count transition requests ([add|set|drop])
     - counters outside of the panel, on the left, aligned to the right
+- split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - change background to white and align other colors
 - sidebars
-  - size change
+  - size change by mouse / hotkey
 - minimap
   - using clusters graph positions
   - render as div[width,height], use the colors
   - skip relations
-- new machine should be a 2 step highlighted transition
 - server config form
 - hovering over state / machine / link names
   - highlights them / dims the background
@@ -93,3 +102,4 @@
 - short screencasts showing off specific features
 - maybe - extract the cluster graph, worker-based dagre layout for jointjs
   into a module
+  
