@@ -4,14 +4,16 @@ export interface ISettings {
   logs_visible: boolean
   machines_visible: boolean
   autoplay: boolean
-  positions: { id: string; x: number; y: number }[]
+  positions: PositionsMap
 }
+
+export type PositionsMap = { [machine_id: string]: { x: number; y: number } }
 
 const default_settings: ISettings = {
   logs_visible: false,
   machines_visible: false,
   autoplay: true,
-  positions: []
+  positions: {}
 }
 
 class LocalStorage {
@@ -25,10 +27,11 @@ class LocalStorage {
     if (!this.data[this.uri]) {
       this.data[this.uri] = deepcopy(default_settings)
     } else {
-      this.data[this.uri] = {...default_settings, ...this.data[this.uri]}
+      this.data[this.uri] = { ...default_settings, ...this.data[this.uri] }
     }
     this.save()
   }
+  // TODO support name as a json path and merge
   set(name: string, value) {
     this.data[this.uri][name] = value
     this.save()

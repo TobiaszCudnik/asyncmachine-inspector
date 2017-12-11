@@ -9,6 +9,7 @@ import * as joint from 'jointjs'
 import * as md5 from 'md5'
 import * as deepcopy from 'deepcopy'
 import { INetworkJson, TCell, TState, TLink, TMachine } from './joint-network'
+import { PositionsMap } from './settings'
 
 // TODO types from dagre
 type TNode = {
@@ -60,11 +61,6 @@ function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
 const log = (...args) => {}
 
 export default class GraphLayout {
-  source_graph: joint.dia.Graph
-  options: {
-    syncLinks: boolean
-  }
-
   clusters: TClusterGraph
   subgraphs: Map<string, TDagreGraph>
 
@@ -76,9 +72,10 @@ export default class GraphLayout {
   layouts_by_hash = new Map<string, IDelta>()
   differ: jsondiffpatch.IDiffPatch
 
-  constructor(source_graph: joint.dia.Graph, options = { syncLinks: false }) {
-    this.source_graph = source_graph
-    this.options = options
+  constructor(
+    public source_graph?: joint.dia.Graph,
+    public options: { positions?: PositionsMap; syncLinks?: false } = {}
+  ) {
     this.subgraphs = new Map<string, TDagreGraph>()
     this.clusters = new Graph({
       directed: false
@@ -413,18 +410,24 @@ export default class GraphLayout {
       let size = { width: 0, height: 0 }
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
-        let node = this.clusters._nodes[cell.id]
-
-        position.x = node.x
-        position.y = node.y
+        const node = this.clusters._nodes[cell.id]
+        // restore position from the settings
+        if (this.options.positions[cell.id]) {
+          position = this.options.positions[cell.id]
+          cell['fixed-position'] = true
+        } else {
+          position.x = node.x
+          position.y = node.y
+        }
         size.width = node.width
         size.height = node.height
       } else if ((cell as TState).type == 'fsa.State') {
         cell = cell as TState
-        let [parent_id, id] = cell.id.split(':')
-        let node = subgraphs.get(parent_id)._nodes[id]
-        let cluster = clusters._nodes[parent_id]
-
+        const [parent_id, id] = cell.id.split(':')
+        const node = subgraphs.get(parent_id)._nodes[id]
+        // try to restore the position first
+        const cluster =
+          this.options.positions[parent_id] || clusters._nodes[parent_id]
         position.x = node.x + cluster.x
         position.y = node.y + cluster.y
         size.width = node.width
@@ -462,6 +465,7 @@ export default class GraphLayout {
       if (!model) {
         cells_to_add.push(cell)
       } else {
+        // handle memorized positions for clusters (machines)
         const is_state = cell.type == 'fsa.State'
         if (model.get('fixed-position')) {
           delete cell.position

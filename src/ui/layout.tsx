@@ -88,7 +88,7 @@ const log = (...args) => {}
 
 export class Main extends Component<
   TLayoutProps,
-  { sidebar?: boolean; sidebar_left?: boolean, autoplay?: boolean }
+  { sidebar?: boolean; sidebar_left?: boolean; autoplay?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
@@ -106,6 +106,7 @@ export class Main extends Component<
     const a = inspector_css + joint_css
   }
 
+  // TODO merge those 3 state handlers
   handleToggleSidebar() {
     this.props.settings.set('logs_visible', !this.state.sidebar)
     this.setState({ sidebar: !this.state.sidebar })

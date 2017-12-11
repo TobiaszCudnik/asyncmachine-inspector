@@ -14,6 +14,7 @@ import * as colors from 'material-ui/styles/colors'
 import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './joint-layout'
 import adjustVertices from '../vendor/adjust-vertices'
+import Settings from './settings'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -75,7 +76,7 @@ export default class Ui extends UiBase<INetworkJson> {
     return this.container.parent().get(0)
   }
 
-  constructor(public data: INetworkJson) {
+  constructor(public data: INetworkJson, public settings: Settings) {
     super(data)
     this.graph = new joint.dia.Graph()
     this.initGraphLayout()
@@ -84,7 +85,9 @@ export default class Ui extends UiBase<INetworkJson> {
   }
 
   initGraphLayout() {
-    this.layout = new GraphLayout(this.graph)
+    this.layout = new GraphLayout(this.graph, {
+      positions: this.settings.get().positions
+    })
   }
 
   reset() {
@@ -452,5 +455,8 @@ export default class Ui extends UiBase<INetworkJson> {
     cell = cell.model || cell
     if (!(cell instanceof joint.shapes.uml.State)) return
     cell.set('fixed-position', true)
+    let positions = this.settings.get().positions
+    positions[cell.id] = cell.get('position')
+    this.settings.set('positions', positions)
   }
 }

@@ -45,7 +45,8 @@ export enum STEP_TYPE_CHANGE {
 export class Inspector implements ITransitions {
   states = new States(this)
   private data_service_: JointDataService
-  graph = new Graph(null)
+  settings = new Settings()
+  graph = new Graph(null, this.settings)
   layout_data: TLayoutProps
   frametime = 0.5
   // TODO type
@@ -63,7 +64,6 @@ export class Inspector implements ITransitions {
   last_render: number
   data_service_sync_max_skip = 500
   data_service_last_sync = 0
-  settings = new Settings
   rendering_position = 0
 
   constructor(
@@ -74,8 +74,9 @@ export class Inspector implements ITransitions {
   ) {
     this.states.id('Inspector')
     this.states.add(['TimelineOnFirst', 'Connecting'])
-    if (this.settings.get().autoplay)
+    if (this.settings.get().autoplay) {
       this.states.add('AutoplayOn')
+    }
 
     // this.socket = io(`http://${this.host}:${this.port}/client`)
     // this.socket.on('full-sync', this.states.addByListener('FullSync'))
