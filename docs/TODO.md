@@ -19,6 +19,12 @@
 - new machine should be a 2 step highlighted transition
 
 #### UI
+- smaller toolbar
+  - redesign
+  - actions menu
+    - reset all settings
+    - reset positions
+    - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - machines sidebar
   - show the next transition
   - sort by queue length, length, index
@@ -35,9 +41,11 @@
     - non active states
     - transition states
     - hotkeys
+    - relations
   - descriptions
   - better background, dimmed out
   - a close button
+    - esc key to close
   - generate the graph elements using the graph engine
 - save as file / download a log on a hotkey
 - log sidebar
@@ -70,6 +78,10 @@
 - render sidebars only when visible
   
 #### Refactoring
+- split into 3 npm modules
+  - am-inspector
+  - am-logger
+  - am-inspector-server
 - extract RemoteInspector with socket io
 - rewrite the UI to grid & flex
 - divide the UI class into several machines
@@ -81,6 +93,7 @@
   - base class of the DataService needs to be extracted
 
 #### Graph
+- resize machine #1
 - better colors
 - descriptive transition styles
 - pipe isnt exactly like add, nor pipe invert like drop, although shown like that
