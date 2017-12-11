@@ -32,6 +32,7 @@ import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
 import { StateChangeTypes } from 'asyncmachine/build/types'
+import Settings from './settings'
 // TODO this shouldnt be here
 import { TMachine } from './joint-network'
 import * as deepCopy from 'deepcopy'
@@ -79,7 +80,7 @@ export type TLayoutProps = {
   onAutoplayToggle: Function
   onPlayButton: Function
   is_legend_visible: boolean
-  queues: {}
+  settings: Settings
 }
 
 const log = (...args) => {}
@@ -95,8 +96,8 @@ export class Main extends Component<
     // TODO read those from localstorage
     // TODO add step_style to states
     this.state = {
-      sidebar: localStorage.getItem('ami-show-logs') == 'true' || false,
-      sidebar_left: localStorage.getItem('ami-show-machines') == 'true' || false
+      sidebar: props.settings.get().logs_visible,
+      sidebar_left: props.settings.get().machines_visible
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
@@ -105,13 +106,13 @@ export class Main extends Component<
   }
 
   handleToggleSidebar() {
+    this.props.settings.set('logs_visible', !this.state.sidebar)
     this.setState({ sidebar: !this.state.sidebar })
-    localStorage.setItem('ami-show-logs', !this.state.sidebar)
   }
 
   handleToggleSidebarLeft() {
+    this.props.settings.set('machines_visible', !this.state.sidebar_left)
     this.setState({ sidebar_left: !this.state.sidebar_left })
-    localStorage.setItem('ami-show-machines', !this.state.sidebar_left)
   }
 
   render() {
@@ -883,7 +884,7 @@ export class Main extends Component<
 }
 
 export default function(container, props) {
-  var layout = <Main {...props} />
+  const layout = <Main {...props} />
   render(layout, container)
   // scroll to the bottom
   document.querySelector('.sidebar.right').scrollTop = 99999

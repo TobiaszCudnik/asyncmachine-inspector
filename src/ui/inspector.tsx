@@ -11,6 +11,7 @@ import 'core-js/es6/symbol'
 import { default as JointDataService, StepTypes } from './joint-data-service'
 import { throttle } from 'underscore'
 import States from './states'
+import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
@@ -62,6 +63,8 @@ export class Inspector implements ITransitions {
   last_render: number
   data_service_sync_max_skip = 500
   data_service_last_sync = 0
+  settings = new Settings
+  rendering_position = 0
 
   constructor(
     public container_selector = '#am-inspector',
@@ -251,8 +254,6 @@ export class Inspector implements ITransitions {
     }
     this.states.drop('PlayStopClicked')
   }
-
-  rendering_position = 0
 
   Rendering_enter(position): boolean {
     if (this.states.from().includes('Rendering')) {
@@ -467,7 +468,8 @@ export class Inspector implements ITransitions {
         } else {
           this.states.add('AutoplayOn')
         }
-      }
+      },
+      settings: this.settings
     }
     return data
   }
