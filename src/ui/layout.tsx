@@ -88,7 +88,7 @@ const log = (...args) => {}
 
 export class Main extends Component<
   TLayoutProps,
-  { sidebar?: boolean; sidebar_left?: boolean }
+  { sidebar?: boolean; sidebar_left?: boolean, autoplay?: boolean }
 > {
   constructor(props, context) {
     super(props, context)
@@ -97,7 +97,8 @@ export class Main extends Component<
     // TODO add step_style to states
     this.state = {
       sidebar: props.settings.get().logs_visible,
-      sidebar_left: props.settings.get().machines_visible
+      sidebar_left: props.settings.get().machines_visible,
+      autoplay: props.settings.get().autoplay
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
@@ -113,6 +114,11 @@ export class Main extends Component<
   handleToggleSidebarLeft() {
     this.props.settings.set('machines_visible', !this.state.sidebar_left)
     this.setState({ sidebar_left: !this.state.sidebar_left })
+  }
+
+  handleToggleAutoplay() {
+    this.props.settings.set('autoplay', !this.state.autoplay)
+    this.setState({ autoplay: !this.state.autoplay })
   }
 
   render() {
@@ -168,8 +174,8 @@ export class Main extends Component<
               <div style={{ width: '9em', padding: '2em' }}>
                 <Toggle
                   label="Autoplay"
-                  defaultToggled={true}
-                  onToggle={this.props.onAutoplayToggle}
+                  defaultToggled={this.state.autoplay}
+                  onToggle={this.handleToggleAutoplay.bind(this)}
                 />
               </div>
               <div style={{ width: '7em' }}>

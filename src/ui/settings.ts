@@ -3,12 +3,14 @@ import * as deepcopy from 'deepcopy'
 export interface ISettings {
   logs_visible: boolean
   machines_visible: boolean
+  autoplay: boolean
   positions: { id: string; x: number; y: number }[]
 }
 
 const default_settings: ISettings = {
   logs_visible: false,
   machines_visible: false,
+  autoplay: true,
   positions: []
 }
 
@@ -22,8 +24,10 @@ class LocalStorage {
     this.data = prev_data ? JSON.parse(prev_data) : {}
     if (!this.data[this.uri]) {
       this.data[this.uri] = deepcopy(default_settings)
-      this.save()
+    } else {
+      this.data[this.uri] = {...default_settings, ...this.data[this.uri]}
     }
+    this.save()
   }
   set(name: string, value) {
     this.data[this.uri][name] = value

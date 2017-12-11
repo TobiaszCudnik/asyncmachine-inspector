@@ -73,7 +73,9 @@ export class Inspector implements ITransitions {
     debug = false
   ) {
     this.states.id('Inspector')
-    this.states.add(['TimelineOnFirst', 'AutoplayOn', 'Connecting'])
+    this.states.add(['TimelineOnFirst', 'Connecting'])
+    if (this.settings.get().autoplay)
+      this.states.add('AutoplayOn')
 
     // this.socket = io(`http://${this.host}:${this.port}/client`)
     // this.socket.on('full-sync', this.states.addByListener('FullSync'))
@@ -463,10 +465,10 @@ export class Inspector implements ITransitions {
       },
       onPlayButton: playstop,
       onAutoplayToggle: () => {
-        if (this.states.is('AutoplayOn')) {
-          this.states.drop('AutoplayOn')
+        if (self.states.is('AutoplayOn')) {
+          self.states.drop('AutoplayOn')
         } else {
-          this.states.add('AutoplayOn')
+          self.states.add('AutoplayOn')
         }
       },
       settings: this.settings
