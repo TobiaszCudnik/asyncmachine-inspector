@@ -222,6 +222,12 @@ main {
 .sidebar.left {
     padding-top: 0;
     white-space: normal;
+    overflow: hidden;
+}
+
+.sidebar.left > div {
+    height: 50%;
+    overflow: auto;
 }
 
 #graph-container {
