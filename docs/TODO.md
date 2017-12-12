@@ -1,22 +1,20 @@
 # TODO
 
 #### Bugs
-- reversing on Transition Steps gives a diff result than going from the 
-  beginning of the transition
-  - difference in requested transitions
-- pause, change step type - starts playing
-- transaction's source machine (the active queue) should also be marked as touched
-- machines sidebar should use full machine names
+- grab & scroll "jumps" after grabbing
+- current transitions lacks queue source machine as "involved"
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
-- transition start should be merged with the first change
-  - avoid empty steps with nested transitions
 - changing the granularity from Transition Steps to States leaves artifacts
   - state_style, is_touched, .during-transition
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
-- grab & scroll "jumps" after grabbing
 - new machine should be a 2 step highlighted transition
+- transition start should be merged with the first change
+  - avoid empty steps with nested transitions
+- BUG? step_type == transitions - cancelled transitions not included, result:
+  - when step_type == steps - more transitions shown
+  - while not included in the "next / current / prev transition" sidebar
 
 #### UI
 - smaller toolbar
@@ -26,8 +24,8 @@
     - reset positions
     - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - machines sidebar
-  - show the next transition
-  - sort by queue length, length, index
+  - machines - current transitions - involved: order alphabetically
+  - sort by queue length, listeners count
 - keep in local storage
   - Log Sidebar open state
   - Machines Sidebar open state
@@ -71,8 +69,10 @@
   
 #### Logger
 - make it easier to bind to your machines
+- transaction's source machine (the active queue) should also be marked as touched
 
 #### Optimizations
+- cache data service scrolling
 - move DataService patch scrolling to a separate worker then dagre layout is in
 - network should update the json based on incoming events, not a full rebuild
 - render sidebars only when visible
