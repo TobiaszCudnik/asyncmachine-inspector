@@ -419,7 +419,7 @@ export class Inspector implements ITransitions {
             if (!ret[machine_id]) {
               ret[machine_id] = []
             }
-            ret[machine_id].push(cell.attrs.text.text.replace(' ', ''))
+            ret[machine_id].push(cell.attrs.text.text.replace('\n', ''))
           } else if (cell.type == 'uml.State') {
             if (!cell.is_touched) continue
             if (!ret[cell.id]) {
@@ -438,6 +438,19 @@ export class Inspector implements ITransitions {
           return _.uniq([...dest, src])
         }
         for (let transition of self.data_service.prev_transitions) {
+          ret = deepMerge(ret, transition.touched, removeDuplicates)
+        }
+        return ret
+      },
+      get next_transitions() {
+        return self.data_service.next_transitions
+      },
+      get next_transitions_touched() {
+        let ret = {}
+        function removeDuplicates(dest, src) {
+          return _.uniq([...dest, src])
+        }
+        for (let transition of self.data_service.next_transitions) {
           ret = deepMerge(ret, transition.touched, removeDuplicates)
         }
         return ret

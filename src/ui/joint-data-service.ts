@@ -36,6 +36,7 @@ class JointDataService extends EventEmitter {
   // not all the previous transitions, just the last 1 or a set of nested ones
   // TODO type as only TRANSITION_END
   prev_transitions: ITransitionData[] = []
+  next_transitions: ITransitionData[] = []
   /** Did the last scroll add or remove any cells? */
   // TODO binary flags for all of the last scrolls props
   last_scroll_add_remove = false
@@ -52,6 +53,7 @@ class JointDataService extends EventEmitter {
     states: [0],
     transitions: [0]
   }
+  patches_active_transitions = 0
   get current_patch(): IPatch | null {
     if (!this.patch_position) return null
     return this.patches[this.patch_position - 1]
@@ -84,44 +86,40 @@ class JointDataService extends EventEmitter {
     this.data = data || null
   }
 
-  patches_active_transitions = 0
+  // stack of last TRANSITION_START indexes
+  private patches_last_transition_start = []
 
   addPatch(patch: IPatch) {
-    // TODO assert integrity somehow
+    // TODO assert the integrity somehow
     this.patches_active_transitions +=
       patch.type == PatchType.TRANSITION_START
         ? 1
         : patch.type == PatchType.TRANSITION_END ? -1 : 0
+    if (patch.type == PatchType.TRANSITION_START) {
+      this.patches_last_transition_start.push(this.patches.length)
+    }
     const prev_patch_state_change =
       this.patches.length &&
       this.patches[this.patches.length - 1].type == PatchType.STATE_CHANGED
-    const prev_patch_transition_end =
-      this.patches.length &&
-      this.patches[this.patches.length - 1].type == PatchType.TRANSITION_END
-    if (
-      (patch.type == PatchType.TRANSITION_END &&
-        !this.patches_active_transitions) ||
-      patch.type == PatchType.NEW_MACHINE
-    ) {
-      // keep states index on the most outer (recent) transition
-      // TODO skips only the first nested
-      // if (prev_patch_transition_end)
-      //   this.index.states[this.index.states.length - 1] = this.patches.length
-      // else
+    // const prev_patch_transition_end =
+    //   this.patches.length &&
+    //   this.patches[this.patches.length - 1].type == PatchType.TRANSITION_END
+    if (patch.type == PatchType.NEW_MACHINE) {
       this.index.states.push(this.patches.length)
-
-      // add also the prev step
-      if (
-        this.index.transitions[this.index.transitions.length - 1] !=
-        this.patches.length - 1
-      )
-        this.index.transitions.push(this.patches.length - 1)
+    } else if (
+      patch.type == PatchType.TRANSITION_END &&
+      !this.patches_active_transitions &&
+      prev_patch_state_change
+    ) {
+      this.index.states.push(this.patches.length)
+      // add also the prev step (STATE_CHANGE or TRANSITION_STEP)
+      this.index.transitions.push(this.patches.length - 1)
       this.index.transitions.push(this.patches.length)
     }
-    // TODO avoid nested transitions
-    if (patch.type == PatchType.TRANSITION_END && !prev_patch_state_change)
-      this.index.transitions.push(this.patches.length)
-
+    if (patch.type == PatchType.TRANSITION_END) {
+      patch.start_index_first = this.patches_last_transition_start[0]
+      patch.start_index = this.patches_last_transition_start.pop()
+    }
     this.patches.push(patch)
   }
 
@@ -149,14 +147,11 @@ class JointDataService extends EventEmitter {
           this.index.transitions.indexOf(this.patch_position - 1) + 1
       } else this.position = this.patch_position
     }
-    // TODO required?
-    // if (type == StepTypes.STEPS)
-    //   this.active_transitions = 0
   }
 
   /**
-     * Returns all the logs till the current position.
-     */
+   * Returns all the logs till the current position.
+   */
   getLogs(): ILogEntry[][] {
     return this.patches
       .slice(0, Math.max(0, this.patch_position - 1))
@@ -217,7 +212,9 @@ class JointDataService extends EventEmitter {
       }
     }
     this.patch_position = position
-    this.buildPrevTransitions()
+    log(position, this.patches[position].type, this.patches[position])
+    this.prev_transitions = this.getPrevTransitionsSet()
+    this.next_transitions = this.getNextTransitionsSet()
     this.emit('scrolled', position, changed)
     return changed
   }
@@ -268,76 +265,112 @@ class JointDataService extends EventEmitter {
   // TODO breaks when reversing inside nested active_transitions (reproduce)
   // TODO this should be executed once, at the end and reverse as much back
   // as needed to zero the counter of the active transitions
-  handleDuringTransition(packet: IPatch, position: number) {
+  handleDuringTransition(patch: IPatch, position: number) {
     // if (this.step_type != StepTypes.STEPS)
     //   return
     // TODO expose data for messages
     const reversed = this.last_scroll_direction == Direction.BACK
     let count = this.active_transitions.length
-    if (packet.type == PatchType.TRANSITION_START) {
+    if (patch.type == PatchType.TRANSITION_START) {
       log('transition start', reversed ? -1 : 1)
-      // this.active_transitions += reversed ? -1 : 1
-      if (reversed) {
-        this.active_transitions.pop()
-      } else {
-        this.active_transitions.push(packet.data)
+      this.active_transitions_count += reversed ? -1 : 1
+      if (!reversed && !this.active_transitions.includes(patch.data)) {
+        this.active_transitions.push(patch.data)
       }
-    } else if (packet.type == PatchType.TRANSITION_END) {
+    } else if (patch.type == PatchType.TRANSITION_END) {
       log('transition end', reversed ? -1 : 1)
-      // this.active_transitions += reversed ? 1 : -1
+      this.active_transitions_count += reversed ? 1 : -1
       if (reversed) {
-        // find the last transition_start (from the current position)
-        let latest_transition
-        for (let i = position; i >= 0; i--) {
-          if (this.patches[i].type == PatchType.TRANSITION_START) {
-            latest_transition = this.patches[i]
-            break
+        for (let i = patch.start_index_first; i < position; i++) {
+          if (
+            this.patches[i].type == PatchType.TRANSITION_START &&
+            !this.active_transitions.includes(this.patches[i].data)
+          ) {
+            this.active_transitions.push(this.patches[i].data)
           }
         }
-        if (!latest_transition) {
-          throw Error('Missing TRANSITION_START')
-        }
-        this.active_transitions.push(latest_transition.data)
-      } else {
-        this.active_transitions.pop()
       }
     }
+    // TODO cache
     log(
-      'this.active_transitions ',
-      this.active_transitions.length - count,
+      'this.active_transitions_count ',
+      this.active_transitions_count - count,
       '==',
-      this.active_transitions
+      this.active_transitions_count
     )
+    if (!this.active_transitions_count) {
+      this.active_transitions.length = 0
+    }
   }
-  // TODO accept a params and return a value
-  buildPrevTransitions() {
-    this.prev_transitions = []
-    // find the last transition end in the index
-    let current_transition_pos = _.sortedIndex(
-      this.index.transitions,
-      this.patch_position
-    )
-    current_transition_pos--
-    if (current_transition_pos <= 0) return
-    let pos = this.index.transitions[current_transition_pos]
-    // always show a prev transition
-    if (
-      this.index.transitions[current_transition_pos + 1] == this.patch_position
-    )
-      pos++
+
+  active_transitions_count = 0
+
+  /**
+   * @param transition_index Should be a TRANSITION_END patch
+   */
+  buildTransitionsSet(transition_index: number) {
     // there was no prev transition
+    if (!this.index.transitions[transition_index]) {
+      return []
+    }
+    let pos = this.index.transitions[transition_index]
+    assert(this.patches[pos].type == PatchType.TRANSITION_END)
+    console.log('buildTransitionsSet', this.patches[pos].type, pos, this.patches[pos])
+    pos = this.patches[pos].start_index_first
+    assert(pos)
+    let ret = []
     let active = 0
     do {
-      let type = this.patches[pos].type
-      if (type == PatchType.TRANSITION_END) {
-        this.prev_transitions.unshift(this.patches[pos].data)
+      const patch = this.patches[pos]
+      let type = patch.type
+      if (type == PatchType.TRANSITION_START) {
+        // temporarily put the positions index
+        ret.push(pos)
         active++
-      } else if (type == PatchType.TRANSITION_START) {
+      } else if (type == PatchType.TRANSITION_END) {
+        // and replace the index with data once we reach the transition's end
+        ret[ret.indexOf(patch.start_index)] = patch.data
         active--
       }
-      pos--
+      pos++
     } while (active)
-    // TODO cache if needed
+    // TODO cache
+    return ret
+  }
+  getPrevTransitionsSet(patch_position = this.patch_position) {
+    const index = this.index.transitions
+    let current_transition_pos = _.sortedIndex(index, patch_position)
+    switch (this.patches[index[current_transition_pos]].type) {
+      case PatchType.TRANSITION_END:
+        return this.buildTransitionsSet(current_transition_pos)
+      default:
+        return this.buildTransitionsSet(current_transition_pos - 1)
+    }
+  }
+  getNextTransitionsSet(
+    patch_position = this.patch_position,
+    step_style = this.step_type
+  ) {
+    const index = this.index.transitions
+    let current_transition_pos = _.sortedIndex(index, patch_position)
+    console.log('getNextTransitionsSet-1', this.patches[index[current_transition_pos]].type, index[current_transition_pos], this.patches[index[current_transition_pos]])
+    switch (step_style) {
+      case StepTypes.TRANSITIONS:
+        current_transition_pos += 1
+        break
+      case StepTypes.STEPS:
+        current_transition_pos += 1
+        break
+    }
+    console.log('getNextTransitionsSet-2', this.patches[index[current_transition_pos]].type, index[current_transition_pos], this.patches[index[current_transition_pos]])
+    switch (this.patches[index[current_transition_pos]].type) {
+      case PatchType.TRANSITION_END:
+        return this.buildTransitionsSet(current_transition_pos + 2)
+      case PatchType.FULL_SYNC:
+        return this.buildTransitionsSet(current_transition_pos + 2)
+      default:
+        return this.buildTransitionsSet(current_transition_pos + 1)
+    }
   }
 }
 

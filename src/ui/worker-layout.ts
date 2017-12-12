@@ -13,6 +13,7 @@ export interface IDataServiceSync {
   step_type: StepTypes
   active_transitions: ITransitionData[]
   prev_transitions: ITransitionData[]
+  next_transitions: ITransitionData[]
   is_latest: boolean
   current_patch: Object
   logs: string[]
@@ -48,6 +49,7 @@ function syncDataService(): IDataServiceSync {
     'step_type',
     'active_transitions',
     'prev_transitions',
+    'next_transitions',
     'is_latest',
     'current_patch',
     'patch_position',
