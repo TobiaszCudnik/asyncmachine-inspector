@@ -72,6 +72,8 @@ export type TLayoutProps = {
   active_transitions_touched: { [machine_id: string]: string[] }
   prev_transitions: ITransitionData[]
   prev_transitions_touched: { [machine_id: string]: string[] }
+  next_transitions: ITransitionData[]
+  next_transitions_touched: { [machine_id: string]: string[] }
   // listeners
   onDownloadSnapshot: Function
   onTimelineSlider: Function
@@ -257,8 +259,6 @@ export class Main extends Component<
                   }: {
                     transitions: ITransitionData[]
                   }) {
-                    transitions = [...transitions]
-                    transitions.reverse()
                     const items = transitions.map((entry, i) => {
                       let class_name = `group-${entry.queue_machine_id}`
                       let type = getTransitionType(entry)
@@ -285,8 +285,10 @@ export class Main extends Component<
                   }
 
                   // TODO make it less bad
+                  // TODO for 'next transition' theres still no name in the json
                   const machineName = partial(
-                    (machines, id: string) => machines[id].name,
+                    (machines, id: string) =>
+                      (machines[id] && machines[id].name) || id,
                     this.props.machines
                   )
 
@@ -329,8 +331,23 @@ export class Main extends Component<
                   }
 
                   let container = []
+                  let transitions = []
+                  if (this.props.prev_transitions.length) {
+                    transitions.push(
+                      <div key="prev-transition">
+                        <h2>Previous transition</h2>
+                        <TransitionsList
+                          transitions={this.props.prev_transitions}
+                        />
+                        <TouchedNodes
+                          touched={this.props.prev_transitions_touched}
+                          transitions={this.props.prev_transitions}
+                        />
+                      </div>
+                    )
+                  }
                   if (this.props.active_transitions.length) {
-                    container.push(
+                    transitions.push(
                       <div key="active-transitions">
                         <h2>Current transition</h2>
                         <TransitionsList
@@ -343,20 +360,21 @@ export class Main extends Component<
                       </div>
                     )
                   }
-                  if (this.props.prev_transitions.length) {
-                    container.push(
-                      <div key="previous-transition">
-                        <h2>Previous transition</h2>
+                  if (this.props.next_transitions.length) {
+                    transitions.push(
+                      <div key="next-transition">
+                        <h2>Next transition</h2>
                         <TransitionsList
-                          transitions={this.props.prev_transitions}
+                          transitions={this.props.next_transitions}
                         />
                         <TouchedNodes
-                          touched={this.props.prev_transitions_touched}
-                          transitions={this.props.prev_transitions}
+                          touched={this.props.next_transitions_touched}
+                          transitions={this.props.next_transitions}
                         />
                       </div>
                     )
                   }
+                  container.push(<div key={'transitions'}>{transitions}</div>)
                   function MachineEntry({ machine }: { machine: TMachine }) {
                     let class_name = `group-${machine.id}`
                     let queue
@@ -395,12 +413,14 @@ export class Main extends Component<
                       </div>
                     )
                   }
-                  container.push(<h2 key={'machines'}>Machines</h2>)
+                  let machines = []
+                  machines.push(<h2 key={'machines'}>Machines</h2>)
                   for (let machine of Object.values(this.props.machines)) {
-                    container.push(
+                    machines.push(
                       <MachineEntry key={machine.id} machine={machine} />
                     )
                   }
+                  container.push(<div key={'machines'}>{machines}</div>)
                   return container
                 })()}
               </div>
