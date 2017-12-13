@@ -76,6 +76,7 @@
 - move DataService patch scrolling to a separate worker then dagre layout is in
 - network should update the json based on incoming events, not a full rebuild
 - render sidebars only when visible
+- reduce the bundle size
   
 #### Refactoring
 - split into 3 npm modules

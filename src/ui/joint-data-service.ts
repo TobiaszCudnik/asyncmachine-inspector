@@ -33,9 +33,11 @@ class JointDataService extends EventEmitter {
   position = 0
   // TODO type as only TRANSITION_START
   active_transitions: ITransitionData[] = []
-  // not all the previous transitions, just the last 1 or a set of nested ones
+  // previous transitions set (1 or more transitions)
   // TODO type as only TRANSITION_END
   prev_transitions: ITransitionData[] = []
+  // next transitions set (1 or more transitions)
+  // TODO type as only TRANSITION_END
   next_transitions: ITransitionData[] = []
   /** Did the last scroll add or remove any cells? */
   // TODO binary flags for all of the last scrolls props
