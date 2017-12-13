@@ -1,9 +1,10 @@
 import * as React from 'react'
 
-function State({ classes }) {
+function State({ classes, radius }) {
   if (!classes) classes = ''
+  if (!radius) radius = 15
   return (
-    <svg>
+    <svg style={{width: radius*2+4, height: radius*2+4}}>
       <g
         id="j_19"
         className={`joint-theme-default joint-cell joint-type-fsa joint-type-fsa-state joint-element ${classes}`}
@@ -17,21 +18,11 @@ function State({ classes }) {
               strokeWidth="3"
               fill="#ffffff"
               stroke="#000000"
-              r="30"
-              cx="32"
-              cy="32"
+              r={radius}
+              cx={radius+2}
+              cy={radius+2}
             />
           </g>
-          <text
-            id="v-171"
-            y="0.8em"
-            fontWeight="800"
-            fontSize="14"
-            textAnchor="middle"
-            fill="#000000"
-            fontFamily="Arial, helvetica, sans-serif"
-            transform="translate(7, 21)"
-          />
         </g>
       </g>
     </svg>
