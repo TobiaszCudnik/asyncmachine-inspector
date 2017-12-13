@@ -1,0 +1,36 @@
+@import "modal.css";
+
+.legend {
+    background: gray;
+    width: 800px;
+}
+
+.legend > div {
+    vertical-align: top;
+}
+
+.legend h4 {
+    font-size: 1.7em;
+}
+
+.legend svg {
+    height: 65px;
+    width: 65px;
+    margin-right: 1em;
+}
+
+.legend ul {
+    padding: 0;
+    margin: 0;
+}
+
+.legend ul.states li {
+    list-style: none;
+    margin-bottom: 0.5em;
+}
+
+.legend ul.states li span {
+    vertical-align: middle;
+    display: inline-block;
+    color: seashell;
+}
