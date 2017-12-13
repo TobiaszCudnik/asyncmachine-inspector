@@ -15,23 +15,25 @@
 - BUG? step_type == transitions - cancelled transitions not included, result:
   - when step_type == steps - more transitions shown
   - while not included in the "next / current / prev transition" sidebar
+- pause immediately after the UI is rendered, timeline get the data, but no
+  "next transition" is shown in the machines sidebar
 
 #### UI
+- help button
+- memorize
+  - zoom level
+  - scroll position
+- actions menu
+  - reset all settings
+  - reset positions
+  - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - smaller toolbar
   - redesign
-  - actions menu
-    - reset all settings
-    - reset positions
-    - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - machines sidebar
   - machines - current transitions - involved: order alphabetically
   - sort by queue length, listeners count
 - keep in local storage
-  - Log Sidebar open state
-  - Machines Sidebar open state
-  - Step Type open state
-  - fixed-position states (based on url & machine IDs)
-  - introduce "reset" menu, resetting each or all of the above
+  - Step Type
 - legend
   - list of hotkeys
   - grouping by type
