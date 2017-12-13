@@ -1,13 +1,26 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.2.1-1",
-  "description": "Live inspector for asyncmachine graphs",
+  "version": "0.3.0-dev1",
+  "description": "Inspector / debugger for the asyncmachine",
   "author": "Tobiasz Cudnik",
   "repository": {
     "type": "git",
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector"
   },
-  "keywords": [],
+  "keywords": [
+    "async",
+    "statemachine",
+    "asyncmachine",
+    "states",
+    "transition",
+    "eventloop",
+    "declarative",
+    "relational",
+    "inspector",
+    "debugger",
+    "logger",
+    "graphs"
+  ],
   "bugs": {
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
   },
@@ -27,10 +40,11 @@
     "acorn": "^4.0.3",
     "asyncmachine": "^3.1.0",
     "awesome-typescript-loader": "^3.2.3",
+    "deepmerge": "^2.0.1",
     "chai": "^3.0.0",
     "chai-xml": "^0.3.0",
-    "css-loader": "^0.28.7",
     "ciena-dagre": "^1.0.10",
+    "css-loader": "^0.28.7",
     "deepcopy": "^0.6.3",
     "del": "^2.0.2",
     "download-as-file": "^1.1.0",
@@ -62,6 +76,6 @@
     "webpack-async-await": "^1.1.0",
     "webpack-bundle-analyzer": "^2.9.0",
     "webpack-shell-plugin": "^0.5.0",
-    "workerio": "TobiaszCudnik/workerio"
+    "workerio": "github:TobiaszCudnik/workerio"
   }
 }
