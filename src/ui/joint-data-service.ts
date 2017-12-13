@@ -315,7 +315,6 @@ class JointDataService extends EventEmitter {
     }
     let pos = this.index.transitions[transition_index]
     assert(this.patches[pos].type == PatchType.TRANSITION_END)
-    console.log('buildTransitionsSet', this.patches[pos].type, pos, this.patches[pos])
     pos = this.patches[pos].start_index_first
     assert(pos)
     let ret = []
@@ -353,7 +352,6 @@ class JointDataService extends EventEmitter {
   ) {
     const index = this.index.transitions
     let current_transition_pos = _.sortedIndex(index, patch_position)
-    console.log('getNextTransitionsSet-1', this.patches[index[current_transition_pos]].type, index[current_transition_pos], this.patches[index[current_transition_pos]])
     switch (step_style) {
       case StepTypes.TRANSITIONS:
         current_transition_pos += 1
@@ -362,7 +360,6 @@ class JointDataService extends EventEmitter {
         current_transition_pos += 1
         break
     }
-    console.log('getNextTransitionsSet-2', this.patches[index[current_transition_pos]].type, index[current_transition_pos], this.patches[index[current_transition_pos]])
     switch (this.patches[index[current_transition_pos]].type) {
       case PatchType.TRANSITION_END:
         return this.buildTransitionsSet(current_transition_pos + 2)
