@@ -19,8 +19,9 @@ import Logger from '../logger-file'
 import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
-import * as key from 'keymaster'
+import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
+import keystrokes from './keystrokes'
 import './worker-layout'
 
 const log = (...args) => {}
@@ -346,14 +347,6 @@ export class Inspector implements ITransitions {
     this.renderUI()
   }
 
-  Connected_state() {
-    this.showMsg('Connected')
-  }
-
-  Connected_end() {
-    this.showMsg('Disconnected')
-  }
-
   // METHODS
 
   buildLayoutData(): TLayoutProps {
@@ -507,25 +500,9 @@ export class Inspector implements ITransitions {
   }
 
   initKeystrokes() {
-    key('shift + /', () => {
-      this.layout_data.is_legend_visible = !this.layout_data.is_legend_visible
-      this.renderUI()
-    })
-    key('left', () => {
-      const next_pos = Math.max(0, this.data_service.position - 1)
-      this.states.add('TimelineScrolled', next_pos)
-    })
-    key('right', () => {
-      const next_pos = Math.min(
-        this.data_service.position + 1,
-        this.data_service.position_max
-      )
-      this.states.add('TimelineScrolled', next_pos)
-    })
-    key('space', () => {
-      if (this.states.is('Playing')) this.states.drop('Playing')
-      else this.states.add('Playing')
-    })
+    for (let [key, fn] of Object.entries(keystrokes(this))) {
+      bindKey(key, fn)
+    }
   }
 
   initSnapshotUpload() {
@@ -549,26 +526,9 @@ export class Inspector implements ITransitions {
     this.layout_data.is_snapshot = true
     this.states.drop('AutoplayOn')
     this.states.add('FullSync', snapshot.full_sync)
-    for (const patch of snapshot.patches) this.states.add('DiffSync', patch)
-  }
-
-  showMsg(msg) {
-    this.layout_data.msg = msg
-    this.renderUI()
-  }
-
-  handleTransitionMessage() {
-    // TODO highlight the involved parts of the log view
-    // let reversed = (data_service.last_scroll_direction == Direction.BACK)
-    let packet = this.data_service.current_patch
-    let data = this.layout_data
-    if (packet && packet.type == PatchType.TRANSITION_START) {
-      data.msg = `Transition started on ${packet.machine_id}`
-      data.msgHidden = false
-    } else if (packet && packet.type == PatchType.TRANSITION_END) {
-      data.msg = `Transition ended on ${packet.machine_id}`
-      data.msgHidden = false
-    } else data.msg = null
+    for (const patch of snapshot.patches) {
+      this.states.add('DiffSync', patch)
+    }
   }
 
   async onDataServiceScrolled(
@@ -585,14 +545,17 @@ export class Inspector implements ITransitions {
         this.data_service.last_scroll_add_remove,
         layout_data
       )
-      this.handleTransitionMessage()
     }
   }
 
   updateTimelineStates() {
-    if (this.data_service.is_latest) this.states.add('TimelineOnLast')
-    else if (this.data_service.position == 0) this.states.add('TimelineOnFirst')
-    else this.states.add('TimelineOnBetween')
+    if (this.data_service.is_latest) {
+      this.states.add('TimelineOnLast')
+    } else if (this.data_service.position == 0) {
+      this.states.add('TimelineOnFirst')
+    } else {
+      this.states.add('TimelineOnBetween')
+    }
   }
 }
 

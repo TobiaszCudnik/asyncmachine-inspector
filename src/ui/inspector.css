@@ -121,8 +121,8 @@ path.connection {
 }
 
 .joint-type-fsa-state.step-requested.step-pipe circle {
-    stroke-dasharray: 120;
-    stroke-dashoffset: 80;
+    stroke-dasharray: 126;
+    stroke-dashoffset: 79;
 }
 
 /* STEP SET */
@@ -148,8 +148,8 @@ path.connection {
 /* STEP CANCEL */
 
 .joint-type-fsa-state.step-cancel circle {
-    fill: red;
-    stroke: black;
+    fill: black;
+    stroke: red;
 }
 
 .joint-type-fsa-state.step-cancel text {
@@ -219,6 +219,10 @@ main {
     overflow: auto;
     white-space: nowrap;
     font-family: monospace;
+}
+
+.sidebar.left h2 {
+    text-align: center;
 }
 
 .sidebar.left {

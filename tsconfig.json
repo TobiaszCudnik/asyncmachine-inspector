@@ -6,7 +6,8 @@
         "module": "es6",
         "allowJs": true,
         "lib": ["es6", "es7", "dom"],
-        "jsx": "react"
+        "jsx": "react",
+        "moduleResolution": "node"
     }, 
     "files": [
         "typings/index.d.ts",

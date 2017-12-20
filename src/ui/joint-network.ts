@@ -53,10 +53,11 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         type: r[QueueRowFields.STATE_CHANGE_TYPE],
         auto: r[QueueRowFields.AUTO]
       })),
-      processing_queue: machine.queue().length,
+      processing_queue: Boolean(machine.queue().length),
       listeners: Object.values(machine._events || {})
         .map(e => e.length || 1)
-        .reduce((count, num) => (count || 0) + num)
+        .reduce((count, num) => (count || 0) + num),
+      ticks: Object.values(machine.clock_).reduce((r, n) => r + n)
     }
   }
   createStateNode(node: GraphNode): TState {
@@ -159,6 +160,7 @@ export type TMachine = {
   queue: { machine?: string; states: StateName[]; type: StateChangeTypes }[]
   processing_queue: boolean
   listeners: number
+  ticks: number
 }
 
 export type TState = {
