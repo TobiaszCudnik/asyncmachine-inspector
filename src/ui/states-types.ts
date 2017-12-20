@@ -364,125 +364,125 @@ export interface ITransitions {
   InitializingLayoutWorker_state /*param1, param2 */?():
     | boolean
     | void
-    | Promise
+    | Promise<any>
   // LayoutWorkerReady
   LayoutWorkerReady_enter /*param1, param2 */?(): boolean | void
-  LayoutWorkerReady_state /*param1, param2 */?(): boolean | void | Promise
+  LayoutWorkerReady_state /*param1, param2 */?(): boolean | void | Promise<any>
   // DOMReady
   DOMReady_enter /*param1, param2 */?(): boolean | void
-  DOMReady_state /*param1, param2 */?(): boolean | void | Promise
+  DOMReady_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Rendering
   Rendering_enter?(position: number): boolean | void
-  Rendering_state?(position: number): boolean | void | Promise
+  Rendering_state?(position: number): boolean | void | Promise<any>
   // Rendered
   Rendered_enter /*param1, param2 */?(): boolean | void
-  Rendered_state /*param1, param2 */?(): boolean | void | Promise
+  Rendered_state /*param1, param2 */?(): boolean | void | Promise<any>
   // InitialRenderDone
   InitialRenderDone_enter /*param1, param2 */?(): boolean | void
-  InitialRenderDone_state /*param1, param2 */?(): boolean | void | Promise
+  InitialRenderDone_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Connecting
   Connecting_enter /*param1, param2 */?(): boolean | void
-  Connecting_state /*param1, param2 */?(): boolean | void | Promise
+  Connecting_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Connected
   Connected_enter /*param1, param2 */?(): boolean | void
-  Connected_state /*param1, param2 */?(): boolean | void | Promise
+  Connected_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Joining
   Joining_enter /*param1, param2 */?(): boolean | void
-  Joining_state /*param1, param2 */?(): boolean | void | Promise
+  Joining_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Joined
   Joined_enter /*param1, param2 */?(): boolean | void
-  Joined_state /*param1, param2 */?(): boolean | void | Promise
+  Joined_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Disconnected
   Disconnected_enter /*param1, param2 */?(): boolean | void
-  Disconnected_state /*param1, param2 */?(): boolean | void | Promise
+  Disconnected_state /*param1, param2 */?(): boolean | void | Promise<any>
   // AutoplayOn
   AutoplayOn_enter /*param1, param2 */?(): boolean | void
-  AutoplayOn_state /*param1, param2 */?(): boolean | void | Promise
+  AutoplayOn_state /*param1, param2 */?(): boolean | void | Promise<any>
   // Playing
   Playing_enter /*param1, param2 */?(): boolean | void
-  Playing_state /*param1, param2 */?(): boolean | void | Promise
+  Playing_state /*param1, param2 */?(): boolean | void | Promise<any>
   // TimelineOnFirst
   TimelineOnFirst_enter /*param1, param2 */?(): boolean | void
-  TimelineOnFirst_state /*param1, param2 */?(): boolean | void | Promise
+  TimelineOnFirst_state /*param1, param2 */?(): boolean | void | Promise<any>
   // TimelineOnBetween
   TimelineOnBetween_enter /*param1, param2 */?(): boolean | void
-  TimelineOnBetween_state /*param1, param2 */?(): boolean | void | Promise
+  TimelineOnBetween_state /*param1, param2 */?(): boolean | void | Promise<any>
   // TimelineOnLast
   TimelineOnLast_enter /*param1, param2 */?(): boolean | void
-  TimelineOnLast_state /*param1, param2 */?(): boolean | void | Promise
+  TimelineOnLast_state /*param1, param2 */?(): boolean | void | Promise<any>
   // StepByStates
   StepByStates_enter /*param1, param2 */?(): boolean | void
-  StepByStates_state /*param1, param2 */?(): boolean | void | Promise
+  StepByStates_state /*param1, param2 */?(): boolean | void | Promise<any>
   // StepByTransitions
   StepByTransitions_enter /*param1, param2 */?(): boolean | void
-  StepByTransitions_state /*param1, param2 */?(): boolean | void | Promise
+  StepByTransitions_state /*param1, param2 */?(): boolean | void | Promise<any>
   // StepBySteps
   StepBySteps_enter /*param1, param2 */?(): boolean | void
-  StepBySteps_state /*param1, param2 */?(): boolean | void | Promise
+  StepBySteps_state /*param1, param2 */?(): boolean | void | Promise<any>
   // PlayStopClicked
   PlayStopClicked_enter /*param1, param2 */?(): boolean | void
-  PlayStopClicked_state /*param1, param2 */?(): boolean | void | Promise
+  PlayStopClicked_state /*param1, param2 */?(): boolean | void | Promise<any>
   // TimelineScrolled
   TimelineScrolled_enter?(value: number): boolean | void
-  TimelineScrolled_state?(value: number): boolean | void | Promise
+  TimelineScrolled_state?(value: number): boolean | void | Promise<any>
   // StepTypeChanged
   StepTypeChanged_enter?(value: STEP_TYPE_CHANGE): boolean | void
-  StepTypeChanged_state?(value: STEP_TYPE_CHANGE): boolean | void | Promise
+  StepTypeChanged_state?(value: STEP_TYPE_CHANGE): boolean | void | Promise<any>
   // FullSync
   FullSync_enter?(graph_data: INetworkJson): boolean | void
-  FullSync_state?(graph_data: INetworkJson): boolean | void | Promise
+  FullSync_state?(graph_data: INetworkJson): boolean | void | Promise<any>
   // DiffSync
   DiffSync_enter?(packet: IPatch): boolean | void
-  DiffSync_state?(packet: IPatch): boolean | void | Promise
+  DiffSync_state?(packet: IPatch): boolean | void | Promise<any>
 
   InitializingLayoutWorker_exit?(): boolean | void
-  InitializingLayoutWorker_end?(): boolean | void | Promise
+  InitializingLayoutWorker_end?(): boolean | void | Promise<any>
   LayoutWorkerReady_exit?(): boolean | void
-  LayoutWorkerReady_end?(): boolean | void | Promise
+  LayoutWorkerReady_end?(): boolean | void | Promise<any>
   DOMReady_exit?(): boolean | void
-  DOMReady_end?(): boolean | void | Promise
+  DOMReady_end?(): boolean | void | Promise<any>
   Rendering_exit?(): boolean | void
-  Rendering_end?(): boolean | void | Promise
+  Rendering_end?(): boolean | void | Promise<any>
   Rendered_exit?(): boolean | void
-  Rendered_end?(): boolean | void | Promise
+  Rendered_end?(): boolean | void | Promise<any>
   InitialRenderDone_exit?(): boolean | void
-  InitialRenderDone_end?(): boolean | void | Promise
+  InitialRenderDone_end?(): boolean | void | Promise<any>
   Connecting_exit?(): boolean | void
-  Connecting_end?(): boolean | void | Promise
+  Connecting_end?(): boolean | void | Promise<any>
   Connected_exit?(): boolean | void
-  Connected_end?(): boolean | void | Promise
+  Connected_end?(): boolean | void | Promise<any>
   Joining_exit?(): boolean | void
-  Joining_end?(): boolean | void | Promise
+  Joining_end?(): boolean | void | Promise<any>
   Joined_exit?(): boolean | void
-  Joined_end?(): boolean | void | Promise
+  Joined_end?(): boolean | void | Promise<any>
   Disconnected_exit?(): boolean | void
-  Disconnected_end?(): boolean | void | Promise
+  Disconnected_end?(): boolean | void | Promise<any>
   AutoplayOn_exit?(): boolean | void
-  AutoplayOn_end?(): boolean | void | Promise
+  AutoplayOn_end?(): boolean | void | Promise<any>
   Playing_exit?(): boolean | void
-  Playing_end?(): boolean | void | Promise
+  Playing_end?(): boolean | void | Promise<any>
   TimelineOnFirst_exit?(): boolean | void
-  TimelineOnFirst_end?(): boolean | void | Promise
+  TimelineOnFirst_end?(): boolean | void | Promise<any>
   TimelineOnBetween_exit?(): boolean | void
-  TimelineOnBetween_end?(): boolean | void | Promise
+  TimelineOnBetween_end?(): boolean | void | Promise<any>
   TimelineOnLast_exit?(): boolean | void
-  TimelineOnLast_end?(): boolean | void | Promise
+  TimelineOnLast_end?(): boolean | void | Promise<any>
   StepByStates_exit?(): boolean | void
-  StepByStates_end?(): boolean | void | Promise
+  StepByStates_end?(): boolean | void | Promise<any>
   StepByTransitions_exit?(): boolean | void
-  StepByTransitions_end?(): boolean | void | Promise
+  StepByTransitions_end?(): boolean | void | Promise<any>
   StepBySteps_exit?(): boolean | void
-  StepBySteps_end?(): boolean | void | Promise
+  StepBySteps_end?(): boolean | void | Promise<any>
   PlayStopClicked_exit?(): boolean | void
-  PlayStopClicked_end?(): boolean | void | Promise
+  PlayStopClicked_end?(): boolean | void | Promise<any>
   TimelineScrolled_exit?(): boolean | void
-  TimelineScrolled_end?(): boolean | void | Promise
+  TimelineScrolled_end?(): boolean | void | Promise<any>
   StepTypeChanged_exit?(): boolean | void
-  StepTypeChanged_end?(): boolean | void | Promise
+  StepTypeChanged_end?(): boolean | void | Promise<any>
   FullSync_exit?(): boolean | void
-  FullSync_end?(): boolean | void | Promise
+  FullSync_end?(): boolean | void | Promise<any>
   DiffSync_exit?(): boolean | void
-  DiffSync_end?(): boolean | void | Promise
+  DiffSync_end?(): boolean | void | Promise<any>
 
   Exception_InitializingLayoutWorker?(): boolean | void
   Exception_LayoutWorkerReady?(): boolean | void
