@@ -170,7 +170,10 @@ class JointDataService extends EventEmitter {
   // scrollBy(amount)
   scrollTo(position: number): Set<string> {
     // TODO ensure that the position is not out of range
-    if (position == this.position) return new Set()
+    if (position == this.position) {
+      this.next_transitions = this.getNextTransitionsSet()
+      return new Set()
+    }
     this.position = position
     return this.scrollToPatch(this.positionToPatchPosition(position))
   }

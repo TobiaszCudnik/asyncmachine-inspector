@@ -205,6 +205,8 @@ export class Inspector implements ITransitions {
     if (play) {
       log('Autoplay from DiffSync')
       states.add('Playing')
+    } else if (states.is('InitialRenderDone') && !this.rendering_position) {
+      this.states.add('Rendering', this.rendering_position)
     }
     this.renderUI()
     log('diff', packet)
@@ -555,7 +557,7 @@ export class Inspector implements ITransitions {
     patch,
     changed_cells: string[]
   ) {
-    log('onDataServiceScrolled', deepcopy(this.data_service))
+    // log('onDataServiceScrolled', deepcopy(this.data_service))
     this.updateTimelineStates()
     jsondiffpatch.patch(this.graph.data, patch)
     if (changed_cells && [...changed_cells].length) {
