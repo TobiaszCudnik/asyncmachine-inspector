@@ -425,28 +425,20 @@ export default class Ui extends UiBase<INetworkJson> {
 
   mouseZoomListener(e) {
     e.preventDefault()
-    let ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
-    let delta =
+    const ev: MouseWheelEvent = e.originalEvent as MouseWheelEvent
+    const delta =
       Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail)) / this.zoom_factor
-    let offset_x = e.offsetX || e.clientX - $(this).offset().left
-    let offset_y = e.offsetY || e.clientY - $(this).offset().top
-    let p = this.offsetToLocalPoint(offset_x, offset_y)
-    let new_scale = vectorizer(this.paper.viewport).scale().sx + delta
+    const offset_x = e.offsetX
+    const offset_y = e.offsetY
+    const scale = vectorizer(this.paper.viewport).scale().sx
+    const paper = this.paper
+    const new_scale = scale + delta
     if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
-      this.paper.setOrigin(0, 0)
-      this.paper.scale(new_scale, new_scale, p.x, p.y)
+      paper.scale(new_scale, new_scale)
+      const dx = (new_scale - scale)/scale * (offset_x - paper.options.origin.x);
+      const dy = (new_scale - scale)/scale * (offset_y - paper.options.origin.y);
+      paper.setOrigin(paper.options.origin.x - dx, paper.options.origin.y - dy);
     }
-  }
-
-  offsetToLocalPoint(x, y) {
-    let svgPoint = this.paper.svg.createSVGPoint()
-    svgPoint.x = x
-    svgPoint.y = y
-
-    let pointTransformed = svgPoint.matrixTransform(
-      this.paper.viewport.getCTM().inverse()
-    )
-    return pointTransformed
   }
 
   // TODO support forgetting
