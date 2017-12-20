@@ -1,9 +1,6 @@
 # TODO
 
 #### Bugs
-- legend
-  - click the overlay to close
-  - dont bubble global hotkeys
 - grab & scroll "jumps" after grabbing
 - current transitions lacks queue source machine as "involved"
 - require highlighted after the target state
@@ -18,8 +15,6 @@
 - BUG? step_type == transitions - cancelled transitions not included, result:
   - when step_type == steps - more transitions shown
   - while not included in the "next / current / prev transition" sidebar
-- pause immediately after the UI is rendered, timeline get the data, but no
-  "next transition" is shown in the machines sidebar
 - the left sidebar gets repainted when new diff arrives, although the content
   doesnt change
 
