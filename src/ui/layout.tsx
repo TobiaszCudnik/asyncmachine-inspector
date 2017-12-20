@@ -332,11 +332,13 @@ export class Main extends Component<
                   }
 
                   let container = []
-                  let transitions = []
+                  let transitions = [
+                    <h2 key={'transitions-title'}>Transitions</h2>
+                  ]
                   if (this.props.prev_transitions.length) {
                     transitions.push(
                       <div key="prev-transition">
-                        <h2>Previous transition</h2>
+                        <h3>Previous</h3>
                         <TransitionsList
                           transitions={this.props.prev_transitions}
                         />
@@ -350,7 +352,7 @@ export class Main extends Component<
                   if (this.props.active_transitions.length) {
                     transitions.push(
                       <div key="active-transitions">
-                        <h2>Current transition</h2>
+                        <h3>Current</h3>
                         <TransitionsList
                           transitions={this.props.active_transitions}
                         />
@@ -364,7 +366,7 @@ export class Main extends Component<
                   if (this.props.next_transitions.length) {
                     transitions.push(
                       <div key="next-transition">
-                        <h2>Next transition</h2>
+                        <h3>Next</h3>
                         <TransitionsList
                           transitions={this.props.next_transitions}
                         />
@@ -405,6 +407,8 @@ export class Main extends Component<
                         <h3 style={{ marginBottom: '0' }}>{machine.name}</h3>
                         - listeners: {machine.listeners}
                         <br />
+                        - ticks: {machine.ticks}
+                        <br />
                         {machine.is_touched ? (
                           <div>- during transition</div>
                         ) : (
@@ -414,8 +418,7 @@ export class Main extends Component<
                       </div>
                     )
                   }
-                  let machines = []
-                  machines.push(<h2 key={'machines'}>Machines</h2>)
+                  let machines = [<h2 key={'machines-title'}>Machines</h2>]
                   for (let machine of Object.values(this.props.machines)) {
                     machines.push(
                       <MachineEntry key={machine.id} machine={machine} />
