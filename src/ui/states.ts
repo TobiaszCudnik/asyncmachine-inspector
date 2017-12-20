@@ -83,12 +83,11 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   DiffSync: IState = {
     multi: true
   }
+  LegendVisible: IState = {};
   // TODO later
-  // LogBarVisible: IState = {};
-  // LogBarClicked: IState = {};
   // SidebarVisible: IState = {};
-  // SidebarClicked: IState = {};
-  // MessageVisible: IState = {};
+  // MachinesSidebarVisible: IState = {};
+  // GlobalHotkey: IState = {};
   constructor(target) {
     super(target)
     this.registerAll()

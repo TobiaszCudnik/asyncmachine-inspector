@@ -66,6 +66,10 @@ export class Inspector implements ITransitions {
   data_service_sync_max_skip = 500
   data_service_last_sync = 0
   rendering_position = 0
+  overlayListener: EventListenerOrEventListenerObject;
+  get overlay_el() {
+    return document.querySelector('#overlay')
+  }
 
   constructor(
     public container_selector = '#am-inspector',
@@ -347,6 +351,19 @@ export class Inspector implements ITransitions {
     this.renderUI()
   }
 
+  LegendVisible_state() {
+    this.overlayListener = e => {
+      this.states.drop('LegendVisible')
+    }
+    this.renderUI()
+    this.overlay_el.addEventListener('click', this.overlayListener)
+  }
+
+  LegendVisible_end() {
+    this.overlay_el.removeEventListener('click', this.overlayListener)
+    this.renderUI()
+  }
+
   // METHODS
 
   buildLayoutData(): TLayoutProps {
@@ -354,7 +371,9 @@ export class Inspector implements ITransitions {
     let playstop = this.states.addByListener('PlayStopClicked')
     let data: TLayoutProps = {
       is_snapshot: false,
-      is_legend_visible: false,
+      get is_legend_visible() {
+        return self.states.is('LegendVisible')
+      },
       get position_max() {
         return self.data_service.position_max
       },

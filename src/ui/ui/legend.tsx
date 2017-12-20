@@ -157,7 +157,7 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          label-idx="0"
+                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -171,11 +171,11 @@ export default function() {
                           />
                           <text
                             id="v-254"
-                            font-size="14"
+                            fontSize={10}
                             y="0.8em"
-                            text-anchor="middle"
+                            textAnchor="right"
                             fill="#000000"
-                            pointer-events="none"
+                            pointerEvents="none"
                             transform="matrix(1,0,0,1,-4,-7)"
                           >
                             <tspan id="v-256" className="v-line" dy="0em">
@@ -211,7 +211,7 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          label-idx="0"
+                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -225,11 +225,11 @@ export default function() {
                           />
                           <text
                             id="v-254"
-                            font-size="14"
+                            fontSize={10}
                             y="0.8em"
-                            text-anchor="middle"
+                            textAnchor="right"
                             fill="#000000"
-                            pointer-events="none"
+                            pointerEvents="none"
                             transform="matrix(1,0,0,1,-14,-7)"
                           >
                             <tspan id="v-256" className="v-line" dy="0em">
@@ -265,7 +265,7 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          label-idx="0"
+                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -279,11 +279,11 @@ export default function() {
                           />
                           <text
                             id="v-254"
-                            font-size="14"
+                            fontSize={10}
                             y="0.8em"
-                            text-anchor="middle"
+                            textAnchor="right"
                             fill="#000000"
-                            pointer-events="none"
+                            pointerEvents="none"
                             transform="matrix(1,0,0,1,-8,-7)"
                           >
                             <tspan id="v-256" className="v-line" dy="0em">
@@ -322,7 +322,7 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          label-idx="0"
+                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -336,11 +336,11 @@ export default function() {
                           />
                           <text
                             id="v-254"
-                            font-size="14"
+                            fontSize={10}
                             y="0.8em"
-                            text-anchor="middle"
+                            textAnchor="right"
                             fill="#000000"
-                            pointer-events="none"
+                            pointerEvents="none"
                             transform="matrix(1,0,0,1,-4,-7)"
                           >
                             <tspan id="v-256" className="v-line" dy="0em">
@@ -376,7 +376,7 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          label-idx="0"
+                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -390,11 +390,11 @@ export default function() {
                           />
                           <text
                             id="v-254"
-                            font-size="14"
+                            fontSize={10}
                             y="0.8em"
-                            text-anchor="middle"
+                            textAnchor="right"
                             fill="#000000"
-                            pointer-events="none"
+                            pointerEvents="none"
                             transform="matrix(1,0,0,1,-8,-7)"
                           >
                             <tspan id="v-256" className="v-line" dy="0em">
