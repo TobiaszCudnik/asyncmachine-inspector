@@ -396,9 +396,9 @@ export default class Ui extends UiBase<INetworkJson> {
     if (!this.drag_start_pos) return
     const el = this.scroll_element
     el.scrollLeft += this.drag_start_pos.x - e.offsetX
-    // el.scrollTop +=
-    //   this.drag_start_pos.y - e.offsetY - $('.toolbar').get(0).clientHeight
-    el.scrollTop += this.drag_start_pos.y - e.offsetY
+    // TODO this should be automatically relative
+    let toolbar_el = document.querySelector('.toolbar')
+    el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
   }
 
   // TODO support scaling up
