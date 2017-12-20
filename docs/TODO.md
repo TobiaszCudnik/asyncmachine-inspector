@@ -9,9 +9,6 @@
   - state_style, is_touched, .during-transition
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
-- new machine should be a 2 step highlighted transition
-- transition start should be merged with the first change
-  - avoid empty steps with nested transitions
 - BUG? step_type == transitions - cancelled transitions not included, result:
   - when step_type == steps - more transitions shown
   - while not included in the "next / current / prev transition" sidebar
@@ -20,13 +17,9 @@
 
 #### UI
 - show the number of ticks
-  - machines sidebar
   - in the state's UI
-- mark a cancelled transition on the transition siebar
+- mark a cancelled transition on the transition sidebar
 - help button
-- memorize
-  - zoom level
-  - scroll position
 - actions menu
   - reset all settings
   - reset positions
