@@ -5,6 +5,8 @@ export interface ISettings {
   machines_visible: boolean
   autoplay: boolean
   positions: PositionsMap
+  zoom_level?: number
+  scroll?: {x: number, y: number}
 }
 
 export type PositionsMap = { [machine_id: string]: { x: number; y: number } }

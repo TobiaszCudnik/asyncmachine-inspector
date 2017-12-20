@@ -177,8 +177,21 @@ export default class Ui extends UiBase<INetworkJson> {
     }
 
     if (first_run) {
-      for (const cell of this.graph.getCells()) adjustVertices(this.graph, cell)
-      this.fitContent()
+      for (const cell of this.graph.getCells()) {
+        adjustVertices(this.graph, cell)
+      }
+      const settings_zoom = this.settings.get().zoom_level
+      const scroll = this.settings.get().scroll
+      if (!settings_zoom || !scroll) {
+        this.fitContent()
+      }
+      if (settings_zoom) {
+        this.paper.scale(settings_zoom, settings_zoom)
+      }
+      if (scroll) {
+        this.scroll_element.scrollLeft = scroll.x
+        this.scroll_element.scrollTop = scroll.y
+      }
     }
 
     log(`Overall setData ${Date.now() - start}ms`)
@@ -399,6 +412,7 @@ export default class Ui extends UiBase<INetworkJson> {
     // TODO this should be automatically relative
     let toolbar_el = document.querySelector('.toolbar')
     el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
+    this.settings.set('scroll', {x: el.scrollLeft, y: el.scrollTop})
   }
 
   // TODO support scaling up
@@ -438,6 +452,7 @@ export default class Ui extends UiBase<INetworkJson> {
       const dx = (new_scale - scale)/scale * (offset_x - paper.options.origin.x);
       const dy = (new_scale - scale)/scale * (offset_y - paper.options.origin.y);
       paper.setOrigin(paper.options.origin.x - dx, paper.options.origin.y - dy);
+      this.settings.set('zoom_level', new_scale)
     }
   }
 

@@ -85,7 +85,7 @@ export default class GraphLayout {
       width: 0,
       height: 0,
       is_dirty: true,
-      marginx: 500,
+      marginx: 700,
       // TODO remove once overlapping in dagre gets fixed
       ranksep: 200
     })
