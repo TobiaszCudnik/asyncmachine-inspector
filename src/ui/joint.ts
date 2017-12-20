@@ -412,7 +412,7 @@ export default class Ui extends UiBase<INetworkJson> {
     // TODO this should be automatically relative
     let toolbar_el = document.querySelector('.toolbar')
     el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
-    this.settings.set('scroll', {x: el.scrollLeft, y: el.scrollTop})
+    this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
   }
 
   // TODO support scaling up
@@ -449,9 +449,11 @@ export default class Ui extends UiBase<INetworkJson> {
     const new_scale = scale + delta
     if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
       paper.scale(new_scale, new_scale)
-      const dx = (new_scale - scale)/scale * (offset_x - paper.options.origin.x);
-      const dy = (new_scale - scale)/scale * (offset_y - paper.options.origin.y);
-      paper.setOrigin(paper.options.origin.x - dx, paper.options.origin.y - dy);
+      const dx =
+        (new_scale - scale) / scale * (offset_x - paper.options.origin.x)
+      const dy =
+        (new_scale - scale) / scale * (offset_y - paper.options.origin.y)
+      paper.setOrigin(paper.options.origin.x - dx, paper.options.origin.y - dy)
       this.settings.set('zoom_level', new_scale)
     }
   }

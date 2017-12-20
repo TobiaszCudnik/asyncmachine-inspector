@@ -2,7 +2,7 @@
 
 .legend {
     background: gray;
-    color: silver;
+    color: white;
     width: 800px;
     display: flex;
     flex-direction: row;

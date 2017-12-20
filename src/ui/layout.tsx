@@ -377,7 +377,11 @@ export class Main extends Component<
                       </div>
                     )
                   }
-                  container.push(<div key={'transitions'}>{transitions}</div>)
+                  container.push(
+                    <div className={'transitions'} key={'transitions'}>
+                      {transitions}
+                    </div>
+                  )
                   function MachineEntry({ machine }: { machine: TMachine }) {
                     let class_name = `group-${machine.id}`
                     let queue

@@ -83,7 +83,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   DiffSync: IState = {
     multi: true
   }
-  LegendVisible: IState = {};
+  LegendVisible: IState = {}
   // TODO later
   // SidebarVisible: IState = {};
   // MachinesSidebarVisible: IState = {};

@@ -8,10 +8,10 @@ compile-watch:
 	node_modules/.bin/tsc --pretty --watch --noEmit
 
 build:
-	node_modules/.bin/tsc 
+	node_modules/.bin/tsc --module commonjs
 
 build-watch:
-	node_modules/.bin/tsc --watch
+	node_modules/.bin/tsc --module commonjs --watch
 
 dist:
 	webpack
@@ -40,6 +40,7 @@ format:
 	prettier --single-quote --no-semi --write src/**/**/*.tsx
 
 state-types:
+	-`make build`
 	node $(STATES_TYPES_BIN) src/ui/states.js -s
 	prettier --single-quote --no-semi --write src/ui/states.js
 

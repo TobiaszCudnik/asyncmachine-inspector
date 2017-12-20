@@ -66,7 +66,7 @@ export class Inspector implements ITransitions {
   data_service_sync_max_skip = 500
   data_service_last_sync = 0
   rendering_position = 0
-  overlayListener: EventListenerOrEventListenerObject;
+  overlayListener: EventListenerOrEventListenerObject
   get overlay_el() {
     return document.querySelector('#overlay')
   }

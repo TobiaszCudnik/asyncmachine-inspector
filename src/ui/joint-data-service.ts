@@ -83,13 +83,13 @@ class JointDataService extends EventEmitter {
     }
   }
 
+  // stack of last TRANSITION_START indexes
+  private patches_last_transition_start = []
+
   constructor(data?: INetworkJson) {
     super()
     this.data = data || null
   }
-
-  // stack of last TRANSITION_START indexes
-  private patches_last_transition_start = []
 
   addPatch(patch: IPatch) {
     // TODO assert the integrity somehow

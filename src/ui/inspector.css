@@ -225,6 +225,10 @@ main {
     text-align: center;
 }
 
+.sidebar.left .transitions h3 {
+    border-bottom: 1px solid white;
+}
+
 .sidebar.left {
     padding-top: 0;
     white-space: normal;

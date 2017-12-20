@@ -136,7 +136,7 @@ export default function() {
             <h5>Between states</h5>
             <ul className="relations">
               <li>
-                <span style={{float: 'left'}}>
+                <span style={{ float: 'left' }}>
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
@@ -157,7 +157,6 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -187,10 +186,13 @@ export default function() {
                     </g>
                   </svg>
                 </span>
-                <span>When the source state gets activated, the target state also gets activated</span>
+                <span>
+                  When the source state gets activated, the target state also
+                  gets activated
+                </span>
               </li>
               <li>
-                <span style={{float: 'left'}}>
+                <span style={{ float: 'left' }}>
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
@@ -211,7 +213,6 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -241,10 +242,13 @@ export default function() {
                     </g>
                   </svg>
                 </span>
-                <span>To get the source state activated, the target states needs to be active (or about to be activated)</span>
+                <span>
+                  To get the source state activated, the target states needs to
+                  be active (or about to be activated)
+                </span>
               </li>
               <li>
-                <span style={{float: 'left'}}>
+                <span style={{ float: 'left' }}>
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
@@ -265,7 +269,6 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -295,13 +298,16 @@ export default function() {
                     </g>
                   </svg>
                 </span>
-                <span>When the source state gets activated, it tries to de-activate the target state</span>
+                <span>
+                  When the source state gets activated, it tries to de-activate
+                  the target state
+                </span>
               </li>
             </ul>
             <h5>Between machines</h5>
             <ul className="relations">
               <li>
-                <span style={{float: 'left'}}>
+                <span style={{ float: 'left' }}>
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
@@ -322,7 +328,6 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -352,10 +357,13 @@ export default function() {
                     </g>
                   </svg>
                 </span>
-                <span>When the source changes, the target gets the same request (activate == activate / de-activate == de-activate)</span>
+                <span>
+                  When the source changes, the target gets the same request
+                  (activate == activate / de-activate == de-activate)
+                </span>
               </li>
               <li>
-                <span style={{float: 'left'}}>
+                <span style={{ float: 'left' }}>
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
@@ -376,7 +384,6 @@ export default function() {
                         <g
                           className="label"
                           id="v-253"
-                          
                           transform="translate(30, 12)"
                         >
                           <rect
@@ -406,7 +413,10 @@ export default function() {
                     </g>
                   </svg>
                 </span>
-                <span>When the source changes, the target gets the inverted request (activate == de-activate / de-activate == activate)</span>
+                <span>
+                  When the source changes, the target gets the inverted request
+                  (activate == de-activate / de-activate == activate)
+                </span>
               </li>
             </ul>
             <h4>Rules</h4>

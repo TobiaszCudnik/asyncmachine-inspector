@@ -218,6 +218,7 @@ export default class Network extends EventEmitter {
       this.emit('change', PatchType.PIPE, id)
     })
     machine.on('transition-init', (transition: Transition) => {
+      // TODO match both the machine and the transition (for lock based cancellation)
       if (!this.transition_origin) {
         this.transition_origin = machine
       }
@@ -234,6 +235,7 @@ export default class Network extends EventEmitter {
     })
     machine.on('transition-end', (transition: Transition) => {
       let touched = {}
+      // TODO match both the machine and the transition (for lock based cancellation)
       if (this.transition_origin === machine) {
         // if the first transition ended, cleanup everything
         this.transition_origin = null
