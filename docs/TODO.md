@@ -1,6 +1,9 @@
 # TODO
 
 #### Bugs
+- legend
+  - click the overlay to close
+  - dont bubble global hotkeys
 - grab & scroll "jumps" after grabbing
 - current transitions lacks queue source machine as "involved"
 - require highlighted after the target state
@@ -17,8 +20,14 @@
   - while not included in the "next / current / prev transition" sidebar
 - pause immediately after the UI is rendered, timeline get the data, but no
   "next transition" is shown in the machines sidebar
+- the left sidebar gets repainted when new diff arrives, although the content
+  doesnt change
 
 #### UI
+- show the number of ticks
+  - machines sidebar
+  - in the state's UI
+- mark a cancelled transition on the transition siebar
 - help button
 - memorize
   - zoom level
@@ -35,12 +44,10 @@
 - keep in local storage
   - Step Type
 - legend
-  - list of hotkeys
   - grouping by type
     - active states
     - non active states
     - transition states
-    - hotkeys
     - relations
   - descriptions
   - better background, dimmed out

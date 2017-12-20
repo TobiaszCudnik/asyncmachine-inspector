@@ -7,7 +7,7 @@ Inspector / debugger for the [asyncmachine](https://github.com/TobiaszCudnik/asy
 ## Features
 - automatic graph from asyncmachines
 - rendered with jointjs (drag-drop, drag-scroll, zooming)
-- automatically layout the graph (using dagre in a web worker)
+- automatically layout the graph (dagre in a worker, diff repaints)
 - supports multiple machines and pipes between them
 - live updates
 - log view
