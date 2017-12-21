@@ -27,7 +27,7 @@ class LocalStorage {
     const prev_data = localStorage.getItem(this.namespace)
     this.data = prev_data ? JSON.parse(prev_data) : {}
     if (!this.data[this.uri]) {
-      this.data[this.uri] = deepcopy(default_settings)
+      this.reset()
     } else {
       this.data[this.uri] = { ...default_settings, ...this.data[this.uri] }
     }
@@ -43,6 +43,13 @@ class LocalStorage {
   }
   save() {
     localStorage.setItem(this.namespace, JSON.stringify(this.data))
+  }
+  reset(everything = false) {
+    if (everything) {
+      this.data = {}
+    }
+    this.data[this.uri] = deepcopy(default_settings)
+    this.save()
   }
 }
 

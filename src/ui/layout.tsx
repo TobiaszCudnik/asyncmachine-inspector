@@ -17,18 +17,20 @@ import Drawer from 'material-ui/Drawer'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
 import { ILogEntry, ITransitionData } from '../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
-import IconPlay from 'material-ui/svg-icons/av/play-arrow'
-import IconPause from 'material-ui/svg-icons/av/pause'
+import PlayIcon from 'material-ui/svg-icons/av/play-arrow'
+import PauseIcon from 'material-ui/svg-icons/av/pause'
+import RemoteIcon from 'material-ui/svg-icons/action/settings-remote'
+import IconButton from 'material-ui/IconButton'
+import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
+import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import Chip from 'material-ui/Chip'
+import FlatButton from 'material-ui/FlatButton'
 import {
   Toolbar,
   ToolbarGroup,
   ToolbarSeparator,
   ToolbarTitle
 } from 'material-ui/Toolbar'
-import IconButton from 'material-ui/IconButton'
-import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
-import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import Legend from './ui/legend'
 import joint_css from './joint.css'
 import inspector_css from './inspector.css'
@@ -77,6 +79,9 @@ export type TLayoutProps = {
   next_transitions_touched: { [machine_id: string]: string[] }
   // listeners
   onDownloadSnapshot: Function
+  onUploadSnapshot: Function
+  onConnectButton: Function
+  onResetButton: Function
   onTimelineSlider: Function
   onZoomSlider: Function
   onStepType: Function
@@ -150,14 +155,14 @@ export class Main extends Component<
                 <MenuItem value="transitions" primaryText="Transitions" />
                 <MenuItem value="steps" primaryText="Transition steps" />
               </SelectField>
-              <ToolbarTitle
-                text={
-                  this.props.is_snapshot
-                    ? 'Snapshot'
-                    : this.props.is_connected ? 'Connected' : 'Disconnected'
-                }
-              />
-
+            </ToolbarGroup>
+            <ToolbarGroup>
+              <IconButton
+                tooltip="Connect to a server"
+                onClick={this.props.onConnectButton}
+              >
+                <RemoteIcon />
+              </IconButton>
               <IconButton
                 tooltip="Upload a snapshot"
                 containerElement="label"
@@ -166,16 +171,35 @@ export class Main extends Component<
                 <FileUploadIcon />
                 <input type="file" id="snapshot-upload" />
               </IconButton>
-              <IconButton
-                tooltip="Download a snapshot"
-                onClick={this.props.onDownloadSnapshot}
-              >
-                <FileDownloadIcon />
-              </IconButton>
+              <ToolbarTitle
+                text={
+                  this.props.is_snapshot
+                    ? 'Snapshot'
+                    : this.props.is_connected ? 'Connected' : 'Disconnected'
+                }
+              />
+              {this.props.is_connected ?
+                <IconButton
+                  tooltip="Download a snapshot"
+                  onClick={this.props.onDownloadSnapshot}
+                >
+                  <FileDownloadIcon />
+                </IconButton>
+                : ''}
             </ToolbarGroup>
             <ToolbarGroup>
+              <FlatButton
+                style={{margin: 0}}
+                label="Reset"
+                onClick={this.props.onResetButton}
+              />
+              <FlatButton
+                style={{margin: 0}}
+                label="Help"
+                onClick={this.props.onHelpButton}
+              />
               {/*TODO css */}
-              <div style={{ width: '9em', padding: '2em' }}>
+              <div style={{ width: '9em', paddingRight: '2em' }}>
                 <Toggle
                   label="Autoplay"
                   defaultToggled={this.state.autoplay}
@@ -472,7 +496,7 @@ export class Main extends Component<
               id="play-button"
               disabled={this.props.on_last}
             >
-              {this.props.is_playing ? <IconPause /> : <IconPlay />}
+              {this.props.is_playing ? <PauseIcon /> : <PlayIcon />}
             </FloatingActionButton>
             <Slider
               id="step-slider"

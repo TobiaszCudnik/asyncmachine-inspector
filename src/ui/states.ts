@@ -25,23 +25,17 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
     require: ['FullSync']
   }
   // connection
+  Connect: IState = {
+    drop: ['Connecting', 'Connected', 'Disconnected']
+  }
   Connecting: IState = {
-    drop: ['Connected', 'Disconnected'],
-    auto: true
+    drop: ['Connect', 'Connected', 'Disconnected']
   }
   Connected: IState = {
-    drop: ['Connecting', 'Disconnected']
-  }
-  Joining: IState = {
-    require: ['Connected'],
-    drop: ['Joined', 'Disconnected']
-  }
-  Joined: IState = {
-    require: ['Connected'],
-    drop: ['Joining', 'Disconnected']
+    drop: ['Connect', 'Connecting', 'Disconnected']
   }
   Disconnected: IState = {
-    drop: ['Connected', 'Connecting', 'Joining', 'Joined']
+    drop: ['Connected', 'Connecting']
   }
   // UIStates
   AutoplayOn: IState = {}

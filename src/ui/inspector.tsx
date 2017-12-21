@@ -2,9 +2,7 @@ import renderLayout, { TLayoutProps } from './layout'
 // UI type
 import Graph from './joint'
 import { INetworkJson } from './joint-network'
-// import Graph from './cola'
-// import { INetworkJson } from './cola-network'
-// import * as io from 'socket.io-client'
+import * as io from 'socket.io-client'
 import Network, { ILogEntry, IPatch, PatchType } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
@@ -15,7 +13,7 @@ import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
-import Logger from '../logger-file'
+import Logger from '../logger/logger-file'
 import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
@@ -50,8 +48,7 @@ export class Inspector implements ITransitions {
   graph = new Graph(null, this.settings)
   layout_data: TLayoutProps
   frametime = 0.5
-  // TODO type
-  // socket: io.Socket
+  socket: io.Socket
   layout
   container: Element
   logger_id: string
@@ -67,52 +64,9 @@ export class Inspector implements ITransitions {
   data_service_last_sync = 0
   rendering_position = 0
   overlayListener: EventListenerOrEventListenerObject
+
   get overlay_el() {
     return document.querySelector('#overlay')
-  }
-
-  constructor(
-    public container_selector = '#am-inspector',
-    public host = 'localhost',
-    public port = 3030,
-    debug = false
-  ) {
-    this.states.id('Inspector')
-    this.states.add(['TimelineOnFirst', 'Connecting'])
-    if (this.settings.get().autoplay) {
-      this.states.add('AutoplayOn')
-    }
-
-    // this.socket = io(`http://${this.host}:${this.port}/client`)
-    // this.socket.on('full-sync', this.states.addByListener('FullSync'))
-    // this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-    // this.socket.on(
-    //   'connect',
-    //   this.states.addByListener(['Connected', 'Joined'])
-    // )
-    // TODO connection_error event and bind retries to a state
-    // this.socket.on('disconnected', this.states.addByListener('Disconnected'))
-    // this.socket.on('loggers', this.states.addByListener('Joining'))
-    // predefined debugger port true)
-    // TODO
-    // this.states.logLevel(3)
-    if (port != 4040 && debug) {
-      this.states.logLevel(3)
-      const network = new Network()
-      network.addMachine(this.states)
-      window.logger = new Logger(network, 'localhost:4040/logger')
-    }
-
-    this.layout_data = this.buildLayoutData()
-    this.data_service = new JointDataService()
-
-    if (document.readyState == 'complete') this.states.add('DOMReady')
-    else {
-      window.document.addEventListener(
-        'DOMContentLoaded',
-        this.states.addByListener('DOMReady')
-      )
-    }
   }
 
   set data_service(value) {
@@ -123,6 +77,46 @@ export class Inspector implements ITransitions {
 
   get data_service() {
     return this.data_service_
+  }
+
+  constructor(public container_selector = '#am-inspector', debug = false) {
+    this.states.id('Inspector')
+    this.states.add(['TimelineOnFirst', 'Connecting'])
+    if (this.settings.get().autoplay) {
+      this.states.add('AutoplayOn')
+    }
+    if (debug) {
+      this.states.logLevel(3)
+    }
+
+    this.layout_data = this.buildLayoutData()
+    this.data_service = new JointDataService()
+
+    if (document.readyState == 'complete') {
+      this.states.add('DOMReady')
+    } else {
+      window.document.addEventListener(
+        'DOMContentLoaded',
+        this.states.addByListener('DOMReady')
+      )
+    }
+  }
+
+  /**
+   * Bind the inspector to a local logger's instance.
+   */
+  setLogger(logger: Logger) {
+    this.states.add('FullSync', logger.base_version)
+    logger.on('diff-sync', this.states.addByListener('DiffSync'))
+  }
+
+  Connect_state(host = 'localhost', port = 80, path = '') {
+    this.socket = io(`http://${host}:${port}/client`)
+    this.socket.on('full-sync', this.states.addByListener('FullSync'))
+    this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
+    this.socket.on('connect', this.states.addByListener('Connected'))
+    // TODO connection_error event and bind retries to a state
+    this.socket.on('disconnected', this.states.addByListener('Disconnected'))
   }
 
   // TODO support resetting
@@ -167,9 +161,7 @@ export class Inspector implements ITransitions {
     this.renderUI()
   }
 
-  FullSync_Joining() {
-    // re-init the data service on re-joining
-    // TODO async
+  FullSync_exit() {
     this.layout_worker.reset()
   }
 
@@ -498,6 +490,13 @@ export class Inspector implements ITransitions {
         } else {
           self.states.add('AutoplayOn')
         }
+      },
+      onHelpButton: () => {
+        // TODO react repaints from ui events arent sync...
+        self.states.addNext('LegendVisible')
+      },
+      onResetButton: () => {
+        self.settings.reset()
       },
       settings: this.settings
     }
