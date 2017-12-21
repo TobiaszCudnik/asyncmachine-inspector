@@ -8,7 +8,7 @@ type MachineId = string
  * fix d.ts files generation
  * TODO introduce revision hashes
  */
-export default class LoggerFile extends EventEmitter {
+export default class LoggerLocal extends EventEmitter {
   json: NetworkJson
   diff: JsonDiffFactory
   base_version: INetworkJson
