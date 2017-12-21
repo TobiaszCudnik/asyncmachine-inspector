@@ -1,21 +1,4 @@
-/**
- * Intermediate server proxying traffic between Loggers (sources) and UIs
- * (consumers).
- *
- * A lot of traffic is being duplicated at the moment.
- * 
- * TODO:
- * - when logger reconnects, re-bind the clients, perform a full sync
- */
-
 import * as io from 'socket.io'
-import * as _ from 'underscore'
-import * as assert from 'assert/'
-// import AsyncMachine from 'asyncmachine'
-
-interface IJoinEvent {
-  loggerId: string
-}
 
 export interface LoggerSocket extends SocketIO.Socket {
   loggerId: string
@@ -26,8 +9,7 @@ export default function createServer() {
 
   // LOGGER ENDPOINT
 
-  var loggerEndpoint = server.of('/logger')
-  var loggerSockets: LoggerSocket[] = []
+  const loggerEndpoint = server.of('/logger')
 
   loggerEndpoint.on('connection', function(socket: LoggerSocket) {
     console.log('logger connected')
@@ -44,8 +26,7 @@ export default function createServer() {
   // UI ENDPOINT
 
   type clientSocket = SocketIO.Socket
-  var uiEndpoint = server.of('/client')
-  var clientSockets: clientSocket[] = []
+  const uiEndpoint = server.of('/client')
 
   uiEndpoint.on('connection', function(socket: clientSocket) {
     loggerEndpoint.emit('full-sync')

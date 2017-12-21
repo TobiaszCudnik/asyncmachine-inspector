@@ -1,15 +1,6 @@
-/**
- * TODO network-to-ui-json should be handled by the server
- */
-import Network, { ITransitionData, PatchType } from './network'
+import Network, { ITransitionData, PatchType } from '../network'
 import * as io from 'socket.io-client'
-// import NetworkJson, {
-//     JsonDiffFactory
-// } from "./ui/cola-network"
-import NetworkJson, { JsonDiffFactory, INetworkJson } from './ui/joint-network'
-// import NetworkJson, {
-//     JsonDiffFactory
-// } from "./ui/graphviz-network"
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../inspector/joint/network'
 
 type MachineId = string
 

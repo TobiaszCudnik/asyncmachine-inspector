@@ -3,7 +3,7 @@ import * as cola from 'webcola'
 import Graph from 'graphs'
 import { INetworkJson, State } from './cola-network'
 import * as jsondiffpatch from 'jsondiffpatch'
-import UiBase from './graph'
+import UiBase from '../graph'
 
 // TODO this is bad
 window['d3'] = d3

@@ -1,13 +1,13 @@
 import * as jsondiffpatch from 'jsondiffpatch'
-import Network, { Node as GraphNode } from '../network'
-import * as assert from 'assert/'
+import Network, { Node as GraphNode } from '../../network'
+import * as assert from 'graphviz-network'
 import {
   NetworkJsonFactory as NetworkJsonFactoryBase,
   JsonDiffFactory as JsonDiffFactoryBase,
   OBJECT_TYPE,
   NODE_LINK_TYPE
-} from '../network-json'
-import AsyncMachine from 'asyncmachine'
+} from '../../network-json'
+import AsyncMachine from '../../../../asyncmachine/build/asyncmachine'
 import * as _ from 'underscore'
 
 export class JsonDiffFactory extends JsonDiffFactoryBase<

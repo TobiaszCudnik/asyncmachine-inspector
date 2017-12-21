@@ -5,10 +5,12 @@ const path = require('path')
 
 module.exports = {
   entry: {
-    inspector: './src/ui/inspector',
-    'logger-file': './src/logger-file',
-    'logger-client': './src/logger-client',
-    'worker-layout': './src/ui/worker-layout'
+    inspector: './src/inspector/inspector',
+    'inspector-layout-worker': './src/inspector/joint/layout-worker',
+    'logger-browser-file': './src/logger/browser-file',
+    'logger-browser-client': './src/logger/browser-client',
+    'logger-server-file': './src/logger/server-file',
+    'logger-server-client': './src/logger/server-client',
   },
   // plugins: [
   //   new AsyncAwaitPlugin({})
@@ -32,8 +34,8 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: `am_[name].umd.js`,
-    library: 'am_[name]',
+    filename: `am-[name].umd.js`,
+    library: 'am-[name]',
     libraryTarget: 'umd'
   },
 

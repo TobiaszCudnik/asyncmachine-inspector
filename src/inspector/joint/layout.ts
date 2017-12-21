@@ -1,4 +1,4 @@
-/// <reference path="../../typings/modules/jointjs/index.d.ts" />
+/// <reference path="../../../typings/modules/jointjs/index.d.ts" />
 
 // import { layout } from 'ciena-dagre/dist/dagre'
 import { layout } from 'ciena-dagre'
@@ -9,7 +9,7 @@ import * as joint from 'jointjs'
 import * as md5 from 'md5'
 import * as deepcopy from 'deepcopy'
 import { INetworkJson, TCell, TState, TLink, TMachine } from './joint-network'
-import { PositionsMap } from './settings'
+import { PositionsMap } from '../settings'
 
 // TODO types from dagre
 type TNode = {

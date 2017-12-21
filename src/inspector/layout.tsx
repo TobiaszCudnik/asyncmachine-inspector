@@ -32,12 +32,12 @@ import {
   ToolbarTitle
 } from 'material-ui/Toolbar'
 import Legend from './ui/legend'
-import joint_css from './joint.css'
+import joint_css from './joint/joint.css'
 import inspector_css from './inspector.css'
 import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from './settings'
 // TODO this shouldnt be here
-import { TMachine } from './joint-network'
+import { TMachine } from './joint/joint-network'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
 
@@ -178,23 +178,25 @@ export class Main extends Component<
                     : this.props.is_connected ? 'Connected' : 'Disconnected'
                 }
               />
-              {this.props.is_connected ?
+              {this.props.is_connected ? (
                 <IconButton
                   tooltip="Download a snapshot"
                   onClick={this.props.onDownloadSnapshot}
                 >
                   <FileDownloadIcon />
                 </IconButton>
-                : ''}
+              ) : (
+                ''
+              )}
             </ToolbarGroup>
             <ToolbarGroup>
               <FlatButton
-                style={{margin: 0}}
+                style={{ margin: 0 }}
                 label="Reset"
                 onClick={this.props.onResetButton}
               />
               <FlatButton
-                style={{margin: 0}}
+                style={{ margin: 0 }}
                 label="Help"
                 onClick={this.props.onHelpButton}
               />

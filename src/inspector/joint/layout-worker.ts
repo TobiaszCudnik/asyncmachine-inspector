@@ -1,11 +1,11 @@
-import DataService, { StepTypes } from './joint-data-service'
-import Layout from './joint-layout'
+import DataService, { StepTypes } from './data-service'
+import Layout from './layout'
 import workerio from 'workerio/src/workerio/index'
 import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as deepcopy from 'deepcopy'
 import { IDelta } from 'jsondiffpatch'
-import { ITransitionData } from '../network'
+import { ITransitionData } from '../../network'
 
 export interface IDataServiceSync {
   position: number

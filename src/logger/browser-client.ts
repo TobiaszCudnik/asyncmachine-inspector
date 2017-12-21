@@ -1,19 +1,9 @@
 /**
  * TODO network-to-ui-json should be handled by the server
  */
-import Network, { IPatch, ITransitionData, PatchType } from './network'
-// import * as io from 'socket.io-client'
-// import NetworkJson, {
-//     JsonDiffFactory
-// } from "./ui/cola-network"
-import NetworkJson, { JsonDiffFactory, INetworkJson } from './ui/joint-network'
+import Network, { IPatch, ITransitionData, PatchType } from '../network'
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
-// import NetworkJson, {
-//     JsonDiffFactory
-// } from "./ui/graphviz-network"
-// TODO save as file (download on keystroke & filesystem)
-// import * as downloadAsFile from 'download-as-file'
-// import * as key from 'keymaster'
 
 type MachineId = string
 
