@@ -16,19 +16,18 @@
   doesnt change
 
 #### UI
-- show the number of ticks
-  - in the state's UI
 - mark a cancelled transition on the transition sidebar
-- help button
 - actions menu
-  - reset all settings
   - reset positions
   - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - smaller toolbar
   - redesign
 - machines sidebar
   - machines - current transitions - involved: order alphabetically
-  - sort by queue length, listeners count
+  - add number of (output) pipes
+  - sort-by select
+    - default: queue length, listeners count
+    - others: name, ticks, pipes
 - keep in local storage
   - Step Type
 - legend
@@ -70,9 +69,12 @@
 
 #### Optimizations
 - cache data service scrolling
-- move DataService patch scrolling to a separate worker then dagre layout is in
+  - including next & prev transitions
+- move DataService patch scrolling to a separate worker
+  - separate from the one dagre layout is in
 - network should update the json based on incoming events, not a full rebuild
 - render sidebars only when visible
+- progressive list rendering for logs
 - reduce the bundle size
   
 #### Refactoring
@@ -99,6 +101,7 @@
 - include state counters
 - visualize the queue and listeners size
 - visualize an active queue
+- show the number of ticks in the state's UI
 
 #### Transition Tree
 - show transition as a tree
@@ -111,6 +114,7 @@
 - comments in the stackblitz demo file
   - Restaurant class should have a separate target
 - short screencasts showing off specific features
+  - links to live demos on stackblitz
 - maybe - extract the cluster graph, worker-based dagre layout for jointjs
   into a module
   
