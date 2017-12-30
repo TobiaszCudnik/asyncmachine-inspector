@@ -1,12 +1,16 @@
+const AsyncAwaitPlugin = require('webpack-async-await')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+  .BundleAnalyzerPlugin
 const path = require('path')
 
 module.exports = {
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
-  },
   entry: {
-    demo: './index.ts',
+    'inspector-layout-worker': './src/inspector/joint/layout-worker'
   },
+  plugins: [
+    // new AsyncAwaitPlugin({})
+  ],
+  // plugins: [new BundleAnalyzerPlugin()],
   module: {
     loaders: [
       { test: /\.css$/, loader: 'style-loader!css-loader' },
@@ -17,13 +21,15 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+  },
   output: {
-    // path: path.join(__dirname, 'dist'),
+    path: path.join(__dirname, '..', 'dist'),
     filename: `am-[name].umd.js`,
     library: 'am-[name]',
     libraryTarget: 'umd'
   },
 
-  // devtool: 'source-map',
   devtool: 'eval'
 }

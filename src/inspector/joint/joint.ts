@@ -1,6 +1,6 @@
 // import Graph from 'graphs'
 import { INetworkJson, TState, TMachine, TLink, TCell } from './joint-network'
-import { TransitionStepTypes } from '../../../../asyncmachine/build/asyncmachine'
+import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from '../graph'
 import * as joint from 'jointjs'
 import * as vectorizer from 'jointjs/dist/vectorizer'
@@ -12,7 +12,7 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import * as colors from 'material-ui/styles/colors'
 import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
-import adjustVertices from '../../vendor/adjust-vertices'
+import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
 
 type IDelta = jsondiffpatch.IDeltas

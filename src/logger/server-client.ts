@@ -1,6 +1,9 @@
 import Network, { ITransitionData, PatchType } from '../network'
 import * as io from 'socket.io-client'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../inspector/joint/network'
+import NetworkJson, {
+  JsonDiffFactory,
+  INetworkJson
+} from '../inspector/joint/network'
 
 type MachineId = string
 

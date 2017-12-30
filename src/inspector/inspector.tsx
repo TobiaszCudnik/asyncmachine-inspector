@@ -1,15 +1,13 @@
-import renderLayout, { TLayoutProps } from './layout'
+import renderLayout, { TLayoutProps } from './ui/layout'
 // UI type
 import Graph from './joint/joint'
-import { INetworkJson } from './joint/joint-network'
+import LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
+import { INetworkJson } from './joint/network'
 import * as io from 'socket.io-client'
 import Network, { ILogEntry, IPatch, PatchType } from '../network'
 import * as jsondiffpatch from 'jsondiffpatch'
 import 'core-js/es6/symbol'
-import {
-  default as JointDataService,
-  StepTypes
-} from './joint/data-service'
+import { default as JointDataService, StepTypes } from './joint/data-service'
 import { throttle } from 'underscore'
 import States from './states'
 import Settings from './settings'
@@ -23,7 +21,6 @@ import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
-import './joint/layout-worker'
 
 const log = (...args) => {}
 
@@ -125,17 +122,21 @@ export class Inspector implements ITransitions {
   // TODO support resetting
   // TODO basedir
   async InitializingLayoutWorker_state() {
-    let worker, LayoutWorker
+    let worker, LayoutWorkerRemote
     // TODO https://github.com/stackblitz/core/issues/72
     if (!location.hostname.includes('stackblitz') && Worker) {
-      // TODO make this configurable, handle 404s
-      worker = new Worker('../../dist/am_inspector-layout-worker.umd.js')
-      LayoutWorker = await workerio.getInterface(worker, 'api')
+      // worker = new Worker('../../dist/am-inspector-layout-worker.umd.js')
+      const blob = new Blob([LayoutWorker], {type: 'application/javascript'})
+      worker = new Worker(URL.createObjectURL(blob));
+      LayoutWorkerRemote = await workerio.getInterface(worker, 'api')
     } else {
-      LayoutWorker = await workerio.getInterface(window, 'api')
+      console.error('TODO')
+      // TODO test
+      eval(LayoutWorker)
+      LayoutWorkerRemote = await workerio.getInterface(window, 'api')
     }
     // TODO keep in the graph class?
-    this.layout_worker = new LayoutWorker()
+    this.layout_worker = new LayoutWorkerRemote()
     this.states.add('LayoutWorkerReady')
   }
 

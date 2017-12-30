@@ -1,5 +1,8 @@
 import Network, { IPatch, ITransitionData, PatchType } from '../network'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../inspector/joint/network'
+import NetworkJson, {
+  JsonDiffFactory,
+  INetworkJson
+} from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
 
 type MachineId = string

@@ -9,7 +9,7 @@
 /src/**/*.js
 /src/**/*.d.ts
 /src/**/*.js.map
-!/src/vendor/**/*.js
+!/src/inspector/joint/vendor/**/*.js
 /test/**/*.js
 /test/**/*.d.ts
 /test/**/*.js.map

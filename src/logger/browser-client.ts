@@ -12,9 +12,8 @@ type MachineId = string
  * TODO introduce revision hashes
  */
 export default class LoggerFile extends LoggerLocal {
-
   constructor(public network: Network) {
     super(network)
-    // TODO contruct socket io
+    // TODO construct a socket io
   }
 }

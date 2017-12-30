@@ -5,7 +5,7 @@
 /src/**/*.ts
 /src/**/*.d.ts
 /src/**/*.js.map
-!/src/vendor/**/*.js
+!/src/inspector/joint/vendor/**/*.js
 /typings
 /test
 /dev

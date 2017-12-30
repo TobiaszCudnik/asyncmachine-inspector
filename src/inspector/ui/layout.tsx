@@ -1,7 +1,7 @@
-/// <reference path="../../typings/globals/socket.io-client/index.d.ts" />
-/// <reference path="../../typings/modules/react/index.d.ts" />
-/// <reference path="../../typings/modules/react-dom/index.d.ts" />
-/// <reference path="../../typings/modules/material-ui/index.d.ts" />
+/// <reference path="../../../typings/globals/socket.io-client/index.d.ts" />
+/// <reference path="../../../typings/modules/react/index.d.ts" />
+/// <reference path="../../../typings/modules/react-dom/index.d.ts" />
+/// <reference path="../../../typings/modules/material-ui/index.d.ts" />
 import * as React from 'react'
 import { render } from 'react-dom'
 import { Component } from 'react'
@@ -15,7 +15,7 @@ import MenuItem from 'material-ui/MenuItem'
 import Toggle from 'material-ui/Toggle'
 import Drawer from 'material-ui/Drawer'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import { ILogEntry, ITransitionData } from '../network'
+import { ILogEntry, ITransitionData } from '../../network'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import PlayIcon from 'material-ui/svg-icons/av/play-arrow'
 import PauseIcon from 'material-ui/svg-icons/av/pause'
@@ -31,11 +31,11 @@ import {
   ToolbarSeparator,
   ToolbarTitle
 } from 'material-ui/Toolbar'
-import Legend from './ui/legend'
-import joint_css from './joint/joint.css'
-import inspector_css from './inspector.css'
-import { StateChangeTypes } from 'asyncmachine/build/types'
-import Settings from './settings'
+import Legend from './legend'
+import joint_css from '../joint/joint.css'
+import inspector_css from '../inspector.css'
+import { StateChangeTypes } from '../../../../asyncmachine/build/types'
+import Settings from '../settings'
 // TODO this shouldnt be here
 import { TMachine } from './joint/joint-network'
 import * as deepCopy from 'deepcopy'

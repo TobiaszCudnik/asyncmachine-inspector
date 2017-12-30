@@ -13,20 +13,39 @@ build:
 build-watch:
 	node_modules/.bin/tsc --module commonjs --watch
 
-dist:
-	webpack
+dist-worker-dev:
+	webpack --config config/webpack-worker.config.js
 
-dist-watch:
-	webpack --watch
+dist-worker-dev-watch:
+	webpack --config config/webpack-worker.config.js --watch
+
+dist-worker-prod:
+	webpack --config config/webpack-worker-prod.config.js
+
+dist-dev:
+	`make dist-worker-dev`
+	webpack --config config/webpack.config.js
+
+dist-dev-watch:
+	`make dist-worker-dev-watch` &
+		webpack --watch
 
 dist-debug:
-	webpack --devtool sourcemap
+	webpack --config config/webpack-worker-prod.config.js
+	webpack --config config/webpack.config.js --devtool sourcemap
 
 dist-debug-watch:
-	webpack --devtool sourcemap --watch
+	webpack --config config/webpack-worker.config.js --watch &
+		webpack --config config/webpack.config.js \
+			--devtool sourcemap --watch
 
-dist-production:
-	webpack --devtool none --optimize-minimize
+dist-prod:
+	webpack --config config/webpack-worker-prod.config.js
+	webpack --config config/webpack-prod.config.js
+
+dist-prod-watch:
+	webpack --config config/webpack-worker-prod.config.js
+	webpack --config config/webpack-prod.config.js --watch
 
 dist-stackblitz:
 	webpack --config webpack-stackblitz.config.js

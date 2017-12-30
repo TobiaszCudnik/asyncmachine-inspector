@@ -109,6 +109,7 @@
   - machines are nodes, states are leafs
   
 #### Project
+- dont use the dev build of react for prod dist file
 - bring back the socket IO client
 - make a demo
 - comments in the stackblitz demo file
@@ -117,4 +118,3 @@
   - links to live demos on stackblitz
 - maybe - extract the cluster graph, worker-based dagre layout for jointjs
   into a module
-  

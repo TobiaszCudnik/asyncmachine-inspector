@@ -54,7 +54,7 @@ function syncDataService(): IDataServiceSync {
     'current_patch',
     'patch_position',
     'last_scroll_add_remove'
-  )
+  ) as IDataServiceSync // TODO loose casting
 }
 
 workerio.publishInterface(self || window, 'api', {
