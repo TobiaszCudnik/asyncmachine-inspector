@@ -16,6 +16,7 @@
   doesnt change
 
 #### UI
+- download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
 - actions menu
   - reset positions
@@ -68,6 +69,7 @@
 - transaction's source machine (the active queue) should also be marked as touched
 
 #### Optimizations
+- properly tree-shake asyncmachine as a logger dependency (its type-only)
 - cache data service scrolling
   - including next & prev transitions
 - move DataService patch scrolling to a separate worker

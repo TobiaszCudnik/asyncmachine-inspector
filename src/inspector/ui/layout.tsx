@@ -69,6 +69,7 @@ export type TLayoutProps = {
   is_playing: boolean
   logs: ILogEntry[][]
   step_type: string
+  is_legend_visible: boolean
   // TODO dont use a layout specific type
   machines: { [machine_id: string]: TMachine }
   active_transitions: ITransitionData[]
@@ -79,7 +80,6 @@ export type TLayoutProps = {
   next_transitions_touched: { [machine_id: string]: string[] }
   // listeners
   onDownloadSnapshot: Function
-  onUploadSnapshot: Function
   onConnectButton: Function
   onResetButton: Function
   onTimelineSlider: Function
@@ -87,7 +87,8 @@ export type TLayoutProps = {
   onStepType: Function
   onAutoplayToggle: Function
   onPlayButton: Function
-  is_legend_visible: boolean
+  onHelpButton: Function
+  // instances
   settings: Settings
 }
 
@@ -166,7 +167,6 @@ export class Main extends Component<
               <IconButton
                 tooltip="Upload a snapshot"
                 containerElement="label"
-                onClick={this.props.onUploadSnapshot}
               >
                 <FileUploadIcon />
                 <input type="file" id="snapshot-upload" />

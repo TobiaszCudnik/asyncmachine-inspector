@@ -5,13 +5,11 @@ const path = require('path')
 module.exports = {
   entry: {
     'inspector': './src/inspector/inspector',
-    'logger-browser-file': './src/logger/browser-file',
-    'logger-browser-client': './src/logger/browser-client',
-    'logger-server-file': './src/logger/server-file',
-    'logger-server-client': './src/logger/server-client',
+    'logger': './src/logger/logger',
+    'logger-remote': './src/logger/logger-remote',
   },
   plugins: [
-      // new BundleAnalyzerPlugin(),
+      new BundleAnalyzerPlugin(),
   ],
   module: {
     loaders: [

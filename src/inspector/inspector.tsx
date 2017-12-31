@@ -14,13 +14,14 @@ import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
-import Logger from '../logger/browser-file'
+import Logger from '../logger/logger'
 import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
+import {JSONSnapshot} from "../network-json";
 
 const log = (...args) => {}
 
@@ -106,7 +107,7 @@ export class Inspector implements ITransitions {
    * Bind the inspector to a local logger's instance.
    */
   setLogger(logger: Logger) {
-    this.states.add('FullSync', logger.base_version)
+    this.states.add('FullSync', logger.full_sync)
     logger.on('diff-sync', this.states.addByListener('DiffSync'))
   }
 
@@ -465,18 +466,22 @@ export class Inspector implements ITransitions {
         }
         return ret
       },
+      /**
+       * TODO export log entires within the patch object
+       */
       onDownloadSnapshot: async function() {
         const { patches } = await self.layout_worker.export()
-        const content = JSON.stringify({
+        // TODO mixin logs into patches, based on the index position
+        const content: JSONSnapshot = {
           full_sync: self.full_sync,
           patches,
-          logs: this.logs
-        })
-        downloadAsFile({
+          logs: self.logs
+        }
+        downloadAsFile(JSON.stringify({
           data: content,
           // TODO format the date
           filename: `inspector-snapshot-${Date.now()}.json`
-        })
+        }))
       },
       // TODO type the export data
       onTimelineSlider: throttle((event, value) => {
@@ -535,6 +540,7 @@ export class Inspector implements ITransitions {
       { type: 'text' },
       (err, files) => {
         for (const file of files) {
+          // TODO keep in the settings class
           localStorage.setItem('last_snapshot', file.target.result)
           const snapshot = JSON.parse(file.target.result)
           this.loadSnapshot(snapshot)

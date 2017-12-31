@@ -4,10 +4,12 @@ import {
   TransitionStepFields,
   StateRelations
 } from 'asyncmachine/build/asyncmachine'
+import Transition from 'asyncmachine/build/transition'
 import {
   AsyncMachine,
   ITransitionStep,
-  IStateStruct
+  IStateStruct,
+  StateChangeTypes
 } from 'asyncmachine/src/types'
 import Graph from 'graphs'
 import * as uuid from 'uuid/v4'
@@ -15,8 +17,6 @@ import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from './network-json'
-import { StateChangeTypes } from 'asyncmachine/build/types'
-import Transition from 'asyncmachine/build/transition'
 
 export type MachinesMap = Map<AsyncMachine, string>
 export type NodeGraph = Graph<Node>

@@ -23,11 +23,11 @@ dist-worker-prod:
 	webpack --config config/webpack-worker-prod.config.js
 
 dist-dev:
-	`make dist-worker-dev`
+	webpack --config config/webpack-worker.config.js
 	webpack --config config/webpack.config.js
 
 dist-dev-watch:
-	`make dist-worker-dev-watch` &
+	webpack --config config/webpack-worker.config.js --watch &
 		webpack --watch
 
 dist-debug:
