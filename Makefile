@@ -8,10 +8,10 @@ compile-watch:
 	node_modules/.bin/tsc --pretty --watch --noEmit
 
 build:
-	node_modules/.bin/tsc --module commonjs
+	node_modules/.bin/tsc --module commonjs --outDir ./build
 
 build-watch:
-	node_modules/.bin/tsc --module commonjs --watch
+	node_modules/.bin/tsc --module commonjs --outDir ./build --watch
 
 dist-worker-dev:
 	webpack --config config/webpack-worker.config.js
@@ -28,7 +28,7 @@ dist-dev:
 
 dist-dev-watch:
 	webpack --config config/webpack-worker.config.js --watch &
-		webpack --watch
+		webpack --config config/webpack.config.js --watch
 
 dist-debug:
 	webpack --config config/webpack-worker-prod.config.js
@@ -71,6 +71,9 @@ cjs-to-es6:
 	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector-es6.js
 
 publish:
+	`make dist-prod`
+	pushd pkg/inspector
 	npm publish
+	popd
 
 .PHONY: test break build dist
