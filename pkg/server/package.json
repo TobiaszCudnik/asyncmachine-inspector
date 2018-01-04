@@ -1,7 +1,7 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.3.0-dev1",
-  "description": "Inspector / debugger for the asyncmachine",
+  "version": "0.3.0-dev2",
+  "description": "Server component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
     "type": "git",
@@ -21,11 +21,11 @@
     "logger",
     "graphs"
   ],
+  "bin": {
+    "am-server": "./am-server.js"
+  },
   "bugs": {
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
-  },
-  "scripts": {
-    "prepare": "make dist"
   },
   "license": "MIT",
   "engines": {
@@ -35,47 +35,5 @@
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
     "socket.io": "^1.4.8"
-  },
-  "devDependencies": {
-    "acorn": "^4.0.3",
-    "asyncmachine": "^3.1.0",
-    "awesome-typescript-loader": "^3.2.3",
-    "deepmerge": "^2.0.1",
-    "chai": "^3.0.0",
-    "chai-xml": "^0.3.0",
-    "ciena-dagre": "^1.0.10",
-    "css-loader": "^0.28.7",
-    "deepcopy": "^0.6.3",
-    "del": "^2.0.2",
-    "download-as-file": "^1.1.0",
-    "eventemitter3": "^1.1.1",
-    "graphs": "TobiaszCudnik/graphs",
-    "jointjs": "^2.0.1",
-    "json-loader": "^0.5.4",
-    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
-    "keymaster": "^1.6.2",
-    "lodash": "^4.17.4",
-    "material-ui": "^0.17.4",
-    "md5": "^2.2.1",
-    "mocha": "^2.2.5",
-    "random-number": "0.0.7",
-    "react": "^15.3.0",
-    "react-dom": "^15.3.0",
-    "react-tap-event-plugin": "^2.0.1",
-    "sinon": "^1.17.2",
-    "socket.io-client": "^1.4.8",
-    "style-loader": "^0.19.0",
-    "stylesheet.js": "^1.1.1",
-    "typescript": "^2.5.3",
-    "underscore": "^1.8.3",
-    "upload-element": "^1.0.1",
-    "uuid": "^3.1.0",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "webpack": "^3.8.1",
-    "webpack-async-await": "^1.1.0",
-    "webpack-bundle-analyzer": "^2.9.0",
-    "webpack-shell-plugin": "^0.5.0",
-    "workerio": "github:TobiaszCudnik/workerio"
   }
 }
