@@ -9,7 +9,7 @@ module.exports = {
     'logger-remote': './src/logger/logger-remote',
   },
   plugins: [
-      new BundleAnalyzerPlugin(),
+      // new BundleAnalyzerPlugin(),
   ],
   module: {
     loaders: [
