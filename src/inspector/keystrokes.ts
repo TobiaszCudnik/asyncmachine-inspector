@@ -39,6 +39,7 @@ export default function(inspector) {
     },
     esc: () => {
       inspector.states.drop('LegendVisible')
+      inspector.states.drop('ConnectionDialogVisible')
     }
   }
 }

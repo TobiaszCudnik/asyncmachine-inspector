@@ -5,7 +5,7 @@ import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as deepcopy from 'deepcopy'
 import { IDelta } from 'jsondiffpatch'
-import { ITransitionData } from '../../network'
+import { ITransitionData } from '../../network/network'
 
 export interface IDataServiceSync {
   position: number

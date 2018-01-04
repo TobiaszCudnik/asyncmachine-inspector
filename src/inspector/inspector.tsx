@@ -4,9 +4,8 @@ import Graph from './joint/joint'
 import LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
 import { INetworkJson } from './joint/network'
 import * as io from 'socket.io-client'
-import Network, { ILogEntry, IPatch, PatchType } from '../network'
+import Network, { ILogEntry, IPatch } from '../network/network'
 import * as jsondiffpatch from 'jsondiffpatch'
-import 'core-js/es6/symbol'
 import { default as JointDataService, StepTypes } from './joint/data-service'
 import { throttle } from 'underscore'
 import States from './states'
@@ -15,13 +14,12 @@ import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
 import Logger from '../logger/logger'
-import * as deepcopy from 'deepcopy'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
-import {JSONSnapshot} from "../network-json";
+import {JSONSnapshot} from "../network/network-json";
 
 const log = (...args) => {}
 
@@ -33,15 +31,7 @@ export enum STEP_TYPE_CHANGE {
   STEPS = 'steps'
 }
 
-/**
- * TODO
- * - pre-render N next steps when playing (possibly in a pool of workers)
- * - longer delay for msgs than for a step they come from
- * - queue & merge scroll requests while rendering
- *   - ideally cancel the current rendering
- * - timers
- * - renderUI() as a state
- */
+
 export class Inspector implements ITransitions {
   states = new States(this)
   private data_service_: JointDataService
@@ -103,16 +93,8 @@ export class Inspector implements ITransitions {
     }
   }
 
-  /**
-   * Bind the inspector to a local logger's instance.
-   */
-  setLogger(logger: Logger) {
-    this.states.add('FullSync', logger.full_sync)
-    logger.on('diff-sync', this.states.addByListener('DiffSync'))
-  }
-
-  Connect_state(host = 'localhost', port = 80, path = '') {
-    this.socket = io(`http://${host}:${port}/client`)
+  Connect_state(url = 'http://localhost:3757/') {
+    this.socket = io(`${url}/client`)
     this.socket.on('full-sync', this.states.addByListener('FullSync'))
     this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
     this.socket.on('connect', this.states.addByListener('Connected'))
@@ -168,13 +150,6 @@ export class Inspector implements ITransitions {
 
   FullSync_exit() {
     this.layout_worker.reset()
-  }
-
-  shouldPlay() {
-    return (
-      this.states.is('AutoplayOn') &&
-      (!this.data_service.position_max || this.states.is('TimelineOnLast'))
-    )
   }
 
   InitialRenderDone_state() {
@@ -316,7 +291,41 @@ export class Inspector implements ITransitions {
     this.renderUI()
   }
 
-  async playStep(abort: Function) {
+  Playing_end() {
+    clearTimeout(this.step_timer)
+    this.step_timer = null
+    this.renderUI()
+  }
+
+  LegendVisible_state() {
+    this.overlayListener = e => {
+      this.states.drop('LegendVisible')
+    }
+    this.renderUI()
+    this.overlay_el.addEventListener('click', this.overlayListener)
+  }
+
+  LegendVisible_end() {
+    this.overlay_el.removeEventListener('click', this.overlayListener)
+    this.renderUI()
+  }
+
+  ConnectionDialogVisible_state() {
+    this.overlayListener = e => {
+      this.states.drop('ConnectionDialogVisible')
+    }
+    this.renderUI()
+    this.overlay_el.addEventListener('click', this.overlayListener)
+  }
+
+  ConnectionDialogVisible_end() {
+    this.overlay_el.removeEventListener('click', this.overlayListener)
+    this.renderUI()
+  }
+
+  // METHODS
+
+  protected async playStep(abort: Function) {
     if (abort()) return
     if (this.states.is('Rendering')) {
       await this.states.when('Rendered')
@@ -344,26 +353,20 @@ export class Inspector implements ITransitions {
     }
   }
 
-  Playing_end() {
-    clearTimeout(this.step_timer)
-    this.step_timer = null
-    this.renderUI()
+  protected shouldPlay() {
+    return (
+      this.states.is('AutoplayOn') &&
+      (!this.data_service.position_max || this.states.is('TimelineOnLast'))
+    )
   }
 
-  LegendVisible_state() {
-    this.overlayListener = e => {
-      this.states.drop('LegendVisible')
-    }
-    this.renderUI()
-    this.overlay_el.addEventListener('click', this.overlayListener)
+  /**
+   * Bind the inspector to a local logger's instance.
+   */
+  setLogger(logger: Logger) {
+    this.states.add('FullSync', logger.full_sync)
+    logger.on('diff-sync', this.states.addByListener('DiffSync'))
   }
-
-  LegendVisible_end() {
-    this.overlay_el.removeEventListener('click', this.overlayListener)
-    this.renderUI()
-  }
-
-  // METHODS
 
   buildLayoutData(): TLayoutProps {
     const self = this
@@ -372,6 +375,9 @@ export class Inspector implements ITransitions {
       is_snapshot: false,
       get is_legend_visible() {
         return self.states.is('LegendVisible')
+      },
+      get is_connection_dialog_visible() {
+        return self.states.is('ConnectionDialogVisible')
       },
       get position_max() {
         return self.data_service.position_max
@@ -507,6 +513,15 @@ export class Inspector implements ITransitions {
       onResetButton: () => {
         self.settings.reset()
       },
+      onConnectButton: () => {
+        // TODO react repaints from ui events arent sync...
+        self.states.addNext('ConnectionDialogVisible')
+      },
+      onConnectSubmit: (data) => {
+        self.states.drop('ConnectionDialogVisible')
+        // TODO handle progress, errors
+        self.states.add('Connect', data.url)
+      },
       settings: this.settings
     }
     return data
@@ -591,5 +606,9 @@ export class Inspector implements ITransitions {
 
 export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  return new Inspector(container_selector, query.host, query.port, query.debug)
+  const inspector = new Inspector(container_selector, query.debug)
+  if (query.server) {
+    inspector.states.add('Connect', query.server)
+  }
+  return inspector
 }

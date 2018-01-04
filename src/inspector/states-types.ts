@@ -1,7 +1,7 @@
 import { STEP_TYPE_CHANGE } from './inspector'
 import { IState as IStateBase } from 'asyncmachine/src/types'
-import { INetworkJson } from './joint/joint-network'
-import { IPatch } from '../network'
+import { INetworkJson } from './joint/network'
+import { IPatch } from '../network/network'
 
 /**
  * Signatures for EventEmitter to bind to transitions.

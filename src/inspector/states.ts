@@ -78,6 +78,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
     multi: true
   }
   LegendVisible: IState = {}
+  ConnectionDialogVisible: IState = {}
   // TODO later
   // SidebarVisible: IState = {};
   // MachinesSidebarVisible: IState = {};
