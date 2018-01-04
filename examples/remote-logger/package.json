@@ -1,0 +1,14 @@
+{
+  "name": "asyncmachine-logger-remote-example",
+  "desc": "AsyncMachine Remote Logger Example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "am_demo.umd.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "asyncmachine-inspector": "^0.3.0-dev1",
+    "asyncmachine-logger": "^0.3.0-dev1",
+    "asyncmachine-server": "^0.3.0-dev1"
+  }
+}
