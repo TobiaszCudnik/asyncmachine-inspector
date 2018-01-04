@@ -1,11 +1,11 @@
 # asyncmachine-inspector
 
-Inspector / debugger for the [asyncmachine](https://github.com/TobiaszCudnik/asyncmachine).
+Inspector and a debugger for the [asyncmachine](https://github.com/TobiaszCudnik/asyncmachine).
 
 ![Preview](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.png)
 
 ## Features
-- automatic graph from asyncmachines
+- shows a graph of asyncmachines with states and relations
 - rendered with jointjs (drag-drop, drag-scroll, zooming)
 - automatically layout the graph (dagre in a worker, diff repaints)
 - supports multiple machines and pipes between them
@@ -15,10 +15,10 @@ Inspector / debugger for the [asyncmachine](https://github.com/TobiaszCudnik/asy
 - transitions view
 - scrolling through the history
 - step by state changes, transitions or everything
-- highlight transitions-related elements
-- preserve the UI settings to localStorage
+- highlight transition-related elements
+- preserve the UI settings to localstorage
 - export / import of snapshots to json
-- external logger support via socketIO
+- remote logger support via socketio
 - automatic colors
 - keyboard navigation
 - legend

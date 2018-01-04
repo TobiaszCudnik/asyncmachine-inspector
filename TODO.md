@@ -16,6 +16,10 @@
   doesnt change
 
 #### UI
+- keep the latest connection host in the settings
+  - maybe - auto-reconnect button (kept in the settings)
+- show the legend on the first load
+- reset confirmation message
 - download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
 - actions menu
@@ -65,6 +69,7 @@
   - click scrolls to the element
   
 #### Logger
+- allow configurable CORS for the server bin
 - make it easier to bind to your machines
 - transaction's source machine (the active queue) should also be marked as touched
 
@@ -78,16 +83,15 @@
 - render sidebars only when visible
 - progressive list rendering for logs
 - reduce the bundle size
+- pre-render N next steps when playing (possibly in a pool of workers)
+- longer delay for msgs than for a step they come from
+- queue & merge scroll requests while rendering
+  - ideally cancel the current rendering
+- renderUI() as a state
   
 #### Refactoring
-- split into 3 npm modules
-  - am-inspector
-  - am-logger
-  - am-inspector-server
-- extract RemoteInspector with socket io
 - rewrite the UI to grid & flex
 - divide the UI class into several machines
-- extract the main template
 - merge similar types and UI components
 - move different layouts into separate dirs
 - graph-layout agnostic
@@ -101,7 +105,7 @@
 - pipe isnt exactly like add, nor pipe invert like drop, although shown like that
 - take advantage of canceling async rendering available in the latest jointjs
 - include state counters
-- visualize the queue and listeners size
+- visualize a number of listeners
 - visualize an active queue
 - show the number of ticks in the state's UI
 
@@ -111,8 +115,10 @@
   - machines are nodes, states are leafs
   
 #### Project
-- bring back the socket IO client
-- make a demo
+- standalone inspector executable
+- examples on stackblitz
+  - generated state types
+  - fixed types generator for merges
 - comments in the stackblitz demo file
   - Restaurant class should have a separate target
 - short screencasts showing off specific features
