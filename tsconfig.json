@@ -12,11 +12,11 @@
     "files": [
         "typings/index.d.ts",
         "src/server/server.ts",
-      "src/logger/server.ts",
-        "src/ui/inspector.tsx",
-        "src/ui/worker-layout.ts",
-        "test/ui-joint/mock-logger.ts",
-        "test/ui-joint/mock-server.ts"
+        "src/server/mock-server.ts",
+        "src/logger/logger.ts",
+        "src/logger/logger-remote.ts",
+        "src/inspector/inspector.tsx",
+        "src/inspector/joint/layout-worker.ts"
     ],
     "awesomeTypescriptLoaderOptions": {
       "useTranspileModule": true,
