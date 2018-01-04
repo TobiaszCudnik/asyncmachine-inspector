@@ -15,7 +15,7 @@ import MenuItem from 'material-ui/MenuItem'
 import Toggle from 'material-ui/Toggle'
 import Drawer from 'material-ui/Drawer'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import { ILogEntry, ITransitionData } from '../../network'
+import { ILogEntry, ITransitionData } from '../../network/network'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import PlayIcon from 'material-ui/svg-icons/av/play-arrow'
 import PauseIcon from 'material-ui/svg-icons/av/pause'
@@ -28,16 +28,17 @@ import FlatButton from 'material-ui/FlatButton'
 import {
   Toolbar,
   ToolbarGroup,
-  ToolbarSeparator,
   ToolbarTitle
 } from 'material-ui/Toolbar'
 import Legend from './legend'
+import ConnectionDialog from './connection-form'
+// TODO joint-specific imports
 import joint_css from '../joint/joint.css'
 import inspector_css from '../inspector.css'
+// TODO joint-specific imports END
+import { TMachine } from './joint/network'
 import { StateChangeTypes } from '../../../../asyncmachine/build/types'
 import Settings from '../settings'
-// TODO this shouldnt be here
-import { TMachine } from './joint/joint-network'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
 
@@ -70,6 +71,7 @@ export type TLayoutProps = {
   logs: ILogEntry[][]
   step_type: string
   is_legend_visible: boolean
+  is_connection_dialog_visible: boolean
   // TODO dont use a layout specific type
   machines: { [machine_id: string]: TMachine }
   active_transitions: ITransitionData[]
@@ -88,6 +90,7 @@ export type TLayoutProps = {
   onAutoplayToggle: Function
   onPlayButton: Function
   onHelpButton: Function
+  onConnectSubmit: Function
   // instances
   settings: Settings
 }
@@ -511,6 +514,8 @@ export class Main extends Component<
             />
           </section>
           {d.is_legend_visible ? <Legend /> : ''}
+          {d.is_connection_dialog_visible ? <ConnectionDialog
+              onSubmit={this.props.onConnectSubmit} /> : ''}
         </main>
       </MuiThemeProvider>
     )
