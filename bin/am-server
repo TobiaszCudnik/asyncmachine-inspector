@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+pushd pkg/server
+node am-server.js
+popd
