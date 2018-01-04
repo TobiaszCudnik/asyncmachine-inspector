@@ -15,3 +15,14 @@
 /test/**/*.js.map
 /.awcache
 /asyncmachine
+examples/restaurant/.awcache/
+examples/restaurant/am-demo.umd.js
+examples/restaurant/index.js
+examples/restaurant/node_modules/
+examples/restaurant/schema.js
+examples/restaurant/transitions.js
+node_modules/
+pkg/inspector/am-inspector.umd.js
+pkg/inspector/node_modules/
+pkg/logger/am-logger-remote.umd.js
+pkg/logger/am-logger.umd.js
