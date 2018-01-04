@@ -10,7 +10,7 @@ import {
   ITransitionStep,
   IStateStruct,
   StateChangeTypes
-} from 'asyncmachine/src/types'
+} from '../../../asyncmachine/src/types'
 import Graph from 'graphs'
 import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'

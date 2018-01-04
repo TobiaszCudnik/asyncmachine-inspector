@@ -7,6 +7,8 @@ export interface LoggerSocket extends SocketIO.Socket {
 export default function createServer() {
   const server = io()
 
+  server.set('origins', '*:*')
+
   // LOGGER ENDPOINT
 
   const loggerEndpoint = server.of('/logger')

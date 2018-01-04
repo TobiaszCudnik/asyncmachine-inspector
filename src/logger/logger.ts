@@ -1,10 +1,10 @@
-import Network, { IPatch, ITransitionData, PatchType } from '../network'
+import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
 import NetworkJson, {
   JsonDiffFactory,
   INetworkJson
 } from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
-import {JSONSnapshot} from "../network-json"
+import { JSONSnapshot } from "../network/network-json"
 import * as downloadAsFile from 'download-as-file'
 import * as bindKey from 'keymaster'
 

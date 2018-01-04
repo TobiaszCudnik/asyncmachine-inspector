@@ -1,4 +1,4 @@
-import Network, {IPatch} from '../network'
+import Network, {IPatch} from '../network/network'
 import * as io from 'socket.io-client'
 import Logger from './logger'
 
