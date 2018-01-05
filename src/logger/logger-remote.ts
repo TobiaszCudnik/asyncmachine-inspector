@@ -1,7 +1,8 @@
-import Network, {IPatch} from '../network/network'
+import Network, { IPatch } from '../network/network'
 import * as io from 'socket.io-client'
 import Logger from './logger'
 
+export { Network, LoggerRemote as Logger }
 
 export default class LoggerRemote extends Logger {
   io: SocketIOClient.Socket

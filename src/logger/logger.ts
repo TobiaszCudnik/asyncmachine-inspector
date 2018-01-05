@@ -4,10 +4,11 @@ import NetworkJson, {
   INetworkJson
 } from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from "../network/network-json"
+import { JSONSnapshot } from '../network/network-json'
 import * as downloadAsFile from 'download-as-file'
 import * as bindKey from 'keymaster'
 
+export { Network, LoggerLocal as Logger }
 
 export default class LoggerLocal extends EventEmitter {
   json: NetworkJson
@@ -71,10 +72,12 @@ export default class LoggerLocal extends EventEmitter {
 
   downloadSnapshot() {
     // TODO browser check?
-    downloadAsFile(JSON.stringify({
-      data: this.getSnapshot(),
-      // TODO format the date
-      filename: `inspector-snapshot-${Date.now()}.json`
-    }))
+    downloadAsFile(
+      JSON.stringify({
+        data: this.getSnapshot(),
+        // TODO format the date
+        filename: `inspector-snapshot-${Date.now()}.json`
+      })
+    )
   }
 }
