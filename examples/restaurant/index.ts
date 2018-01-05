@@ -1,6 +1,6 @@
 import { Restaurant, Chef, Customer, Waiter } from './schema'
 import transitions from './transitions'
-import render, {Network, Logger} from 'asyncmachine-inspector'
+import render, { Network, Logger } from 'asyncmachine-inspector'
 const network = new Network()
 
 function createRestaurant(network) {
