@@ -35,6 +35,7 @@
     - others: name, ticks, pipes
 - keep in local storage
   - Step Type
+  - last timeline scroll position
 - legend
   - grouping by type
     - active states
@@ -72,6 +73,10 @@
 - allow configurable CORS for the server bin
 - make it easier to bind to your machines
 - transaction's source machine (the active queue) should also be marked as touched
+
+#### Server
+- support re-connecting of the inspector
+  - re-send full sync, all patches, then resume sending the new ones
 
 #### Optimizations
 - properly tree-shake asyncmachine as a logger dependency (its type-only)
