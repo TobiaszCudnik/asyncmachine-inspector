@@ -2,7 +2,12 @@ import { IDelta } from 'jsondiffpatch'
 import * as jsondiffpatch from 'jsondiffpatch'
 import { INetworkJson, TCell } from './network'
 import { EventEmitter } from 'events'
-import { IPatch, PatchType, ILogEntry, ITransitionData } from '../../network/network'
+import {
+  IPatch,
+  PatchType,
+  ILogEntry,
+  ITransitionData
+} from '../../network/network'
 import * as assert from 'assert/'
 import { sortedIndex } from 'underscore'
 

@@ -7,7 +7,7 @@ import {
   OBJECT_TYPE,
   NODE_LINK_TYPE
 } from '../../network-json'
-import AsyncMachine from '../../../../asyncmachine/build/asyncmachine'
+import AsyncMachine from 'asyncmachine/build/asyncmachine'
 import * as _ from 'underscore'
 
 /**

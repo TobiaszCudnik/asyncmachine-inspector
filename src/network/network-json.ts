@@ -1,13 +1,13 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
-import Network, {ILogEntry, IPatch, Node as GraphNode} from './network'
+import Network, { ILogEntry, IPatch, Node as GraphNode } from './network'
 import { PipeFlags } from 'asyncmachine/build/asyncmachine'
-import { AsyncMachine } from '../../../asyncmachine/src/types'
+import { AsyncMachine } from 'asyncmachine/src/types'
 // TODO shouldnt point to a layout-specific type
 import { INetworkJson } from '../inspector/joint/network'
 
 export interface JSONSnapshot {
-  full_sync: INetworkJson,
+  full_sync: INetworkJson
   patches: IPatch[]
 }
 

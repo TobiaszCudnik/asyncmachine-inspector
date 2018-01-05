@@ -25,19 +25,15 @@ import FileUploadIcon from 'material-ui/svg-icons/file/file-upload'
 import FileDownloadIcon from 'material-ui/svg-icons/file/file-download'
 import Chip from 'material-ui/Chip'
 import FlatButton from 'material-ui/FlatButton'
-import {
-  Toolbar,
-  ToolbarGroup,
-  ToolbarTitle
-} from 'material-ui/Toolbar'
+import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar'
 import Legend from './legend'
 import ConnectionDialog from './connection-form'
 // TODO joint-specific imports
 import joint_css from '../joint/joint.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
-import { TMachine } from './joint/network'
-import { StateChangeTypes } from '../../../../asyncmachine/build/types'
+import { TMachine } from '../joint/network'
+import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
@@ -167,10 +163,7 @@ export class Main extends Component<
               >
                 <RemoteIcon />
               </IconButton>
-              <IconButton
-                tooltip="Upload a snapshot"
-                containerElement="label"
-              >
+              <IconButton tooltip="Upload a snapshot" containerElement="label">
                 <FileUploadIcon />
                 <input type="file" id="snapshot-upload" />
               </IconButton>
@@ -514,8 +507,11 @@ export class Main extends Component<
             />
           </section>
           {d.is_legend_visible ? <Legend /> : ''}
-          {d.is_connection_dialog_visible ? <ConnectionDialog
-              onSubmit={this.props.onConnectSubmit} /> : ''}
+          {d.is_connection_dialog_visible ? (
+            <ConnectionDialog onSubmit={this.props.onConnectSubmit} />
+          ) : (
+            ''
+          )}
         </main>
       </MuiThemeProvider>
     )

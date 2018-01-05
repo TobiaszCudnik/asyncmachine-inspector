@@ -16,7 +16,6 @@ export default function createServer() {
   loggerEndpoint.on('connection', function(socket: LoggerSocket) {
     console.log('logger connected')
     socket.on('diff-sync', function(diff) {
-      console.dir(diff)
       uiEndpoint.emit('diff-sync', diff)
     })
     socket.on('full-sync', function(full) {
@@ -25,17 +24,18 @@ export default function createServer() {
     socket.on('error', console.error.bind(console))
   })
 
-  // UI ENDPOINT
+  // INSPECTOR ENDPOINT
 
   type clientSocket = SocketIO.Socket
   const uiEndpoint = server.of('/client')
 
   uiEndpoint.on('connection', function(socket: clientSocket) {
+    console.log('inspector connected')
     loggerEndpoint.emit('full-sync')
-    // constructor
-    console.log('new ui connected')
     socket.on('error', console.error.bind(console))
   })
+
+  console.dir(server)
 
   return server
 }

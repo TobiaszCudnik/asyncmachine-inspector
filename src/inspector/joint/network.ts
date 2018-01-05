@@ -5,7 +5,7 @@ import {
 } from '../../network/network-json'
 import AsyncMachine, {
   TransitionStepTypes
-} from '../../../../asyncmachine/build/asyncmachine'
+} from 'asyncmachine/build/asyncmachine'
 import * as _ from 'underscore'
 import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
 

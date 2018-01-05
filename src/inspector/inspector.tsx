@@ -19,7 +19,7 @@ import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
-import {JSONSnapshot} from "../network/network-json";
+import { JSONSnapshot } from '../network/network-json'
 
 const log = (...args) => {}
 
@@ -30,7 +30,6 @@ export enum STEP_TYPE_CHANGE {
   STATES = 'states',
   STEPS = 'steps'
 }
-
 
 export class Inspector implements ITransitions {
   states = new States(this)
@@ -109,8 +108,8 @@ export class Inspector implements ITransitions {
     // TODO https://github.com/stackblitz/core/issues/72
     if (!location.hostname.includes('stackblitz') && Worker) {
       // worker = new Worker('../../dist/am-inspector-layout-worker.umd.js')
-      const blob = new Blob([LayoutWorker], {type: 'application/javascript'})
-      worker = new Worker(URL.createObjectURL(blob));
+      const blob = new Blob([LayoutWorker], { type: 'application/javascript' })
+      worker = new Worker(URL.createObjectURL(blob))
       LayoutWorkerRemote = await workerio.getInterface(worker, 'api')
     } else {
       console.error('TODO')
@@ -483,11 +482,13 @@ export class Inspector implements ITransitions {
           patches,
           logs: self.logs
         }
-        downloadAsFile(JSON.stringify({
-          data: content,
-          // TODO format the date
-          filename: `inspector-snapshot-${Date.now()}.json`
-        }))
+        downloadAsFile(
+          JSON.stringify({
+            data: content,
+            // TODO format the date
+            filename: `inspector-snapshot-${Date.now()}.json`
+          })
+        )
       },
       // TODO type the export data
       onTimelineSlider: throttle((event, value) => {
@@ -517,7 +518,7 @@ export class Inspector implements ITransitions {
         // TODO react repaints from ui events arent sync...
         self.states.addNext('ConnectionDialogVisible')
       },
-      onConnectSubmit: (data) => {
+      onConnectSubmit: data => {
         self.states.drop('ConnectionDialogVisible')
         // TODO handle progress, errors
         self.states.add('Connect', data.url)
