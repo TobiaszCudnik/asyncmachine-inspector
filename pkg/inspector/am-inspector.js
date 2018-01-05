@@ -48,7 +48,7 @@ http.createServer(function (req, res) {
 
 let url = `http://localhost:${params.port}/`
 if (params.server) {
-  url += '?host='+encodeURIComponent(params.server)
+  url += '?server='+encodeURIComponent(params.server)
 }
 open(url)
 console.log(`AsyncMachine Inspector available at:
