@@ -2,7 +2,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
   .BundleAnalyzerPlugin
 const path = require('path')
 
-module.exports = {
+const config = {
   entry: {
     'inspector': './src/inspector/inspector',
     'logger': './src/logger/logger',
@@ -36,3 +36,17 @@ module.exports = {
 
   devtool: 'eval'
 }
+
+const config_cjs = {
+  entry: {
+    'logger': './src/logger/logger',
+    'logger-remote': './src/logger/logger-remote',
+  },
+  output: {
+    path: path.join(__dirname, '..', 'dist'),
+    filename: `am-[name].cjs.js`,
+    libraryTarget: 'commonjs'
+  },
+}
+
+module.exports = [config, {...config, ...config_cjs}]
