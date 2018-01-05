@@ -75,8 +75,7 @@
 - transaction's source machine (the active queue) should also be marked as touched
 
 #### Server
-- support re-connecting of the inspector
-  - re-send full sync, all patches, then resume sending the new ones
+- support multiple loggers simultaneously
 
 #### Optimizations
 - properly tree-shake asyncmachine as a logger dependency (its type-only)

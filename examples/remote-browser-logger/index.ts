@@ -21,7 +21,7 @@ network.addMachine(example)
 const logger = new Logger(network, 'http://localhost:3757')
 
 // simulation logic
-example.add('Foo')
+example.add(['Foo', 'Bar'])
 setTimeout(() => {
   example.add('Baz')
 }, 3000)

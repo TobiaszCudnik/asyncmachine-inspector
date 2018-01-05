@@ -95,7 +95,11 @@ export class Inspector implements ITransitions {
   Connect_state(url = 'http://localhost:3757') {
     url = url.replace(/\/$/, '')
     this.socket = io(`${url}/client`)
-    this.socket.on('full-sync', this.states.addByListener('FullSync'))
+    this.socket.on('full-sync', (sync) => {
+      // reset all the data
+      this.states.drop('FullSync')
+      this.states.add('FullSync', sync)
+    })
     this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
     this.socket.on('connect', this.states.addByListener('Connected'))
     // TODO connection_error event and bind retries to a state
