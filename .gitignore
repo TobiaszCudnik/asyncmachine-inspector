@@ -26,3 +26,6 @@ pkg/inspector/am-inspector.umd.js
 pkg/inspector/node_modules/
 pkg/logger/am-logger-remote.umd.js
 pkg/logger/am-logger.umd.js
+/pkg/logger/am-logger-remote.cjs.js
+/pkg/logger/am-logger.cjs.js
+/examples/remote-browser-logger/.awcache/

@@ -115,7 +115,8 @@
   - machines are nodes, states are leafs
   
 #### Project
-- standalone inspector executable
+- ES6 & CJS packages for the logger
+- webpack & typescript deps for the examples
 - examples on stackblitz
   - generated state types
   - fixed types generator for merges
