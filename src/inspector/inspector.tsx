@@ -493,7 +493,6 @@ export class Inspector implements ITransitions {
           filename: `inspector-snapshot-${Date.now()}.json`
         })
       },
-      // TODO type the export data
       onTimelineSlider: throttle((event, value) => {
         self.states.add('TimelineScrolled', value)
       }, 100),
