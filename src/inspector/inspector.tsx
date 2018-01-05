@@ -154,6 +154,7 @@ export class Inspector implements ITransitions {
 
   FullSync_exit() {
     this.layout_worker.reset()
+    this.logs = []
   }
 
   InitialRenderDone_state() {
@@ -484,16 +485,13 @@ export class Inspector implements ITransitions {
         // TODO mixin logs into patches, based on the index position
         const content: JSONSnapshot = {
           full_sync: self.full_sync,
-          patches,
-          logs: self.logs
+          patches
         }
-        downloadAsFile(
-          JSON.stringify({
-            data: content,
-            // TODO format the date
-            filename: `inspector-snapshot-${Date.now()}.json`
-          })
-        )
+        downloadAsFile({
+          data: JSON.stringify(content),
+          // TODO format the date
+          filename: `inspector-snapshot-${Date.now()}.json`
+        })
       },
       // TODO type the export data
       onTimelineSlider: throttle((event, value) => {

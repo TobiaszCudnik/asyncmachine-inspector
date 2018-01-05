@@ -176,7 +176,7 @@ export class Main extends Component<
               />
               {this.props.is_connected ? (
                 <IconButton
-                  tooltip="Download a snapshot"
+                  tooltip="Download as a snapshot"
                   onClick={this.props.onDownloadSnapshot}
                 >
                   <FileDownloadIcon />
