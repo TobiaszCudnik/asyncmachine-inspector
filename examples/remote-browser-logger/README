@@ -1,0 +1,9 @@
+= Asyncmachine Inspector Restaurant Example
+
+1. Execute ./start.sh
+
+or
+
+1. Start a web server in the main dir
+2. Open the root dir
+3. Execute `am-inspector "http://localhost:3797/"`

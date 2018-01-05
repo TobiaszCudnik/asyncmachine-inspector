@@ -1,13 +1,19 @@
 {
   "name": "asyncmachine-logger-remote-example",
-  "desc": "AsyncMachine Remote Logger Example",
+  "description": "AsyncMachine Remote Logger Example",
   "version": "1.0.0",
-  "description": "",
-  "main": "am_demo.umd.js",
-  "author": "",
+  "main": "am-demo.umd.js",
+  "author": "Tobiasz Cudnik",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector"
+  },
   "license": "MIT",
   "dependencies": {
-    "asyncmachine-inspector-server": "latest",
-    "asyncmachine-inspector-logger": "latest"
+    "asyncmachine-inspector-inspector": "0.3.1-dev1",
+    "asyncmachine-inspector-logger": "0.3.1-dev1",
+    "asyncmachine-inspector-server": "0.3.1-dev1",
+    "httpserver": "^0.3.0",
+    "asyncmachine": "latest"
   }
 }

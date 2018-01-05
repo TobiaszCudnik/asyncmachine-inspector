@@ -25,3 +25,11 @@ example.add('Foo')
 setTimeout(() => {
   example.add('Baz')
 }, 3000)
+
+// output a helpful msg to the user
+setTimeout(() => {
+  const msg = `Start debugging by executing the following command:
+  <pre>${logger.getDebugCommand()}</pre>`
+  document.body.innerHTML = msg
+  console.log(msg)
+})
