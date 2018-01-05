@@ -346,10 +346,13 @@ class JointDataService extends EventEmitter {
     // TODO cache
     return ret
   }
-  getPrevTransitionsSet(patch_position = this.patch_position) {
+  getPrevTransitionsSet(patch_position = this.patch_position): ITransitionData[] {
     const index = this.index.transitions
     let current_transition_pos = _.sortedIndex(index, patch_position)
-    switch (this.patches[index[current_transition_pos]].type) {
+    const patch = this.patches[index[current_transition_pos]]
+    if (!patch)
+      return []
+    switch (patch.type) {
       case PatchType.TRANSITION_END:
         return this.buildTransitionsSet(current_transition_pos)
       default:
@@ -359,18 +362,16 @@ class JointDataService extends EventEmitter {
   getNextTransitionsSet(
     patch_position = this.patch_position,
     step_style = this.step_type
-  ) {
+  ): ITransitionData[] {
     const index = this.index.transitions
     let current_transition_pos = _.sortedIndex(index, patch_position)
-    switch (step_style) {
-      case StepTypes.TRANSITIONS:
-        current_transition_pos += 1
-        break
-      case StepTypes.STEPS:
-        current_transition_pos += 1
-        break
+    if ([StepTypes.TRANSITIONS, StepTypes.STEPS].includes(step_style)) {
+      current_transition_pos += 1
     }
-    switch (this.patches[index[current_transition_pos]].type) {
+    const patch = this.patches[index[current_transition_pos]]
+    if (!patch)
+      return []
+    switch (patch.type) {
       case PatchType.TRANSITION_END:
         return this.buildTransitionsSet(current_transition_pos + 2)
       case PatchType.FULL_SYNC:
