@@ -3,8 +3,22 @@
 const http = require('http')
 const fs = require('fs')
 const open = require('open')
+const cli = require('commander')
+const package = require('./package.json')
 
-const PORT = process.argv[3] || 3797
+cli
+  .usage('-p 80 -h 0.0.0.0 -s "http://foo.com:3757"')
+  .option('-p, --port [n]', 'Port to listen on (default: 3797, optional)')
+  .option('-h, --host [n]', 'Host to listen on (default: localhost, optional)')
+  .option('-s, --server [url]', 'Auto connect to a specific server (optional)')
+  .version(package.version)
+  .parse(process.argv)
+
+const params = {
+  port: cli.port || 3797,
+  host: cli.host || 'localhost',
+  server: cli.server
+}
 
 http.createServer(function (req, res) {
   let path
@@ -19,6 +33,10 @@ http.createServer(function (req, res) {
       break
   }
 
+  if (!path && req.url.match(/^\/\?/)) {
+    path = 'index.html'
+  }
+
   if (!path) {
     res.statusCode = 404
     res.end(`File ${req.url} not found!`)
@@ -26,9 +44,12 @@ http.createServer(function (req, res) {
   }
 
   fs.createReadStream(path).pipe(res)
-}).listen(PORT)
+}).listen(params.port, params.host)
 
-const url = `http://localhost:${PORT}/`
+let url = `http://localhost:${params.port}/`
+if (params.server) {
+  url += '?host='+encodeURIComponent(params.server)
+}
 open(url)
 console.log(`AsyncMachine Inspector available at:
 ${url}`)

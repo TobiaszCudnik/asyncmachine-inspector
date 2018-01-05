@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 pushd pkg/inspector
-node am-inspector.js
+./am-inspector.js
 popd

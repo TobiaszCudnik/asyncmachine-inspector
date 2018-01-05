@@ -33,6 +33,8 @@
   },
   "main": "am-inspector.umd.js",
   "dependencies": {
+    "asyncmachine-inspector-server": "^0.3.1",
+    "commander": "^2.12.2",
     "open": "0.0.5"
   }
 }
