@@ -21,29 +21,30 @@ const params = {
 }
 
 http.createServer(function (req, res) {
-  let path = __dirname
+  let dir = __dirname
+  let path
 
   switch (req.url) {
     case '/':
     case '/index.html':
-      path += '/index.html'
+      path = '/index.html'
       break
     case '/am-inspector.umd.js':
-      path += '/am-inspector.umd.js'
+      path = '/am-inspector.umd.js'
       break
   }
 
   if (!path && req.url.match(/^\/\?/)) {
-    path += '/index.html'
+    path = '/index.html'
   }
 
-  if (!path || !fs.existsSync(path)) {
+  if (!path || !fs.existsSync(dir+path)) {
     res.statusCode = 404
     res.end(`File ${req.url} not found!`)
     return
   }
 
-  fs.createReadStream(path).pipe(res)
+  fs.createReadStream(dir+path).pipe(res)
 }).listen(params.port, params.host)
 
 let url = `http://localhost:${params.port}/`
