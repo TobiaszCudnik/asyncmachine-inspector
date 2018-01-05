@@ -8,9 +8,10 @@ export default class LoggerRemote extends Logger {
   io: SocketIOClient.Socket
   connected = false
 
-  constructor(public network: Network, public server_host) {
+  constructor(public network: Network, public url = 'http://localhost:3757') {
     super(network, false)
-    this.io = io(server_host, {
+    url = url.replace(/\/$/, '')
+    this.io = io(`${url}/logger`, {
       query: `id=${network.id}`
     })
 
@@ -27,7 +28,7 @@ export default class LoggerRemote extends Logger {
   start() {
     super.start()
 
-    console.log(`Logger connected to ${this.server_host}`)
+    console.log(`Logger connected to ${this.url}`)
     this.connected = true
 
     this.io.emit('full-sync', this.full_sync)

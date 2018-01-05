@@ -8,6 +8,9 @@ export default function createServer() {
   const server = io()
 
   server.set('origins', '*:*')
+  server.on('connect', () => {
+    console.log('new connection')
+  })
 
   // LOGGER ENDPOINT
 
@@ -34,8 +37,6 @@ export default function createServer() {
     loggerEndpoint.emit('full-sync')
     socket.on('error', console.error.bind(console))
   })
-
-  console.dir(server)
 
   return server
 }
