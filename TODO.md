@@ -1,7 +1,6 @@
 # TODO
 
 #### Bugs
-- grab & scroll "jumps" after grabbing
 - current transitions lacks queue source machine as "involved"
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
@@ -16,26 +15,27 @@
   doesnt change
 
 #### UI
-- keep the latest connection host in the settings
-  - maybe - auto-reconnect button (kept in the settings)
 - show the legend on the first load
 - reset confirmation message
 - download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
-- actions menu
-  - reset positions
-  - hotkeys for each (one hotkey -> focus -> keyboard navigation)
-- smaller toolbar
-  - redesign
 - machines sidebar
   - machines - current transitions - involved: order alphabetically
   - add number of (output) pipes
   - sort-by select
     - default: queue length, listeners count
     - others: name, ticks, pipes
-- keep in local storage
+- keep in localstorage
   - Step Type
   - last timeline scroll position
+  - the last snapshot
+  - the latest connection host in the settings
+- maybe - auto-reconnect button (kept in the settings)
+- smaller toolbar
+  - redesign
+  - actions menu
+    - reset positions
+    - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - legend
   - grouping by type
     - active states
@@ -62,7 +62,6 @@
   - using clusters graph positions
   - render as div[width,height], use the colors
   - skip relations
-- server config form
 - hovering over state / machine / link names
   - highlights them / dims the background
   - AND/OR highlights all the other instances of that element
@@ -84,20 +83,18 @@
 - move DataService patch scrolling to a separate worker
   - separate from the one dagre layout is in
 - network should update the json based on incoming events, not a full rebuild
-- render sidebars only when visible
+- react-render sidebars (transitions, machines, logs) only if they are visible
 - progressive list rendering for logs
-- reduce the bundle size
 - pre-render N next steps when playing (possibly in a pool of workers)
 - longer delay for msgs than for a step they come from
 - queue & merge scroll requests while rendering
   - ideally cancel the current rendering
-- renderUI() as a state
   
 #### Refactoring
+- renderUI() as a state
 - rewrite the UI to grid & flex
 - divide the UI class into several machines
 - merge similar types and UI components
-- move different layouts into separate dirs
 - graph-layout agnostic
   - UI class contains some jointjs structs
   - base class of the DataService needs to be extracted
@@ -119,7 +116,7 @@
   - machines are nodes, states are leafs
   
 #### Project
-- ES6 & CJS packages for the logger
+- ES6 packages for the logger
 - webpack & typescript deps for the examples
 - examples on stackblitz
   - generated state types
