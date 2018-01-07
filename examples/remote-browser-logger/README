@@ -4,6 +4,8 @@
 
 or
 
-1. Start a web server in the main dir
-2. Open the root dir
-3. Execute `am-inspector "http://localhost:3797/"`
+1. Go to the root dir
+2. Start a web server, eg `httpserver`
+3. Execute `am-server`
+4. Execute `am-inspector "http://localhost:3797/"`
+5. Go to `http://localhost:8080` (port depends on step 1)
