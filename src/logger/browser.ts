@@ -5,11 +5,11 @@ import NetworkJson, {
 } from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
-import * as fs from 'fs'
+import * as downloadAsFile from 'download-as-file'
+import * as bindKey from 'keymaster'
 
 export { Network, LoggerLocal as Logger }
 
-// TODO extract the bvase class
 export default class LoggerLocal extends EventEmitter {
   json: NetworkJson
   differ: JsonDiffFactory
@@ -63,7 +63,20 @@ export default class LoggerLocal extends EventEmitter {
     this.emit('diff-sync', this.patches[this.patches.length - 1])
   }
 
-  saveFile(path) {
-    fs.writeFileSync(path, JSON.stringify(this.snapshot))
+  bindKeyToSnapshotDownload(key: string) {
+    bindKey(key, () => {
+      this.downloadSnapshot()
+    })
+  }
+
+  downloadSnapshot() {
+    // TODO browser check?
+    downloadAsFile(
+      JSON.stringify({
+        data: this.snapshot,
+        // TODO format the date
+        filename: `inspector-snapshot-${Date.now()}.json`
+      })
+    )
   }
 }

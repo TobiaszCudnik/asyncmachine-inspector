@@ -24,9 +24,6 @@
   "bugs": {
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
   },
-  "scripts": {
-    "prepare": "make dist"
-  },
   "license": "MIT",
   "engines": {
     "node": ">=0.10.0"
@@ -34,6 +31,7 @@
   "main": "dist/am_logger-file.umd.js",
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
+    "@types/socket.io-client": "^1.4.32",
     "socket.io": "^1.4.8"
   },
   "devDependencies": {
@@ -64,7 +62,7 @@
     "react-dom": "^15.3.0",
     "react-tap-event-plugin": "^2.0.1",
     "sinon": "^1.17.2",
-    "socket.io-client": "^1.4.8",
+    "socket.io-client": "^1.7.4",
     "style-loader": "^0.19.0",
     "stylesheet.js": "^1.1.1",
     "typescript": "^2.5.3",
