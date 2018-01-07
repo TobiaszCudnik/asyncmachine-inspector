@@ -29,5 +29,8 @@
     "node": ">=0.10.0"
   },
   "main": "am-logger.cjs.js",
-  "browser": "am-logger.umd.js"
+  "browser": "am-logger.umd.js",
+  "dependencies": {
+    "socket.io-client": "^2.0.4"
+  }
 }

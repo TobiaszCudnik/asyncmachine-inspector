@@ -6,7 +6,6 @@ import NetworkJson, {
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 import * as downloadAsFile from 'download-as-file'
-import * as bindKey from 'keymaster'
 
 export { Network, LoggerLocal as Logger }
 
@@ -57,7 +56,8 @@ export default class LoggerLocal extends EventEmitter {
   }
 
   bindKeyToSnapshotDownload(key: string) {
-    // TODO browser check?
+    // node only
+    const bindKey = require('keymaster')
     bindKey(key, () => {
       this.downloadSnapshot()
     })
