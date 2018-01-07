@@ -42,6 +42,7 @@ const config_cjs = {
     'logger': './src/logger/logger',
     'logger-remote': './src/logger/logger-remote',
   },
+  target: 'node',
   output: {
     path: path.join(__dirname, '..', 'dist'),
     filename: `am-[name].cjs.js`,
