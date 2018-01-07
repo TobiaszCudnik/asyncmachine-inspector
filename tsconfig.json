@@ -13,8 +13,10 @@
         "typings/index.d.ts",
         "src/server/server.ts",
         "src/server/mock-server.ts",
-        "src/logger/logger.ts",
-        "src/logger/logger-remote.ts",
+        "src/logger/node.ts",
+        "src/logger/remote.ts",
+        "src/logger/browser.ts",
+        "src/logger/remote-browser.ts",
         "src/inspector/inspector.tsx",
         "src/inspector/joint/layout-worker.ts"
     ],
