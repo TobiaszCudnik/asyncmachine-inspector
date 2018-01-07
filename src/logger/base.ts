@@ -5,12 +5,10 @@ import NetworkJson, {
 } from '../inspector/joint/network'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
-import * as fs from 'fs'
 
-export { Network, LoggerLocal as Logger }
+export { Network, LoggerBase }
 
-// TODO extract the bvase class
-export default class LoggerLocal extends EventEmitter {
+export default class LoggerBase extends EventEmitter {
   json: NetworkJson
   differ: JsonDiffFactory
   full_sync: INetworkJson
@@ -61,9 +59,5 @@ export default class LoggerLocal extends EventEmitter {
     this.patches.push({ ...packet, logs: [...this.network.logs] })
     this.network.logs = []
     this.emit('diff-sync', this.patches[this.patches.length - 1])
-  }
-
-  saveFile(path) {
-    fs.writeFileSync(path, JSON.stringify(this.snapshot))
   }
 }

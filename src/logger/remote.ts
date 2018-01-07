@@ -1,17 +1,19 @@
-import LoggerRemote from './browser-remote'
-import Network, {IPatch} from '../network/network'
-import * as io from 'socket.io-client/dist/socket.io'
+import Network, { IPatch } from '../network/network'
+import Logger from './base'
 
-export * from './logger-remote'
+export { Network, LoggerRemote as Logger }
 
-export default class LoggerRemote extends LoggerRemoteNode {
+export default class LoggerRemote extends Logger {
   io: SocketIOClient.Socket
   connected = false
+  get socket_io(): SocketIOClientStatic {
+    return require('socket.io-client')
+  }
 
   constructor(public network: Network, public url = 'http://localhost:3757') {
-    super(network, url)
+    super(network, false)
     url = url.replace(/\/$/, '')
-    this.io = io(`${url}/logger`, {
+    this.io = this.socket_io(`${url}/logger`, {
       query: `id=${network.id}`
     })
 

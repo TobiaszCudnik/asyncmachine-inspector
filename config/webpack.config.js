@@ -5,10 +5,8 @@ const path = require('path')
 const config = {
   entry: {
     'inspector': './src/inspector/inspector',
-    'logger': './src/logger/logger',
-    'logger-remote': './src/logger/logger-remote',
     'logger-browser': './src/logger/browser',
-    'logger-remote-browser': './src/logger/logger-remote-browser',
+    'logger-remote-browser': './src/logger/remote-browser',
   },
   plugins: [
       // new BundleAnalyzerPlugin(),
@@ -39,17 +37,4 @@ const config = {
   devtool: 'eval'
 }
 
-const config_cjs = {
-  entry: {
-    'logger': './src/logger/logger',
-    'logger-remote': './src/logger/logger-remote',
-  },
-  target: 'node',
-  output: {
-    path: path.join(__dirname, '..', 'dist'),
-    filename: `am-[name].cjs.js`,
-    libraryTarget: 'commonjs'
-  },
-}
-
-module.exports = [config, {...config, ...config_cjs}]
+module.exports = config

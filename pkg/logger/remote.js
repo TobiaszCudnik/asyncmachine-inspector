@@ -1,1 +1,1 @@
-/Users/dev/workspace/asyncmachine-inspector/dist/am-logger-remote.cjs.js
+/Users/dev/workspace/asyncmachine-inspector/build/logger/remote.js

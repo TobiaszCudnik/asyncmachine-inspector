@@ -28,7 +28,7 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "main": "am-logger.cjs.js",
+  "main": "logger.js",
   "browser": "browser.js",
   "dependencies": {
     "socket.io-client": "^2.0.4"
