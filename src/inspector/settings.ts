@@ -1,4 +1,5 @@
 import * as deepcopy from 'deepcopy'
+import {JSONSnapshot} from "../network/network-json";
 
 export interface ISettings {
   logs_visible: boolean
@@ -7,6 +8,7 @@ export interface ISettings {
   positions: PositionsMap
   zoom_level?: number
   scroll?: { x: number; y: number }
+  last_snapshot?: JSONSnapshot
 }
 
 export type PositionsMap = { [machine_id: string]: { x: number; y: number } }

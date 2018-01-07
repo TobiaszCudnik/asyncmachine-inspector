@@ -13,7 +13,7 @@ import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
-import Logger from '../logger/logger'
+import Logger from '../logger/browser'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
@@ -539,9 +539,9 @@ export class Inspector implements ITransitions {
       // TODO !this.states.willBe('FullSync')
       if (
         !this.states.is('FullSync') &&
-        localStorage.getItem('last_snapshot')
+        this.settings.get().last_snapshot
       ) {
-        this.loadSnapshot(JSON.parse(localStorage.getItem('last_snapshot')))
+        this.loadSnapshot(this.settings.get().last_snapshot)
       }
     }
   }
@@ -558,9 +558,8 @@ export class Inspector implements ITransitions {
       { type: 'text' },
       (err, files) => {
         for (const file of files) {
-          // TODO keep in the settings class
-          localStorage.setItem('last_snapshot', file.target.result)
           const snapshot = JSON.parse(file.target.result)
+          this.settings.set('last_snapshot', snapshot)
           this.loadSnapshot(snapshot)
           break
         }
@@ -569,7 +568,7 @@ export class Inspector implements ITransitions {
     this.renderUI()
   }
 
-  loadSnapshot(snapshot) {
+  loadSnapshot(snapshot: JSONSnapshot) {
     // TODO make it a state
     this.layout_data.is_snapshot = true
     this.states.drop('AutoplayOn')
