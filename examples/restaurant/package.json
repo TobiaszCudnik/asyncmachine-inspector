@@ -13,7 +13,7 @@
     "delay": "^2.0.0",
     "random-int": "^1.0.0",
     "lodash": "^4.17.4",
-    "asyncmachine-inspector": "0.3.1",
+    "asyncmachine-inspector": "^0.3.3",
     "asyncmachine": "latest"
   }
 }

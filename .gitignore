@@ -29,3 +29,10 @@ pkg/logger/am-logger.umd.js
 /pkg/logger/am-logger-remote.cjs.js
 /pkg/logger/am-logger.cjs.js
 /examples/remote-browser-logger/.awcache/
+/examples/file-logger/snapshot.json
+examples/file-logger/index.js
+examples/file-logger/index.js.map
+examples/file-logger/snapshot.json
+examples/remote-browser-logger/am-demo.umd.js
+examples/remote-server-logger/index.js
+examples/remote-server-logger/index.js.map

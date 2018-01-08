@@ -15,6 +15,7 @@
   doesnt change
 
 #### UI
+- load snapshots from URLs
 - show the legend on the first load
 - reset confirmation message
 - download a snapshot keybinding

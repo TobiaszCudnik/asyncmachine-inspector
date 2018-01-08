@@ -6,5 +6,5 @@ or
 
 1. Go to the root dir
 2. Execute `am-server`
-3. Execute `am-inspector "http://localhost:3797/"`
+3. Execute `am-inspector --server "http://localhost:3797/"`
 4. Execute `node index.js`

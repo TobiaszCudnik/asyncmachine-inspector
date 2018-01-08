@@ -10,9 +10,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "asyncmachine-inspector": "0.3.1",
-    "asyncmachine-inspector-logger": "0.3.1",
-    "asyncmachine-inspector-server": "0.3.1",
+    "asyncmachine-inspector": "^0.3.3",
+    "asyncmachine-inspector-logger": "^0.3.3",
+    "asyncmachine-inspector-server": "^0.3.3",
     "asyncmachine": "latest"
   }
 }

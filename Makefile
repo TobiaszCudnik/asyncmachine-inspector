@@ -69,10 +69,36 @@ cjs-to-es6:
 	sed 's/^exports\["inspector"\]/let def/' dist/inspector-cjs.js > dist/inspector-es6.js
 	echo '\nexport const Inspector = def.Inspector\nexport const Network = def.Network\nexport const Logger = def.Logger\ndef = def.default\nexport default def' >> dist/inspector-es6.js
 
+version:
+	npm --no-git-tag-version --allow-same-version version $(version)
+
+	cd pkg/inspector && \
+		npm --no-git-tag-version --allow-same-version version $(version)
+
+	cd pkg/logger && \
+		npm --no-git-tag-version --allow-same-version version $(version)
+
+	cd pkg/server && \
+		npm --no-git-tag-version --allow-same-version version $(version)
+
 publish:
-	`make dist-prod`
-	pushd pkg/inspector
-	npm publish
-	popd
+	#make dist-prod
+
+	rm -Rf pkg/tmp
+	cp -RL pkg/inspector pkg/tmp
+	cd pkg/tmp && \
+		npm publish
+
+	rm -Rf pkg/tmp
+	cp -RL pkg/logger pkg/tmp
+	cd pkg/tmp && \
+		npm publish
+
+	rm -Rf pkg/tmp
+	cp -RL pkg/server pkg/tmp
+	cd pkg/tmp && \
+		npm publish
+
+	rm -R pkg/tmp
 
 .PHONY: test break build dist

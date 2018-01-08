@@ -1,0 +1,5 @@
+= AsyncMachine Inspector Restaurant Example
+
+1. Execute `am-inspector`
+2. Go to `http://localhost:3757`
+3. Load `snapshot.json` from the UI

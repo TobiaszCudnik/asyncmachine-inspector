@@ -29,7 +29,7 @@ const config = {
   },
   output: {
     path: path.join(__dirname, '..', 'dist'),
-    filename: `am-[name].umd.js`,
+    filename: `am-[name]-umd.js`,
     library: 'am-[name]',
     libraryTarget: 'umd'
   },

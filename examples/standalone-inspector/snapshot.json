@@ -1,0 +1,459 @@
+{
+  "full_sync": {
+    "cells": [
+      {
+        "type": "uml.State",
+        "name": "demo",
+        "id": "demo",
+        "embeds": [
+          "demo:Exception",
+          "demo:Foo",
+          "demo:Bar",
+          "demo:Baz"
+        ],
+        "z": 1,
+        "is_touched": false,
+        "queue": [],
+        "processing_queue": false,
+        "listeners": 6,
+        "ticks": 0
+      },
+      {
+        "type": "fsa.State",
+        "id": "demo:Exception",
+        "parent": "demo",
+        "attrs": {
+          "text": {
+            "text": "Exception"
+          }
+        },
+        "z": 3,
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "is_set": false,
+        "is_multi": true,
+        "step_style": null
+      },
+      {
+        "type": "fsa.State",
+        "id": "demo:Foo",
+        "parent": "demo",
+        "attrs": {
+          "text": {
+            "text": "Foo"
+          }
+        },
+        "z": 3,
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "is_set": false,
+        "step_style": null
+      },
+      {
+        "type": "fsa.State",
+        "id": "demo:Bar",
+        "parent": "demo",
+        "attrs": {
+          "text": {
+            "text": "Bar"
+          }
+        },
+        "z": 3,
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "is_set": false,
+        "step_style": null
+      },
+      {
+        "type": "fsa.State",
+        "id": "demo:Baz",
+        "parent": "demo",
+        "attrs": {
+          "text": {
+            "text": "Baz"
+          }
+        },
+        "z": 3,
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "is_set": false,
+        "step_style": null
+      },
+      {
+        "type": "fsa.Arrow",
+        "smooth": true,
+        "source": {
+          "id": "demo:Baz"
+        },
+        "target": {
+          "id": "demo:Bar"
+        },
+        "relation": 1,
+        "id": "demo:Baz::demo:Bar::1",
+        "labels": [
+          {
+            "id": "demo:Baz::demo:Bar::1-label",
+            "position": 0.5,
+            "attrs": {
+              "text": {
+                "text": "drop"
+              }
+            }
+          }
+        ],
+        "z": 2,
+        "is_touched": false
+      }
+    ]
+  },
+  "patches": [
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "is_touched": [
+              false,
+              true
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 2,
+      "machine_id": "demo",
+      "data": {
+        "machine_id": "demo",
+        "queue_machine_id": "demo",
+        "states": [
+          "Foo",
+          "Bar"
+        ],
+        "auto": false,
+        "type": 1
+      },
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "2": {
+            "step_style": [
+              null,
+              64
+            ]
+          },
+          "3": {
+            "step_style": [
+              null,
+              64
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "2": {
+            "step_style": [
+              64,
+              72
+            ]
+          },
+          "3": {
+            "step_style": [
+              64,
+              72
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": [
+        {
+          "id": "demo",
+          "msg": "[add] Foo, Bar",
+          "level": 2
+        }
+      ]
+    },
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "ticks": [
+              0,
+              2
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 0,
+      "logs": [
+        {
+          "id": "demo",
+          "msg": "[states] +Foo +Bar",
+          "level": 1
+        }
+      ]
+    },
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "is_touched": [
+              true,
+              false
+            ]
+          },
+          "2": {
+            "is_set": [
+              false,
+              true
+            ],
+            "step_style": [
+              72,
+              null
+            ]
+          },
+          "3": {
+            "is_set": [
+              false,
+              true
+            ],
+            "step_style": [
+              72,
+              null
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 3,
+      "machine_id": "demo",
+      "data": {
+        "machine_id": "demo",
+        "queue_machine_id": "demo",
+        "states": [
+          "Foo",
+          "Bar"
+        ],
+        "auto": false,
+        "type": 1,
+        "touched": {
+          "demo": [
+            "Foo",
+            "Bar"
+          ]
+        }
+      },
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "is_touched": [
+              false,
+              true
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 2,
+      "machine_id": "demo",
+      "data": {
+        "machine_id": "demo",
+        "queue_machine_id": "demo",
+        "states": [
+          "Baz"
+        ],
+        "auto": false,
+        "type": 1
+      },
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "4": {
+            "step_style": [
+              null,
+              64
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "4": {
+            "step_style": [
+              64,
+              72
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": [
+        {
+          "id": "demo",
+          "msg": "[add] Baz",
+          "level": 2
+        }
+      ]
+    },
+    {
+      "diff": {
+        "cells": {
+          "3": {
+            "step_style": [
+              null,
+              1
+            ]
+          },
+          "4": {
+            "step_style": [
+              72,
+              73
+            ]
+          },
+          "5": {
+            "is_touched": [
+              false,
+              true
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": []
+    },
+    {
+      "diff": {
+        "cells": {
+          "3": {
+            "step_style": [
+              1,
+              17
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 4,
+      "machine_id": "demo",
+      "logs": [
+        {
+          "id": "demo",
+          "msg": "[drop] Bar by Baz",
+          "level": 2
+        }
+      ]
+    },
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "ticks": [
+              2,
+              3
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 0,
+      "logs": [
+        {
+          "id": "demo",
+          "msg": "[states] +Baz -Bar",
+          "level": 1
+        }
+      ]
+    },
+    {
+      "diff": {
+        "cells": {
+          "0": {
+            "is_touched": [
+              true,
+              false
+            ]
+          },
+          "3": {
+            "is_set": [
+              true,
+              false
+            ],
+            "step_style": [
+              17,
+              null
+            ]
+          },
+          "4": {
+            "is_set": [
+              false,
+              true
+            ],
+            "step_style": [
+              73,
+              null
+            ]
+          },
+          "5": {
+            "is_touched": [
+              true,
+              false
+            ]
+          },
+          "_t": "a"
+        }
+      },
+      "type": 3,
+      "machine_id": "demo",
+      "data": {
+        "machine_id": "demo",
+        "queue_machine_id": "demo",
+        "states": [
+          "Baz"
+        ],
+        "auto": false,
+        "type": 1,
+        "touched": {
+          "demo": [
+            "Bar",
+            "Baz"
+          ]
+        }
+      },
+      "logs": []
+    }
+  ]
+}
