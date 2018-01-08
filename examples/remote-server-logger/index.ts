@@ -1,5 +1,5 @@
 import Asyncmachine from 'asyncmachine'
-import { Logger, Network } from 'asyncmachine-inspector-logger/remote'
+import { Logger, Network } from 'ami-logger/remote'
 
 // an example machine and its instance
 class Example extends Asyncmachine {

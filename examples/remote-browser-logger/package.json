@@ -11,9 +11,9 @@
   "license": "MIT",
   "dependencies": {
     "asyncmachine-inspector": "^0.3.3",
-    "asyncmachine-inspector-logger": "^0.3.3",
-    "asyncmachine-inspector-server": "^0.3.3",
+    "ami-logger": "^0.3.3",
+    "ami-server": "^0.3.3",
     "httpserver": "^0.3.0",
-    "asyncmachine": "latest"
+    "asyncmachine": "^3.2"
   }
 }

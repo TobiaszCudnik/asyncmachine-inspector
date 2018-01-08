@@ -1,1 +1,1 @@
-See [asyncmachine-inspector](https://github.com/TobiaszCudnik/asyncmachine-inspector).
+/Users/dev/workspace/asyncmachine-inspector/README.md

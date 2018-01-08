@@ -7,9 +7,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "asyncmachine-logger": "^0.3.3",
-    "asyncmachine-server": "^0.3.3",
-    "asyncmachine-inspector": "^0.3.3",
-    "asyncmachine": "latest"
+    "ami-logger": "^0.3.3",
+    "asyncmachine": "^3.2"
   }
 }

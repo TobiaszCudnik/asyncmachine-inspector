@@ -1,6 +1,6 @@
 {
-  "name": "asyncmachine-inspector-logger",
-  "version": "0.3.4",
+  "name": "ami-logger",
+  "version": "0.3.5",
   "description": "Logger component for the AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
