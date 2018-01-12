@@ -282,17 +282,17 @@ export default class Ui extends UiBase<INetworkJson> {
     layout_data
   ) {
     console.time('updateCells')
-    if (!was_add_remove) {
-      this.patchCells(changed_ids)
-    } else {
+    const ui_changed_ids = this.patchCells(changed_ids)
+    if (was_add_remove) {
       await this.setData(this.data, layout_data, changed_ids)
     }
-    this.postUpdateLayout(changed_ids)
+    this.postUpdateLayout(ui_changed_ids)
     console.timeEnd('updateCells')
   }
 
-  patchCells(cell_ids: Iterable<string>) {
+  patchCells(cell_ids: string[]) {
     console.time('patchCells')
+    const ui_changed_ids = new Set<string>()
     for (let cell of this.getDataCellsByIds(cell_ids)) {
       let model = this.graph.getCell(cell.id)
       // TODO this can be undefined, ensure to apply all the diffs
@@ -301,15 +301,17 @@ export default class Ui extends UiBase<INetworkJson> {
         continue
       for (let field of this.patch_fields) {
         if (!cell.hasOwnProperty(field)) continue
+        if (model.get(field) == cell[field]) continue
+        ui_changed_ids.add(cell.id)
         model.set(field, cell[field], {silent: true})
       }
     }
     console.timeEnd('patchCells')
+    return [...ui_changed_ids]
   }
 
-  getDataCellsByIds(cell_ids: Iterable<string>): TCell[] {
-    let ids = [...cell_ids]
-    return this.data.cells.filter(cell => ids.includes(cell.id))
+  getDataCellsByIds(cell_ids: string[]): TCell[] {
+    return this.data.cells.filter(cell => cell_ids.includes(cell.id))
   }
 
   postUpdateLayout(changed_ids?: string[]) {
