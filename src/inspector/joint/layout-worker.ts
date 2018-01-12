@@ -25,8 +25,8 @@ export interface IDataServiceSync {
 
 export interface ISync {
   layout_data: Object
-  patch?: IDelta
-  rev_patch?: IDelta
+  diff?: IDelta
+  rev_diff?: IDelta
   db_key?: string
   data_service: IDataServiceSync
   changed_ids: string[]
@@ -44,7 +44,7 @@ const differ = jsondiffpatch.create({
 // - changed_ids
 // into DataServiceScrollUpdate
 async function prepareDiffUpdate(changed_ids: string[], prev_position: number): Promise<ISync> {
-  const update = {
+  const update: ISync = {
     rev_diff: null,
     diff: null,
     db_key: null,
@@ -54,9 +54,9 @@ async function prepareDiffUpdate(changed_ids: string[], prev_position: number): 
   }
   if (Math.abs(data_service.patch_position - prev_position) == 1) {
     if (prev_position > data_service.patch_position) {
-      update.rev_diff = data_service.patches[prev_position]
+      update.rev_diff = data_service.patches[prev_position].diff
     } else if (prev_position < data_service.patch_position) {
-      update.diff = data_service.patches[data_service.patch_position]
+      update.diff = data_service.patches[data_service.patch_position].diff
     }
   } else if (prev_position != data_service.position) {
     console.time('db.set(\'scroll_result\')')

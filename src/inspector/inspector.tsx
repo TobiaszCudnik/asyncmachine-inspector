@@ -641,10 +641,10 @@ export class Inspector implements ITransitions {
   ) {
     console.time('onDataServiceScrolled')
     this.updateTimelineStates()
-    if (update.patch) {
-      jsondiffpatch.patch(this.graph.data, update.patch)
-    } else if (update.rev_patch) {
-      jsondiffpatch.unpatch(this.graph.data, update.rev_patch)
+    if (update.diff) {
+      jsondiffpatch.patch(this.graph.data, update.diff)
+    } else if (update.rev_diff) {
+      jsondiffpatch.unpatch(this.graph.data, update.rev_diff)
     } else if (update.db_key) {
       this.graph.data = await db.get(update.db_key)
     }
