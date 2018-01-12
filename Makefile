@@ -82,7 +82,7 @@ version:
 		npm --no-git-tag-version --allow-same-version version $(version)
 
 publish:
-	#make dist-prod
+	make dist-prod
 
 	rm -Rf pkg/tmp
 	cp -RL pkg/inspector pkg/tmp

@@ -5,6 +5,7 @@
 - Cancelled states dont get un-marked (repro)
 - cant distinguish cancelled from requested
   - during a transition
+- sometimes drag-drop on a machine shifts states out of the machines borders
 - uploading a snapshot after one is already loaded doesnt work
 - current transitions lacks queue source machine as "involved"
 - sometimes machine isnt marked as touched, although listed as Involved
@@ -14,9 +15,14 @@
   - state_style, is_touched, .during-transition
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
-- BUG? step_type == transitions - cancelled transitions not included, result:
-  - when step_type == steps - more transitions shown
-  - while not included in the "next / current / prev transition" sidebar
+- BUG? step_type == transitions - cancelled transitions not included
+- changing step_type doesnt preserve the proper position
+  1 set step_type == transitions
+  2 move to in between some transitions
+  3 set step_type == steps
+  4 go fwd one step
+  - expected: the next transition from step 2 should start
+  - result: the previous transition from step 2 actually starts 
 - the left sidebar gets repainted when new diff arrives, although the content
   doesnt change
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
@@ -136,9 +142,11 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
+- visualize if a machine is during transition
+  - to distinguish nested transitions
 - show the number of ticks in the state's UI
-- visualize a number of listeners (per machine)
-- visualize an active queue (per machine)
+- visualize the number of listeners (per machine)
+- visualize if the queue is active (per machine)
 - resize a machine
   - requires 'resisable' elements from jointjs
 - better colors

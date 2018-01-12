@@ -297,8 +297,8 @@ export class Inspector implements ITransitions {
       // TODO no await needed?
       await this.layout_worker.blindSetPosition(this.data_service.step_type,
           this.rendered_patch)
-      if (abort()) return
       console.timeEnd('fixing dataservice scroll position')
+      if (abort()) return
     }
     // TODO patch_position, step_type ???
     this.rendering_position = position
