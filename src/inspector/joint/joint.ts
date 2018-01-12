@@ -181,6 +181,7 @@ export default class Ui extends UiBase<INetworkJson> {
 
     if (!this.paper) {
       this.paper = new joint.dia.Paper({
+        // TODO set elementView and linkView using custom views
         el: this.container,
         // TODO make it work
         async: true,
@@ -390,14 +391,13 @@ export default class Ui extends UiBase<INetworkJson> {
     )
   }
 
-  // TODO this should sync from models, not JSON
-  // note: keep in sync with joint.dia.ElementView.prototype.className
+  // TODO merge with joint.dia.ElementView.prototype.className
   syncClasses(changed_cells: string[]) {
     console.log(`syncing classes for ${(changed_cells||[]).length} elements`)
     for (const id of changed_cells) {
       const cell = this.graph.getCell(id)
       if (!cell) {
-        console.error(`Changed cell missing in the UI - "${id}`)
+        // cell could have been deleted or the rendering was cancelled
         continue
       }
       switch(cell.get('type')) {
@@ -425,7 +425,7 @@ export default class Ui extends UiBase<INetworkJson> {
       el.addClass(name)
     }
     // handle the touched state
-    el.toggleClass('is-touched', Boolean(link.get('is_touched')))
+    el.toggleClass('joint-is-touched', Boolean(link.get('is_touched')))
   }
 
   syncMachineClasses(machine: Cell) {
@@ -433,7 +433,7 @@ export default class Ui extends UiBase<INetworkJson> {
     if (!view) return
     let el = joint.V(view.el)
     // handle the touched state
-    el.toggleClass('is-touched', Boolean(machine.get('is_touched')))
+    el.toggleClass('joint-is-touched', Boolean(machine.get('is_touched')))
     el.addClass('joint-group-' + machine.id)
   }
 
@@ -444,15 +444,15 @@ export default class Ui extends UiBase<INetworkJson> {
     const el = joint.V(view.el)
     // active state
     for (const type of ['set', 'multi', 'auto']) {
-      el.toggleClass('is-' + type, Boolean(state.get('is_' + type)))
+      el.toggleClass('joint-is-' + type, Boolean(state.get('is_' + type)))
     }
     // touched state
-    el.toggleClass('is-touched', Boolean(state.get('step_style')))
+    el.toggleClass('joint-is-touched', Boolean(state.get('step_style')))
     // step type classes
     for (let key of Object.keys(TransitionStepTypes)) {
       // skip labels
       if (typeof TransitionStepTypes[key] !== 'number') continue
-      let classname = 'step-' + key.toLowerCase().replace('_', '-')
+      let classname = 'joint-step-' + key.toLowerCase().replace('_', '-')
       el.toggleClass(
         classname,
         Boolean(state.get('step_style') & TransitionStepTypes[key])

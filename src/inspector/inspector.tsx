@@ -245,7 +245,7 @@ export class Inspector implements ITransitions {
 
   DOMReady_state() {
     this.container = document.querySelector(this.container_selector)
-    this.renderUI()
+    this.renderUIQueue()
     // TODO bind via a random ID
     this.graph.render('#graph')
   }
@@ -308,6 +308,7 @@ export class Inspector implements ITransitions {
     console.timeEnd('layout_worker.layout')
     if (abort()) return
     this.data_service = update.data_service
+    // cant cancel after this point
     await this.onDataServiceScrolled(update)
     this.last_render = Date.now()
     this.rendered_step_type = this.data_service.step_type
@@ -369,13 +370,13 @@ export class Inspector implements ITransitions {
     this.overlayListener = e => {
       this.states.drop('ConnectionDialogVisible')
     }
-    this.renderUI()
+    this.renderUIQueue()
     this.overlay_el.addEventListener('click', this.overlayListener)
   }
 
   ConnectionDialogVisible_end() {
     this.overlay_el.removeEventListener('click', this.overlayListener)
-    this.renderUI()
+    this.renderUIQueue()
   }
 
   // METHODS
@@ -600,13 +601,13 @@ export class Inspector implements ITransitions {
     }
   }
 
-  initKeystrokes() {
+  protected initKeystrokes() {
     for (let [key, fn] of Object.entries(keystrokes(this))) {
       bindKey(key, fn)
     }
   }
 
-  initSnapshotUpload() {
+  protected initSnapshotUpload() {
     onFileUpload(
       document.getElementById('snapshot-upload'),
       { type: 'text' },
