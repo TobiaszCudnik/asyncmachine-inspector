@@ -38,6 +38,7 @@
   - Step Type
   - last timeline scroll position
   - the latest connection host
+- full rerender as a button / action
 - show time on the main UI
 - maybe - auto-reconnect button
   - kept in the settings
@@ -90,8 +91,12 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
-- start applygin styles on the existing nodes
-  - while the new ones still being processed by the worker
+- optimize jointjs'es render methods
+  - drop translate, scale, rotate
+  - use x/y coordinates directly from svg
+- stream diffsync patches to the DB and throttle notifications to the worker
+- start applying styles on the existing nodes
+  - while the new ones are still being processed by the requested worker
 - eliminate updateRelativeAttributes/getBBox calls in jointjs
   - use translateBy
 - keep a merged diff against the full_sync every 100 patches in the exported snapshot
@@ -131,15 +136,16 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
-- resize machine #1
-- better colors
-- descriptive transition styles
-- pipe isnt exactly like add, nor pipe invert like drop, although shown like that
-- take advantage of canceling async rendering available in the latest jointjs
-- include state counters
-- visualize a number of listeners
-- visualize an active queue
 - show the number of ticks in the state's UI
+- visualize a number of listeners (per machine)
+- visualize an active queue (per machine)
+- resize a machine
+  - requires 'resisable' elements from jointjs
+- better colors
+- more descriptive transition styles
+- 'pipe' isnt exactly like add, nor 'pipe invert' like drop
+  - although shown like that
+- take advantage of canceling async rendering available in the latest jointjs
 
 #### Transition Tree
 - show transition as a tree
