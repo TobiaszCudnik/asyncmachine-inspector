@@ -14,7 +14,6 @@ import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
-import {Cell} from "jointjs";
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -414,7 +413,7 @@ export default class Ui extends UiBase<INetworkJson> {
     }
   }
 
-  syncLinkClasses(link: Cell) {
+  syncLinkClasses(link: joint.dia.Cell) {
     const view = this.paper.findViewByModel(link)
     if (!view) return
     // handle link types
@@ -428,7 +427,7 @@ export default class Ui extends UiBase<INetworkJson> {
     el.toggleClass('joint-is-touched', Boolean(link.get('is_touched')))
   }
 
-  syncMachineClasses(machine: Cell) {
+  syncMachineClasses(machine: joint.dia.Cell) {
     const view = this.paper.findViewByModel(machine)
     if (!view) return
     let el = joint.V(view.el)
@@ -437,9 +436,8 @@ export default class Ui extends UiBase<INetworkJson> {
     el.addClass('joint-group-' + machine.id)
   }
 
-  syncStateClasses(state: Cell) {
+  syncStateClasses(state: joint.dia.Cell) {
     const view = this.paper.findViewByModel(state)
-    // state = state as joint.dia.Cell
     if (!view) return
     const el = joint.V(view.el)
     // active state
