@@ -1,1 +1,1 @@
-/Users/dev/workspace/asyncmachine-inspector/build/logger/node.js
+module.exports = require('./logger/node')

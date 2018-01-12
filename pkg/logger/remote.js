@@ -1,1 +1,1 @@
-/Users/dev/workspace/asyncmachine-inspector/build/logger/remote.js
+module.exports = require('./logger/remote')
