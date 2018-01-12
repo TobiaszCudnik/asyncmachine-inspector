@@ -37,6 +37,8 @@ import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
+import {StepTypes} from "../joint/data-service";
+import {STEP_TYPE_CHANGE} from "../inspector";
 
 const styles = {
   container: {
@@ -382,6 +384,13 @@ export class Main extends Component<
                           touched={this.props.active_transitions_touched}
                           transitions={this.props.active_transitions}
                         />
+                      </div>
+                    )
+                  } else if (this.props.step_type != STEP_TYPE_CHANGE.STATES) {
+                    transitions.push(
+                      <div key="active-transitions">
+                        <h3>Current</h3>
+                        NONE
                       </div>
                     )
                   }
