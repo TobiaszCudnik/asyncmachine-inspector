@@ -7,7 +7,7 @@ import { IDelta } from 'jsondiffpatch'
 import { Graph } from 'graphlib'
 import * as joint from 'jointjs'
 import * as md5 from 'md5'
-import * as deepcopy from 'deepcopy'
+import * as deepcopy from 'deep-copy'
 import { INetworkJson, TCell, TState, TLink, TMachine } from './joint-network'
 import { PositionsMap } from '../settings'
 
@@ -95,19 +95,19 @@ export default class GraphLayout {
   }
 
   setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
-    let start = Date.now()
+    console.time('layout/setData')
     this.syncData(data, changed_cells)
-    log(`Sync data ${Date.now() - start}ms`)
-    if (!this.layout()) return
-    start = Date.now()
-    this.syncSourceGraph(data, changed_cells)
-    log(`Update the source graph ${Date.now() - start}ms`)
+    if (this.layout()) {
+      this.syncSourceGraph(data, changed_cells)
+    }
+    console.timeEnd('layout/setData')
   }
 
   /**
    * Returns the number of changed graphs.
    */
   layout(): number {
+    console.time('layout/layout')
     let start = Date.now()
     let cloned = 0
     let dirty = 0
@@ -145,6 +145,7 @@ export default class GraphLayout {
       this.clusters.graph().is_dirty = false
       log(`Layout the cluster graph ${Date.now() - start}ms`)
     }
+    console.timeEnd('layout/layout')
     return dirty
   }
 
@@ -406,6 +407,9 @@ export default class GraphLayout {
 
     for (let cell of data.cells) {
       cells.set(cell.id, cell)
+      if (changed_cells && !changed_cells.includes(cell.id)) {
+        continue
+      }
       let position = { x: 0, y: 0 }
       let size = { width: 0, height: 0 }
       if ((cell as TMachine).embeds) {
@@ -475,13 +479,21 @@ export default class GraphLayout {
         ) {
           delete cell.position
         }
-        model.set(cell)
+        // TODO check if that wont break anything
+        model.set(cell, {silent: true})
+        // model.set(cell)
       }
     }
 
     if (!first_run) {
       if (cells_to_add) {
-        this.source_graph.addCells(cells_to_add)
+        if (this.source_graph.getFirstCell()) {
+          this.source_graph.addCells(cells_to_add)
+        } else {
+          // use resetCells on the first import
+          // TODO not needed with startBatch?
+          this.source_graph.resetCells(cells_to_add)
+        }
       }
       let cells_to_remove = [...(changed_cells || [])]
         .filter(id => !cells.has(id))

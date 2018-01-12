@@ -3,13 +3,16 @@ import Layout from './layout'
 import workerio from 'workerio/src/workerio/index'
 import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'
-import * as deepcopy from 'deepcopy'
 import { IDelta } from 'jsondiffpatch'
-import { ITransitionData } from '../../network/network'
+import { IPatch, ITransitionData } from '../../network/network'
+import * as db from 'idb-keyval'
+import {INetworkJson} from "./network"
+import * as assert from 'assert/'
 
 export interface IDataServiceSync {
   position: number
   position_max: number
+  patch_position: number
   step_type: StepTypes
   active_transitions: ITransitionData[]
   prev_transitions: ITransitionData[]
@@ -17,11 +20,14 @@ export interface IDataServiceSync {
   is_latest: boolean
   current_patch: Object
   logs: string[]
+  last_scroll_add_remove: boolean
 }
 
 export interface ISync {
   layout_data: Object
-  patch: IDelta
+  patch?: IDelta
+  rev_patch?: IDelta
+  db_key?: string
   data_service: IDataServiceSync
   changed_ids: string[]
 }
@@ -32,13 +38,33 @@ const differ = jsondiffpatch.create({
   objectHash: obj => obj.id
 })
 
-function sync(data, changed_ids): ISync {
-  return {
+// TODO group
+// - layout_data as graph_layout
+// - patch
+// - changed_ids
+// into DataServiceScrollUpdate
+async function prepareDiffUpdate(changed_ids: string[], prev_position: number): Promise<ISync> {
+  const update = {
+    rev_diff: null,
+    diff: null,
+    db_key: null,
     layout_data: layout.exportLayoutData(),
-    patch: differ.diff(data, data_service.data),
     data_service: syncDataService(),
     changed_ids
   }
+  if (Math.abs(data_service.patch_position - prev_position) == 1) {
+    if (prev_position > data_service.patch_position) {
+      update.rev_diff = data_service.patches[prev_position]
+    } else if (prev_position < data_service.patch_position) {
+      update.diff = data_service.patches[data_service.patch_position]
+    }
+  } else if (prev_position != data_service.position) {
+    console.time('db.set(\'scroll_result\')')
+    await db.set('scroll_result', data_service.data)
+    console.timeEnd('db.set(\'scroll_result\')')
+    update.db_key = 'scroll_result'
+  }
+  return update
 }
 
 function syncDataService(): IDataServiceSync {
@@ -62,9 +88,10 @@ workerio.publishInterface(self || window, 'api', {
     data_service.removeAllListeners('scrolled')
     data_service = new DataService()
   },
-  setData(json, reset = false) {
-    data_service.data = json
-    layout.setData(json)
+  async fullSync() {
+    const data = await db.get('full_sync') as INetworkJson
+    data_service.data = data
+    layout.setData(data)
     layout.layout()
     return {
       layout_data: layout.exportLayoutData(),
@@ -75,27 +102,48 @@ workerio.publishInterface(self || window, 'api', {
     data_service.addPatch(patch)
     return syncDataService()
   },
-  setStepType(type: StepTypes): ISync {
-    const data = deepcopy(data_service.data)
+  // TODO transfer via indexedDB
+  addPatches(patches: IPatch[]) {
+    for (let patch of patches) {
+      data_service.addPatch(patch)
+    }
+  },
+  async setStepType(type: StepTypes): Promise<ISync> {
+    const prev_position = data_service.positionToPatchPosition(
+      data_service.position)
     let ids = data_service.setStepType(type)
-    return sync(data, ids)
+    return await prepareDiffUpdate(ids, prev_position)
   },
   /**
      * Used to reset the position to the last rendered one, to guarantee the
      * diff integrity.
      */
   blindSetPosition(type: StepTypes, position: number) {
+    const t = StepTypes
+    switch (type) {
+      case t.STATES:
+        position = data_service.index.states.indexOf(position)
+        break
+      case t.TRANSITIONS:
+        position = data_service.index.transitions.indexOf(position)
+        break
+    }
+    assert(position != -1)
     data_service.setStepType(type)
     data_service.scrollTo(position)
   },
   // rename to syncWorker or something
-  layout(position: number): ISync {
-    const data = deepcopy(data_service.data)
-    let ids = data_service.scrollTo(position)
-    layout.setData(data_service.data)
-    layout.layout()
-    return sync(data, ids)
+  async diffSync(position: number): Promise<ISync> {
+    const prev_position = data_service.positionToPatchPosition(
+      data_service.position)
+    let changed_ids = data_service.scrollTo(position)
+    if (data_service.last_scroll_add_remove) {
+      layout.setData(data_service.data)
+      layout.layout()
+    }
+    return await prepareDiffUpdate(changed_ids, prev_position)
   },
+  // TODO export via indexedDB
   export() {
     return {
       // skip the fake full sync patch

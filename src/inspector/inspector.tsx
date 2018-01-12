@@ -1,6 +1,7 @@
 import renderLayout, { TLayoutProps } from './ui/layout'
 // UI type
 import Graph from './joint/joint'
+// TODO loose this magic once worker modules are here
 import LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
 import { INetworkJson } from './joint/network'
 import * as io from 'socket.io-client'
@@ -20,6 +21,8 @@ import * as bindKey from 'keymaster'
 import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
 import { JSONSnapshot } from '../network/network-json'
+import * as db from 'idb-keyval'
+import {IDataServiceSync, ISync} from "./joint/layout-worker";
 
 const log = (...args) => {}
 
@@ -33,7 +36,7 @@ export enum STEP_TYPE_CHANGE {
 
 export class Inspector implements ITransitions {
   states = new States(this)
-  private data_service_: JointDataService
+  protected _data_service: IDataServiceSync | null
   settings = new Settings()
   graph = new Graph(null, this.settings)
   layout_data: TLayoutProps
@@ -49,11 +52,15 @@ export class Inspector implements ITransitions {
   // TODO type
   layout_worker: any
   full_sync: INetworkJson
+  // last render time
   last_render: number
-  data_service_sync_max_skip = 500
+  playing_longest_empty_render = 500
   data_service_last_sync = 0
   rendering_position = 0
+  rendered_patch = 0
+  rendered_step_type: StepTypes
   overlayListener: EventListenerOrEventListenerObject
+  worker_patches_pending: IPatch[] = []
 
   get overlay_el() {
     return document.querySelector('#overlay')
@@ -61,22 +68,22 @@ export class Inspector implements ITransitions {
 
   set data_service(value) {
     log('synced the data_service', value)
-    this.data_service_ = value
+    this._data_service = value
     this.updateTimelineStates()
   }
 
   get data_service() {
-    return this.data_service_
+    return this._data_service
   }
 
-  constructor(public container_selector = '#am-inspector', debug = false) {
+  constructor(public container_selector = '#am-inspector', debug: number) {
     this.states.id('Inspector')
     this.states.add(['TimelineOnFirst', 'Connecting'])
     if (this.settings.get().autoplay) {
       this.states.add('AutoplayOn')
     }
     if (debug) {
-      this.states.logLevel(3)
+      this.states.logLevel(debug)
     }
 
     this.layout_data = this.buildLayoutData()
@@ -90,6 +97,10 @@ export class Inspector implements ITransitions {
         this.states.addByListener('DOMReady')
       )
     }
+    // TODO define this one
+    this.renderUIQueue = throttle(() => {
+      this.renderUI()
+    }, 100)
   }
 
   Connect_state(url = 'http://localhost:3757') {
@@ -132,24 +143,32 @@ export class Inspector implements ITransitions {
   async FullSync_state(graph_data: INetworkJson) {
     if (!this.states.to().includes('LayoutWorkerReady'))
       await this.states.when('LayoutWorkerReady')
-    // TODO check LayoutWorkerReady (use while)
-    // TODO cancel the rendering here (if there was an existing FullSync)
-    this.logger_id = graph_data.loggerId
-    this.states.add(['Rendering'])
-    // console.log('full-sync', Date.now() - start_join)
+    console.time('FullSync_state')
     log('full-sync', graph_data)
     this.full_sync = graph_data
-    // TODO reset?
-    this.data_service.data = graph_data
-    let { layout_data, data_service } = await this.layout_worker.setData(
-      graph_data
-    )
+
+    console.time('layout_worker.fullSync')
+    await db.set('full_sync', graph_data)
+    let { layout_data, data_service } = await this.layout_worker.fullSync()
+    console.timeEnd('layout_worker.fullSync')
+
+    console.time('graph.setData')
     this.data_service = data_service
+    // render
     await this.graph.setData(graph_data, layout_data)
-    // TODO move it into the graph class
-    this.graph.postUpdateLayout()
+    // TODO support rendering to the last position
+    this.rendered_step_type = this.data_service.step_type
+    this.rendered_patch = this.data_service.patch_position
+    console.timeEnd('graph.setData')
+
+    console.time('postUpdateLayout')
+    // this.graph.postUpdateLayout()
+    this.last_render = Date.now()
+    console.timeEnd('postUpdateLayout')
+
     this.states.add('Rendered')
-    this.renderUI()
+    this.renderUIQueue()
+    console.timeEnd('FullSync_state')
   }
 
   FullSync_exit() {
@@ -163,31 +182,34 @@ export class Inspector implements ITransitions {
     }
   }
 
-  async DiffSync_state(packet: IPatch) {
+  LayoutWorkerReady_state() {
+    if (this.worker_patches_pending.length) {
+      const latest = this.worker_patches_pending.pop()
+      this.layout_worker.addPatches(this.worker_patches_pending)
+      // TODO divide logs
+      this.states.add('DiffSync', latest)
+    }
+  }
+
+  async DiffSync_state(patch: IPatch) {
     const states = this.states
-    const abort = states.getAbort('DiffSync')
-    if (!states.to().includes('LayoutWorkerReady'))
-      await states.when('LayoutWorkerReady')
-    this.logs.push(packet.logs)
-    const data_service = await this.layout_worker.addPatch(packet)
-    const now = Date.now()
-    const force_refresh =
-      now - this.data_service_last_sync > this.data_service_sync_max_skip
-    // TODO extract to AutoplayOn_DiffSync (and handle async dataservice sync)
+    // queue the patches until the worker is ready
+    if (!states.to().includes('LayoutWorkerReady')) {
+      this.worker_patches_pending.push(patch)
+      return
+    }
+    this.logs.push(patch.logs)
+    const data_service = await this.layout_worker.addPatch(patch)
+    this.data_service_last_sync = Date.now()
+    this.data_service = data_service
+    // TODO move to Autoplay
     const play = this.shouldPlay()
     log('play', play)
-    if (abort() && !force_refresh) return
-    this.data_service_last_sync = now
-    this.data_service = data_service
     if (play) {
       log('Autoplay from DiffSync')
       states.add('Playing')
-    } else if (states.is('InitialRenderDone') && !this.rendering_position) {
-      this.states.add('Rendering', this.rendering_position)
     }
-    this.renderUI()
-    log('diff', packet)
-    log('updated dataservice', data_service)
+    this.renderUIQueue()
   }
 
   async StepTypeChanged_state(value: STEP_TYPE_CHANGE) {
@@ -209,16 +231,15 @@ export class Inspector implements ITransitions {
         this.states.add('StepBySteps')
         break
     }
-    // TODO sync the data_servie, use abort
-    let {
-      layout_data,
-      patch,
-      data_service,
-      changed_ids
-    } = await this.layout_worker.setStepType(type)
-    this.data_service = data_service
-    await this.onDataServiceScrolled(layout_data, patch, changed_ids)
-    this.renderUI()
+    const update = await this.layout_worker.setStepType(type)
+    this.data_service = update.data_service
+    if (update.changed_ids && update.changed_ids.length) {
+      await this.onDataServiceScrolled(update)
+    }
+    // TODO merge with DiffRendering and FullSync
+    this.last_render = Date.now()
+    this.rendered_step_type = type
+    this.renderUIQueue()
     this.states.drop('StepTypeChanged')
   }
 
@@ -243,44 +264,74 @@ export class Inspector implements ITransitions {
   }
 
   Rendering_enter(position): boolean {
+    if (position === undefined) {
+      console.log('no position')
+      return false
+    }
     if (this.states.from().includes('Rendering')) {
       if (this.rendering_position == position) {
+        // duplicate scroll, ignore
+      console.log('duplicate scroll, ignore')
         return false
       } else if (
+        // backwards position while playing, ignore
         this.states.to().includes('Playing') &&
         position < this.rendering_position
       ) {
-        return false
-      } else {
-        // TODO GC
-        this.states.once(
-          'Rendering_end',
-          this.states.addByListener('Rendering', position)
-        )
+      console.log('backwards position while playing, ignore')
         return false
       }
     }
-    return true
   }
 
+  // TODO rename to DiffRendering and keep Rendering as:
+  // (+FullSync-InitialRenderingDone) | DiffRendering
   async Rendering_state(position) {
-    if (position !== undefined) {
-      this.rendering_position = position
-      let {
-        layout_data,
-        patch,
-        data_service,
-        changed_ids
-      } = await this.layout_worker.layout(position)
-      this.data_service = data_service
-      await this.onDataServiceScrolled(layout_data, patch, changed_ids)
-      this.states.add('Rendered')
-      this.renderUI()
+    console.log('DiffRendering start')
+    console.time('DiffRendering')
+    const abort = this.states.getAbort('Rendering')
+    // always get the diff from the last rendered position
+    if (this.rendered_patch != this.data_service.patch_position ||
+        this.rendered_step_type != this.data_service.step_type) {
+      console.log('fixing dataservice scroll position')
+      // TODO no await needed?
+      await this.layout_worker.blindSetPosition(this.data_service.step_type,
+          this.rendered_patch)
+      if (abort()) return
+      console.timeEnd('fixing dataservice scroll position')
     }
+    // TODO patch_position, step_type ???
+    this.rendering_position = position
+    console.time('layout_worker.layout')
+    // TODO step_type ???
+    let update: ISync = await this.layout_worker.diffSync(position)
+    console.timeEnd('layout_worker.layout')
+    if (abort()) return
+    this.data_service = update.data_service
+    await this.onDataServiceScrolled(update)
+    this.last_render = Date.now()
+    this.rendered_step_type = this.data_service.step_type
+    this.rendered_patch = this.data_service.patch_position
+    this.states.add('Rendered')
+    this.renderUIQueue()
+    console.timeEnd('DiffRendering')
+  }
+
+  Rendering_exit() {
+    const now = Date.now()
+    const force_render =
+      now - this.last_render >
+        this.playing_longest_empty_render
+    return !(this.states.is('Playing') && force_render)
   }
 
   async TimelineScrolled_state(value: number) {
-    this.states.add('Rendering', value)
+    console.log('TimelineScrolled')
+    if (this.states.is('InitialRenderDone')) {
+      this.states.add('Rendering', value)
+    } else {
+      // TODO handle the rejection
+    }
     this.states.drop('TimelineScrolled')
   }
 
@@ -289,7 +340,6 @@ export class Inspector implements ITransitions {
   }
 
   Playing_state() {
-    this.last_render = Date.now()
     const abort = this.states.getAbort('Playing')
     this.step_fn = this.playStep.bind(this, abort)
     this.step_timer = setTimeout(this.step_fn, this.frametime * 1000)
@@ -330,6 +380,7 @@ export class Inspector implements ITransitions {
 
   // METHODS
 
+  // TODO merge with Render_exit
   protected async playStep(abort: Function) {
     if (abort()) return
     if (this.states.is('Rendering')) {
@@ -531,6 +582,7 @@ export class Inspector implements ITransitions {
   }
 
   renderUI() {
+    console.log('Render UI')
     const first = !this.layout
     this.layout = renderLayout(this.container, this.layout_data)
     if (first) {
@@ -541,7 +593,9 @@ export class Inspector implements ITransitions {
         !this.states.is('FullSync') &&
         this.settings.get().last_snapshot
       ) {
-        this.loadSnapshot(this.settings.get().last_snapshot)
+        setTimeout(() => {
+          this.loadSnapshot(this.settings.get().last_snapshot)
+        })
       }
     }
   }
@@ -565,34 +619,43 @@ export class Inspector implements ITransitions {
         }
       }
     )
-    this.renderUI()
   }
 
-  loadSnapshot(snapshot: JSONSnapshot) {
+  async loadSnapshot(snapshot: JSONSnapshot) {
     // TODO make it a state
     this.layout_data.is_snapshot = true
     this.states.drop('AutoplayOn')
     this.states.add('FullSync', snapshot.full_sync)
-    for (const patch of snapshot.patches) {
-      this.states.add('DiffSync', patch)
+    if (this.states.is('LayoutWorkerReady')) {
+      const latest = snapshot.patches.pop()
+      this.layout_worker.addPatches(snapshot.patches)
+      this.states.add('DiffSync', latest)
+      // TODO divide logs
+    } else {
+      this.worker_patches_pending.push(...snapshot.patches)
     }
   }
 
-  async onDataServiceScrolled(
-    layout_data: TLayoutProps,
-    patch,
-    changed_cells: string[]
+  async onDataServiceScrolled(update: ISync
   ) {
-    // log('onDataServiceScrolled', deepcopy(this.data_service))
+    console.time('onDataServiceScrolled')
     this.updateTimelineStates()
-    jsondiffpatch.patch(this.graph.data, patch)
-    if (changed_cells && [...changed_cells].length) {
+    if (update.patch) {
+      jsondiffpatch.patch(this.graph.data, update.patch)
+    } else if (update.rev_patch) {
+      jsondiffpatch.unpatch(this.graph.data, update.rev_patch)
+    } else if (update.db_key) {
+      this.graph.data = await db.get(update.db_key)
+    }
+
+    if (update.changed_ids && update.changed_ids.length) {
       await this.graph.updateCells(
-        changed_cells,
+        update.changed_ids,
         this.data_service.last_scroll_add_remove,
-        layout_data
+        update.layout_data
       )
     }
+    console.timeEnd('onDataServiceScrolled')
   }
 
   updateTimelineStates() {

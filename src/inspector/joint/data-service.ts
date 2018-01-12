@@ -130,7 +130,7 @@ class JointDataService extends EventEmitter {
     this.patches.push(patch)
   }
 
-  setStepType(type: StepTypes) {
+  setStepType(type: StepTypes): string[] {
     let old_step_type = this.step_type
     this.step_type = type
     if (type > old_step_type) {
@@ -143,7 +143,7 @@ class JointDataService extends EventEmitter {
           position => position + 1 > this.position
         )
         // scroll to one step before the found one
-        this.scrollTo(index)
+        return this.scrollTo(index)
       } else {
         this.position = positions.indexOf(this.patch_position - 1) + 1
       }
@@ -152,8 +152,11 @@ class JointDataService extends EventEmitter {
       if (type == StepTypes.TRANSITIONS) {
         this.position =
           this.index.transitions.indexOf(this.patch_position - 1) + 1
-      } else this.position = this.patch_position
+      } else {
+        this.position = this.patch_position
+      }
     }
+    return []
   }
 
   /**
@@ -173,11 +176,11 @@ class JointDataService extends EventEmitter {
 
   // TODO
   // scrollBy(amount)
-  scrollTo(position: number): Set<string> {
+  scrollTo(position: number): string[] {
     // TODO ensure that the position is not out of range
     if (position == this.position) {
       this.next_transitions = this.getNextTransitionsSet()
-      return new Set()
+      return []
     }
     this.position = position
     return this.scrollToPatch(this.positionToPatchPosition(position))
@@ -200,7 +203,8 @@ class JointDataService extends EventEmitter {
    * Returns a list of affected nodes (in their latest form (
    * in the scroll direction)).
    */
-  protected scrollToPatch(position: number): Set<string> {
+  protected scrollToPatch(position: number): string[] {
+    console.time('scrollToPatch')
     assert(typeof position == 'number')
     this.last_scroll_add_remove = false
     let changed = new Set<string>()
@@ -226,7 +230,8 @@ class JointDataService extends EventEmitter {
     this.prev_transitions = this.getPrevTransitionsSet()
     this.next_transitions = this.getNextTransitionsSet()
     this.emit('scrolled', position, changed)
-    return changed
+    console.timeEnd('scrollToPatch')
+    return [...changed]
   }
 
   /**
@@ -238,14 +243,19 @@ class JointDataService extends EventEmitter {
     for (let key of Object.keys(diff.cells)) {
       if (key == '_t' || key[0] != '_') continue
       this.handleAddRemove(diff.cells[key])
-      if (this.data.cells[key.slice(1)])
+      // TODO honor ignored_cell_fields
+      if (this.data.cells[key.slice(1)]) {
         changed.add(this.data.cells[key.slice(1)].id)
+      }
     }
     jsondiffpatch.patch(this.data, diff)
     for (let key of Object.keys(diff.cells)) {
       if (key == '_t' || key[0] == '_') continue
       this.handleAddRemove(diff.cells[key])
-      if (this.data.cells[key]) changed.add(this.data.cells[key].id)
+      // TODO honor ignored_cell_fields
+      if (this.data.cells[key]) {
+        changed.add(this.data.cells[key].id)
+      }
     }
   }
 
@@ -255,15 +265,20 @@ class JointDataService extends EventEmitter {
     for (let key of Object.keys(diff.cells)) {
       if (key == '_t' || key[0] == '_') continue
       this.handleAddRemove(diff.cells[key])
-      if (this.data.cells[key]) changed.add(this.data.cells[key].id)
+      // TODO honor ignored_cell_fields
+      if (this.data.cells[key]) {
+        changed.add(this.data.cells[key].id)
+      }
     }
     jsondiffpatch.unpatch(this.data, diff)
     for (let key of Object.keys(diff.cells)) {
       if (key == '_t' || key[0] != '_') continue
       this.handleAddRemove(diff.cells[key])
       // TODO handle missing elements when key == '_a'
-      if (this.data.cells[key.slice(1)])
+      // TODO honor ignored_cell_fields
+      if (this.data.cells[key.slice(1)]) {
         changed.add(this.data.cells[key.slice(1)].id)
+      }
     }
   }
 

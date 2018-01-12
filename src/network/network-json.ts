@@ -1,8 +1,8 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
 import Network, { ILogEntry, IPatch, Node as GraphNode } from './network'
-import { PipeFlags } from 'asyncmachine/build/asyncmachine'
-import { AsyncMachine } from 'asyncmachine/src/types'
+import { PipeFlags } from 'asyncmachine'
+import { AsyncMachine } from 'asyncmachine/build/types'
 // TODO shouldnt point to a layout-specific type
 import { INetworkJson } from '../inspector/joint/network'
 

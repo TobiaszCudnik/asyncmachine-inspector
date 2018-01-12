@@ -32,6 +32,9 @@
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
     "@types/socket.io-client": "^1.4.32",
+    "deep-copy": "^1.4.1",
+    "delay": "^2.0.0",
+    "idb-keyval": "^2.3.0",
     "socket.io": "^1.4.8"
   },
   "devDependencies": {

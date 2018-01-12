@@ -251,12 +251,12 @@ export class Main extends Component<
                   }
 
                   function QueueList({ machine_id, queue }) {
-                    let class_name = `group-${machine_id}`
+                    let class_name = `joint-group-${machine_id}`
                     const items = queue.map((entry, i) => {
                       let type = getTransitionType(entry)
                       let target_states = ''
                       if (entry.machine != machine_id) {
-                        let class_name = `group-${entry.machine}`
+                        let class_name = `joint-group-${entry.machine}`
                         target_states = (
                           <span className={class_name}>
                             [{machineName(entry.machine)}]{' '}
@@ -283,11 +283,11 @@ export class Main extends Component<
                     transitions: ITransitionData[]
                   }) {
                     const items = transitions.map((entry, i) => {
-                      let class_name = `group-${entry.queue_machine_id}`
+                      let class_name = `joint-group-${entry.queue_machine_id}`
                       let type = getTransitionType(entry)
                       let target_states = ''
                       if (entry.machine_id != entry.queue_machine_id) {
-                        let class_name = `group-${entry.machine_id}`
+                        let class_name = `joint-group-${entry.machine_id}`
                         target_states = (
                           <span className={class_name}>
                             [{machineName(entry.machine_id)}]{' '}
@@ -336,7 +336,7 @@ export class Main extends Component<
                     const items = Object.entries(
                       touched
                     ).map(([machine_id, states]) => {
-                      let class_name = `group-${machine_id}`
+                      let class_name = `joint-group-${machine_id}`
                       return (
                         <div key={machine_id} className={class_name}>
                           - <strong>{machineName(machine_id)}</strong>
@@ -405,7 +405,7 @@ export class Main extends Component<
                     </div>
                   )
                   function MachineEntry({ machine }: { machine: TMachine }) {
-                    let class_name = `group-${machine.id}`
+                    let class_name = `joint-group-${machine.id}`
                     let queue
                     if (machine.processing_queue) {
                       queue = (
@@ -470,7 +470,7 @@ export class Main extends Component<
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       let entry = logs[i][ii]
                       let key = `log-${i}-${ii}`
-                      let class_name = `group-${entry.id}`
+                      let class_name = `joint-group-${entry.id}`
                       // TODO inline-block
                       container.push(
                         <span className={class_name} key={key}>

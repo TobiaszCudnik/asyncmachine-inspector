@@ -14,15 +14,93 @@ import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
+import {Cell} from "jointjs";
 
 type IDelta = jsondiffpatch.IDeltas
 
 // simplify the link markup
-// TODO put into the right place
+// TODO move to shapes.ts
 joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
-  markup:
-    '<path class="connection"/><path class="marker-target"/><g class="labels" />'
+  markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
 })
+const oldLinkClassName = joint.dia.LinkView.prototype.className
+joint.dia.LinkView.prototype.className = function() {
+  let class_names: string = oldLinkClassName.apply(this, arguments)
+  const types = this.model.get('labels')['0'].attrs.text.text || 'pipe'
+  class_names += ' '+types
+  if (this.model.get('is_touched')) {
+    class_names += ' is-touched'
+  }
+  return class_names
+}
+const oldElementClassName = joint.dia.ElementView.prototype.className
+joint.dia.ElementView.prototype.className = function() {
+  let class_names: string = oldElementClassName.apply(this, arguments)
+  const model = this.model
+  const type = model.get('type')
+  // STATES
+  if (type == 'fsa.State') {
+    // active state
+    for (const type of ['set', 'multi', 'auto']) {
+      if (model.get('is_' + type)) {
+        class_names += ' is-' + type
+      }
+    }
+    // touched state
+    if (model.get('step_style')) {
+      class_names += ' is-touched'
+    }
+    // step type classes
+    for (let key of Object.keys(TransitionStepTypes)) {
+      // skip labels
+      if (typeof TransitionStepTypes[key] !== 'number') continue
+      let classname = 'step-' + key.toLowerCase().replace('_', '-')
+      if (model.get('step_style') & TransitionStepTypes[key]) {
+        class_names += ' '+classname
+      }
+    }
+  // MACHINES
+  } else if (type == 'uml.State') {
+    class_names += ' joint-group-'+model.id
+    if (model.get('is_touched')) {
+      class_names += ' is-touched'
+    }
+  }
+  return class_names
+}
+// joint.shapes.ami = {}
+// joint.shapes.ami.Link = joint.shapes.fsa.Arrow.extend({
+//   // initialize: function() {
+//   //   joint.shapes.fsa.Arrow.prototype.initialize.apply(this, arguments)
+//   //   debugger
+//   // },
+//   markup:
+//     '<path class="connection"/><path class="marker-target"/><g class="labels" />',
+//
+//   render: function() {
+//     this.$el.empty();
+//
+//     this.renderMarkup();
+//     debugger
+//     this.rotatableNode = this.vel.findOne('.rotatable');
+//     var scalable = this.scalableNode = this.vel.findOne('.scalable');
+//     if (scalable) {
+//         // Double update is necessary for elements with the scalable group only
+//         // Note the resize() triggers the other `update`.
+//         this.update();
+//     }
+//     this.resize();
+//     this.rotate();
+//     this.translate();
+//
+//     return this;
+//   },
+//
+//   className: function() {
+//     debugger
+//     joint.shapes.fsa.Arrow.prototype.className.apply(this, arguments)
+//   }
+// })
 
 const log = (...args) => {}
 
@@ -69,6 +147,7 @@ export default class Ui extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
+  // TODO use in the data_service as non-ignored fields
   patch_fields = ['step_style', 'is_set', 'is_touched', 'name']
 
   get scroll_element(): Element {
@@ -150,12 +229,12 @@ export default class Ui extends UiBase<INetworkJson> {
   async setData(
     data: INetworkJson,
     layout_data?,
-    changed_cells: Iterable<string> = null
+    changed_cells: string[] = null
   ) {
     const first_run = !this.data
 
     this.data = data
-    let start = Date.now()
+    console.time('joint/setData')
 
     // TODO async
     // this.layout.setData(this.data, changed_cells)
@@ -191,32 +270,41 @@ export default class Ui extends UiBase<INetworkJson> {
         this.scroll_element.scrollLeft = scroll.x
         this.scroll_element.scrollTop = scroll.y
       }
+      this.postUpdateLayout(changed_cells)
     }
 
-    log(`Overall setData ${Date.now() - start}ms`)
+    console.timeEnd('joint/setData')
   }
 
   async updateCells(
-    cells: Iterable<string>,
+    changed_ids: string[],
     was_add_remove: boolean = false,
     layout_data
   ) {
+    console.time('updateCells')
     if (!was_add_remove) {
-      this.patchCells(cells)
+      this.patchCells(changed_ids)
     } else {
-      await this.setData(this.data, layout_data, cells)
+      await this.setData(this.data, layout_data, changed_ids)
     }
-    this.postUpdateLayout(cells)
+    this.postUpdateLayout(changed_ids)
+    console.timeEnd('updateCells')
   }
 
   patchCells(cell_ids: Iterable<string>) {
+    console.time('patchCells')
     for (let cell of this.getDataCellsByIds(cell_ids)) {
       let model = this.graph.getCell(cell.id)
+      // TODO this can be undefined, ensure to apply all the diffs
+      // in case of a cancelled rendering
+      if (!model)
+        continue
       for (let field of this.patch_fields) {
         if (!cell.hasOwnProperty(field)) continue
-        model.set(field, cell[field])
+        model.set(field, cell[field], {silent: true})
       }
     }
+    console.timeEnd('patchCells')
   }
 
   getDataCellsByIds(cell_ids: Iterable<string>): TCell[] {
@@ -224,7 +312,7 @@ export default class Ui extends UiBase<INetworkJson> {
     return this.data.cells.filter(cell => ids.includes(cell.id))
   }
 
-  postUpdateLayout(cells?) {
+  postUpdateLayout(changed_ids?: string[]) {
     // lay out the graph
     // joint.layout.DirectedGraph.layout(this.graph, {
     // 	// TODO check verticles from dagre
@@ -241,18 +329,16 @@ export default class Ui extends UiBase<INetworkJson> {
     // 		top: 40, left: 20, right: 20, bottom: 20 }
     // 	// TODO check resizeClusters: true
     // })
-    let start = Date.now()
-    let tmp1 = start
-    this.syncClasses(cells ? [...cells] : null)
-    let tmp2 = Date.now()
-    log(`Sync classes ${tmp2 - tmp1}ms`)
+
+    if (changed_ids && changed_ids.length) {
+      console.time('syncClasses')
+      this.syncClasses(changed_ids)
+      console.timeEnd('syncClasses')
+    }
+
+    console.time('assignColors')
     this.assignColors()
-    tmp1 = tmp2
-    tmp2 = Date.now()
-    log(`Assign colors ${tmp2 - tmp1}ms`)
-    // tmp2 = Date.now()
-    // this.autosize()
-    // log(`Autosize ${Date.now() - tmp2}ms`)
+    console.timeEnd('assignColors')
   }
 
   parseColors() {
@@ -296,83 +382,82 @@ export default class Ui extends UiBase<INetworkJson> {
   applyColor(group, color_name) {
     let fg = colors[color_name + '200']
     let bg = colors[color_name + '100']
-    this.stylesheet.addRule(`.group-${group.get('id')}`, `color: ${fg};`)
-    this.stylesheet.addRule(`.group-${group.get('id')} path`, `stroke: ${fg};`)
+    this.stylesheet.addRule(`.joint-group-${group.get('id')}`, `color: ${fg};`)
+    this.stylesheet.addRule(`.joint-group-${group.get('id')} path`, `stroke: ${fg};`)
     this.stylesheet.addRule(
-      `.group-${group.get('id')} rect`,
+      `.joint-group-${group.get('id')} rect`,
       `stroke: ${fg}; fill: ${bg};`
     )
   }
 
-  syncClasses(changed_cells?) {
-    if (!changed_cells) changed_cells = this.data.cells.map(cell => cell.id)
-    this.syncMachineClasses(changed_cells)
-    this.syncStateClasses(changed_cells)
-    this.syncLinkClasses(changed_cells)
+  // TODO this should sync from models, not JSON
+  // note: keep in sync with joint.dia.ElementView.prototype.className
+  syncClasses(changed_cells: string[]) {
+    console.log(`syncing classes for ${(changed_cells||[]).length} elements`)
+    for (const id of changed_cells) {
+      const cell = this.graph.getCell(id)
+      if (!cell) {
+        console.error(`Changed cell missing in the UI - "${id}`)
+        continue
+      }
+      switch(cell.get('type')) {
+        case 'fsa.Arrow':
+          this.syncLinkClasses(cell)
+          break
+        case 'uml.State':
+          this.syncMachineClasses(cell)
+          break
+        case 'fsa.State':
+          this.syncStateClasses(cell)
+          break
+      }
+    }
   }
 
-  // TODO define class on the server
-  // TODO this should sync from models, not JSON
-  syncLinkClasses(changed_cells: string[]) {
-    changed_cells
-      .map(id => this.graph.getCell(id))
-      .filter(node => node && node.get('type') == 'fsa.Arrow')
-      .forEach(link => {
-        if (!this.paper.findViewByModel(link)) return
-        // handle link types
-        let classNames = (link.get('labels')['0'].attrs.text.text || 'pipe'
-        ).split(' ')
-        let view = joint.V(this.paper.findViewByModel(link).el)
-        for (let name of classNames) view.addClass(name)
-        // handle the touched state
-        view.toggleClass('is-touched', Boolean(link.get('is_touched')))
-      })
+  syncLinkClasses(link: Cell) {
+    const view = this.paper.findViewByModel(link)
+    if (!view) return
+    // handle link types
+    let class_names = (link.get('labels')['0'].attrs.text.text || 'pipe'
+    ).split(' ')
+    let el = joint.V(view.el)
+    for (let name of class_names) {
+      el.addClass(name)
+    }
+    // handle the touched state
+    el.toggleClass('is-touched', Boolean(link.get('is_touched')))
   }
 
-  // TODO define class on the server
-  // TODO this should sync from models, not JSON
-  syncMachineClasses(changed_cells: string[]) {
-    changed_cells
-      .map(id => this.graph.getCell(id))
-      .filter(node => node && node.get('type') == 'uml.State')
-      .forEach(machine => {
-        if (!this.paper.findViewByModel(machine)) return
-        let view = joint.V(this.paper.findViewByModel(machine).el)
-        // TODO edit the main template
-        // view.find('path')[0].attr('d',
-        // 	view.find('path')[0].attr('d').replace(/ 20 ?/g, ' 30'))
-        if (!this.paper.findViewByModel(machine)) return
-        // handle the touched state
-        view.toggleClass('is-touched', Boolean(machine.get('is_touched')))
-        view.addClass('group-' + machine.id)
-      })
+  syncMachineClasses(machine: Cell) {
+    const view = this.paper.findViewByModel(machine)
+    if (!view) return
+    let el = joint.V(view.el)
+    // handle the touched state
+    el.toggleClass('is-touched', Boolean(machine.get('is_touched')))
+    el.addClass('joint-group-' + machine.id)
   }
 
-  // TODO this should sync from models, not JSON
-  syncStateClasses(changed_cells: string[]) {
-    changed_cells
-      .map(id => this.graph.getCell(id))
-      .filter(node => node && node.get('type') == 'fsa.State')
-      .forEach(state => {
-        // state = state as joint.dia.Cell
-        if (!this.paper.findViewByModel(state)) return
-        const el = joint.V(this.paper.findViewByModel(state).el)
-        // active state
-        for (const type of ['set', 'multi', 'auto'])
-          el.toggleClass('is-' + type, Boolean(state.get('is_' + type)))
-        // touched state
-        el.toggleClass('is-touched', Boolean(state.get('step_style')))
-        // step type classes
-        for (let key of Object.keys(TransitionStepTypes)) {
-          // skip labels
-          if (typeof TransitionStepTypes[key] !== 'number') continue
-          let classname = 'step-' + key.toLowerCase().replace('_', '-')
-          el.toggleClass(
-            classname,
-            Boolean(state.get('step_style') & TransitionStepTypes[key])
-          )
-        }
-      })
+  syncStateClasses(state: Cell) {
+    const view = this.paper.findViewByModel(state)
+    // state = state as joint.dia.Cell
+    if (!view) return
+    const el = joint.V(view.el)
+    // active state
+    for (const type of ['set', 'multi', 'auto']) {
+      el.toggleClass('is-' + type, Boolean(state.get('is_' + type)))
+    }
+    // touched state
+    el.toggleClass('is-touched', Boolean(state.get('step_style')))
+    // step type classes
+    for (let key of Object.keys(TransitionStepTypes)) {
+      // skip labels
+      if (typeof TransitionStepTypes[key] !== 'number') continue
+      let classname = 'step-' + key.toLowerCase().replace('_', '-')
+      el.toggleClass(
+        classname,
+        Boolean(state.get('step_style') & TransitionStepTypes[key])
+      )
+    }
   }
 
   bindMouseZoom() {

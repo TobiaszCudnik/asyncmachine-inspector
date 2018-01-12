@@ -2,9 +2,9 @@ import {
   StateStructFields,
   TransitionStepTypes,
   TransitionStepFields,
-  StateRelations
-} from 'asyncmachine/build/asyncmachine'
-import Transition from 'asyncmachine/build/transition'
+  StateRelations,
+  Transition
+} from 'asyncmachine'
 import {
   AsyncMachine,
   ITransitionStep,
