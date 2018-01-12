@@ -1,7 +1,13 @@
 # TODO
 
 #### Bugs
+- is-touched highlighting during a transition is broken
+- Cancelled states dont get un-marked (repro)
+- cant distinguish cancelled from requested
+  - during a transition
+- uploading a snapshot after one is already loaded doesnt work
 - current transitions lacks queue source machine as "involved"
+- sometimes machine isnt marked as touched, although listed as Involved
 - require highlighted after the target state
   - target state - add - another state, not highlighted as separate steps
 - changing the granularity from Transition Steps to States leaves artifacts
@@ -13,8 +19,10 @@
   - while not included in the "next / current / prev transition" sidebar
 - the left sidebar gets repainted when new diff arrives, although the content
   doesnt change
+- the worker sometimes times out with debug=3 because of the DiffSync state flooding
+  - import snapshots in the async way
 
-#### UI
+#### Inspector
 - load snapshots from URLs
 - show the legend on the first load
 - reset confirmation message
@@ -26,28 +34,26 @@
   - sort-by select
     - default: queue length, listeners count
     - others: name, ticks, pipes
-- keep in localstorage
+- keep in localstorage / settings
   - Step Type
   - last timeline scroll position
-  - the last snapshot
-  - the latest connection host in the settings
-- maybe - auto-reconnect button (kept in the settings)
+  - the latest connection host
+- show time on the main UI
+- maybe - auto-reconnect button
+  - kept in the settings
+- support multiple loggers simultaneously
+  - allow to show/hide specific ones
 - smaller toolbar
   - redesign
   - actions menu
     - reset positions
     - hotkeys for each (one hotkey -> focus -> keyboard navigation)
 - legend
-  - grouping by type
-    - active states
-    - non active states
-    - transition states
-    - relations
-  - descriptions
-  - better background, dimmed out
-  - a close button
-    - esc key to close
   - generate the graph elements using the graph engine
+- ability to add a note to a graph
+- live view, render in real time from a source
+  - add as a new step type "live"
+  - fps limit
 - save as file / download a log on a hotkey
 - log sidebar
   - filters
@@ -69,15 +75,37 @@
   - places like machine info, log view, graph, even the timeline
   - click scrolls to the element
   
+#### Data service worker
+- keep cache in IndexedDB
+  - validate by hash
+  
 #### Logger
 - allow configurable CORS for the server bin
 - make it easier to bind to your machines
 - transaction's source machine (the active queue) should also be marked as touched
+- live stream to a file
+- dont depend on the asyncmachine module
 
 #### Server
 - support multiple loggers simultaneously
 
 #### Optimizations
+- start applygin styles on the existing nodes
+  - while the new ones still being processed by the worker
+- eliminate updateRelativeAttributes/getBBox calls in jointjs
+  - use translateBy
+- keep a merged diff against the full_sync every 100 patches in the exported snapshot
+  - reduces the scrolling times
+  - expand the merged patches to full jsons in the background
+  - create patches between them (to get changed_ids easily)
+- cancel rendering in case of the manual scroll position changed
+  - MANUAL scroll only
+  - dont render the intermidiate frames
+- merge deltas instead of re-diffing
+  - https://github.com/benjamine/jsondiffpatch/issues/39
+- avoid binding to LayoutWorkerReady on every DiffSync
+- render only selected machines (helps with big networks)
+  - keep the visibility state in the settings
 - properly tree-shake asyncmachine as a logger dependency (its type-only)
 - cache data service scrolling
   - including next & prev transitions
@@ -92,6 +120,7 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- custom shape constructors (fsa.Arrow etc)
 - renderUI() as a state
 - rewrite the UI to grid & flex
 - divide the UI class into several machines
@@ -99,6 +128,7 @@
 - graph-layout agnostic
   - UI class contains some jointjs structs
   - base class of the DataService needs to be extracted
+- use the workerify webpack loader to simplify the build process
 
 #### Graph
 - resize machine #1
@@ -117,7 +147,14 @@
   - machines are nodes, states are leafs
   
 #### Project
-- ES6 packages for the logger
+- READMEs for
+  - examples
+  - npm packages
+- more dist forms
+  - ES6 modules
+    - es6 dist for the browser logger
+  - TS files / d.ts
+  - source maps
 - webpack & typescript deps for the examples
 - examples on stackblitz
   - generated state types

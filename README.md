@@ -1,11 +1,11 @@
-# asyncmachine-inspector
+# AsyncMachine Inspector
 
-Inspector and a debugger for the [asyncmachine](https://github.com/TobiaszCudnik/asyncmachine).
+Inspector and a debugger for the [AsyncMachine](https://github.com/TobiaszCudnik/asyncmachine).
 
 ![Preview](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.png)
 
 ## Features
-- shows a graph of asyncmachines with states and relations
+- shows a graph of asyncmachines with their states and relations
 - rendered with jointjs (drag-drop, drag-scroll, zooming)
 - automatically layout the graph (dagre in a worker, diff repaints)
 - supports multiple machines and pipes between them
