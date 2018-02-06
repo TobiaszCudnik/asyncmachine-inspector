@@ -1,11 +1,30 @@
 # TODO
 
 #### Bugs
+- after the logger reconnects
+  - full graph reset required
+  - timeline slider moves to 0 (OK)
+  - no re-render at all (wrong)
+  - after scrolling the timeline, machines arent centered (wrong)
+  - state styles remain in the "in transition" (wrong)
+    - if the previous step style was "steps" and the rendered view had "step styles" active
+- logs not memorized on the server
+- autoplay not honored on a logger re-connect
+- dont load the last snapshot automatically if theres a server URL param present
+- asyncmachine-inspector npm doesnt work on stackblitz
+- long distance zoom out and in blocks scrolling
+  - when zoomed out and in 2 distant places
+- scroll to the middle, press play 
+  - playing starts from a later position
+  - should start from the selected one
+  - affects all the step types
 - is-touched highlighting during a transition is broken
 - Cancelled states dont get un-marked (repro)
 - cant distinguish cancelled from requested
   - during a transition
 - sometimes drag-drop on a machine shifts states out of the machines borders
+  - when dragging a machine during rendering (but not only)
+- pipe source state sometimes not marked as touched
 - uploading a snapshot after one is already loaded doesnt work
 - current transitions lacks queue source machine as "involved"
 - sometimes machine isnt marked as touched, although listed as Involved
@@ -29,6 +48,12 @@
   - import snapshots in the async way
 
 #### Inspector
+- scroll to a machine
+  - toolbar switch to auto scroll to the current transition while stepping
+  - click to scroll on machine and state names
+    - machines view
+    - transitions view
+    - log view
 - load snapshots from URLs
 - show the legend on the first load
 - reset confirmation message
@@ -68,6 +93,7 @@
     - bold or fade the matched entries or the rest
   - count transition requests ([add|set|drop])
     - counters outside of the panel, on the left, aligned to the right
+  - an option to show machine names
 - split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - change background to white and align other colors
 - sidebars
@@ -142,6 +168,16 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
+- Transition step type should have 3 steps per transition
+  - involved machines are highlighted in all 3 steps
+  - before the change, normal state styling
+  - involved states highlighted and with the transition styling
+  - after the change, normal state styling
+  - after & before from different transitions represent the same step
+    but are seperate steps on the timeline
+- ability to see nested transitions separately
+- play mode with transition step should fast-forward the single steps
+  - 0.2s per step?
 - visualize if a machine is during transition
   - to distinguish nested transitions
 - show the number of ticks in the state's UI
