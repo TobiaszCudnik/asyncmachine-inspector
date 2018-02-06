@@ -76,9 +76,10 @@ export class Inspector implements ITransitions {
     return this._data_service
   }
 
-  constructor(public container_selector = '#am-inspector', debug: number) {
+  constructor(public container_selector = '#am-inspector', server_url: string, debug: number) {
     this.states.id('Inspector')
-    this.states.add(['TimelineOnFirst', 'Connecting'])
+    this.states.add(['TimelineOnFirst'])
+    this.states.add('Connecting', server_url)
     if (this.settings.get().autoplay) {
       this.states.add('AutoplayOn')
     }
@@ -103,7 +104,7 @@ export class Inspector implements ITransitions {
     }, 100)
   }
 
-  Connect_state(url = 'http://localhost:3757') {
+  Connecting_state(url = 'http://localhost:3757') {
     url = url.replace(/\/$/, '')
     this.socket = io(`${url}/client`)
     this.socket.on('full-sync', (sync) => {
@@ -186,7 +187,9 @@ export class Inspector implements ITransitions {
     if (this.worker_patches_pending.length) {
       const latest = this.worker_patches_pending.pop()
       this.layout_worker.addPatches(this.worker_patches_pending)
-      // TODO divide logs
+      for (const patch of this.worker_patches_pending) {
+        this.logs.push(patch.logs)
+      }
       this.states.add('DiffSync', latest)
     }
   }
@@ -589,9 +592,10 @@ export class Inspector implements ITransitions {
     if (first) {
       this.initSnapshotUpload()
       this.initKeystrokes()
-      // TODO !this.states.willBe('FullSync')
+      // auto load the latest snapshot
+      // TODO should be somewhere else
       if (
-        !this.states.is('FullSync') &&
+        !(this.states.is('FullSync') || this.states.is('Connecting')) &&
         this.settings.get().last_snapshot
       ) {
         setTimeout(() => {
@@ -672,9 +676,6 @@ export class Inspector implements ITransitions {
 
 export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  const inspector = new Inspector(container_selector, query.debug)
-  if (query.server) {
-    inspector.states.add('Connect', query.server)
-  }
+  const inspector = new Inspector(container_selector, query.server, query.debug)
   return inspector
 }
