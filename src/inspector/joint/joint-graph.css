@@ -162,7 +162,7 @@ path.connection {
 
 #graph.during-transition .joint-viewport > :not(.joint-is-touched) {
     opacity: 0.3;
-    transition-duration: 0.5s;
+    /*transition-duration: 0.5s;*/
 }
 
 #graph.during-transition .connection-wrap {

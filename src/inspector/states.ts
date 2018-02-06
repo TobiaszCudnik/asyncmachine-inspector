@@ -25,14 +25,11 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
     require: ['FullSync']
   }
   // connection
-  Connect: IState = {
-    drop: ['Connecting', 'Connected', 'Disconnected']
-  }
   Connecting: IState = {
-    drop: ['Connect', 'Connected', 'Disconnected']
+    drop: ['Connected', 'Disconnected']
   }
   Connected: IState = {
-    drop: ['Connect', 'Connecting', 'Disconnected']
+    drop: ['Connecting', 'Disconnected']
   }
   Disconnected: IState = {
     drop: ['Connected', 'Connecting']

@@ -11,7 +11,7 @@ import {
   IStateStruct,
   StateChangeTypes
 } from 'asyncmachine/src/types'
-import Graph from 'graphs'
+import Graph from 'graphs-tob'
 import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
@@ -377,5 +377,9 @@ export default class Network extends EventEmitter {
         this.graph.link(source_state, target_state)
       }
     }
+  }
+
+  toString() {
+    return [...this.machines.keys()].map( m => m.toString() ).join('')
   }
 }

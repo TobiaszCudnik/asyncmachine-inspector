@@ -23,6 +23,7 @@ export default function createServer() {
       full_sync: null,
       patches: []
     }
+    // TODO disconnect the previous logger
     socket.on('diff-sync', function(diff) {
       data.patches.push(diff)
       uiEndpoint.emit('diff-sync', diff)

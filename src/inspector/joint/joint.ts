@@ -141,7 +141,7 @@ export default class Ui extends UiBase<INetworkJson> {
   height = 3500
 
   zoom_max = 1.5
-  zoom_min = 0.5
+  zoom_min = 0.1
   zoom_factor = 30
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
@@ -209,9 +209,10 @@ export default class Ui extends UiBase<INetworkJson> {
 
       // adjust vertices when a cell is removed or its source/target
       // was changed
+      // TODO throttle
       this.graph.on(
         'add remove change:source change:target change:position change:size',
-        _.partial(adjustVertices, this.graph)
+        _.throttle(_.partial(adjustVertices, this.graph), 100)
       )
       // also when an user stops interacting with an element.
       this.paper.on('cell:pointerup', _.partial(adjustVertices, this.graph))
