@@ -1,7 +1,7 @@
 {
   "name": "asyncmachine-inspector",
   "version": "0.3.7",
-  "description": "Inspector and a debugger for the asyncmachine",
+  "description": "Inspector and a debugger for AsyncMachine",
   "author": "Tobiasz Cudnik",
   "repository": {
     "type": "git",
@@ -50,7 +50,7 @@
     "del": "^2.0.2",
     "download-as-file": "^1.1.0",
     "eventemitter3": "^1.1.1",
-    "graphs": "TobiaszCudnik/graphs",
+    "graphs-tob": "^2.0.0",
     "jointjs": "^2.0.1",
     "json-loader": "^0.5.4",
     "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
