@@ -111,7 +111,7 @@ class JointDataService extends EventEmitter {
     // const prev_patch_transition_end =
     //   this.patches.length &&
     //   this.patches[this.patches.length - 1].type == PatchType.TRANSITION_END
-    if (patch.type == PatchType.NEW_MACHINE) {
+    if (patch.type == PatchType.NEW_MACHINE && !this.patches_active_transitions) {
       this.index.states.push(this.patches.length)
     } else if (
       patch.type == PatchType.TRANSITION_END &&
@@ -187,6 +187,7 @@ class JointDataService extends EventEmitter {
   }
 
   positionToPatchPosition(position: number): number {
+    // TODO asserts to early detect scrolling problems
     const t = StepTypes
     switch (this.step_type) {
       case t.STATES:
