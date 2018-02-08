@@ -22,7 +22,7 @@
     "graphs"
   ],
   "bin": {
-    "am-server": "./am-server.js"
+    "ami-server": "./ami-server.js"
   },
   "bugs": {
     "url": "https://github.com/TobiaszCudnik/asyncmachine-inspector/issues"
