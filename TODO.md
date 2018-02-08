@@ -1,6 +1,12 @@
 # TODO
 
 #### Bugs
+- legend broken colors (class name prefix?)
+- node remote logger doesnt have the file logger features
+- changing from step type - step to transitions causes a js error
+  - blindSetPosition, assert, position == -1
+  - while in the middle of a transition
+- refresh doesnt preserve the scroll position
 - after the logger reconnects
   - full graph reset required
   - timeline slider moves to 0 (OK)
@@ -8,7 +14,6 @@
   - after scrolling the timeline, machines arent centered (wrong)
   - state styles remain in the "in transition" (wrong)
     - if the previous step style was "steps" and the rendered view had "step styles" active
-- logs not memorized on the server
 - autoplay not honored on a logger re-connect
 - dont load the last snapshot automatically if theres a server URL param present
 - asyncmachine-inspector npm doesnt work on stackblitz
@@ -32,6 +37,9 @@
   - target state - add - another state, not highlighted as separate steps
 - changing the granularity from Transition Steps to States leaves artifacts
   - state_style, is_touched, .during-transition
+- scrollbars in both sidebars
+  - should have a dark background
+  - overlap the last line and last chars in a line (padding required)
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
 - BUG? step_type == transitions - cancelled transitions not included
@@ -91,9 +99,14 @@
   - filters
     - by log level / query text
     - bold or fade the matched entries or the rest
-  - count transition requests ([add|set|drop])
-    - counters outside of the panel, on the left, aligned to the right
+    - types (add, drop, set, rejected, transitions, etc...)
+  - counters for log groups (patch index) and transitions (first-level, later nested)
+    - click on the counter scrolls the timeline to that moment
+    - hover on the transition number previews the whole transition
   - an option to show machine names
+- timeline
+  - preview log entries when hovering over the timeline (from the selected step)
+  - maybe: give info about transitions?
 - split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - change background to white and align other colors
 - sidebars
