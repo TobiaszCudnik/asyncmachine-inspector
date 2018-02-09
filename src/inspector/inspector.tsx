@@ -79,7 +79,9 @@ export class Inspector implements ITransitions {
   constructor(public container_selector = '#am-inspector', server_url: string, debug: number) {
     this.states.id('Inspector')
     this.states.add(['TimelineOnFirst'])
-    this.states.add('Connecting', server_url)
+    if (server_url) {
+      this.states.add('Connecting', server_url)
+    }
     if (this.settings.get().autoplay) {
       this.states.add('AutoplayOn')
     }
@@ -676,6 +678,5 @@ export class Inspector implements ITransitions {
 
 export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  const inspector = new Inspector(container_selector, query.server, query.debug)
-  return inspector
+  return new Inspector(container_selector, query.server, query.debug)
 }
