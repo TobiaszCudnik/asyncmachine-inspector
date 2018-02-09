@@ -1,6 +1,10 @@
 # TODO
 
 #### Bugs
+- loading a snapshot doesnt show the log entires, but
+  - resuming from the last one does (with the same snapshot data)
+- autoconnect even without the server param?
+- download a snapshot broken?
 - legend broken colors (class name prefix?)
 - node remote logger doesnt have the file logger features
 - changing from step type - step to transitions causes a js error
@@ -105,8 +109,11 @@
     - hover on the transition number previews the whole transition
   - an option to show machine names
 - timeline
-  - preview log entries when hovering over the timeline (from the selected step)
-  - maybe: give info about transitions?
+  - tooltip with info about the step
+    - transitions active
+    - log entries from that step
+    - states changed
+  - stepping through nested transition (same UI as when hovering)
 - split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - change background to white and align other colors
 - sidebars
@@ -126,6 +133,7 @@
   - validate by hash
   
 #### Logger
+- ability to hook-in a custom logger, visible in the log sidebar
 - allow configurable CORS for the server bin
 - make it easier to bind to your machines
 - transaction's source machine (the active queue) should also be marked as touched
@@ -181,6 +189,9 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
+- click on a state marks it with an outline
+  - so its easy to distinguish when zoomed out
+  - should work with marking transition-related states
 - Transition step type should have 3 steps per transition
   - involved machines are highlighted in all 3 steps
   - before the change, normal state styling
