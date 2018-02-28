@@ -8,10 +8,10 @@ compile-watch:
 	node_modules/.bin/tsc --pretty --watch --noEmit
 
 build:
-	node_modules/.bin/tsc --module commonjs --outDir ./build
+	node_modules/.bin/tsc
 
 build-watch:
-	node_modules/.bin/tsc --module commonjs --outDir ./build --watch
+	node_modules/.bin/tsc --watch
 
 dist-worker-dev:
 	webpack --config config/webpack-worker.config.js

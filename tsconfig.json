@@ -2,12 +2,13 @@
     "compilerOptions": {
         "sourceMap": true,
         "target": "es2017",
-        "module": "es6",
+        "module": "commonjs",
         "allowJs": true,
-        "lib": ["es6", "es7", "dom"],
+        "lib": ["es6", "es7", "dom", "es2017"],
         "jsx": "react",
-        "moduleResolution": "node"
-    }, 
+        "moduleResolution": "node",
+        "outDir": "build"
+    },
     "files": [
         "typings/index.d.ts",
         "src/server/server.ts",

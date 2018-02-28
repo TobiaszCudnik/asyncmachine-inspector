@@ -2,7 +2,7 @@ import renderLayout, { TLayoutProps } from './ui/layout'
 // UI type
 import Graph from './joint/joint'
 // TODO loose this magic once worker modules are here
-import LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
+import * as LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
 import { INetworkJson } from './joint/network'
 import * as io from 'socket.io-client'
 import Network, { ILogEntry, IPatch } from '../network/network'
