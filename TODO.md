@@ -1,6 +1,8 @@
 # TODO
 
 #### Bugs
+- uploading snapshots doesnt work on safari
+- more colors need, as after ~20 machines, rest is gray
 - loading a snapshot doesnt show the log entires, but
   - resuming from the last one does (with the same snapshot data)
 - autoconnect even without the server param?
@@ -11,6 +13,8 @@
   - blindSetPosition, assert, position == -1
   - while in the middle of a transition
 - refresh doesnt preserve the scroll position
+  - becasue of the zoom issue, its impossible to find the rendered graph
+  - inspector -> svg -> scroll to view is a tmp workaround
 - after the logger reconnects
   - full graph reset required
   - timeline slider moves to 0 (OK)
@@ -33,6 +37,7 @@
   - during a transition
 - sometimes drag-drop on a machine shifts states out of the machines borders
   - when dragging a machine during rendering (but not only)
+  - every time in FF
 - pipe source state sometimes not marked as touched
 - uploading a snapshot after one is already loaded doesnt work
 - current transitions lacks queue source machine as "involved"
@@ -60,6 +65,10 @@
   - import snapshots in the async way
 
 #### Inspector
+- catch errors when loading a snapshot
+  - notify the user
+  - progress UI
+- implement node-debug as a logger
 - scroll to a machine
   - toolbar switch to auto scroll to the current transition while stepping
   - click to scroll on machine and state names
@@ -133,6 +142,9 @@
   - validate by hash
   
 #### Logger
+- optimize creating patches
+  - port jsondiffpatch to wasm/rust?
+- use the new asyncmachine log handlers API
 - ability to hook-in a custom logger, visible in the log sidebar
 - allow configurable CORS for the server bin
 - make it easier to bind to your machines
@@ -144,6 +156,10 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
+- disable console.time calls when in production
+- extract layout.tsx into separate react components
+  - implement custom shouldComponentUpdate
+  - reduce re-renders, especially the log and machines view
 - optimize jointjs'es render methods
   - drop translate, scale, rotate
   - use x/y coordinates directly from svg
@@ -153,8 +169,8 @@
 - eliminate updateRelativeAttributes/getBBox calls in jointjs
   - use translateBy
 - keep a merged diff against the full_sync every 100 patches in the exported snapshot
-  - reduces the scrolling times
-  - expand the merged patches to full jsons in the background
+  - reduces scrolling times
+  - expand the merged patches to full jsons, in the background
   - create patches between them (to get changed_ids easily)
 - cancel rendering in case of the manual scroll position changed
   - MANUAL scroll only
@@ -178,6 +194,9 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- extract layout.tsx into separate react components
+  - implement custom shouldComponentUpdate
+  - reduce re-renders, especially the log and machines view
 - custom shape constructors (fsa.Arrow etc)
 - renderUI() as a state
 - rewrite the UI to grid & flex
