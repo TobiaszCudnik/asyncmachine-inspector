@@ -10,6 +10,7 @@ import {
 } from '../../network/network'
 import * as assert from 'assert/'
 import { sortedIndex } from 'underscore'
+import { isProd } from '../utils';
 
 export enum Direction {
   FWD,
@@ -205,7 +206,7 @@ class JointDataService extends EventEmitter {
    * in the scroll direction)).
    */
   protected scrollToPatch(position: number): string[] {
-    console.time('scrollToPatch')
+    if (!isProd()) console.time('scrollToPatch')
     assert(typeof position == 'number')
     this.last_scroll_add_remove = false
     let changed = new Set<string>()
@@ -231,7 +232,7 @@ class JointDataService extends EventEmitter {
     this.prev_transitions = this.getPrevTransitionsSet()
     this.next_transitions = this.getNextTransitionsSet()
     this.emit('scrolled', position, changed)
-    console.timeEnd('scrollToPatch')
+    if (!isProd()) console.timeEnd('scrollToPatch')
     return [...changed]
   }
 

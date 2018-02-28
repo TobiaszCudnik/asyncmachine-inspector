@@ -10,6 +10,7 @@ import * as md5 from 'md5'
 import * as deepcopy from 'deep-copy'
 import { INetworkJson, TCell, TState, TLink, TMachine } from './joint-network'
 import { PositionsMap } from '../settings'
+import { isProd } from '../utils'
 
 // TODO types from dagre
 type TNode = {
@@ -95,19 +96,19 @@ export default class GraphLayout {
   }
 
   setData(data: INetworkJson, changed_cells: Iterable<string> = null) {
-    console.time('layout/setData')
+    if (!isProd()) console.time('layout/setData')
     this.syncData(data, changed_cells)
     if (this.layout()) {
       this.syncSourceGraph(data, changed_cells)
     }
-    console.timeEnd('layout/setData')
+    if (!isProd()) console.timeEnd('layout/setData')
   }
 
   /**
    * Returns the number of changed graphs.
    */
   layout(): number {
-    console.time('layout/layout')
+    if (!isProd()) console.time('layout/layout')
     let start = Date.now()
     let cloned = 0
     let dirty = 0
@@ -145,7 +146,7 @@ export default class GraphLayout {
       this.clusters.graph().is_dirty = false
       log(`Layout the cluster graph ${Date.now() - start}ms`)
     }
-    console.timeEnd('layout/layout')
+    if (!isProd()) console.timeEnd('layout/layout')
     return dirty
   }
 

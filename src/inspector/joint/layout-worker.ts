@@ -8,6 +8,7 @@ import { IPatch, ITransitionData } from '../../network/network'
 import * as db from 'idb-keyval'
 import {INetworkJson} from "./network"
 import * as assert from 'assert/'
+import { isProd } from '../utils';
 
 export interface IDataServiceSync {
   position: number
@@ -59,9 +60,9 @@ async function prepareDiffUpdate(changed_ids: string[], prev_position: number): 
       update.diff = data_service.patches[data_service.patch_position].diff
     }
   } else if (prev_position != data_service.position) {
-    console.time('db.set(\'scroll_result\')')
+    if (!isProd()) console.time('db.set(\'scroll_result\')')
     await db.set('scroll_result', data_service.data)
-    console.timeEnd('db.set(\'scroll_result\')')
+    if (!isProd()) console.timeEnd('db.set(\'scroll_result\')')
     update.db_key = 'scroll_result'
   }
   return update

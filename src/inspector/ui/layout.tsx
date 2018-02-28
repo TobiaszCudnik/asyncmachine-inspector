@@ -39,6 +39,11 @@ import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
 import {StepTypes} from "../joint/data-service";
 import {STEP_TYPE_CHANGE} from "../inspector";
+// import whyDidYouUpdate from 'why-did-you-update'
+
+// if (process.env.NODE_ENV !== 'production') {
+//   whyDidYouUpdate(React)
+// }
 
 const styles = {
   container: {

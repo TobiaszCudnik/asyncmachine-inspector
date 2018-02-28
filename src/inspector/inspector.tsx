@@ -22,7 +22,8 @@ import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
 import { JSONSnapshot } from '../network/network-json'
 import * as db from 'idb-keyval'
-import {IDataServiceSync, ISync} from "./joint/layout-worker";
+import {IDataServiceSync, ISync} from "./joint/layout-worker"
+import {isProd} from './utils'
 
 const log = (...args) => {}
 
@@ -146,32 +147,32 @@ export class Inspector implements ITransitions {
   async FullSync_state(graph_data: INetworkJson) {
     if (!this.states.to().includes('LayoutWorkerReady'))
       await this.states.when('LayoutWorkerReady')
-    console.time('FullSync_state')
+    if (!isProd()) console.time('FullSync_state')
     log('full-sync', graph_data)
     this.full_sync = graph_data
 
-    console.time('layout_worker.fullSync')
+    if (!isProd()) console.time('layout_worker.fullSync')
     await db.set('full_sync', graph_data)
     let { layout_data, data_service } = await this.layout_worker.fullSync()
-    console.timeEnd('layout_worker.fullSync')
+    if (!isProd()) console.timeEnd('layout_worker.fullSync')
 
-    console.time('graph.setData')
+    if (!isProd()) console.time('graph.setData')
     this.data_service = data_service
     // render
     await this.graph.setData(graph_data, layout_data)
     // TODO support rendering to the last position
     this.rendered_step_type = this.data_service.step_type
     this.rendered_patch = this.data_service.patch_position
-    console.timeEnd('graph.setData')
+    if (!isProd()) console.timeEnd('graph.setData')
 
-    console.time('postUpdateLayout')
+    if (!isProd()) console.time('postUpdateLayout')
     // this.graph.postUpdateLayout()
     this.last_render = Date.now()
-    console.timeEnd('postUpdateLayout')
+    if (!isProd()) console.timeEnd('postUpdateLayout')
 
     this.states.add('Rendered')
     this.renderUIQueue()
-    console.timeEnd('FullSync_state')
+    if (!isProd()) console.timeEnd('FullSync_state')
   }
 
   FullSync_exit() {
@@ -293,7 +294,7 @@ export class Inspector implements ITransitions {
   // (+FullSync-InitialRenderingDone) | DiffRendering
   async Rendering_state(position) {
     console.log('DiffRendering start')
-    console.time('DiffRendering')
+    if (!isProd()) console.time('DiffRendering')
     const abort = this.states.getAbort('Rendering')
     // always get the diff from the last rendered position
     if (this.rendered_patch != this.data_service.patch_position ||
@@ -302,15 +303,15 @@ export class Inspector implements ITransitions {
       // TODO no await needed?
       await this.layout_worker.blindSetPosition(this.data_service.step_type,
           this.rendered_patch)
-      console.timeEnd('fixing dataservice scroll position')
+      if (!isProd()) console.timeEnd('fixing dataservice scroll position')
       if (abort()) return
     }
     // TODO patch_position, step_type ???
     this.rendering_position = position
-    console.time('layout_worker.layout')
+    if (!isProd()) console.time('layout_worker.layout')
     // TODO step_type ???
     let update: ISync = await this.layout_worker.diffSync(position)
-    console.timeEnd('layout_worker.layout')
+    if (!isProd()) console.timeEnd('layout_worker.layout')
     if (abort()) return
     this.data_service = update.data_service
     // cant cancel after this point
@@ -320,7 +321,7 @@ export class Inspector implements ITransitions {
     this.rendered_patch = this.data_service.patch_position
     this.states.add('Rendered')
     this.renderUIQueue()
-    console.timeEnd('DiffRendering')
+    if (!isProd()) console.timeEnd('DiffRendering')
   }
 
   Rendering_exit() {
@@ -588,7 +589,7 @@ export class Inspector implements ITransitions {
   }
 
   renderUI() {
-    console.log('Render UI')
+    log('Render UI')
     const first = !this.layout
     this.layout = renderLayout(this.container, this.layout_data)
     if (first) {
@@ -645,7 +646,7 @@ export class Inspector implements ITransitions {
 
   async onDataServiceScrolled(update: ISync
   ) {
-    console.time('onDataServiceScrolled')
+    if (!isProd()) console.time('onDataServiceScrolled')
     this.updateTimelineStates()
     if (update.diff) {
       jsondiffpatch.patch(this.graph.data, update.diff)
@@ -662,7 +663,7 @@ export class Inspector implements ITransitions {
         update.layout_data
       )
     }
-    console.timeEnd('onDataServiceScrolled')
+    if (!isProd()) console.timeEnd('onDataServiceScrolled')
   }
 
   updateTimelineStates() {

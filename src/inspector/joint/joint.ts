@@ -14,6 +14,7 @@ import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
+import { isProd } from '../utils';
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -235,7 +236,7 @@ export default class Ui extends UiBase<INetworkJson> {
     const first_run = !this.data
 
     this.data = data
-    console.time('joint/setData')
+    if (!isProd()) console.time('joint/setData')
 
     // TODO async
     // this.layout.setData(this.data, changed_cells)
@@ -274,7 +275,7 @@ export default class Ui extends UiBase<INetworkJson> {
       this.postUpdateLayout(changed_cells)
     }
 
-    console.timeEnd('joint/setData')
+    if (!isProd()) console.timeEnd('joint/setData')
   }
 
   async updateCells(
@@ -282,17 +283,17 @@ export default class Ui extends UiBase<INetworkJson> {
     was_add_remove: boolean = false,
     layout_data
   ) {
-    console.time('updateCells')
+    if (!isProd()) console.time('updateCells')
     const ui_changed_ids = this.patchCells(changed_ids)
     if (was_add_remove) {
       await this.setData(this.data, layout_data, changed_ids)
     }
     this.postUpdateLayout(ui_changed_ids)
-    console.timeEnd('updateCells')
+    if (!isProd()) console.timeEnd('updateCells')
   }
 
   patchCells(cell_ids: string[]) {
-    console.time('patchCells')
+    if (!isProd()) console.time('patchCells')
     const ui_changed_ids = new Set<string>()
     for (let cell of this.getDataCellsByIds(cell_ids)) {
       let model = this.graph.getCell(cell.id)
@@ -307,7 +308,7 @@ export default class Ui extends UiBase<INetworkJson> {
         model.set(field, cell[field], {silent: true})
       }
     }
-    console.timeEnd('patchCells')
+    if (!isProd()) console.timeEnd('patchCells')
     return [...ui_changed_ids]
   }
 
@@ -334,14 +335,14 @@ export default class Ui extends UiBase<INetworkJson> {
     // })
 
     if (changed_ids && changed_ids.length) {
-      console.time('syncClasses')
+      if (!isProd()) console.time('syncClasses')
       this.syncClasses(changed_ids)
-      console.timeEnd('syncClasses')
+      if (!isProd()) console.timeEnd('syncClasses')
     }
 
-    console.time('assignColors')
+    if (!isProd()) console.time('assignColors')
     this.assignColors()
-    console.timeEnd('assignColors')
+    if (!isProd()) console.timeEnd('assignColors')
   }
 
   parseColors() {
