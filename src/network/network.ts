@@ -267,12 +267,8 @@ export default class Network extends EventEmitter {
     machine.on('queue-changed', () =>
       this.emit('change', PatchType.QUEUE_CHANGED)
     )
-    machine.logHandler((msg, level) => {
-      machine.logHandlerDefault(msg.toString(), level)
-      // TODO no hardcoded level
-      if (level > 2) {
-        return
-      }
+    // TODO dispose
+    machine.log_handlers.push( (msg, level) => {
       this.logs.push({ id, msg, level })
     })
   }
