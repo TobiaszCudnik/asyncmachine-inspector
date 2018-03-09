@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 pushd pkg/server
-node am-server.js
+node ami-server.js
 popd

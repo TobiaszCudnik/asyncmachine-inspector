@@ -212,7 +212,7 @@ export default class Network extends EventEmitter {
     // TODO unbind on dispose
     // TODO group the same changes emitted by a couple of machines
     const id = machine.id(true)
-    machine.on('change', () => this.emit('change', PatchType.STATE_CHANGED))
+    machine.on('tick', () => this.emit('change', PatchType.STATE_CHANGED))
     machine.on('pipe', () => {
       this.linkPipedStates(machine)
       this.emit('change', PatchType.PIPE, id)

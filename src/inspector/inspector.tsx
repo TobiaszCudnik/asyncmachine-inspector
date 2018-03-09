@@ -126,13 +126,12 @@ export class Inspector implements ITransitions {
   async InitializingLayoutWorker_state() {
     let worker, LayoutWorkerRemote
     // TODO https://github.com/stackblitz/core/issues/72
-    if (!location.hostname.includes('stackblitz') && Worker) {
-      // worker = new Worker('../../dist/am-inspector-layout-worker.umd.js')
+    if (Worker) {
       const blob = new Blob([LayoutWorker], { type: 'application/javascript' })
       worker = new Worker(URL.createObjectURL(blob))
       LayoutWorkerRemote = await workerio.getInterface(worker, 'api')
     } else {
-      console.error('TODO')
+      console.error('TODO inline worker')
       // TODO test
       eval(LayoutWorker)
       LayoutWorkerRemote = await workerio.getInterface(window, 'api')

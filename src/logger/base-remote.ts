@@ -7,13 +7,14 @@ export { Network, LoggerRemote as Logger }
 export default class LoggerRemote extends Logger {
   io: SocketIOClient.Socket
   connected = false
+  url: string
   get socket_io(): SocketIOClientStatic {
     return require('socket.io-client')
   }
 
-  constructor(public network: Network, public url = 'http://localhost:3757') {
+  constructor(public network: Network, url = 'http://localhost:3757') {
     super(network, false)
-    url = url.replace(/\/$/, '')
+    this.url = url.replace(/\/$/, '')
     this.io = this.socket_io(`${url}/logger`, {
       query: `id=${network.id}`
     })

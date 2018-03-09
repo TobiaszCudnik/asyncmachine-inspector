@@ -1,5 +1,5 @@
 import Network, { IPatch } from '../network/network'
-import Logger from './base'
+import Logger from './base-remote'
 import * as fs from 'fs'
 import * as io from 'socket.io-client'
 

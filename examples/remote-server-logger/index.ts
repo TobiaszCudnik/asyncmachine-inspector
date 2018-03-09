@@ -1,19 +1,13 @@
-import Asyncmachine from 'asyncmachine'
+import { machine } from 'asyncmachine'
 import { Logger, Network } from 'ami-logger/remote'
 
 // an example machine and its instance
-class Example extends Asyncmachine {
-  Foo = {}
-  Bar = {}
-  Baz = { drop: ['Bar'] }
-  constructor() {
-    super()
-    this.id('demo')
-    // always required for typescript
-    this.registerAll()
-  }
+const example_states = {
+  Foo: {},
+  Bar: {},
+  Baz: { drop: ['Bar'] }
 }
-const example = new Example()
+const example = machine(example_states)
 
 // hook up the instance to a logger client
 const network = new Network()
