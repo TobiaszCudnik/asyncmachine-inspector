@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- cant connect using the toolbar button
 - uploading snapshots doesnt work on safari
 - more colors need, as after ~20 machines, rest is gray
 - loading a snapshot doesnt show the log entires, but
@@ -86,6 +87,10 @@
   - sort-by select
     - default: queue length, listeners count
     - others: name, ticks, pipes
+  - list all the states per machine with their counters
+    - including inactive (eg '-Foo')
+    - clicking on a state triggers add('Foo')
+      - use predefined states as forms, ideally in a separate machine
 - keep in localstorage / settings
   - Step Type
   - last timeline scroll position
