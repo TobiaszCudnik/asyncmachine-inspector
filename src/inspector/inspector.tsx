@@ -63,6 +63,8 @@ export class Inspector implements ITransitions {
   overlayListener: EventListenerOrEventListenerObject
   worker_patches_pending: IPatch[] = []
 
+  renderUIQueue: (() => void) | null
+
   get overlay_el() {
     return document.querySelector('#overlay')
   }
@@ -176,6 +178,7 @@ export class Inspector implements ITransitions {
 
   FullSync_exit() {
     this.layout_worker.reset()
+    this.graph.reset()
     this.logs = []
   }
 
@@ -632,6 +635,7 @@ export class Inspector implements ITransitions {
     // TODO make it a state
     this.layout_data.is_snapshot = true
     this.states.drop('AutoplayOn')
+    this.states.drop('FullSync')
     this.states.add('FullSync', snapshot.full_sync)
     if (this.states.is('LayoutWorkerReady')) {
       const latest = snapshot.patches.pop()
