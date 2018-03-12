@@ -137,9 +137,9 @@ export default class Ui extends UiBase<INetworkJson> {
   group_colors = {}
   stylesheet: Stylesheet
 
-  // TODO responsive to the screen size
-  width = 5000
-  height = 3500
+  // responsive to the screen size
+  width = null
+  height = null
 
   zoom_max = 1.5
   zoom_min = 0.1
@@ -179,6 +179,14 @@ export default class Ui extends UiBase<INetworkJson> {
     // this.container = $('<div/>')
     assert(this.container)
 
+    // setup dimensions
+    // TODO update on resize
+    const client_width = this.scroll_element.clientWidth
+    const client_height = this.scroll_element.clientHeight
+    this.width = client_width * (client_width / (client_width * this.zoom_min))
+    this.height =
+      client_height * (client_height / (client_height * this.zoom_min))
+
     if (!this.paper) {
       this.paper = new joint.dia.Paper({
         // TODO set elementView and linkView using custom views
@@ -189,6 +197,7 @@ export default class Ui extends UiBase<INetworkJson> {
         model: this.graph,
         width: this.width,
         height: this.height,
+        // restrictTranslate: true,
         // TODO check these
         // defaultLink: new joint.dia.Link({
         // 	router: { name: 'manhattan', args: { step: 20 } },
@@ -205,6 +214,20 @@ export default class Ui extends UiBase<INetworkJson> {
           vertexAdd: false
         }
       })
+
+      this.container.css({
+        width: this.width,
+        height: this.height,
+        'min-height': this.scroll_element.clientHeight,
+        'min-width': this.scroll_element.clientWidth
+      })
+
+      this.paper.options.restrictTranslate = cell_view => {
+        const area = cell_view.paper.getArea()
+        area.width = this.width
+        area.height = this.height
+        return area
+      }
 
       this.bindMouseZoom()
 
@@ -225,6 +248,41 @@ export default class Ui extends UiBase<INetworkJson> {
     if (this.data) {
       await this.setData(this.data)
     }
+  }
+
+
+  zoom(level: number, offset_x?: number, offset_y?: number) {
+    // @ts-ignore
+    const current_level = this.paper.scale().sx
+    this.paper.scale(level, level)
+    const offset_x_ratio = offset_x
+      ? offset_x / this.container.width()
+      : 0.5
+    const offset_y_ratio = offset_y
+      ? offset_y / this.container.height()
+      : 0.5
+    this.container.width(this.width * level)
+    this.container.height(this.height * level)
+    const el = this.scroll_element;
+    if (level > current_level) {
+      // ZOOM IN
+      // X
+      const diff_x = this.width * level - this.width * current_level
+      el.scrollLeft += diff_x * offset_x_ratio
+      // Y
+      const diff_y = this.height * level - this.height * current_level
+      el.scrollTop += diff_y * offset_y_ratio
+    } else if (level < current_level) {
+      // ZOOM OUT
+      // X
+      const diff_x = this.width * current_level - this.width * level
+      el.scrollLeft -= diff_x * offset_x_ratio
+      // Y
+      const diff_y = this.height * current_level - this.height * level
+      el.scrollTop -= diff_y * offset_y_ratio
+    }
+    this.settings.set('zoom_level', level)
+    this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
   }
 
   // TODO layout_data?
@@ -514,7 +572,7 @@ export default class Ui extends UiBase<INetworkJson> {
         (box.width * scale > el.clientWidth - margin * 2 ||
           box.height * scale > el.clientHeight - margin * 2 - footer_height)
       ) {
-        this.paper.scale(scale * 0.9)
+        this.zoom(scale * 0.9)
         continue
       }
       el.scrollLeft = box.x * scale - margin
@@ -533,15 +591,8 @@ export default class Ui extends UiBase<INetworkJson> {
     const scale = vectorizer(this.paper.viewport).scale().sx
     const paper = this.paper
     const new_scale = scale + delta
-    if (new_scale > this.zoom_min && new_scale < this.zoom_max) {
-      paper.scale(new_scale, new_scale)
-      const dx =
-        (new_scale - scale) / scale * (offset_x - paper.options.origin.x)
-      const dy =
-        (new_scale - scale) / scale * (offset_y - paper.options.origin.y)
-      paper.setOrigin(paper.options.origin.x - dx, paper.options.origin.y - dy)
-      this.settings.set('zoom_level', new_scale)
-    }
+    const accepted = Math.min(this.zoom_max, Math.max(this.zoom_min, new_scale))
+    this.zoom(accepted, e.offsetX, e.offsetY)
   }
 
   // TODO support forgetting
