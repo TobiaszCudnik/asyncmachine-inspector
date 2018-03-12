@@ -80,5 +80,9 @@
     "webpack-bundle-analyzer": "^2.9.0",
     "webpack-shell-plugin": "^0.5.0",
     "workerio": "github:TobiaszCudnik/workerio"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
   }
 }

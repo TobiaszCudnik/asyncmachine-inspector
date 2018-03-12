@@ -7,7 +7,7 @@ const example_states = {
   Bar: {},
   Baz: { drop: ['Bar'] }
 }
-const example = machine(example_states)
+const example = machine(example_states).id('example')
 
 // hook up the instance to a logger client
 const network = new Network()

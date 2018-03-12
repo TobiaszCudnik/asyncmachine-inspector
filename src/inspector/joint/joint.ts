@@ -14,20 +14,21 @@ import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
-import { isProd } from '../utils';
+import { isProd } from '../utils'
 
 type IDelta = jsondiffpatch.IDeltas
 
 // simplify the link markup
 // TODO move to shapes.ts
 joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
-  markup: '<path class="connection"/><path class="marker-target"/><g class="labels" />'
+  markup:
+    '<path class="connection"/><path class="marker-target"/><g class="labels" />'
 })
 const oldLinkClassName = joint.dia.LinkView.prototype.className
 joint.dia.LinkView.prototype.className = function() {
   let class_names: string = oldLinkClassName.apply(this, arguments)
   const types = this.model.get('labels')['0'].attrs.text.text || 'pipe'
-  class_names += ' '+types
+  class_names += ' ' + types
   if (this.model.get('is_touched')) {
     class_names += ' is-touched'
   }
@@ -56,12 +57,12 @@ joint.dia.ElementView.prototype.className = function() {
       if (typeof TransitionStepTypes[key] !== 'number') continue
       let classname = 'step-' + key.toLowerCase().replace('_', '-')
       if (model.get('step_style') & TransitionStepTypes[key]) {
-        class_names += ' '+classname
+        class_names += ' ' + classname
       }
     }
-  // MACHINES
+    // MACHINES
   } else if (type == 'uml.State') {
-    class_names += ' joint-group-'+model.id
+    class_names += ' joint-group-' + model.id
     if (model.get('is_touched')) {
       class_names += ' is-touched'
     }
@@ -119,7 +120,7 @@ const log = (...args) => {}
  * - switch autolayout to ciena-blueplanet/dagre
  * - hightlight/strike through required dependencies of auto states
  * - mark which machines queue is currently executing
- * 
+ *
  * TODO
  * - slim links
  * http://jsfiddle.net/kumilingus/fjzvqhhk/
@@ -357,13 +358,12 @@ export default class Ui extends UiBase<INetworkJson> {
       let model = this.graph.getCell(cell.id)
       // TODO this can be undefined, ensure to apply all the diffs
       // in case of a cancelled rendering
-      if (!model)
-        continue
+      if (!model) continue
       for (let field of this.patch_fields) {
         if (!cell.hasOwnProperty(field)) continue
         if (model.get(field) == cell[field]) continue
         ui_changed_ids.add(cell.id)
-        model.set(field, cell[field], {silent: true})
+        model.set(field, cell[field], { silent: true })
       }
     }
     if (!isProd()) console.timeEnd('patchCells')
@@ -445,7 +445,10 @@ export default class Ui extends UiBase<INetworkJson> {
     let fg = colors[color_name + '200']
     let bg = colors[color_name + '100']
     this.stylesheet.addRule(`.joint-group-${group.get('id')}`, `color: ${fg};`)
-    this.stylesheet.addRule(`.joint-group-${group.get('id')} path`, `stroke: ${fg};`)
+    this.stylesheet.addRule(
+      `.joint-group-${group.get('id')} path`,
+      `stroke: ${fg};`
+    )
     this.stylesheet.addRule(
       `.joint-group-${group.get('id')} rect`,
       `stroke: ${fg}; fill: ${bg};`
@@ -454,14 +457,14 @@ export default class Ui extends UiBase<INetworkJson> {
 
   // TODO merge with joint.dia.ElementView.prototype.className
   syncClasses(changed_cells: string[]) {
-    console.log(`syncing classes for ${(changed_cells||[]).length} elements`)
+    console.log(`syncing classes for ${(changed_cells || []).length} elements`)
     for (const id of changed_cells) {
       const cell = this.graph.getCell(id)
       if (!cell) {
         // cell could have been deleted or the rendering was cancelled
         continue
       }
-      switch(cell.get('type')) {
+      switch (cell.get('type')) {
         case 'fsa.Arrow':
           this.syncLinkClasses(cell)
           break
@@ -479,8 +482,9 @@ export default class Ui extends UiBase<INetworkJson> {
     const view = this.paper.findViewByModel(link)
     if (!view) return
     // handle link types
-    let class_names = (link.get('labels')['0'].attrs.text.text || 'pipe'
-    ).split(' ')
+    let class_names = (link.get('labels')['0'].attrs.text.text || 'pipe').split(
+      ' '
+    )
     let el = joint.V(view.el)
     for (let name of class_names) {
       el.addClass(name)

@@ -83,6 +83,7 @@ version:
 		npm --no-git-tag-version --allow-same-version version $(version)
 
 publish:
+	make build
 	make dist-prod
 
 	rm -Rf pkg/tmp
