@@ -15,6 +15,7 @@ import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
 import Logger from '../logger/browser'
+import LoggerRemote from '../logger/remote-browser'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
@@ -46,7 +47,6 @@ export class Inspector implements ITransitions {
   socket: io.Socket
   layout
   container: Element
-  logger_id: string
   step_timer: number
   step_fn: Function
   differ: jsondiffpatch
@@ -81,10 +81,14 @@ export class Inspector implements ITransitions {
     return this._data_service
   }
 
+  self_network: Network
+  self_logger: LoggerRemote
+
   constructor(
     public container_selector = '#am-inspector',
     server_url: string,
-    debug: number
+    debug: number,
+    debug_server: string
   ) {
     this.states.id('Inspector')
     this.states.add(['TimelineOnFirst'])
@@ -96,6 +100,11 @@ export class Inspector implements ITransitions {
     }
     if (debug) {
       this.states.logLevel(debug)
+    }
+    if (debug_server) {
+      this.self_network = new Network()
+      this.self_network.addMachine(this.states)
+      this.self_logger = new LoggerRemote(this.self_network, debug_server)
     }
 
     this.layout_data = this.buildLayoutData()
@@ -666,5 +675,5 @@ export class Inspector implements ITransitions {
 
 export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  return new Inspector(container_selector, query.server, query.debug)
+  return new Inspector(container_selector, query.server, parseInt(query.debug, 10), query.debug_server)
 }
