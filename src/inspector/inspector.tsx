@@ -22,10 +22,11 @@ import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
 import { JSONSnapshot } from '../network/network-json'
 import * as db from 'idb-keyval'
-import {IDataServiceSync, ISync} from "./joint/layout-worker"
-import {isProd} from './utils'
+import { IDataServiceSync, ISync } from './joint/layout-worker'
+import { isProd } from './utils'
 
 const log = (...args) => {}
+// const log = log.bind(console)
 
 export { Logger, Network }
 
@@ -62,6 +63,7 @@ export class Inspector implements ITransitions {
   rendered_step_type: StepTypes
   overlayListener: EventListenerOrEventListenerObject
   worker_patches_pending: IPatch[] = []
+  last_manual_scroll: number = null
 
   renderUIQueue: (() => void) | null
 
@@ -70,7 +72,7 @@ export class Inspector implements ITransitions {
   }
 
   set data_service(value) {
-    log('synced the data_service', value)
+    log(`synced the data_service, max: ${value.position_max}`, value)
     this._data_service = value
     this.updateTimelineStates()
   }
@@ -79,7 +81,11 @@ export class Inspector implements ITransitions {
     return this._data_service
   }
 
-  constructor(public container_selector = '#am-inspector', server_url: string, debug: number) {
+  constructor(
+    public container_selector = '#am-inspector',
+    server_url: string,
+    debug: number
+  ) {
     this.states.id('Inspector')
     this.states.add(['TimelineOnFirst'])
     if (server_url) {
@@ -103,7 +109,10 @@ export class Inspector implements ITransitions {
         this.states.addByListener('DOMReady')
       )
     }
-    // TODO define this one
+    // setup the play interval
+    this.step_fn = this.playStep.bind(this)
+    this.step_timer = setInterval(this.step_fn, this.frametime * 1000)
+    // throttle UI updates
     this.renderUIQueue = throttle(() => {
       this.renderUI()
     }, 100)
@@ -112,7 +121,7 @@ export class Inspector implements ITransitions {
   Connecting_state(url = 'http://localhost:3757') {
     url = url.replace(/\/$/, '')
     this.socket = io(`${url}/client`)
-    this.socket.on('full-sync', (sync) => {
+    this.socket.on('full-sync', sync => {
       // reset all the data
       this.states.drop('FullSync')
       this.states.add('FullSync', sync)
@@ -146,6 +155,10 @@ export class Inspector implements ITransitions {
   // TRANSITIONS
 
   async FullSync_state(graph_data: INetworkJson) {
+    // TODO avoid duplication
+    if (!this.states.is('AutoplayOn')) {
+      this.last_manual_scroll = 0
+    }
     if (!this.states.to().includes('LayoutWorkerReady'))
       await this.states.when('LayoutWorkerReady')
     if (!isProd()) console.time('FullSync_state')
@@ -166,8 +179,6 @@ export class Inspector implements ITransitions {
     this.rendered_patch = this.data_service.patch_position
     if (!isProd()) console.timeEnd('graph.setData')
 
-    if (!isProd()) console.time('postUpdateLayout')
-    // this.graph.postUpdateLayout()
     this.last_render = Date.now()
     if (!isProd()) console.timeEnd('postUpdateLayout')
 
@@ -176,47 +187,44 @@ export class Inspector implements ITransitions {
     if (!isProd()) console.timeEnd('FullSync_state')
   }
 
-  FullSync_exit() {
+  async FullSync_end() {
+    this.last_manual_scroll = null
     this.layout_worker.reset()
     this.graph.reset()
     this.logs = []
-  }
-
-  InitialRenderDone_state() {
-    if (this.states.is('AutoplayOn')) {
-      this.states.add('Playing')
-    }
   }
 
   LayoutWorkerReady_state() {
     if (this.worker_patches_pending.length) {
       const latest = this.worker_patches_pending.pop()
       this.layout_worker.addPatches(this.worker_patches_pending)
-      for (const patch of this.worker_patches_pending) {
+      let patch
+      while ((patch = this.worker_patches_pending.shift())) {
         this.logs.push(patch.logs)
       }
-      this.states.add('DiffSync', latest)
+      log(`latest ${latest.type}`)
+      // the last patch should trigger the regular procedure
+      this.states.add('DiffSync', latest, true)
     }
   }
 
-  async DiffSync_state(patch: IPatch) {
+  // LayoutWorkerReady_end() {
+  //   // TODO GC this.layout_worker
+  // }
+
+  async DiffSync_state(patch: IPatch, autoplay = false) {
+    log(`patch type ${patch.type}`)
     const states = this.states
     // queue the patches until the worker is ready
     if (!states.to().includes('LayoutWorkerReady')) {
       this.worker_patches_pending.push(patch)
+      log(`worker not ready - patch postponed`)
       return
     }
     this.logs.push(patch.logs)
     const data_service = await this.layout_worker.addPatch(patch)
     this.data_service_last_sync = Date.now()
     this.data_service = data_service
-    // TODO move to Autoplay
-    const play = this.shouldPlay()
-    log('play', play)
-    if (play) {
-      log('Autoplay from DiffSync')
-      states.add('Playing')
-    }
     this.renderUIQueue()
   }
 
@@ -259,34 +267,28 @@ export class Inspector implements ITransitions {
   }
 
   async PlayStopClicked_state() {
+    // TODO should restart the playStep interval to react immediately
     const abort = this.states.getAbort('PlayStopClicked')
-    if (this.states.is('Playing')) {
-      this.states.drop('Playing')
-    } else if (
-      this.data_service.position_max &&
-      !this.states.is('TimelineOnLast')
-    ) {
-      this.states.add('Playing')
-    }
+    this.last_manual_scroll = null
     this.states.drop('PlayStopClicked')
   }
 
   Rendering_enter(position): boolean {
     if (position === undefined) {
-      console.log('no position')
+      log('no position')
       return false
     }
     if (this.states.from().includes('Rendering')) {
       if (this.rendering_position == position) {
         // duplicate scroll, ignore
-      console.log('duplicate scroll, ignore')
+        log('duplicate scroll, ignore')
         return false
       } else if (
         // backwards position while playing, ignore
         this.states.to().includes('Playing') &&
         position < this.rendering_position
       ) {
-      console.log('backwards position while playing, ignore')
+        log('backwards position while playing, ignore')
         return false
       }
     }
@@ -295,16 +297,20 @@ export class Inspector implements ITransitions {
   // TODO rename to DiffRendering and keep Rendering as:
   // (+FullSync-InitialRenderingDone) | DiffRendering
   async Rendering_state(position) {
-    console.log('DiffRendering start')
+    log('DiffRendering start')
     if (!isProd()) console.time('DiffRendering')
     const abort = this.states.getAbort('Rendering')
     // always get the diff from the last rendered position
-    if (this.rendered_patch != this.data_service.patch_position ||
-        this.rendered_step_type != this.data_service.step_type) {
-      console.log('fixing dataservice scroll position')
+    if (
+      this.rendered_patch != this.data_service.patch_position ||
+      this.rendered_step_type != this.data_service.step_type
+    ) {
+      log('fixing dataservice scroll position')
       // TODO no await needed?
-      await this.layout_worker.blindSetPosition(this.data_service.step_type,
-          this.rendered_patch)
+      await this.layout_worker.blindSetPosition(
+        this.data_service.step_type,
+        this.rendered_patch
+      )
       if (!isProd()) console.timeEnd('fixing dataservice scroll position')
       if (abort()) return
     }
@@ -329,13 +335,13 @@ export class Inspector implements ITransitions {
   Rendering_exit() {
     const now = Date.now()
     const force_render =
-      now - this.last_render >
-        this.playing_longest_empty_render
+      now - this.last_render > this.playing_longest_empty_render
     return !(this.states.is('Playing') && force_render)
   }
 
   async TimelineScrolled_state(value: number) {
-    console.log('TimelineScrolled')
+    log('TimelineScrolled')
+    this.last_manual_scroll = value
     if (this.states.is('InitialRenderDone')) {
       this.states.add('Rendering', value)
     } else {
@@ -346,19 +352,6 @@ export class Inspector implements ITransitions {
 
   Playing_enter() {
     return Boolean(this.data_service.position_max)
-  }
-
-  Playing_state() {
-    const abort = this.states.getAbort('Playing')
-    this.step_fn = this.playStep.bind(this, abort)
-    this.step_timer = setTimeout(this.step_fn, this.frametime * 1000)
-    this.renderUI()
-  }
-
-  Playing_end() {
-    clearTimeout(this.step_timer)
-    this.step_timer = null
-    this.renderUI()
   }
 
   LegendVisible_state() {
@@ -390,39 +383,30 @@ export class Inspector implements ITransitions {
   // METHODS
 
   // TODO merge with Render_exit
-  protected async playStep(abort: Function) {
-    if (abort()) return
+  protected async playStep() {
+    if (!this.states.is('InitialRenderDone')) return
     if (this.states.is('Rendering')) {
       await this.states.when('Rendered')
-      if (abort()) return
     }
+    if (
+      this.data_service.position == this.data_service.position_max ||
+      (this.last_manual_scroll !== null &&
+        this.last_manual_scroll != this.data_service.position_max)
+    ) {
+      this.states.drop('Playing')
+      return
+    }
+    this.states.add('Playing')
     // merged-step to catch up with the skipped frames
-    let framestimes_since_last = Math.round(
+    let frames_since_last = Math.round(
       (Date.now() - this.last_render) / (this.frametime * 1000)
     )
     let position = Math.min(
       this.data_service.position_max,
-      this.data_service.position + framestimes_since_last
+      this.data_service.position + frames_since_last
     )
-    if (framestimes_since_last) {
-      log('merge jump to position', position)
-      this.states.add('Rendering', position)
-      // TODO move to render
-      this.last_render = Date.now()
-    }
-    if (
-      this.data_service.position + framestimes_since_last <
-      this.data_service.position_max
-    ) {
-      setTimeout(this.step_fn, this.frametime * 1000)
-    }
-  }
-
-  protected shouldPlay() {
-    return (
-      this.states.is('AutoplayOn') &&
-      (!this.data_service.position_max || this.states.is('TimelineOnLast'))
-    )
+    log(`play to pos ${position} (${frames_since_last} skipped)`)
+    this.states.add('Rendering', position)
   }
 
   /**
@@ -562,11 +546,11 @@ export class Inspector implements ITransitions {
           self.states.add('StepTypeChanged', value)
       },
       onPlayButton: playstop,
-      onAutoplayToggle: () => {
-        if (self.states.is('AutoplayOn')) {
-          self.states.drop('AutoplayOn')
-        } else {
+      onAutoplaySet: (state: boolean) => {
+        if (state) {
           self.states.add('AutoplayOn')
+        } else {
+          self.states.drop('AutoplayOn')
         }
       },
       onHelpButton: () => {
@@ -634,7 +618,8 @@ export class Inspector implements ITransitions {
   async loadSnapshot(snapshot: JSONSnapshot) {
     // TODO make it a state
     this.layout_data.is_snapshot = true
-    this.states.drop('AutoplayOn')
+    // TODO why drop?
+    // this.states.drop('AutoplayOn')
     this.states.drop('FullSync')
     this.states.add('FullSync', snapshot.full_sync)
     if (this.states.is('LayoutWorkerReady')) {
@@ -647,8 +632,7 @@ export class Inspector implements ITransitions {
     }
   }
 
-  async onDataServiceScrolled(update: ISync
-  ) {
+  async onDataServiceScrolled(update: ISync) {
     if (!isProd()) console.time('onDataServiceScrolled')
     this.updateTimelineStates()
     if (update.diff) {

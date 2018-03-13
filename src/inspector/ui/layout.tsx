@@ -90,7 +90,7 @@ export type TLayoutProps = {
   onTimelineSlider: Function
   onZoomSlider: Function
   onStepType: Function
-  onAutoplayToggle: Function
+  onAutoplaySet: (state: boolean) => void
   onPlayButton: Function
   onHelpButton: Function
   onConnectSubmit: Function
@@ -135,6 +135,7 @@ export class Main extends Component<
   handleToggleAutoplay() {
     this.props.settings.set('autoplay', !this.state.autoplay)
     this.setState({ autoplay: !this.state.autoplay })
+    this.props.onAutoplaySet(!this.state.autoplay)
   }
 
   render() {

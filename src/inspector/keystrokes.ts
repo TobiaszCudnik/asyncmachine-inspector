@@ -31,11 +31,7 @@ export default function(inspector) {
         return
       }
       // TODO use #toggle
-      if (inspector.states.is('Playing')) {
-        inspector.states.drop('Playing')
-      } else {
-        inspector.states.add('Playing')
-      }
+      inspector.states.add('PlayStopClicked')
     },
     esc: () => {
       inspector.states.drop('LegendVisible')
