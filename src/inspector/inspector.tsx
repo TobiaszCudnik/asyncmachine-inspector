@@ -402,14 +402,22 @@ export class Inspector implements ITransitions {
       (this.last_manual_scroll !== null &&
         this.last_manual_scroll != this.data_service.position_max)
     ) {
-      this.states.drop('Playing')
+      if (this.states.is('Playing')) {
+        this.states.drop('Playing')
+      }
       return
     }
-    this.states.add('Playing')
-    // merged-step to catch up with the skipped frames
-    let frames_since_last = Math.round(
-      (Date.now() - this.last_render) / (this.frametime * 1000)
-    )
+    let frames_since_last
+    if (!this.states.is('Playing')) {
+      // start playing
+      this.states.add('Playing')
+      frames_since_last = 1
+    } else {
+      // merged-step to catch up with the skipped frames
+      frames_since_last = Math.round(
+        (Date.now() - this.last_render) / (this.frametime * 1000)
+      )
+    }
     let position = Math.min(
       this.data_service.position_max,
       this.data_service.position + frames_since_last
