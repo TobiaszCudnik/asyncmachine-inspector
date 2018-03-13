@@ -103,4 +103,7 @@ publish:
 
 	rm -R pkg/tmp
 
+npmi:
+	npm link asyncmachine
+
 .PHONY: test break build dist

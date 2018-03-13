@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- ami-server is missing a CLI / commander
 - cant connect using the toolbar button
 - uploading snapshots doesnt work on safari
 - more colors need, as after ~20 machines, rest is gray
@@ -9,7 +10,6 @@
 - autoconnect even without the server param?
 - download a snapshot broken?
 - legend broken colors (class name prefix?)
-- node remote logger doesnt have the file logger features
 - changing from step type - step to transitions causes a js error
   - blindSetPosition, assert, position == -1
   - while in the middle of a transition
@@ -23,9 +23,7 @@
   - after scrolling the timeline, machines arent centered (wrong)
   - state styles remain in the "in transition" (wrong)
     - if the previous step style was "steps" and the rendered view had "step styles" active
-- autoplay not honored on a logger re-connect
 - dont load the last snapshot automatically if theres a server URL param present
-- asyncmachine-inspector npm doesnt work on stackblitz
 - long distance zoom out and in blocks scrolling
   - when zoomed out and in 2 distant places
 - scroll to the middle, press play 
@@ -66,6 +64,11 @@
   - import snapshots in the async way
 
 #### Inspector
+- fix scroll / zoom / restore
+  - mark scroll borders
+  - relative container size to min/max scroll and the scroller size (min)
+  - prevent mouse move of edges outside of the container area
+- regenerate am-types
 - catch errors when loading a snapshot
   - notify the user
   - progress UI
