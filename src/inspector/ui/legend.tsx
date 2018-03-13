@@ -42,13 +42,13 @@ export default function() {
             <ul className="states">
               <li>
                 <span>
-                  <State classes={'is-set'} />
+                  <State classes={'joint-is-set'} />
                 </span>
                 <span>Regular state</span>
               </li>
               <li>
                 <span>
-                  <State classes={'is-multi is-set'} />
+                  <State classes={'joint-is-multi joint-is-set'} />
                 </span>
                 <span>Multi state</span>
               </li>
@@ -63,7 +63,7 @@ export default function() {
               </li>
               <li>
                 <span>
-                  <State classes={'is-auto'} />
+                  <State classes={'joint-is-auto'} />
                 </span>
                 <span>Auto state</span>
               </li>
@@ -73,20 +73,20 @@ export default function() {
             <ul className="states">
               <li>
                 <span>
-                  <State classes={'is-touched step-set step-requested'} />
+                  <State classes={'joint-is-touched joint-step-set joint-step-requested'} />
                 </span>
                 <span>Activate</span>
               </li>
               <li>
                 <span>
-                  <State classes={'is-touched step-set step-relation'} />
+                  <State classes={'joint-is-touched joint-step-set joint-step-relation'} />
                 </span>
                 <span>Activate by a relation</span>
               </li>
               <li>
                 <span>
                   <State
-                    classes={'is-touched step-set step-requested step-pipe'}
+                    classes={'joint-is-touched joint-step-set joint-step-requested joint-step-pipe'}
                   />
                 </span>
                 <span>Activate by piping</span>
@@ -97,7 +97,7 @@ export default function() {
               <li>
                 <span>
                   <State
-                    classes={'is-touched is-set step-drop step-requested'}
+                    classes={'joint-is-touched joint-is-set joint-step-drop joint-step-requested'}
                   />
                 </span>
                 <span>De-active</span>
@@ -105,7 +105,7 @@ export default function() {
               <li>
                 <span>
                   <State
-                    classes={'is-touched is-set step-drop step-relation'}
+                    classes={'joint-is-touched joint-is-set joint-step-drop joint-step-relation'}
                   />
                 </span>
                 <span>De-active by a relation</span>
@@ -114,7 +114,7 @@ export default function() {
                 <span>
                   <State
                     classes={
-                      'is-touched is-set step-drop step-requested step-pipe'
+                      'joint-is-touched joint-is-set joint-step-drop joint-step-requested joint-step-pipe'
                     }
                   />
                 </span>
@@ -125,7 +125,7 @@ export default function() {
               <h5>Others</h5>
               <li>
                 <span>
-                  <State classes={'step-cancel'} />
+                  <State classes={'joint-step-cancel'} />
                 </span>
                 <span>Cancelled</span>
               </li>
@@ -208,7 +208,7 @@ export default function() {
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
-                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default add"
+                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default joint-add"
                       data-type="fsa.Arrow"
                     >
                       <path
@@ -264,7 +264,7 @@ export default function() {
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
-                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default require"
+                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default joint-require"
                       data-type="fsa.Arrow"
                     >
                       <path
@@ -320,7 +320,7 @@ export default function() {
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
-                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default drop"
+                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default joint-drop"
                       data-type="fsa.Arrow"
                     >
                       <path
@@ -379,7 +379,7 @@ export default function() {
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
-                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default add"
+                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default joint-add"
                       data-type="fsa.Arrow"
                     >
                       <path
@@ -435,7 +435,7 @@ export default function() {
                   <svg style={{ width: 80, height: 25 }}>
                     <g
                       id="j_49"
-                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default drop"
+                      className="joint-cell joint-type-fsa joint-type-fsa-arrow joint-link joint-theme-default joint-drop"
                       data-type="fsa.Arrow"
                     >
                       <path
