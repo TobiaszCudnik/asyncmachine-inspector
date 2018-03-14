@@ -1,4 +1,4 @@
-// import Graph from 'graphs'
+// TODO rename to joint/graph.ts and joint/graph.css
 import { INetworkJson, TState, TMachine, TLink, TCell } from './joint-network'
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from '../graph'
@@ -14,7 +14,7 @@ import * as Stylesheet from 'stylesheet.js'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
-import { isProd } from '../utils'
+import { colorIsDark, hexToRgb, isProd } from '../utils'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -172,7 +172,9 @@ export default class Ui extends UiBase<INetworkJson> {
   reset() {
     this.graph.clear()
     this.initGraphLayout()
-    // TODO reset stylesheet and color assignments
+    this.parseColors()
+    this.group_colors = {}
+    this.stylesheet.clear()
   }
 
   async render(el) {
@@ -251,20 +253,15 @@ export default class Ui extends UiBase<INetworkJson> {
     }
   }
 
-
   zoom(level: number, offset_x?: number, offset_y?: number) {
     // @ts-ignore
     const current_level = this.paper.scale().sx
     this.paper.scale(level, level)
-    const offset_x_ratio = offset_x
-      ? offset_x / this.container.width()
-      : 0.5
-    const offset_y_ratio = offset_y
-      ? offset_y / this.container.height()
-      : 0.5
+    const offset_x_ratio = offset_x ? offset_x / this.container.width() : 0.5
+    const offset_y_ratio = offset_y ? offset_y / this.container.height() : 0.5
     this.container.width(this.width * level)
     this.container.height(this.height * level)
-    const el = this.scroll_element;
+    const el = this.scroll_element
     if (level > current_level) {
       // ZOOM IN
       // X
@@ -295,7 +292,9 @@ export default class Ui extends UiBase<INetworkJson> {
     const first_run = !this.data
 
     this.data = data
-    if (!isProd()) console.time('joint/setData')
+    if (!isProd()) {
+      console.time('joint/setData')
+    }
 
     // TODO async
     // this.layout.setData(this.data, changed_cells)
@@ -334,7 +333,9 @@ export default class Ui extends UiBase<INetworkJson> {
       this.postUpdateLayout(changed_cells)
     }
 
-    if (!isProd()) console.timeEnd('joint/setData')
+    if (!isProd()) {
+      console.timeEnd('joint/setData')
+    }
   }
 
   async updateCells(
@@ -342,17 +343,23 @@ export default class Ui extends UiBase<INetworkJson> {
     was_add_remove: boolean = false,
     layout_data
   ) {
-    if (!isProd()) console.time('updateCells')
+    if (!isProd()) {
+      console.time('updateCells')
+    }
     const ui_changed_ids = this.patchCells(changed_ids)
     if (was_add_remove) {
       await this.setData(this.data, layout_data, changed_ids)
     }
     this.postUpdateLayout(ui_changed_ids)
-    if (!isProd()) console.timeEnd('updateCells')
+    if (!isProd()) {
+      console.timeEnd('updateCells')
+    }
   }
 
   patchCells(cell_ids: string[]) {
-    if (!isProd()) console.time('patchCells')
+    if (!isProd()) {
+      console.time('patchCells')
+    }
     const ui_changed_ids = new Set<string>()
     for (let cell of this.getDataCellsByIds(cell_ids)) {
       let model = this.graph.getCell(cell.id)
@@ -366,7 +373,9 @@ export default class Ui extends UiBase<INetworkJson> {
         model.set(field, cell[field], { silent: true })
       }
     }
-    if (!isProd()) console.timeEnd('patchCells')
+    if (!isProd()) {
+      console.timeEnd('patchCells')
+    }
     return [...ui_changed_ids]
   }
 
@@ -393,22 +402,34 @@ export default class Ui extends UiBase<INetworkJson> {
     // })
 
     if (changed_ids && changed_ids.length) {
-      if (!isProd()) console.time('syncClasses')
+      if (!isProd()) {
+        console.time('syncClasses')
+      }
       this.syncClasses(changed_ids)
-      if (!isProd()) console.timeEnd('syncClasses')
+      if (!isProd()) {
+        console.timeEnd('syncClasses')
+      }
     }
 
-    if (!isProd()) console.time('assignColors')
+    if (!isProd()) {
+      console.time('assignColors')
+    }
     this.assignColors()
-    if (!isProd()) console.timeEnd('assignColors')
+    if (!isProd()) {
+      console.timeEnd('assignColors')
+    }
   }
 
   parseColors() {
-    // 37 colors, TODO find more
     this.available_colors = []
-    for (let color of Object.keys(colors)) {
-      if (color.slice(-3) != '100' || color.slice(-4) == 'A100') continue
-      this.available_colors.push(color.slice(0, -3))
+    for (let [name, hex] of Object.entries(colors)) {
+      // A100 to A700
+      // http://www.material-ui.com/#/customization/colors
+      if (hex[0] != '#') continue
+      if (name.includes('grey') || name.includes('brown')) continue
+      const rgb = hexToRgb(hex)
+      if (!colorIsDark(rgb.r, rgb.g, rgb.b)) continue
+      this.available_colors.push(hex as string)
     }
   }
 
@@ -418,16 +439,16 @@ export default class Ui extends UiBase<INetworkJson> {
     )
   }
 
-  getColor(group): string {
+  getColor(input: string): string {
     // TODO constant color per group (by ID)
     if (!this.available_colors.length) return null
-    let index = [...group.id]
+    let index = [...input]
       .map(a => a.charCodeAt(0))
-      .reduce((prev, curr) => (prev || 0) * curr)
+      .reduce((prev, curr) => (prev || 0) * curr + curr)
     index = index % (this.available_colors.length - 1)
     let color = this.available_colors[index]
     // remove the color
-    this.available_colors.splice(index, 1)
+    // this.available_colors.splice(index, 1)
     return color
   }
 
@@ -435,15 +456,15 @@ export default class Ui extends UiBase<INetworkJson> {
     for (let group of this.getGroups()) {
       let id = group.get('id')
       if (this.group_colors[id]) continue
-      let color = this.getColor(group)
-      this.group_colors[id] = color
-      this.applyColor(group, color)
+      let fg = this.getColor(group.id)
+      let bg = this.getColor([...group.id].reverse())
+      this.group_colors[id] = { bg, fg }
+      this.applyColor(group, { bg, fg })
     }
   }
 
-  applyColor(group, color_name) {
-    let fg = colors[color_name + '200']
-    let bg = colors[color_name + '100']
+  applyColor(group, colors: { fg: string; bg: string }) {
+    let { fg, bg } = colors
     this.stylesheet.addRule(`.joint-group-${group.get('id')}`, `color: ${fg};`)
     this.stylesheet.addRule(
       `.joint-group-${group.get('id')} path`,
