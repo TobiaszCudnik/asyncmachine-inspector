@@ -29,7 +29,7 @@ import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar'
 import Legend from './legend'
 import ConnectionDialog from './connection-form'
 // TODO joint-specific imports
-import joint_css from '../joint/joint.css'
+import joint_css from '../joint/base.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
 import { TMachine } from '../joint/network'

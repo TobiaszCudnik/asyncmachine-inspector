@@ -1,6 +1,6 @@
 import renderLayout, { TLayoutProps } from './ui/layout'
 // UI type
-import Graph from './joint/joint'
+import Graph from './joint/graph'
 // TODO loose this magic once worker modules are here
 import * as LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
 import { INetworkJson } from './joint/network'
@@ -26,8 +26,8 @@ import * as db from 'idb-keyval'
 import { IDataServiceSync, ISync } from './joint/layout-worker'
 import { isProd } from './utils'
 
-const log = (...args) => {}
-// const log = log.bind(console)
+// const log = (...args) => {}
+const log = console.log.bind(console)
 
 export { Logger, Network }
 
@@ -72,7 +72,7 @@ export class Inspector implements ITransitions {
   }
 
   set data_service(value) {
-    log(`synced the data_service, max: ${value.position_max}`, value)
+    // log(`synced the data_service, max: ${value.position_max}`, value)
     this._data_service = value
     this.updateTimelineStates()
   }
@@ -205,16 +205,18 @@ export class Inspector implements ITransitions {
     this.logs = []
   }
 
-  LayoutWorkerReady_state() {
+  async LayoutWorkerReady_state() {
     if (!this.worker_patches_pending.length) return
-    this.addPatches(this.worker_patches_pending)
+    await this.addPatches(this.worker_patches_pending)
   }
 
   // Add patches in a bulk, but ending with a regular render
   // @param patches List of patches. MODIFIED by reference.
-  addPatches(patches: IPatch[]) {
+  async addPatches(patches: IPatch[]) {
     const latest = patches.pop()
-    this.layout_worker.addPatches(patches)
+    console.time('addPatches')
+    // await this.layout_worker.addPatches(patches)
+    console.timeEnd('addPatches')
     let patch
     while ((patch = patches.shift())) {
       this.logs.push(patch.logs)
@@ -224,17 +226,16 @@ export class Inspector implements ITransitions {
     this.states.add('DiffSync', latest)
   }
 
-  // LayoutWorkerReady_end() {
-  //   // TODO GC this.layout_worker
+gt   //   // TODO GC this.layout_worker
   // }
 
   async DiffSync_state(patch: IPatch) {
-    log(`patch type ${patch.type}`)
+    // log(`patch type ${patch.type}`)
     const states = this.states
     // queue the patches until the worker is ready
     if (!states.to().includes('LayoutWorkerReady')) {
       this.worker_patches_pending.push(patch)
-      log(`worker not ready - patch postponed`)
+      // log(`worker not ready - patch postponed`)
       return
     }
     this.logs.push(patch.logs)
@@ -649,7 +650,7 @@ export class Inspector implements ITransitions {
     this.states.add('FullSync', snapshot.full_sync)
     if (this.states.is('LayoutWorkerReady')) {
       // TODO maybe snapshot shouldnt be mutated?
-      this.addPatches(snapshot.patches)
+      await this.addPatches(snapshot.patches)
     } else {
       this.worker_patches_pending.push(...snapshot.patches)
     }

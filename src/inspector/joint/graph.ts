@@ -292,9 +292,7 @@ export default class Ui extends UiBase<INetworkJson> {
     const first_run = !this.data
 
     this.data = data
-    if (!isProd()) {
-      console.time('joint/setData')
-    }
+    if (!isProd()) console.time('joint/setData')
 
     // TODO async
     // this.layout.setData(this.data, changed_cells)
@@ -333,9 +331,7 @@ export default class Ui extends UiBase<INetworkJson> {
       this.postUpdateLayout(changed_cells)
     }
 
-    if (!isProd()) {
-      console.timeEnd('joint/setData')
-    }
+    if (!isProd()) console.timeEnd('joint/setData')
   }
 
   async updateCells(
@@ -343,23 +339,17 @@ export default class Ui extends UiBase<INetworkJson> {
     was_add_remove: boolean = false,
     layout_data
   ) {
-    if (!isProd()) {
-      console.time('updateCells')
-    }
+    if (!isProd()) console.time('updateCells')
     const ui_changed_ids = this.patchCells(changed_ids)
     if (was_add_remove) {
       await this.setData(this.data, layout_data, changed_ids)
     }
     this.postUpdateLayout(ui_changed_ids)
-    if (!isProd()) {
-      console.timeEnd('updateCells')
-    }
+    if (!isProd()) console.timeEnd('updateCells')
   }
 
   patchCells(cell_ids: string[]) {
-    if (!isProd()) {
-      console.time('patchCells')
-    }
+    if (!isProd()) console.time('patchCells')
     const ui_changed_ids = new Set<string>()
     for (let cell of this.getDataCellsByIds(cell_ids)) {
       let model = this.graph.getCell(cell.id)
@@ -373,9 +363,7 @@ export default class Ui extends UiBase<INetworkJson> {
         model.set(field, cell[field], { silent: true })
       }
     }
-    if (!isProd()) {
-      console.timeEnd('patchCells')
-    }
+    if (!isProd()) console.timeEnd('patchCells')
     return [...ui_changed_ids]
   }
 
@@ -402,22 +390,14 @@ export default class Ui extends UiBase<INetworkJson> {
     // })
 
     if (changed_ids && changed_ids.length) {
-      if (!isProd()) {
-        console.time('syncClasses')
-      }
+      if (!isProd()) console.time('syncClasses')
       this.syncClasses(changed_ids)
-      if (!isProd()) {
-        console.timeEnd('syncClasses')
-      }
+      if (!isProd()) console.timeEnd('syncClasses')
     }
 
-    if (!isProd()) {
-      console.time('assignColors')
-    }
+    if (!isProd()) console.time('assignColors')
     this.assignColors()
-    if (!isProd()) {
-      console.timeEnd('assignColors')
-    }
+    if (!isProd()) console.timeEnd('assignColors')
   }
 
   parseColors() {
@@ -431,6 +411,7 @@ export default class Ui extends UiBase<INetworkJson> {
       if (!colorIsDark(rgb.r, rgb.g, rgb.b)) continue
       this.available_colors.push(hex as string)
     }
+    console.log(`${this.available_colors.length} colors available`)
   }
 
   getGroups() {
@@ -439,27 +420,28 @@ export default class Ui extends UiBase<INetworkJson> {
     )
   }
 
-  getColor(input: string): string {
+  getColor(input: string): {fg: string, bg: string} {
     // TODO constant color per group (by ID)
     if (!this.available_colors.length) return null
     let index = [...input]
       .map(a => a.charCodeAt(0))
       .reduce((prev, curr) => (prev || 0) * curr + curr)
     index = index % (this.available_colors.length - 1)
-    let color = this.available_colors[index]
-    // remove the color
-    // this.available_colors.splice(index, 1)
-    return color
+    return {
+      fg: this.available_colors[index],
+      bg: this.available_colors[index + 1]
+        ? this.available_colors[index + 1]
+        : this.available_colors[0]
+    }
   }
 
   assignColors() {
     for (let group of this.getGroups()) {
       let id = group.get('id')
       if (this.group_colors[id]) continue
-      let fg = this.getColor(group.id)
-      let bg = this.getColor([...group.id].reverse())
-      this.group_colors[id] = { bg, fg }
-      this.applyColor(group, { bg, fg })
+      const color = this.getColor(group.id)
+      this.group_colors[id] = color
+      this.applyColor(group, color)
     }
   }
 
