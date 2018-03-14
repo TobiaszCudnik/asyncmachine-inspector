@@ -10,9 +10,6 @@
 - autoconnect even without the server param?
 - download a snapshot broken?
 - legend broken colors (class name prefix?)
-- changing from step type - step to transitions causes a js error
-  - blindSetPosition, assert, position == -1
-  - while in the middle of a transition
 - refresh doesnt preserve the scroll position
   - becasue of the zoom issue, its impossible to find the rendered graph
   - inspector -> svg -> scroll to view is a tmp workaround
@@ -26,10 +23,6 @@
 - dont load the last snapshot automatically if theres a server URL param present
 - long distance zoom out and in blocks scrolling
   - when zoomed out and in 2 distant places
-- scroll to the middle, press play 
-  - playing starts from a later position
-  - should start from the selected one
-  - affects all the step types
 - is-touched highlighting during a transition is broken
 - Cancelled states dont get un-marked (repro)
 - cant distinguish cancelled from requested
@@ -64,6 +57,10 @@
   - import snapshots in the async way
 
 #### Inspector
+- hotkeys
+	- go to step
+	- change step type
+- API for setting markers on the timeline
 - fix scroll / zoom / restore
   - mark scroll borders
   - relative container size to min/max scroll and the scroller size (min)
