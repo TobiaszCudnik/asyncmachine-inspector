@@ -1,37 +1,21 @@
 # TODO
 
 #### Bugs
+- resuming from a server with many diffs hangs the worker
+  - increase the timeout
+  - split packages into async batches
+- "Transition - Next" with stepType=step isnt correct
 - ami-server is missing a CLI / commander
-- cant connect using the toolbar button
 - uploading snapshots doesnt work on safari
-- more colors need, as after ~20 machines, rest is gray
-- loading a snapshot doesnt show the log entires, but
-  - resuming from the last one does (with the same snapshot data)
-- autoconnect even without the server param?
-- download a snapshot broken?
-- legend broken colors (class name prefix?)
-- refresh doesnt preserve the scroll position
-  - becasue of the zoom issue, its impossible to find the rendered graph
-  - inspector -> svg -> scroll to view is a tmp workaround
-- after the logger reconnects
-  - full graph reset required
-  - timeline slider moves to 0 (OK)
-  - no re-render at all (wrong)
-  - after scrolling the timeline, machines arent centered (wrong)
-  - state styles remain in the "in transition" (wrong)
-    - if the previous step style was "steps" and the rendered view had "step styles" active
-- dont load the last snapshot automatically if theres a server URL param present
-- long distance zoom out and in blocks scrolling
-  - when zoomed out and in 2 distant places
 - is-touched highlighting during a transition is broken
-- Cancelled states dont get un-marked (repro)
+- Cancelled states dont get un-marked
+  - repro?
 - cant distinguish cancelled from requested
   - during a transition
 - sometimes drag-drop on a machine shifts states out of the machines borders
   - when dragging a machine during rendering (but not only)
   - every time in FF
 - pipe source state sometimes not marked as touched
-- uploading a snapshot after one is already loaded doesnt work
 - current transitions lacks queue source machine as "involved"
 - sometimes machine isnt marked as touched, although listed as Involved
 - require highlighted after the target state
@@ -44,13 +28,6 @@
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
 - BUG? step_type == transitions - cancelled transitions not included
-- changing step_type doesnt preserve the proper position
-  1 set step_type == transitions
-  2 move to in between some transitions
-  3 set step_type == steps
-  4 go fwd one step
-  - expected: the next transition from step 2 should start
-  - result: the previous transition from step 2 actually starts 
 - the left sidebar gets repainted when new diff arrives, although the content
   doesnt change
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
@@ -213,6 +190,7 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
+- states should have a restriction area of the parent machine
 - click on a state marks it with an outline
   - so its easy to distinguish when zoomed out
   - should work with marking transition-related states
