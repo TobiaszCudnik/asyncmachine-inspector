@@ -263,7 +263,8 @@ export class Inspector implements ITransitions {
     }
     // TODO merge with DiffRendering and FullSync
     this.last_render = Date.now()
-    this.rendered_step_type = type
+    this.rendered_step_type = this.data_service.step_type
+    this.rendered_patch = this.data_service.patch_position
     this.renderUIQueue()
     this.states.drop('StepTypeChanged')
   }
