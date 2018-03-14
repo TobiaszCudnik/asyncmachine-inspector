@@ -268,7 +268,9 @@ export default class Network extends EventEmitter {
       this.emit('change', PatchType.QUEUE_CHANGED)
     )
     // TODO dispose
-    machine.log_handlers.push( (msg, level) => {
+    machine.log_handlers.push((msg, level) => {
+      // TODO accept all the logs once Inspector supports filtering
+      if (level > 2) return
       this.logs.push({ id, msg, level })
     })
   }
@@ -376,6 +378,6 @@ export default class Network extends EventEmitter {
   }
 
   toString() {
-    return [...this.machines.keys()].map( m => m.toString() ).join('')
+    return [...this.machines.keys()].map(m => m.toString()).join('')
   }
 }
