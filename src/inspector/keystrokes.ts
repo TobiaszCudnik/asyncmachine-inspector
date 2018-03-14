@@ -9,14 +9,14 @@ export default function(inspector) {
         inspector.states.add('LegendVisible')
       }
     },
-    left: () => {
+    'alt+left': () => {
       if (isLegendVisible()) {
         return
       }
       const next_pos = Math.max(0, inspector.data_service.position - 1)
       inspector.states.add('TimelineScrolled', next_pos)
     },
-    right: () => {
+    'alt+right': () => {
       if (isLegendVisible()) {
         return
       }
