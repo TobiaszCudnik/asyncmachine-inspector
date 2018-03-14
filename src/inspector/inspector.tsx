@@ -136,6 +136,9 @@ export class Inspector implements ITransitions {
       this.states.add('FullSync', sync)
     })
     this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
+    this.socket.on('batch-sync', patches =>
+      this.addPatches(patches)
+    )
     this.socket.on('connect', this.states.addByListener('Connected'))
     // TODO connection_error event and bind retries to a state
     this.socket.on('disconnected', this.states.addByListener('Disconnected'))
@@ -215,7 +218,7 @@ export class Inspector implements ITransitions {
   async addPatches(patches: IPatch[]) {
     const latest = patches.pop()
     console.time('addPatches')
-    // await this.layout_worker.addPatches(patches)
+    await this.layout_worker.addPatches(patches)
     console.timeEnd('addPatches')
     let patch
     while ((patch = patches.shift())) {
@@ -226,7 +229,7 @@ export class Inspector implements ITransitions {
     this.states.add('DiffSync', latest)
   }
 
-gt   //   // TODO GC this.layout_worker
+  //   // TODO GC this.layout_worker
   // }
 
   async DiffSync_state(patch: IPatch) {

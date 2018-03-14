@@ -55,12 +55,21 @@ export default function createServer(
       socket.emit('full-sync', data.full_sync)
       console.log(`sending ${data.patches.length} patches...`)
       let c = 0
+      let buffer = []
       for (let patch of data.patches) {
-        socket.emit('diff-sync', patch)
+        // TODO check if still connected / cancel the loop
+        // socket.emit('diff-sync', patch)
+        buffer.push(patch)
         c++
-        if (c % 100) {
-          console.log(c + '00')
-          await delay(100)
+        // if (c % 100) {
+        //   console.log(c + '00')
+        //   await delay(100)
+        // }
+        if (c % 100 == 0) {
+          socket.emit('batch-sync', buffer)
+          buffer = []
+          console.log(c)
+          await delay(500)
         }
       }
     }

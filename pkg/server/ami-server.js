@@ -20,11 +20,13 @@ const params = {
 }
 
 if (params.snapshot_file) {
-    console.log(`Loading a snapshot from ${params.snapshot_file}`)
+  console.log(`Loading a snapshot from ${params.snapshot_file}`)
 }
-const snapshot = params.snapshot_file ? JSON.parse(fs.readFileSync(params.snapshot_file)) : null
+const snapshot = params.snapshot_file
+  ? JSON.parse(fs.readFileSync(params.snapshot_file))
+  : null
 
 console.log(`Listening on ${params.port}`)
-require('./server/server').default(params.port, params.host, snapshot)
-    .listen(params.port)
-
+require('./server/server')
+  .default(params.port, params.host, snapshot)
+  .listen(params.port)
