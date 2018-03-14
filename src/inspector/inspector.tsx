@@ -86,7 +86,7 @@ export class Inspector implements ITransitions {
 
   constructor(
     public container_selector = '#am-inspector',
-    server_url: string,
+    public server_url: string,
     debug: number,
     debug_server: string
   ) {
@@ -197,31 +197,38 @@ export class Inspector implements ITransitions {
   }
 
   async FullSync_end() {
+    log('resetting everything...')
     this.last_manual_scroll = null
     this.layout_worker.reset()
+    // TODO reset assigned colors
     this.graph.reset()
     this.logs = []
   }
 
   LayoutWorkerReady_state() {
-    if (this.worker_patches_pending.length) {
-      const latest = this.worker_patches_pending.pop()
-      this.layout_worker.addPatches(this.worker_patches_pending)
-      let patch
-      while ((patch = this.worker_patches_pending.shift())) {
-        this.logs.push(patch.logs)
-      }
-      log(`latest ${latest.type}`)
-      // the last patch should trigger the regular procedure
-      this.states.add('DiffSync', latest, true)
+    if (!this.worker_patches_pending.length) return
+    this.addPatches(this.worker_patches_pending)
+  }
+
+  // Add patches in a bulk, but ending with a regular render
+  // @param patches List of patches. MODIFIED by reference.
+  addPatches(patches: IPatch[]) {
+    const latest = patches.pop()
+    this.layout_worker.addPatches(patches)
+    let patch
+    while ((patch = patches.shift())) {
+      this.logs.push(patch.logs)
     }
+    log(`latest ${latest.type}`)
+    // the last patch should trigger the regular procedure
+    this.states.add('DiffSync', latest)
   }
 
   // LayoutWorkerReady_end() {
   //   // TODO GC this.layout_worker
   // }
 
-  async DiffSync_state(patch: IPatch, autoplay = false) {
+  async DiffSync_state(patch: IPatch) {
     log(`patch type ${patch.type}`)
     const states = this.states
     // queue the patches until the worker is ready
@@ -394,7 +401,8 @@ export class Inspector implements ITransitions {
 
   // TODO merge with Render_exit
   protected async playStep() {
-    if (!this.states.is('InitialRenderDone')) return
+    if (!this.states.is('InitialRenderDone') || !this.states.is('FullSync'))
+      return
     if (this.states.is('Rendering')) {
       await this.states.when('Rendered')
     }
@@ -585,7 +593,7 @@ export class Inspector implements ITransitions {
       onConnectSubmit: data => {
         self.states.drop('ConnectionDialogVisible')
         // TODO handle progress, errors
-        self.states.add('Connect', data.url)
+        self.states.add('Connecting', data.url)
       },
       settings: this.settings
     }
@@ -603,7 +611,8 @@ export class Inspector implements ITransitions {
       // TODO should be somewhere else
       if (
         !(this.states.is('FullSync') || this.states.is('Connecting')) &&
-        this.settings.get().last_snapshot
+        this.settings.get().last_snapshot &&
+        !this.server_url
       ) {
         setTimeout(() => {
           this.loadSnapshot(this.settings.get().last_snapshot)
@@ -636,15 +645,11 @@ export class Inspector implements ITransitions {
   async loadSnapshot(snapshot: JSONSnapshot) {
     // TODO make it a state
     this.layout_data.is_snapshot = true
-    // TODO why drop?
-    // this.states.drop('AutoplayOn')
     this.states.drop('FullSync')
     this.states.add('FullSync', snapshot.full_sync)
     if (this.states.is('LayoutWorkerReady')) {
-      const latest = snapshot.patches.pop()
-      this.layout_worker.addPatches(snapshot.patches)
-      this.states.add('DiffSync', latest)
-      // TODO divide logs
+      // TODO maybe snapshot shouldnt be mutated?
+      this.addPatches(snapshot.patches)
     } else {
       this.worker_patches_pending.push(...snapshot.patches)
     }
@@ -684,5 +689,10 @@ export class Inspector implements ITransitions {
 
 export default function(container_selector?) {
   const { query } = url.parse(window.document.location.toString(), true)
-  return new Inspector(container_selector, query.server, parseInt(query.debug, 10), query.debug_server)
+  return new Inspector(
+    container_selector,
+    query.server,
+    parseInt(query.debug, 10),
+    query.debug_server
+  )
 }

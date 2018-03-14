@@ -18,6 +18,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
     drop: ['Rendered']
   }
   Rendered: IState = {
+    require: ['FullSync'],
     drop: ['Rendering'],
     add: ['InitialRenderDone']
   }
