@@ -10,6 +10,7 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import { default as JointDataService, StepTypes } from './joint/data-service'
 import { throttle } from 'underscore'
 import States from './states'
+import { Mutex, Semaphore } from 'await-semaphore'
 import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
@@ -34,7 +35,8 @@ export { Logger, Network }
 export enum STEP_TYPE_CHANGE {
   TRANSITION = 'transitions',
   STATES = 'states',
-  STEPS = 'steps'
+  STEPS = 'steps',
+  LIVE = 'live'
 }
 
 export class Inspector implements ITransitions {
@@ -136,9 +138,7 @@ export class Inspector implements ITransitions {
       this.states.add('FullSync', sync)
     })
     this.socket.on('diff-sync', this.states.addByListener('DiffSync'))
-    this.socket.on('batch-sync', patches =>
-      this.addPatches(patches)
-    )
+    this.socket.on('batch-sync', patches => this.addPatches(patches))
     this.socket.on('connect', this.states.addByListener('Connected'))
     // TODO connection_error event and bind retries to a state
     this.socket.on('disconnected', this.states.addByListener('Disconnected'))
@@ -213,24 +213,32 @@ export class Inspector implements ITransitions {
     await this.addPatches(this.worker_patches_pending)
   }
 
+  add_patches_mutex = new Mutex()
+
   // Add patches in a bulk, but ending with a regular render
   // @param patches List of patches. MODIFIED by reference.
   async addPatches(patches: IPatch[]) {
-    if (!this.states.is("LayoutWorkerReady")) {
+    if (!this.states.is('LayoutWorkerReady')) {
       this.worker_patches_pending.push(...patches)
       return
     }
-    const latest = patches.pop()
-    console.time('addPatches')
-    await this.layout_worker.addPatches(patches)
-    console.timeEnd('addPatches')
-    let patch
-    while ((patch = patches.shift())) {
-      this.logs.push(patch.logs)
+    const release = await this.add_patches_mutex.acquire()
+    try {
+      const latest = patches.pop()
+      console.time('addPatches')
+      await db.set('addAPtches', patches)
+      await this.layout_worker.addPatches('addAPtches')
+      console.timeEnd('addPatches')
+      let patch
+      while ((patch = patches.shift())) {
+        this.logs.push(patch.logs)
+      }
+      log(`latest ${latest.type}`)
+      // the last patch should trigger the regular procedure
+      this.states.add('DiffSync', latest)
+    } finally {
+      release()
     }
-    log(`latest ${latest.type}`)
-    // the last patch should trigger the regular procedure
-    this.states.add('DiffSync', latest)
   }
 
   //   // TODO GC this.layout_worker

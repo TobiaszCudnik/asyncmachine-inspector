@@ -10,7 +10,7 @@ import {
 } from '../../network/network'
 import * as assert from 'assert/'
 import { sortedIndex } from 'underscore'
-import { isProd } from '../utils';
+import { isProd } from '../utils'
 
 export enum Direction {
   FWD,
@@ -112,7 +112,10 @@ class JointDataService extends EventEmitter {
     // const prev_patch_transition_end =
     //   this.patches.length &&
     //   this.patches[this.patches.length - 1].type == PatchType.TRANSITION_END
-    if (patch.type == PatchType.NEW_MACHINE && !this.patches_active_transitions) {
+    if (
+      patch.type == PatchType.NEW_MACHINE &&
+      !this.patches_active_transitions
+    ) {
       this.index.states.push(this.patches.length)
     } else if (
       patch.type == PatchType.TRANSITION_END &&
@@ -363,12 +366,13 @@ class JointDataService extends EventEmitter {
     // TODO cache
     return ret
   }
-  getPrevTransitionsSet(patch_position = this.patch_position): ITransitionData[] {
+  getPrevTransitionsSet(
+    patch_position = this.patch_position
+  ): ITransitionData[] {
     const index = this.index.transitions
     let current_transition_pos = _.sortedIndex(index, patch_position)
     const patch = this.patches[index[current_transition_pos]]
-    if (!patch)
-      return []
+    if (!patch) return []
     switch (patch.type) {
       case PatchType.TRANSITION_END:
         return this.buildTransitionsSet(current_transition_pos)
@@ -386,8 +390,7 @@ class JointDataService extends EventEmitter {
       current_transition_pos += 1
     }
     const patch = this.patches[index[current_transition_pos]]
-    if (!patch)
-      return []
+    if (!patch) return []
     switch (patch.type) {
       case PatchType.TRANSITION_END:
         return this.buildTransitionsSet(current_transition_pos + 2)

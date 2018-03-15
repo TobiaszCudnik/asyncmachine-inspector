@@ -91,7 +91,7 @@ workerio.publishInterface(self || window, 'api', {
     data_service = new DataService()
   },
   async fullSync() {
-    const data = await db.get('full_sync') as INetworkJson
+    const data = (await db.get('full_sync')) as INetworkJson
     data_service.data = data
     layout.setData(data)
     layout.layout()

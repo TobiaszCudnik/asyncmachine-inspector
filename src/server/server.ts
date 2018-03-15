@@ -65,12 +65,15 @@ export default function createServer(
         //   console.log(c + '00')
         //   await delay(100)
         // }
-        if (c % 100 == 0) {
+        if (c % 1000 == 0) {
           socket.emit('batch-sync', buffer)
           buffer = []
           console.log(c)
           await delay(500)
         }
+      }
+      if (buffer.length) {
+        socket.emit('batch-sync', buffer)
       }
     }
     socket.on('error', console.error.bind(console))
