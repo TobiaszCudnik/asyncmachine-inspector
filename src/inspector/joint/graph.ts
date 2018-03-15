@@ -15,7 +15,7 @@ import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
 import { colorIsDark, hexToRgb, isProd } from '../utils'
-import {StepTypes} from "./data-service";
+import { StepTypes } from './data-service'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -171,6 +171,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   }
 
   reset() {
+    this.data = null
     this.graph.clear()
     this.initGraphLayout()
     this.parseColors()
@@ -300,6 +301,22 @@ export default class JointGraph extends UiBase<INetworkJson> {
     // this.layout.setData(this.data, changed_cells)
     this.layout.syncFromLayout(layout_data, data, changed_cells)
 
+    if (first_run) {
+      const settings_zoom = this.settings.get().zoom_level
+      const { x, y } = this.settings.get().scroll
+      if (!settings_zoom || !scroll) {
+        this.fitContent()
+      }
+      if (settings_zoom) {
+        this.zoom(settings_zoom)
+      }
+      if (x || y) {
+        this.scroll_element.scrollLeft = x
+        this.scroll_element.scrollTop = y
+      }
+      this.settings.set('scroll', { x, y })
+    }
+
     // TODO wait for a full render when playing, so certain frames are fully
     // painted and cancel in other cases (like scrolling)
     // if (!first_run)
@@ -317,18 +334,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
     if (first_run) {
       for (const cell of this.graph.getCells()) {
         adjustVertices(this.graph, cell)
-      }
-      const settings_zoom = this.settings.get().zoom_level
-      const scroll = this.settings.get().scroll
-      if (!settings_zoom || !scroll) {
-        this.fitContent()
-      }
-      if (settings_zoom) {
-        this.paper.scale(settings_zoom, settings_zoom)
-      }
-      if (scroll) {
-        this.scroll_element.scrollLeft = scroll.x
-        this.scroll_element.scrollTop = scroll.y
       }
       this.postUpdateLayout(changed_cells, step_type)
     }
@@ -374,7 +379,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
     return this.data.cells.filter(cell => cell_ids.includes(cell.id))
   }
 
-  postUpdateLayout(changed_ids?: string[], step_type: StepTypes = StepTypes.STATES) {
+  postUpdateLayout(
+    changed_ids?: string[],
+    step_type: StepTypes = StepTypes.STATES
+  ) {
     // lay out the graph
     // joint.layout.DirectedGraph.layout(this.graph, {
     // 	// TODO check verticles from dagre
@@ -465,7 +473,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       `.joint-group-${group.get('id')} rect`,
       // TODO test
       // `stroke: ${fg}; fill: ${bg};`
-      `stroke: ${fg}; fill: black;`
+      `stroke: ${fg};`
     )
   }
 
