@@ -28,5 +28,7 @@ const snapshot = params.snapshot_file
 
 console.log(`Listening on ${params.port}`)
 require('./server/server')
-  .default(params.port, params.host, snapshot)
+  .default(snapshot)
+  // .listen(params.port, params.host)
   .listen(params.port)
+console.log(`.listen(${params.port}, '${params.host}')`)
