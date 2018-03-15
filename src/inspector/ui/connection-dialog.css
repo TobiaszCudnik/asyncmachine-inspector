@@ -1,58 +1,58 @@
-@import "modal.css";
+@import 'modal.css';
 
 .legend {
-    background: gray;
-    color: white;
-    width: 800px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-content: center;
-    align-items: flex-start;
+  background: gray;
+  color: white;
+  width: 800px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-content: center;
+  align-items: flex-start;
 }
 
 .legend > div {
-    vertical-align: top;
-    order: 0;
-    flex: 1 1 20%;
-    align-self: auto;
-    font-family: monospace;
+  vertical-align: top;
+  order: 0;
+  flex: 1 1 20%;
+  align-self: auto;
+  font-family: monospace;
 }
 
 .legend h4 {
-    color: gold;
-    font-size: 1.7em;
-    margin: 0 10px 10px 0;
-    border-bottom: 1px solid darkgray;
+  color: gold;
+  font-size: 1.7em;
+  margin: 0 10px 10px 0;
+  border-bottom: 1px solid darkgray;
 }
 
 .legend h5 {
-    color: gold;
-    font-size: 1.2em;
-    margin: 0 0 10px 0;
+  color: gold;
+  font-size: 1.2em;
+  margin: 0 0 10px 0;
 }
 
 .legend li > *:nth-child(1) {
-    margin-right: 1em;
-    color: yellow;
+  margin-right: 1em;
+  color: yellow;
 }
 
 .legend ul {
-    padding: 0;
-    margin: 0;
+  padding: 0;
+  margin: 0;
 }
 
 .legend ul li {
-    list-style: none;
-    margin-bottom: 0.5em;
+  list-style: none;
+  margin-bottom: 0.5em;
 }
 
 .legend ul.states li span {
-    vertical-align: middle;
-    display: inline-block;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 .legend ol {
-    padding-left: 20px;
+  padding-left: 20px;
 }

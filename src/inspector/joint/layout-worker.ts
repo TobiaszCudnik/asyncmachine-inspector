@@ -6,9 +6,10 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import { IDelta } from 'jsondiffpatch'
 import { IPatch, ITransitionData } from '../../network/network'
 import * as db from 'idb-keyval'
-import {INetworkJson} from "./network"
+import { INetworkJson } from './network'
 import * as assert from 'assert/'
-import { isProd } from '../utils';
+import { isProd } from '../utils'
+import { isString } from 'underscore'
 
 export interface IDataServiceSync {
   position: number
@@ -44,7 +45,10 @@ const differ = jsondiffpatch.create({
 // - patch
 // - changed_ids
 // into DataServiceScrollUpdate
-async function prepareDiffUpdate(changed_ids: string[], prev_position: number): Promise<ISync> {
+async function prepareDiffUpdate(
+  changed_ids: string[],
+  prev_position: number
+): Promise<ISync> {
   const update: ISync = {
     rev_diff: null,
     diff: null,
@@ -60,9 +64,9 @@ async function prepareDiffUpdate(changed_ids: string[], prev_position: number): 
       update.diff = data_service.patches[data_service.patch_position].diff
     }
   } else if (prev_position != data_service.position) {
-    if (!isProd()) console.time('db.set(\'scroll_result\')')
+    if (!isProd()) console.time("db.set('scroll_result')")
     await db.set('scroll_result', data_service.data)
-    if (!isProd()) console.timeEnd('db.set(\'scroll_result\')')
+    if (!isProd()) console.timeEnd("db.set('scroll_result')")
     update.db_key = 'scroll_result'
   }
   return update
@@ -104,22 +108,24 @@ workerio.publishInterface(self || window, 'api', {
     data_service.addPatch(patch)
     return syncDataService()
   },
-  // TODO transfer via indexedDB
-  addPatches(patches: IPatch[]) {
+  async addPatches(input: IPatch[] | string) {
+    // @ts-ignore
+    const patches: IPatch[] = isString(input) ? await db.get(input) : input
     for (let patch of patches) {
       data_service.addPatch(patch)
     }
   },
   async setStepType(type: StepTypes): Promise<ISync> {
     const prev_position = data_service.positionToPatchPosition(
-      data_service.position)
+      data_service.position
+    )
     let ids = data_service.setStepType(type)
     return await prepareDiffUpdate(ids, prev_position)
   },
   /**
-     * Used to reset the position to the last rendered one, to guarantee the
-     * diff integrity.
-     */
+   * Used to reset the position to the last rendered one, to guarantee the
+   * diff integrity.
+   */
   blindSetPosition(type: StepTypes, position: number) {
     const t = StepTypes
     switch (type) {
@@ -137,7 +143,8 @@ workerio.publishInterface(self || window, 'api', {
   // rename to syncWorker or something
   async diffSync(position: number): Promise<ISync> {
     const prev_position = data_service.positionToPatchPosition(
-      data_service.position)
+      data_service.position
+    )
     let changed_ids = data_service.scrollTo(position)
     if (data_service.last_scroll_add_remove) {
       layout.setData(data_service.data)

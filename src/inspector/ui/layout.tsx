@@ -37,8 +37,8 @@ import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
-import {StepTypes} from "../joint/data-service";
-import {STEP_TYPE_CHANGE} from "../inspector";
+import { StepTypes } from '../joint/data-service'
+import { STEP_TYPE_CHANGE } from '../inspector'
 // import whyDidYouUpdate from 'why-did-you-update'
 
 // if (process.env.NODE_ENV !== 'production') {
@@ -341,17 +341,17 @@ export class Main extends Component<
                       if (!touched[trans.machine_id].length)
                         delete touched[trans.machine_id]
                     }
-                    const items = Object.entries(
-                      touched
-                    ).map(([machine_id, states]) => {
-                      let class_name = `joint-group-${machine_id}`
-                      return (
-                        <div key={machine_id} className={class_name}>
-                          - <strong>{machineName(machine_id)}</strong>
-                          {states.length ? ': ' + states.join(' ') : ''}
-                        </div>
-                      )
-                    })
+                    const items = Object.entries(touched).map(
+                      ([machine_id, states]) => {
+                        let class_name = `joint-group-${machine_id}`
+                        return (
+                          <div key={machine_id} className={class_name}>
+                            - <strong>{machineName(machine_id)}</strong>
+                            {states.length ? ': ' + states.join(' ') : ''}
+                          </div>
+                        )
+                      }
+                    )
                     return items.length ? (
                       <div>
                         <br />

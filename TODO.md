@@ -1,10 +1,14 @@
+- live view, render in real time from a source
+  - add as a new step type "live"
+  - fps limit
+
 # TODO
 
 #### Bugs
+- "Transition - Next" with stepType=step isnt correct
 - resuming from a server with many diffs hangs the worker
   - increase the timeout
   - split packages into async batches
-- "Transition - Next" with stepType=step isnt correct
 - ami-server is missing a CLI / commander
 - uploading snapshots doesnt work on safari
 - is-touched highlighting during a transition is broken
@@ -34,6 +38,8 @@
   - import snapshots in the async way
 
 #### Inspector
+- spread network diffing into a worker pool
+- try to use directly from an HTML file
 - hotkeys
 	- go to step
 	- change step type
@@ -190,6 +196,8 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
+- Every Transition StepType
+  - highlighting each child transition in a separate step
 - states should have a restriction area of the parent machine
 - click on a state marks it with an outline
   - so its easy to distinguish when zoomed out

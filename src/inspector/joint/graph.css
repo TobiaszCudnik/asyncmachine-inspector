@@ -1,170 +1,170 @@
 .node {
-    fill: lightsteelblue;
-    stroke: #555;
-    stroke-width: 3px;
-    padding: 5px;
-    padding-right: 10px;
+  fill: lightsteelblue;
+  stroke: #555;
+  stroke-width: 3px;
+  padding: 5px;
+  padding-right: 10px;
 }
 .joint-is-auto circle {
-    fill: lightgray;
+  fill: lightgray;
 }
 .joint-is-set circle {
-    fill: yellow;
+  fill: yellow;
 }
 .joint-is-set.joint-is-multi circle {
-    fill: #bbffb5;
+  fill: #bbffb5;
 }
 circle.leaf {
-    stroke: #fff;
-    stroke-width: 1.5px;
+  stroke: #fff;
+  stroke-width: 1.5px;
 }
 circle.link-expanded {
-    stroke: #555;
-    stroke-width: 3px;
-    stroke-dasharray: 2px 4px;
+  stroke: #555;
+  stroke-width: 3px;
+  stroke-dasharray: 2px 4px;
 }
 circle.helper {
-    stroke-width: 0;
-    fill: #333;
-    opacity: 0.6;
+  stroke-width: 0;
+  fill: #333;
+  opacity: 0.6;
 }
 circle.center-of-mass {
-    fill: white;
-    stroke: red;
-    stroke-width: 5px;
+  fill: white;
+  stroke: red;
+  stroke-width: 5px;
 }
 .uml-state-name {
-    font-size: 28px;
-    font-weight: bold;
+  font-size: 28px;
+  font-weight: bold;
 }
 .uml-state-separator {
-    display: none;
+  display: none;
 }
 path.hull {
-    fill: lightsteelblue;
-    fill-opacity: 0.3;
+  fill: lightsteelblue;
+  fill-opacity: 0.3;
 }
 path.hlink {
-    stroke: #333;
-    stroke-opacity: 0.5;
-    fill: none;
-    pointer-events: none;
+  stroke: #333;
+  stroke-opacity: 0.5;
+  fill: none;
+  pointer-events: none;
 }
 line.link {
-    stroke: red;
-    stroke-opacity: 0.7;
-    pointer-events: none;
+  stroke: red;
+  stroke-opacity: 0.7;
+  pointer-events: none;
 }
 .group {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 .node {
-    opacity: 0.8;
+  opacity: 0.8;
 }
 
 path.connection {
-    stroke-width: 4px;
+  stroke-width: 4px;
 }
 
 .joint-require path.connection {
-    stroke: #555;
+  stroke: #555;
 }
 .joint-link.joint-require .labels rect {
-    stroke: #555;
-    fill: #555;
+  stroke: #555;
+  fill: #555;
 }
 
 .joint-drop path.connection,
 .inverted path.connection {
-    stroke: #C62828;
-    stroke-dasharray: 5 2;
+  stroke: #c62828;
+  stroke-dasharray: 5 2;
 }
 .joint-link.joint-drop .labels rect,
 .joint-link.inverted .labels rect {
-    stroke: #C62828;
-    fill: #C62828;
+  stroke: #c62828;
+  fill: #c62828;
 }
 
 .joint-add path.connection,
 .joint-pipe path.connection {
-    stroke: #1976D2;
+  stroke: #1976d2;
 }
 .joint-link.joint-add .labels rect,
 .joint-link.joint-pipe .labels rect {
-    stroke: #1976D2;
-    fill: #1976D2;
+  stroke: #1976d2;
+  fill: #1976d2;
 }
 
 .joint-link .labels rect {
-    fill: #7c68fc;
-    stroke: #7c68fc;
-    stroke-width: 10;
-    rx: 5;
-    ry: 5;
+  fill: #7c68fc;
+  stroke: #7c68fc;
+  stroke-width: 10;
+  rx: 5;
+  ry: 5;
 }
 
 .joint-link .labels text {
-    fill: white;
+  fill: white;
 }
 
 /* STEP REQUESTED */
 
 .joint-type-fsa-state.joint-step-requested circle {
-    stroke: red;
+  stroke: red;
 }
 
 .joint-type-fsa-state.joint-step-requested.joint-step-pipe circle {
-    stroke-dasharray: 126;
-    stroke-dashoffset: 79;
+  stroke-dasharray: 126;
+  stroke-dashoffset: 79;
 }
 
 /* STEP SET */
 
 .joint-type-fsa-state.joint-step-set circle {
-    fill: #ffb40b;
+  fill: #ffb40b;
 }
 
 .joint-type-fsa-state.joint-step-set text {
-    fill: black;
+  fill: black;
 }
 
 /* STEP DROP */
 
 .joint-type-fsa-state.joint-step-drop circle {
-    fill: brown;
+  fill: brown;
 }
 
 .joint-type-fsa-state.joint-step-drop text {
-    fill: white;
+  fill: white;
 }
 
 /* STEP CANCEL */
 
 .joint-type-fsa-state.joint-step-cancel circle {
-    fill: black;
-    stroke: red;
+  fill: black;
+  stroke: red;
 }
 
 .joint-type-fsa-state.joint-step-cancel text {
-    fill: white;
+  fill: white;
 }
 
 /* DURING TRANSITION */
 
 #graph .viewport > * {
-    opacity: 1;
-    transition-duration: 0.5s;
+  opacity: 1;
+  transition-duration: 0.5s;
 }
 
 .joint-is-touched path.connection {
-    stroke-width: 6px;
+  stroke-width: 6px;
 }
 
 #graph.during-transition .joint-viewport > :not(.joint-is-touched) {
-    opacity: 0.3;
-    /*transition-duration: 0.5s;*/
+  opacity: 0.3;
+  /*transition-duration: 0.5s;*/
 }
 
 #graph.during-transition .connection-wrap {
-    stroke: transparent;
+  stroke: transparent;
 }

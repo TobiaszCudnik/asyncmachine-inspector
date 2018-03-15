@@ -68,8 +68,8 @@ export default class GraphLayout {
   data: INetworkJson
 
   /**
-     * TODO GC after a supported limit
-     */
+   * TODO GC after a supported limit
+   */
   layouts_by_hash = new Map<string, IDelta>()
   differ: jsondiffpatch.IDiffPatch
 
@@ -131,9 +131,9 @@ export default class GraphLayout {
       }
     }
     log(
-      `Layout ${this.subgraphs
-        .size} subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() -
-        start}ms`
+      `Layout ${
+        this.subgraphs.size
+      } subgraphs (${dirty} dirty, ${cloned} cloned) ${Date.now() - start}ms`
     )
     // layout the clusters (machines)
     if (this.clusters.graph().is_dirty && this.clusters.nodes()) {
@@ -159,10 +159,10 @@ export default class GraphLayout {
   }
 
   /**
-     * Exports the whole layout data from all the graphs.
-     * 
-     * '_clusters' is a predefined key, everything else is an ID of a subgraph.
-     */
+   * Exports the whole layout data from all the graphs.
+   *
+   * '_clusters' is a predefined key, everything else is an ID of a subgraph.
+   */
   exportLayoutData(): Object {
     let ret = {}
     for (let [name, graph] of this.subgraphs.entries()) {
@@ -185,10 +185,10 @@ export default class GraphLayout {
   }
 
   /**
-     * Sync the source graph with a layout data comming from another worker.
-     *
-     * TODO: rename to import()?
-     */
+   * Sync the source graph with a layout data comming from another worker.
+   *
+   * TODO: rename to import()?
+   */
   syncFromLayout(layout_data, data, changed_cells) {
     this.importLayoutData(layout_data)
     this.syncSourceGraph(data, changed_cells)
@@ -363,10 +363,10 @@ export default class GraphLayout {
   }
 
   /**
-     * Removes parent IDs from links.
-     *
-     * parent:a::parent:b -> a::b
-     */
+   * Removes parent IDs from links.
+   *
+   * parent:a::parent:b -> a::b
+   */
   removeParentIds(id: string) {
     return id.replace(/(^|::).+?:/g, '$1')
   }
@@ -481,7 +481,7 @@ export default class GraphLayout {
           delete cell.position
         }
         // TODO check if that wont break anything
-        model.set(cell, {silent: true})
+        model.set(cell, { silent: true })
         // model.set(cell)
       }
     }

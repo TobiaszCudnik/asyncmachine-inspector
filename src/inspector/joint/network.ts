@@ -3,9 +3,7 @@ import {
   JsonDiffFactory as JsonDiffFactoryBase,
   NODE_LINK_TYPE
 } from '../../network/network-json'
-import AsyncMachine, {
-  TransitionStepTypes
-} from 'asyncmachine'
+import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
 import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
 
@@ -54,7 +52,9 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       processing_queue: Boolean(machine.queue().length),
       listeners: Object.values(machine._events || {})
         .map(e => e.length || 1)
-        .reduce((count, num) => { return (count || 0) + num }, 0),
+        .reduce((count, num) => {
+          return (count || 0) + num
+        }, 0),
       ticks: Object.values(machine.clock_).reduce((r, n) => r + n)
     }
   }

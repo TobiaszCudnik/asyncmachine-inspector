@@ -420,7 +420,7 @@ export default class Ui extends UiBase<INetworkJson> {
     )
   }
 
-  getColor(input: string): {fg: string, bg: string} {
+  getColor(input: string): { fg: string; bg: string } {
     // TODO constant color per group (by ID)
     if (!this.available_colors.length) return null
     let index = [...input]

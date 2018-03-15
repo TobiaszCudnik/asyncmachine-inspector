@@ -1,9 +1,9 @@
 /**
  * Intermediate server proxying traffic between Loggers (sources) and UIs
  * (consumers).
- * 
+ *
  * A lot of traffic is being duplicated at the moment.
- * 
+ *
  * TODO:
  * - when logger reconnects, re-bind the clients, perform a full sync
  */

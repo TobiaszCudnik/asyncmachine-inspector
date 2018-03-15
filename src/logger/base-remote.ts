@@ -1,6 +1,6 @@
 import Network, { IPatch } from '../network/network'
 import Logger from './base'
-import * as fs from "fs"
+import * as fs from 'fs'
 
 export { Network, LoggerRemote as Logger }
 
@@ -19,7 +19,7 @@ export default class LoggerRemote extends Logger {
     this.io.on('connect', () => {
       this.start()
     })
-    this.io.on('error', (err) => {
+    this.io.on('error', err => {
       console.error(err)
     })
   }

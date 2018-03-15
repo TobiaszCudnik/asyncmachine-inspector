@@ -73,20 +73,30 @@ export default function() {
             <ul className="states">
               <li>
                 <span>
-                  <State classes={'joint-is-touched joint-step-set joint-step-requested'} />
+                  <State
+                    classes={
+                      'joint-is-touched joint-step-set joint-step-requested'
+                    }
+                  />
                 </span>
                 <span>Activate</span>
               </li>
               <li>
                 <span>
-                  <State classes={'joint-is-touched joint-step-set joint-step-relation'} />
+                  <State
+                    classes={
+                      'joint-is-touched joint-step-set joint-step-relation'
+                    }
+                  />
                 </span>
                 <span>Activate by a relation</span>
               </li>
               <li>
                 <span>
                   <State
-                    classes={'joint-is-touched joint-step-set joint-step-requested joint-step-pipe'}
+                    classes={
+                      'joint-is-touched joint-step-set joint-step-requested joint-step-pipe'
+                    }
                   />
                 </span>
                 <span>Activate by piping</span>
@@ -97,7 +107,9 @@ export default function() {
               <li>
                 <span>
                   <State
-                    classes={'joint-is-touched joint-is-set joint-step-drop joint-step-requested'}
+                    classes={
+                      'joint-is-touched joint-is-set joint-step-drop joint-step-requested'
+                    }
                   />
                 </span>
                 <span>De-active</span>
@@ -105,7 +117,9 @@ export default function() {
               <li>
                 <span>
                   <State
-                    classes={'joint-is-touched joint-is-set joint-step-drop joint-step-relation'}
+                    classes={
+                      'joint-is-touched joint-is-set joint-step-drop joint-step-relation'
+                    }
                   />
                 </span>
                 <span>De-active by a relation</span>
@@ -188,11 +202,11 @@ export default function() {
                 <span>Help menu</span>
               </li>
               <li>
-                <span>LEFT</span>
+                <span>ALT + LEFT</span>
                 <span>Go back in time</span>
               </li>
               <li>
-                <span>RIGHT</span>
+                <span>ALT + RIGHT</span>
                 <span>Go fwd in time</span>
               </li>
               <li>

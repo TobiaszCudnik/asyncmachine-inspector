@@ -25,7 +25,7 @@
 .modal-content {
   max-width: 80%;
   position: relative;
-  box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, .4);
+  box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.4);
   background-color: #fff;
   padding: 15px;
   pointer-events: auto;

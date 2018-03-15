@@ -1,5 +1,5 @@
 import * as deepcopy from 'deepcopy'
-import {JSONSnapshot} from "../network/network-json";
+import { JSONSnapshot } from '../network/network-json'
 
 export interface ISettings {
   logs_visible: boolean
