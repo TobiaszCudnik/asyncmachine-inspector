@@ -120,13 +120,20 @@ export class Inspector implements ITransitions {
         this.states.addByListener('DOMReady')
       )
     }
-    // setup the play interval
-    this.step_fn = this.playStep.bind(this)
-    this.step_timer = setInterval(this.step_fn, this.frametime * 1000)
+    this.initPlayStep()
     // throttle UI updates
     this.renderUIQueue = throttle(() => {
       this.renderUI()
     }, 100)
+  }
+
+  private initPlayStep() {
+    // setup the play interval
+    if (this.step_timer) {
+      clearInterval(this.step_timer)
+    }
+    this.step_fn = this.playStep.bind(this)
+    this.step_timer = setInterval(this.step_fn, this.frametime * 1000)
   }
 
   Connecting_state(url = 'http://localhost:3757') {
@@ -273,6 +280,8 @@ export class Inspector implements ITransitions {
     }
     const t = StepTypes
     const type = StepTypes[value.toUpperCase()]
+    // TODO config
+    this.frametime = 0.5
     switch (type) {
       case t.STATES:
         this.states.add('StepByStates')
@@ -282,6 +291,8 @@ export class Inspector implements ITransitions {
         break
       case t.STEPS:
         this.states.add('StepBySteps')
+        // TODO config
+        this.frametime = 0.2
         break
     }
     const update = await this.layout_worker.setStepType(type)
@@ -295,6 +306,7 @@ export class Inspector implements ITransitions {
     this.rendered_patch = this.data_service.patch_position
     this.renderUIQueue()
     this.states.drop('StepTypeChanged')
+    this.initPlayStep()
   }
 
   DOMReady_state() {
@@ -309,8 +321,17 @@ export class Inspector implements ITransitions {
     const abort = this.states.getAbort('PlayStopClicked')
     if (this.last_manual_scroll) {
       this.last_manual_scroll = null
+      this.renderUIQueue()
     } else {
+      this.states.drop('Playing')
       this.last_manual_scroll = this.data_service.position
+      if (this.states.is('Playing')) {
+        this.states.once('Playing_end', () => {
+          this.renderUIQueue()
+        })
+      } else {
+        this.renderUIQueue()
+      }
     }
     this.states.drop('PlayStopClicked')
   }
