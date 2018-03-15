@@ -47,7 +47,7 @@ http.createServer(function (req, res) {
   fs.createReadStream(dir+path).pipe(res)
 }).listen(params.port, params.host)
 
-let url = `http://localhost:${params.port}/`
+let url = `http://${params.host}:${params.port}/`
 if (params.server) {
   url += '?server='+encodeURIComponent(params.server)
 }
