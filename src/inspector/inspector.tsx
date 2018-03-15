@@ -216,6 +216,10 @@ export class Inspector implements ITransitions {
   // Add patches in a bulk, but ending with a regular render
   // @param patches List of patches. MODIFIED by reference.
   async addPatches(patches: IPatch[]) {
+    if (!this.states.is("LayoutWorkerReady")) {
+      this.worker_patches_pending.push(...patches)
+      return
+    }
     const latest = patches.pop()
     console.time('addPatches')
     await this.layout_worker.addPatches(patches)
