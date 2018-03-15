@@ -5,11 +5,7 @@ export interface LoggerSocket extends SocketIO.Socket {
   loggerId: string
 }
 
-export default function createServer(
-  port = 3757,
-  host = 'localhost',
-  snapshot = null
-) {
+export default function createServer(snapshot = null) {
   const server = io()
 
   server.set('origins', '*:*')
