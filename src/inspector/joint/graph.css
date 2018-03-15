@@ -5,6 +5,9 @@
   padding: 5px;
   padding-right: 10px;
 }
+.joint-type-uml-state rect {
+  fill: black;
+}
 .joint-is-auto circle {
   fill: lightgray;
 }
@@ -67,7 +70,7 @@ path.connection {
 }
 
 .joint-require path.connection {
-  stroke: #555;
+  stroke: yellow;
 }
 .joint-link.joint-require .labels rect {
   stroke: #555;
@@ -167,4 +170,8 @@ path.connection {
 
 #graph.during-transition .connection-wrap {
   stroke: transparent;
+}
+
+.connection {
+  color: white;
 }

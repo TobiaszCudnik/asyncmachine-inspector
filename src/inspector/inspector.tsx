@@ -185,7 +185,12 @@ export class Inspector implements ITransitions {
     if (!isProd()) console.time('graph.setData')
     this.data_service = data_service
     // render
-    await this.graph.setData(graph_data, layout_data)
+    await this.graph.setData(
+      graph_data,
+      layout_data,
+      null,
+      this.data_service.step_type
+    )
     // TODO support rendering to the last position
     this.rendered_step_type = this.data_service.step_type
     this.rendered_patch = this.data_service.patch_position
@@ -302,7 +307,11 @@ export class Inspector implements ITransitions {
   async PlayStopClicked_state() {
     // TODO should restart the playStep interval to react immediately
     const abort = this.states.getAbort('PlayStopClicked')
-    this.last_manual_scroll = null
+    if (this.last_manual_scroll) {
+      this.last_manual_scroll = null
+    } else {
+      this.last_manual_scroll = this.data_service.position
+    }
     this.states.drop('PlayStopClicked')
   }
 
@@ -686,7 +695,8 @@ export class Inspector implements ITransitions {
       await this.graph.updateCells(
         update.changed_ids,
         this.data_service.last_scroll_add_remove,
-        update.layout_data
+        update.layout_data,
+        this.data_service.step_type
       )
     }
     if (!isProd()) console.timeEnd('onDataServiceScrolled')

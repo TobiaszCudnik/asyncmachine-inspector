@@ -15,6 +15,7 @@ import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
 import { colorIsDark, hexToRgb, isProd } from '../utils'
+import {StepTypes} from "./data-service";
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -127,7 +128,7 @@ const log = (...args) => {}
  * - clone cells from existing cells
  * http://jsfiddle.net/kumilingus/fjzvqhhk/
  */
-export default class Ui extends UiBase<INetworkJson> {
+export default class JointGraph extends UiBase<INetworkJson> {
   container: JQuery
 
   paper: joint.dia.Paper
@@ -219,8 +220,8 @@ export default class Ui extends UiBase<INetworkJson> {
       })
 
       this.container.css({
-        width: this.width,
-        height: this.height,
+        width: client_width,
+        height: client_height,
         'min-height': this.scroll_element.clientHeight,
         'min-width': this.scroll_element.clientWidth
       })
@@ -287,7 +288,8 @@ export default class Ui extends UiBase<INetworkJson> {
   async setData(
     data: INetworkJson,
     layout_data?,
-    changed_cells: string[] = null
+    changed_cells: string[] = null,
+    step_type: StepTypes = StepTypes.STATES
   ) {
     const first_run = !this.data
 
@@ -328,7 +330,7 @@ export default class Ui extends UiBase<INetworkJson> {
         this.scroll_element.scrollLeft = scroll.x
         this.scroll_element.scrollTop = scroll.y
       }
-      this.postUpdateLayout(changed_cells)
+      this.postUpdateLayout(changed_cells, step_type)
     }
 
     if (!isProd()) console.timeEnd('joint/setData')
@@ -337,14 +339,15 @@ export default class Ui extends UiBase<INetworkJson> {
   async updateCells(
     changed_ids: string[],
     was_add_remove: boolean = false,
-    layout_data
+    layout_data,
+    step_type: StepTypes = StepTypes.STATES
   ) {
     if (!isProd()) console.time('updateCells')
     const ui_changed_ids = this.patchCells(changed_ids)
     if (was_add_remove) {
       await this.setData(this.data, layout_data, changed_ids)
     }
-    this.postUpdateLayout(ui_changed_ids)
+    this.postUpdateLayout(ui_changed_ids, step_type)
     if (!isProd()) console.timeEnd('updateCells')
   }
 
@@ -371,7 +374,7 @@ export default class Ui extends UiBase<INetworkJson> {
     return this.data.cells.filter(cell => cell_ids.includes(cell.id))
   }
 
-  postUpdateLayout(changed_ids?: string[]) {
+  postUpdateLayout(changed_ids?: string[], step_type: StepTypes = StepTypes.STATES) {
     // lay out the graph
     // joint.layout.DirectedGraph.layout(this.graph, {
     // 	// TODO check verticles from dagre
@@ -389,12 +392,18 @@ export default class Ui extends UiBase<INetworkJson> {
     // 	// TODO check resizeClusters: true
     // })
 
+    // syncClasses
     if (changed_ids && changed_ids.length) {
+      // highlights
+      if (step_type == StepTypes.STATES) {
+        this.highlight(changed_ids)
+      }
       if (!isProd()) console.time('syncClasses')
       this.syncClasses(changed_ids)
       if (!isProd()) console.timeEnd('syncClasses')
     }
 
+    // assignColors
     if (!isProd()) console.time('assignColors')
     this.assignColors()
     if (!isProd()) console.timeEnd('assignColors')
@@ -454,7 +463,9 @@ export default class Ui extends UiBase<INetworkJson> {
     )
     this.stylesheet.addRule(
       `.joint-group-${group.get('id')} rect`,
-      `stroke: ${fg}; fill: ${bg};`
+      // TODO test
+      // `stroke: ${fg}; fill: ${bg};`
+      `stroke: ${fg}; fill: black;`
     )
   }
 
@@ -611,5 +622,33 @@ export default class Ui extends UiBase<INetworkJson> {
     let positions = this.settings.get().positions
     positions[cell.id] = cell.get('position')
     this.settings.set('positions', positions)
+  }
+
+  highlight(changed_ids: string[]) {
+    const views = changed_ids
+      .map(id => this.graph.getCell(id))
+      .map(cell => this.paper.findViewByModel(cell))
+    const highlighter = {
+      name: 'stroke',
+      options: {
+        attrs: {
+          'stroke-width': 3,
+          stroke: 'red',
+          d:
+            'M 68, 66         m -75, 0         a 75,75 0 1,0 150,0         a 75,75 0 1,0 -150,0',
+          transform: 'scale(0.75, .75)'
+        }
+      }
+    }
+    for (const cell of views) {
+      cell.highlight(null /* defaults to cellView.el */, {
+        highlighter: highlighter
+      })
+    }
+    setTimeout(() => {
+      for (const cell of views) {
+        cell.unhighlight(null, { highlighter })
+      }
+    }, 1000)
   }
 }
