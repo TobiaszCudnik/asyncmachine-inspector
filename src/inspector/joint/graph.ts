@@ -552,8 +552,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
       this.drag_tick_ms
     )
     let drag_enabled = false
-    this.paper.on('blank:pointerdown', () => {
+    this.paper.on('blank:pointerdown', ev => {
       drag_enabled = true
+      this.evCache.push(ev)
+      console.log('down', this.evCache.length, this.evCache)
       this.container.mousemove(drag_listener)
     })
     this.container.on('mousedown', (event, x, y) => {
@@ -564,14 +566,126 @@ export default class JointGraph extends UiBase<INetworkJson> {
         y: event.clientY + el.scrollTop
       }
     })
-    this.paper.on('cell:pointerup blank:pointerup', () => {
+    // this.paper.on('blank:pointermove', e => {
+    //   console.log('pointermove')
+    //   this.scroll_element.scrollLeft += this.scroll_element.scrollLeft*
+    // })
+    this.paper.on('cell:pointerup blank:pointerup', ev => {
       this.drag_start_pos = null
       drag_enabled = false
+      const i = this.evCache.findIndex(ev2 => ev.pointerId == ev2.pointerId)
+      this.evCache.splice(i, 1)
+      console.log('up', this.evCache.length, this.evCache)
       this.container.unbind('mousemove', drag_listener)
+      if (this.evCache.length < 2) this.prevDiff = -1
     })
     this.paper.$el.on('mousewheel DOMMouseScroll', e =>
       this.mouseZoomListener(e)
     )
+    this.paper.on('blank:pointermove', e => {
+      console.log('pointermove', e.changedTouches)
+      this.touchZoomListener(e)
+    })
+    this.container.on(
+      'gesturechange',
+      e => {
+      console.log('pointermove', e.changedTouches)
+        console.log('e', e)
+        console.log('e.scale', e.scale)
+        if (e.scale < 1.0) {
+          this.zoom(this.paper.scale().sx * 1.3)
+        } else if (e.scale > 1.0) {
+          this.zoom(this.paper.scale().sx * 0.7)
+        }
+      }
+    )
+    this.container.on('gesturechange', () => console.log('gesturechange'))
+    this.container.on('gesturestart', () => console.log('gesturestart'))
+  }
+
+  bindTouchZoom() {
+    // const drag_listener = throttle(
+    //   e => this.dragScrollListener(e),
+    //   this.drag_tick_ms
+    // )
+    // let drag_enabled = false
+    // this.paper.on('blank:pointerdown', () => {
+    //   drag_enabled = true
+    //   this.container.mousemove(drag_listener)
+    // })
+    // this.container.on('mousedown', (event, x, y) => {
+    //   if (!drag_enabled) return
+    //   const el = this.scroll_element
+    //   this.drag_start_pos = {
+    //     x: event.clientX + el.scrollLeft,
+    //     y: event.clientY + el.scrollTop
+    //   }
+    // })
+    // this.paper.on('cell:pointerup blank:pointerup', () => {
+    //   this.drag_start_pos = null
+    //   drag_enabled = false
+    //   this.container.unbind('mousemove', drag_listener)
+    // })
+    // this.paper.$el.on('mousewheel DOMMouseScroll', e =>
+    //   this.mouseZoomListener(e)
+    // )
+    // var el = this.paper.getArea()
+    // el.onpointerdown = this.pointerDownListener.bind(this)
+    // el.onpointermove = this.pinchListener.bind(this)
+    // // Use same handler for pointer{up,cancel,out,leave} events since
+    // // the semantics for these events - in this app - are the same.
+    // const up = this.pinchListener.bind(this)
+    // el.onpointerup = up
+    // el.onpointercancel = up
+    // el.onpointerout = up
+    // el.onpointerleave = up
+  }
+
+  evCache = []
+  prevDiff = -1
+
+  pointerDownListener(ev) {
+    this.evCache.push(ev)
+    log('pointerDown', ev)
+  }
+
+  pointerUpListener(ev) {
+    log(ev.type, ev)
+    // Remove this pointer from the cache and reset the target's
+    // background and border
+    const i = this.evCache.findIndex(ev2 => ev.pointerId == ev2.pointerId)
+    this.evCache.splice(i, 1)
+    ev.target.style.background = 'white'
+    ev.target.style.border = '1px solid black'
+
+    // If the number of pointers down is less than two then reset diff tracker
+    if (this.evCache.length < 2) this.prevDiff = -1
+  }
+
+  touchZoomListener(ev) {
+    // If two pointers are down, check for pinch gestures
+    if (this.evCache.length == 2) {
+      // Calculate the distance between the two pointers
+      var curDiff = Math.abs(this.evCache[0].clientX - this.evCache[1].clientX)
+
+      if (this.prevDiff > 0) {
+        if (curDiff > this.prevDiff) {
+          this.zoom(this.paper.scale().sx * 0.7)
+          // The distance between the two pointers has increased
+          log('Pinch moving OUT -> Zoom in', ev)
+          // ev.target.style.background = 'pink'
+        }
+        if (curDiff < this.prevDiff) {
+          this.zoom(this.paper.scale().sx * 1.3)
+          // The distance between the two pointers has decreased
+          log('Pinch moving IN -> Zoom out', ev)
+          // ev.target.style.background = 'lightblue'
+        }
+      }
+
+      // Cache the distance for the next move event
+      this.prevDiff = curDiff
+    }
   }
 
   dragScrollListener(e) {

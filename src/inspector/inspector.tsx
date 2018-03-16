@@ -27,8 +27,8 @@ import * as db from 'idb-keyval'
 import { IDataServiceSync, ISync } from './joint/layout-worker'
 import { isProd } from './utils'
 
-// const log = (...args) => {}
-const log = console.log.bind(console)
+const log = (...args) => {}
+// const log = console.log.bind(console)
 
 export { Logger, Network }
 
@@ -125,7 +125,11 @@ export class Inspector implements ITransitions {
     this.renderUIQueue = throttle(() => {
       this.renderUI()
     }, 100)
+    this.goToLast = throttle(() => {
+      this.states.add('Rendering', this.data_service.position_max)
+    }, 500)
   }
+  goToLast: Function
 
   private initPlayStep() {
     // setup the play interval
@@ -209,6 +213,10 @@ export class Inspector implements ITransitions {
     this.states.add('Rendered')
     this.renderUIQueue()
     if (!isProd()) console.timeEnd('FullSync_state')
+
+    if (this.data_service.step_type == StepTypes.LIVE) {
+      this.goToLast()
+    }
   }
 
   async FullSync_end() {
@@ -238,14 +246,14 @@ export class Inspector implements ITransitions {
     try {
       const latest = patches.pop()
       console.time('addPatches')
-      await db.set('addAPtches', patches)
-      await this.layout_worker.addPatches('addAPtches')
+      await db.set('addPatches', patches)
+      await this.layout_worker.addPatches('addPatches')
       console.timeEnd('addPatches')
       let patch
       while ((patch = patches.shift())) {
         this.logs.push(patch.logs)
       }
-      log(`latest ${latest.type}`)
+      // log(`latest ${latest.type}`)
       // the last patch should trigger the regular procedure
       this.states.add('DiffSync', latest)
     } finally {
@@ -270,6 +278,9 @@ export class Inspector implements ITransitions {
     this.data_service_last_sync = Date.now()
     this.data_service = data_service
     this.renderUIQueue()
+    if (this.data_service.step_type == StepTypes.LIVE) {
+      this.goToLast()
+    }
   }
 
   async StepTypeChanged_state(value: STEP_TYPE_CHANGE) {
@@ -283,11 +294,17 @@ export class Inspector implements ITransitions {
     // TODO config
     this.frametime = 0.5
     switch (type) {
+      case t.LIVE:
+        this.states.add('StepByLive')
+        break
       case t.STATES:
         this.states.add('StepByStates')
         break
       case t.TRANSITIONS:
         this.states.add('StepByTransitions')
+        break
+      case t.NESTED_TRANSITIONS:
+        this.states.add('StepByNestedTransitions')
         break
       case t.STEPS:
         this.states.add('StepBySteps')
@@ -307,6 +324,9 @@ export class Inspector implements ITransitions {
     this.renderUIQueue()
     this.states.drop('StepTypeChanged')
     this.initPlayStep()
+    if (type == t.LIVE) {
+      this.goToLast()
+    }
   }
 
   DOMReady_state() {
@@ -512,8 +532,12 @@ export class Inspector implements ITransitions {
       get step_type() {
         let t = StepTypes
         switch (self.data_service.step_type) {
+          case t.LIVE:
+            return 'live'
           case t.TRANSITIONS:
             return 'transitions'
+          case t.NESTED_TRANSITIONS:
+            return 'nested_transitions'
           case t.STEPS:
             return 'steps'
         }

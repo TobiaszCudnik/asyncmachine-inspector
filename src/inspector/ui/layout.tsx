@@ -159,9 +159,11 @@ export class Main extends Component<
                 value={this.props.step_type}
                 onChange={this.props.onStepType}
               >
+                <MenuItem value="live" primaryText="Live" />
                 <MenuItem value="states" primaryText="States" />
                 <MenuItem value="transitions" primaryText="Transitions" />
-                <MenuItem value="steps" primaryText="Transition steps" />
+                <MenuItem value="nested_transitions" primaryText="Nested Transitions" />
+                <MenuItem value="steps" primaryText="Every Step" />
               </SelectField>
             </ToolbarGroup>
             <ToolbarGroup>

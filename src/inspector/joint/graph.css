@@ -6,7 +6,8 @@
   padding-right: 10px;
 }
 .joint-type-uml-state rect {
-  fill: black;
+  /*fill: black;*/
+  fill: rgb(33, 33, 33);;
 }
 .joint-is-auto circle {
   fill: lightgray;
@@ -39,6 +40,7 @@ circle.center-of-mass {
 .uml-state-name {
   font-size: 28px;
   font-weight: bold;
+  fill: white;
 }
 .uml-state-separator {
   display: none;
@@ -174,4 +176,8 @@ path.connection {
 
 .connection {
   color: white;
+}
+
+.marker-target {
+  fill: white;
 }

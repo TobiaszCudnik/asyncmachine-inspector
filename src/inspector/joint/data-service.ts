@@ -19,8 +19,10 @@ export enum Direction {
 
 export enum StepTypes {
   STEPS,
+  NESTED_TRANSITIONS,
   TRANSITIONS,
-  STATES
+  STATES,
+  LIVE
 }
 
 const log = (...args) => {}
@@ -56,10 +58,12 @@ class JointDataService extends EventEmitter {
   index: {
     states: number[]
     transitions: number[]
+    nested_transitions: number[]
   } = {
     // `[0]` means initial full sync
     states: [0],
-    transitions: [0]
+    transitions: [0],
+    nested_transitions: [0]
   }
   patches_active_transitions = 0
   get current_patch(): IPatch | null {
@@ -80,10 +84,13 @@ class JointDataService extends EventEmitter {
   get position_max() {
     const t = StepTypes
     switch (this.step_type) {
+      case t.LIVE:
       case t.STATES:
         return this.index.states.length - 1
       case t.TRANSITIONS:
         return Math.max(0, this.index.transitions.length - 1)
+      case t.NESTED_TRANSITIONS:
+        return Math.max(0, this.index.nested_transitions.length - 1)
       case t.STEPS:
         return Math.max(0, this.patches.length - 1)
     }
@@ -126,6 +133,9 @@ class JointDataService extends EventEmitter {
       // add also the prev step (STATE_CHANGE or TRANSITION_STEP)
       this.index.transitions.push(this.patches.length - 1)
       this.index.transitions.push(this.patches.length)
+      this.index.nested_transitions.push(this.patches.length - 1)
+    } else if (patch.type == PatchType.TRANSITION_START) {
+      this.index.nested_transitions.push(this.patches.length)
     }
     if (patch.type == PatchType.TRANSITION_END) {
       patch.start_index_first = this.patches_last_transition_start[0]
@@ -140,7 +150,11 @@ class JointDataService extends EventEmitter {
     if (type > old_step_type) {
       // lower granularity (grouping)
       const positions =
-        type == StepTypes.STATES ? this.index.states : this.index.transitions
+        type == StepTypes.TRANSITIONS
+          ? this.index.transitions
+          : type == StepTypes.NESTED_TRANSITIONS
+            ? this.index.nested_transitions
+            : this.index.states
       // go back to the prev step
       if (!positions.includes(this.patch_position - 1)) {
         let index = positions.findIndex(
@@ -156,6 +170,9 @@ class JointDataService extends EventEmitter {
       if (type == StepTypes.TRANSITIONS) {
         this.position =
           this.index.transitions.indexOf(this.patch_position - 1) + 1
+      } else if (type == StepTypes.NESTED_TRANSITIONS) {
+        this.position =
+          this.index.nested_transitions.indexOf(this.patch_position - 1) + 1
       } else {
         this.position = this.patch_position
       }
@@ -194,10 +211,13 @@ class JointDataService extends EventEmitter {
     // TODO asserts to early detect scrolling problems
     const t = StepTypes
     switch (this.step_type) {
+      case t.LIVE:
       case t.STATES:
         return this.index.states[position]
       case t.TRANSITIONS:
         return this.index.transitions[position]
+      case t.NESTED_TRANSITIONS:
+        return this.index.nested_transitions[position]
     }
     return position
   }

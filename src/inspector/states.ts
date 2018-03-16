@@ -52,13 +52,19 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   }
   // TODO not needed?
   StepByStates: IState = {
-    drop: ['StepByTransitions', 'StepBySteps']
+    drop: ['StepByTransitions', 'StepBySteps', 'StepByLive', 'StepByNestedTransitions']
   }
   StepByTransitions: IState = {
-    drop: ['StepByStates', 'StepBySteps']
+    drop: ['StepByStates', 'StepBySteps', 'StepByLive', 'StepByNestedTransitions']
   }
   StepBySteps: IState = {
-    drop: ['StepByTransitions', 'StepByStates']
+    drop: ['StepByTransitions', 'StepByStates', 'StepByLive', 'StepByNestedTransitions']
+  }
+  StepByNestedTransitions: IState = {
+    drop: ['StepByStates', 'StepBySteps', 'StepByLive', 'StepByTransitions']
+  }
+  StepByLive: IState = {
+    drop: ['StepByStates', 'StepBySteps', 'StepByLive', 'StepByNestedTransitions']
   }
   // UI inputs
   PlayStopClicked: IState = {}
