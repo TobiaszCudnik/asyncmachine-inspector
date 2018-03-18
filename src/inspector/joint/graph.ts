@@ -793,11 +793,13 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const positions = this.settings.get().positions
     console.time('renderMinimap')
     const machines = this.data.cells.filter(c => c.type == 'uml.State')
+    // CLEAR
     const canvas = this.minimap.getContext('2d')
     canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
     canvas.stroke()
     // const x_ratio = this.minimap.clientWidth / this.width
     // const y_ratio = this.minimap.clientHeight / this.height
+    $('#minimap').height($('#minimap').width() * (this.height / this.width))
     const clusters = this.layout.clusters
     const x_ratio = this.minimap.clientWidth / clusters._label.width
     const y_ratio = this.minimap.clientHeight / clusters._label.height
@@ -805,13 +807,17 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const is_during_transition = $('#graph.during-transition').length
 
     // ZOOM WINDOW
+    // TODO not accurate
     this.minimap_zoom_window.css({
-      width: this.minimap.clientWidth * (this.scroll_element.clientWidth / this.container.width()),
-      height: this.minimap.clientHeight * (this.scroll_element.clientHeight / this.container.height()),
-      left: this.scroll_element.scrollLeft * x_ratio,
-      top: this.scroll_element.scrollTop * y_ratio,
+      width:
+        this.minimap.clientWidth *
+        (this.scroll_element.clientWidth / this.container.width()),
+      height:
+        this.minimap.clientHeight *
+        (this.scroll_element.clientHeight / this.container.height()),
+      left: this.scroll_element.scrollLeft / this.container.width() * this.minimap.clientWidth,
+      top: this.scroll_element.scrollTop / this.container.height() * this.minimap.clientHeight
     })
-
 
     // LINKS
     for (const [id, machine] of Object.entries(clusters._nodes)) {
@@ -826,7 +832,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           let [source_ids, target_ids] = link.split('::')
           let [source_parent_id, source_id] = source_ids.split(':')
           let [target_parent_id, target_id] = target_ids.split(':')
-          const data = this.data.cells.find( i => i.id == link )
+          const data = this.data.cells.find(i => i.id == link)
           if (is_during_transition && !data.is_touched) {
             continue
           }
