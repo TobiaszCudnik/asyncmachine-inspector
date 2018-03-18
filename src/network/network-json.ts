@@ -164,6 +164,7 @@ export abstract class JsonDiffFactory<
   Json
 > {
   diffpatcher: jsondiffpatch.IDiffPatch
+  // TODO rename to json
   previous_json: Json
 
   constructor(public network: T) {
@@ -181,7 +182,7 @@ export abstract class JsonDiffFactory<
 
   generateJson() {
     // generate a new json and keep it as the last one
-    this.previous_json = this.network.generateJson()
+    return this.previous_json = this.network.generateJson()
   }
 
   generateDiff(base_json?: Json) {

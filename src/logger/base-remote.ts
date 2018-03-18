@@ -9,8 +9,9 @@ export default class LoggerRemote extends Logger {
   connected = false
   url: string
 
-  constructor(public network: Network, url = 'http://localhost:3757') {
-    super(network, false)
+  constructor(public network: Network, url = 'http://localhost:3757', options = {}) {
+    super(network, options)
+    url = url || 'http://localhost:3757'
     this.url = url.replace(/\/$/, '')
     this.io = this.socket_io(`${this.url}/logger`, {
       query: `id=${network.id}`

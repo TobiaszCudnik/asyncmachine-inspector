@@ -7,6 +7,9 @@ import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 
 export { Network, LoggerBase }
+export interface IOptions {
+  autostart: boolean
+}
 
 export default class LoggerBase extends EventEmitter {
   json: NetworkJson
@@ -21,8 +24,9 @@ export default class LoggerBase extends EventEmitter {
     }
   }
 
-  constructor(public network: Network, autostart = true) {
+  constructor(public network: Network, options: IOptions = null) {
     super()
+    this.options = options || {}
     this.json = new NetworkJson(network)
     this.differ = new JsonDiffFactory(this.json)
 
