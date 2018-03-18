@@ -802,7 +802,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const x_ratio = this.minimap.clientWidth / clusters._label.width
     const y_ratio = this.minimap.clientHeight / clusters._label.height
     const scale = this.paper.scale().sx
+    const is_during_transition = $('#graph.during-transition').length
 
+    // ZOOM WINDOW
     this.minimap_zoom_window.css({
       width: this.minimap.clientWidth * (this.scroll_element.clientWidth / this.container.width()),
       height: this.minimap.clientHeight * (this.scroll_element.clientHeight / this.container.height()),
@@ -810,11 +812,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
       top: this.scroll_element.scrollTop * y_ratio,
     })
 
-    const is_during_transition = $('#graph.during-transition').length
+
+    // LINKS
     for (const [id, machine] of Object.entries(clusters._nodes)) {
       const m = machines.find(m => m.id == id)
       if (!m) continue
-      // Links
       // if (!clusters._edgeLabels[id]) continue
       for (const [name, data] of Object.entries(clusters._edgeLabels)) {
         if (!name.match(new RegExp(`^${id}|${id}$`))) continue
@@ -824,6 +826,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
           let [source_ids, target_ids] = link.split('::')
           let [source_parent_id, source_id] = source_ids.split(':')
           let [target_parent_id, target_id] = target_ids.split(':')
+          const data = this.data.cells.find( i => i.id == link )
+          if (is_during_transition && !data.is_touched) {
+            continue
+          }
           // source_parent_id + target_parent_id
           // source
           const source = clusters._nodes[source_parent_id]
@@ -844,14 +850,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
           canvas.beginPath()
           canvas.moveTo(start.x, start.y)
           canvas.lineTo(end.x, end.y)
-          // TODO color
           canvas.strokeStyle = '#1976d2'
           canvas.stroke()
-          console.log(start)
-          console.log(end)
         }
       }
     }
+    // RECTANGLES
     for (const [id, machine] of Object.entries(clusters._nodes)) {
       const m = machines.find(m => m.id == id)
       if (!m) continue
@@ -868,6 +872,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       )
       canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 1)`
       if (!m.is_touched && is_during_transition) {
+        continue
         canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${
           color.blue
         }, 0.5)`
