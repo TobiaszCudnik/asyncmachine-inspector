@@ -246,11 +246,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
       // TODO throttle
       this.graph.on(
         'add remove change:source change:target change:position change:size',
-        _.throttle(_.partial(adjustVertices, this.graph), 100)
+        _.partial(adjustVertices, this.graph)
       )
       this.graph.on(
         'change:position change:size',
-        _.throttle(this.renderMinimap.bind(this), 100)
+        _.throttle(this.renderMinimap.bind(this), 1000)
       )
       // also when an user stops interacting with an element.
       this.paper.on('cell:pointerup', _.partial(adjustVertices, this.graph))
@@ -815,8 +815,14 @@ export default class JointGraph extends UiBase<INetworkJson> {
       height:
         this.minimap.clientHeight *
         (this.scroll_element.clientHeight / this.container.height()),
-      left: this.scroll_element.scrollLeft / this.container.width() * this.minimap.clientWidth,
-      top: this.scroll_element.scrollTop / this.container.height() * this.minimap.clientHeight
+      left:
+        this.scroll_element.scrollLeft /
+        this.container.width() *
+        this.minimap.clientWidth,
+      top:
+        this.scroll_element.scrollTop /
+        this.container.height() *
+        this.minimap.clientHeight
     })
 
     // LINKS

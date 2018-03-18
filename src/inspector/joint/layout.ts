@@ -141,6 +141,7 @@ export default class GraphLayout {
     )
     // layout the clusters (machines)
     if (this.clusters.graph().is_dirty && this.clusters.nodes()) {
+    // if (this.clusters.nodes()) {
       // TODO support the hash based cache
       dirty++
       start = Date.now()
@@ -254,7 +255,6 @@ export default class GraphLayout {
             v: source_parent_id,
             w: target_parent_id
           }
-          console.log(edge)
           let edge_data = clusters.edge(edge)
           if (edge_data) {
             // add a inner node to inner node connection
@@ -414,15 +414,16 @@ export default class GraphLayout {
 
     for (let cell of data.cells) {
       cells.set(cell.id, cell)
-      if (changed_cells && !changed_cells.includes(cell.id)) {
-        continue
-      }
+      // TODO Missing cluster re-location detection
+      // if (!(cell as TMachine).embeds && changed_cells && !changed_cells.includes(cell.id)) {
+      //   continue
+      // }
       let position = { x: 0, y: 0 }
       let size = { width: 0, height: 0 }
       if ((cell as TMachine).embeds) {
         cell = cell as TMachine
         const node = this.clusters._nodes[cell.id]
-        // restore position from the settings
+        // restore the position from the settings
         if (this.options.positions[cell.id]) {
           position = this.options.positions[cell.id]
           cell['fixed-position'] = true
@@ -487,8 +488,8 @@ export default class GraphLayout {
           delete cell.position
         }
         // TODO check if that wont break anything
-        model.set(cell, { silent: true })
-        // model.set(cell)
+        // model.set(cell, { silent: true })
+        model.set(cell)
       }
     }
 
