@@ -75,7 +75,11 @@ export default class GraphLayout {
 
   constructor(
     public source_graph?: joint.dia.Graph,
-    public options: { positions?: PositionsMap; syncLinks?: false } = {}
+    public options: {
+      positions?: PositionsMap
+      syncLinks?: false
+      dimensions?: { x: number; y: number }
+    } = {}
   ) {
     this.subgraphs = new Map<string, TDagreGraph>()
     this.clusters = new Graph({
@@ -83,8 +87,8 @@ export default class GraphLayout {
     }) as TClusterGraph
     // TODO memorize the last position through DnD
     this.clusters.setGraph({
-      width: 0,
-      height: 0,
+      width: options.dimensions && options.dimensions.x || 0,
+      height: options.dimensions && options.dimensions.y || 0,
       is_dirty: true,
       marginx: 700,
       // TODO remove once overlapping in dagre gets fixed
@@ -250,6 +254,7 @@ export default class GraphLayout {
             v: source_parent_id,
             w: target_parent_id
           }
+          console.log(edge)
           let edge_data = clusters.edge(edge)
           if (edge_data) {
             // add a inner node to inner node connection
@@ -302,6 +307,7 @@ export default class GraphLayout {
       if (type == 'machine') {
         clusters.removeNode(cell_id)
         clusters.graph().is_dirty = true
+        console.log(`deleted ${cell_id}`)
         subgraphs.delete(cell_id)
       } else if (type == 'state') {
         let [parent_id, id] = cell_id.split(':')

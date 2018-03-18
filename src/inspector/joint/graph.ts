@@ -11,6 +11,7 @@ import * as assert from 'assert/'
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as colors from 'material-ui/styles/colors'
 import * as Stylesheet from 'stylesheet.js'
+import * as hexRGB from 'hex-rgb'
 import GraphLayout from './layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
@@ -130,6 +131,7 @@ const log = (...args) => {}
  */
 export default class JointGraph extends UiBase<INetworkJson> {
   container: JQuery
+  minimap: HTMLCanvasElement
 
   paper: joint.dia.Paper
   graph: joint.dia.Graph
@@ -166,7 +168,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   initGraphLayout() {
     this.layout = new GraphLayout(this.graph, {
-      positions: this.settings.get().positions
+      positions: this.settings.get().positions,
+      dimensions: { x: this.width, y: this.height }
     })
   }
 
@@ -181,6 +184,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   async render(el) {
     this.container = $(el)
+    this.minimap = $('#minimap canvas').get(0)
+    this.minimap_zoom_window = $('#minimap .zoom-window')
     // this.container = $('<div/>')
     assert(this.container)
 
@@ -243,6 +248,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
         'add remove change:source change:target change:position change:size',
         _.throttle(_.partial(adjustVertices, this.graph), 100)
       )
+      this.graph.on(
+        'change:position change:size',
+        _.throttle(this.renderMinimap.bind(this), 100)
+      )
       // also when an user stops interacting with an element.
       this.paper.on('cell:pointerup', _.partial(adjustVertices, this.graph))
 
@@ -283,6 +292,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
     this.settings.set('zoom_level', level)
     this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
+    this.renderMinimap()
   }
 
   // TODO layout_data?
@@ -303,7 +313,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
     if (first_run) {
       const settings_zoom = this.settings.get().zoom_level
-      const { x, y } = this.settings.get().scroll
+      const { x, y } = this.settings.get().scroll || { x: 0, y: 0 }
       if (!settings_zoom || !scroll) {
         this.fitContent()
       }
@@ -315,6 +325,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
         this.scroll_element.scrollTop = y
       }
       this.settings.set('scroll', { x, y })
+      this.renderMinimap()
     }
 
     // TODO wait for a full render when playing, so certain frames are fully
@@ -337,6 +348,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       }
       this.postUpdateLayout(changed_cells, step_type)
     }
+    this.renderMinimap()
 
     if (!isProd()) console.timeEnd('joint/setData')
   }
@@ -347,6 +359,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     layout_data,
     step_type: StepTypes = StepTypes.STATES
   ) {
+    this.renderMinimap()
     if (!isProd()) console.time('updateCells')
     const ui_changed_ids = this.patchCells(changed_ids)
     if (was_add_remove) {
@@ -403,7 +416,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     // syncClasses
     if (changed_ids && changed_ids.length) {
       // highlights
-      if (step_type == StepTypes.STATES) {
+      if (step_type == StepTypes.STATES || step_type == StepTypes.LIVE) {
         this.highlight(changed_ids)
       }
       if (!isProd()) console.time('syncClasses')
@@ -414,6 +427,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     // assignColors
     if (!isProd()) console.time('assignColors')
     this.assignColors()
+    this.renderMinimap()
     if (!isProd()) console.timeEnd('assignColors')
   }
 
@@ -586,19 +600,16 @@ export default class JointGraph extends UiBase<INetworkJson> {
       console.log('pointermove', e.changedTouches)
       this.touchZoomListener(e)
     })
-    this.container.on(
-      'gesturechange',
-      e => {
+    this.container.on('gesturechange', e => {
       console.log('pointermove', e.changedTouches)
-        console.log('e', e)
-        console.log('e.scale', e.scale)
-        if (e.scale < 1.0) {
-          this.zoom(this.paper.scale().sx * 1.3)
-        } else if (e.scale > 1.0) {
-          this.zoom(this.paper.scale().sx * 0.7)
-        }
+      console.log('e', e)
+      console.log('e.scale', e.scale)
+      if (e.scale < 1.0) {
+        this.zoom(this.paper.scale().sx * 1.3)
+      } else if (e.scale > 1.0) {
+        this.zoom(this.paper.scale().sx * 0.7)
       }
-    )
+    })
     this.container.on('gesturechange', () => console.log('gesturechange'))
     this.container.on('gesturestart', () => console.log('gesturestart'))
   }
@@ -697,6 +708,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     let toolbar_el = document.querySelector('.toolbar')
     el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
     this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
+    this.renderMinimap()
   }
 
   // TODO support scaling up
@@ -744,6 +756,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     let positions = this.settings.get().positions
     positions[cell.id] = cell.get('position')
     this.settings.set('positions', positions)
+    this.renderMinimap()
   }
 
   highlight(changed_ids: string[]) {
@@ -772,5 +785,102 @@ export default class JointGraph extends UiBase<INetworkJson> {
         cell.unhighlight(null, { highlighter })
       }
     }, 1000)
+  }
+
+  minimap_zoom_window: string
+
+  renderMinimap() {
+    const positions = this.settings.get().positions
+    console.time('renderMinimap')
+    const machines = this.data.cells.filter(c => c.type == 'uml.State')
+    const canvas = this.minimap.getContext('2d')
+    canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
+    canvas.stroke()
+    // const x_ratio = this.minimap.clientWidth / this.width
+    // const y_ratio = this.minimap.clientHeight / this.height
+    const clusters = this.layout.clusters
+    const x_ratio = this.minimap.clientWidth / clusters._label.width
+    const y_ratio = this.minimap.clientHeight / clusters._label.height
+    const scale = this.paper.scale().sx
+
+    this.minimap_zoom_window.css({
+      width: this.minimap.clientWidth * (this.scroll_element.clientWidth / this.container.width()),
+      height: this.minimap.clientHeight * (this.scroll_element.clientHeight / this.container.height()),
+      left: this.scroll_element.scrollLeft * x_ratio,
+      top: this.scroll_element.scrollTop * y_ratio,
+    })
+
+    const is_during_transition = $('#graph.during-transition').length
+    for (const [id, machine] of Object.entries(clusters._nodes)) {
+      const m = machines.find(m => m.id == id)
+      if (!m) continue
+      // Links
+      // if (!clusters._edgeLabels[id]) continue
+      for (const [name, data] of Object.entries(clusters._edgeLabels)) {
+        if (!name.match(new RegExp(`^${id}|${id}$`))) continue
+        for (const link of data.cells.values()) {
+          if (link.slice(0, id.length + 1) != id + ':') continue
+          // console.log('DRAW', link)
+          let [source_ids, target_ids] = link.split('::')
+          let [source_parent_id, source_id] = source_ids.split(':')
+          let [target_parent_id, target_id] = target_ids.split(':')
+          // source_parent_id + target_parent_id
+          // source
+          const source = clusters._nodes[source_parent_id]
+          let pos = positions[source_parent_id] || {}
+          let width = source.width * x_ratio
+          let height = source.height * y_ratio
+          let x = (pos.x || source.x) * x_ratio
+          let y = (pos.y || source.y) * y_ratio
+          const start = { x: x + width / 2, y: y + height / 2 }
+          // target
+          const target = clusters._nodes[target_parent_id]
+          pos = positions[target_parent_id] || {}
+          width = target.width * x_ratio
+          height = target.height * y_ratio
+          x = (pos.x || target.x) * x_ratio
+          y = (pos.y || target.y) * y_ratio
+          const end = { x: x + width / 2, y: y + height / 2 }
+          canvas.beginPath()
+          canvas.moveTo(start.x, start.y)
+          canvas.lineTo(end.x, end.y)
+          // TODO color
+          canvas.strokeStyle = '#1976d2'
+          canvas.stroke()
+          console.log(start)
+          console.log(end)
+        }
+      }
+    }
+    for (const [id, machine] of Object.entries(clusters._nodes)) {
+      const m = machines.find(m => m.id == id)
+      if (!m) continue
+      // let $el = this.minimap.find(`#minimap-${machine.id}`)
+      // if (!$el.length) {
+      //   $el = this.minimap.append(`<div id="minimap-${machine.id}" />`)
+      // }
+      const pos = positions[id] || {}
+      const width = machine.width * x_ratio
+      const height = machine.height * y_ratio
+      //  machine.width * (this.width)
+      const color = hexRGB(
+        this.group_colors[id] ? this.group_colors[id].fg : '#FFFFFF'
+      )
+      canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 1)`
+      if (!m.is_touched && is_during_transition) {
+        canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${
+          color.blue
+        }, 0.5)`
+      }
+      // TODO drag&drop positions? settings?
+      canvas.fillRect(
+        (pos.x || machine.x) * x_ratio,
+        (pos.y || machine.y) * y_ratio,
+        width,
+        height
+      )
+      canvas.stroke()
+    }
+    console.timeEnd('renderMinimap')
   }
 }

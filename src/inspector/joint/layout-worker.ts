@@ -147,7 +147,7 @@ workerio.publishInterface(self || window, 'api', {
     )
     let changed_ids = data_service.scrollTo(position)
     if (data_service.last_scroll_add_remove) {
-      layout.setData(data_service.data)
+      layout.setData(data_service.data, changed_ids)
       layout.layout()
     }
     return await prepareDiffUpdate(changed_ids, prev_position)

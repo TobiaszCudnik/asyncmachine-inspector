@@ -228,6 +228,11 @@ export class Main extends Component<
           </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
           <div id="graph-container">
+            <div id="minimap">
+              <canvas/>
+              <div className="zoom-window" />
+            </div>
+
             <div id="graph-scroller">
               <div
                 id="graph"

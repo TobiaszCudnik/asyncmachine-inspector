@@ -7,15 +7,20 @@
 }
 .joint-type-uml-state rect {
   /*fill: black;*/
-  fill: rgb(33, 33, 33);;
+  fill: rgb(33, 33, 33);
 }
-.joint-is-auto circle {
+.joint-type-fsa-state.joint-is-auto circle {
   fill: lightgray;
 }
-.joint-is-set circle {
+.joint-type-fsa-state.joint-is-set circle {
   fill: yellow;
+  stroke: black;
 }
-.joint-is-set.joint-is-multi circle {
+.joint-type-fsa-state.joint-is-set text {
+  fill: black;
+  stroke: transparent;
+}
+.joint-type-fsa-state.joint-is-set.joint-is-multi circle {
   fill: #bbffb5;
 }
 circle.leaf {
@@ -181,3 +186,13 @@ path.connection {
 .marker-target {
   fill: white;
 }
+
+/*.joint-type-fsa-state text {
+  stroke: white;
+  fill: white;
+}
+
+.joint-type-fsa-state circle {
+  fill: transparent;
+  stroke: white;
+}*/
