@@ -1,5 +1,5 @@
 import DataService, { StepTypes } from './data-service'
-import Layout from './layout'
+import Layout from './graph-layout'
 import workerio from 'workerio/src/workerio/index'
 import * as _ from 'underscore'
 import * as jsondiffpatch from 'jsondiffpatch'

@@ -24,7 +24,7 @@ import deepMerge from 'deepmerge'
 import keystrokes from './keystrokes'
 import { JSONSnapshot } from '../network/network-json'
 import * as db from 'idb-keyval'
-import { IDataServiceSync, ISync } from './joint/layout-worker'
+import { IDataServiceSync, ISync } from './joint/graph-layout-worker'
 import { isProd } from './utils'
 
 const log = (...args) => {}

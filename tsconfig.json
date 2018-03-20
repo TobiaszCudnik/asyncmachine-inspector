@@ -18,7 +18,7 @@
         "src/logger/browser.ts",
         "src/logger/remote-browser.ts",
         "src/inspector/inspector.tsx",
-        "src/inspector/joint/layout-worker.ts"
+        "src/inspector/joint/graph-layout-worker.ts"
     ],
     "awesomeTypescriptLoaderOptions": {
       "useTranspileModule": true,

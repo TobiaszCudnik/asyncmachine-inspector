@@ -12,7 +12,7 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import * as colors from 'material-ui/styles/colors'
 import * as Stylesheet from 'stylesheet.js'
 import * as hexRGB from 'hex-rgb'
-import GraphLayout from './layout'
+import GraphLayout from './graph-layout'
 import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
 import { colorIsDark, hexToRgb, isProd } from '../utils'
@@ -239,7 +239,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
         return area
       }
 
-      this.bindMouseZoom()
+      this.bindMouseListeners()
+      this.bindTouch()
 
       // adjust vertices when a cell is removed or its source/target
       // was changed
@@ -250,7 +251,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
       )
       this.graph.on(
         'change:position change:size',
-        _.throttle(this.renderMinimap.bind(this), 1000)
+        _.throttle(() => {
+          this.renderMinimap()
+        }, 1000)
       )
       // also when an user stops interacting with an element.
       this.paper.on('cell:pointerup', _.partial(adjustVertices, this.graph))
@@ -267,6 +270,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   zoom(level: number, offset_x?: number, offset_y?: number) {
     // @ts-ignore
     const current_level = this.paper.scale().sx
+    console.log(`zooming to level ${level}`)
     this.paper.scale(level, level)
     const offset_x_ratio = offset_x ? offset_x / this.container.width() : 0.5
     const offset_y_ratio = offset_y ? offset_y / this.container.height() : 0.5
@@ -317,7 +321,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       if (!settings_zoom || !scroll) {
         this.fitContent()
       }
-      if (settings_zoom) {
+      if (settings_zoom && this.paper) {
         this.zoom(settings_zoom)
       }
       if (x || y) {
@@ -560,7 +564,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
 
-  bindMouseZoom() {
+  bindMouseListeners() {
     const drag_listener = throttle(
       e => this.dragScrollListener(e),
       this.drag_tick_ms
@@ -568,8 +572,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
     let drag_enabled = false
     this.paper.on('blank:pointerdown', ev => {
       drag_enabled = true
-      this.evCache.push(ev)
-      console.log('down', this.evCache.length, this.evCache)
       this.container.mousemove(drag_listener)
     })
     this.container.on('mousedown', (event, x, y) => {
@@ -587,116 +589,115 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.paper.on('cell:pointerup blank:pointerup', ev => {
       this.drag_start_pos = null
       drag_enabled = false
-      const i = this.evCache.findIndex(ev2 => ev.pointerId == ev2.pointerId)
-      this.evCache.splice(i, 1)
-      console.log('up', this.evCache.length, this.evCache)
       this.container.unbind('mousemove', drag_listener)
-      if (this.evCache.length < 2) this.prevDiff = -1
     })
     this.paper.$el.on('mousewheel DOMMouseScroll', e =>
       this.mouseZoomListener(e)
     )
-    this.paper.on('blank:pointermove', e => {
-      console.log('pointermove', e.changedTouches)
-      this.touchZoomListener(e)
-    })
-    this.container.on('gesturechange', e => {
-      console.log('pointermove', e.changedTouches)
-      console.log('e', e)
-      console.log('e.scale', e.scale)
-      if (e.scale < 1.0) {
-        this.zoom(this.paper.scale().sx * 1.3)
-      } else if (e.scale > 1.0) {
-        this.zoom(this.paper.scale().sx * 0.7)
-      }
-    })
-    this.container.on('gesturechange', () => console.log('gesturechange'))
-    this.container.on('gesturestart', () => console.log('gesturestart'))
-  }
-
-  bindTouchZoom() {
-    // const drag_listener = throttle(
-    //   e => this.dragScrollListener(e),
-    //   this.drag_tick_ms
-    // )
-    // let drag_enabled = false
-    // this.paper.on('blank:pointerdown', () => {
-    //   drag_enabled = true
-    //   this.container.mousemove(drag_listener)
+    // this.paper.on('gesturechange', e => {
+    //   console.log('gesturechange', e.changedTouches)
+    //   this.touchZoomListener(e)
     // })
-    // this.container.on('mousedown', (event, x, y) => {
-    //   if (!drag_enabled) return
-    //   const el = this.scroll_element
-    //   this.drag_start_pos = {
-    //     x: event.clientX + el.scrollLeft,
-    //     y: event.clientY + el.scrollTop
+    // this.container.on('gesturechange', e => {
+    //   console.log('e.changedTouches', e.changedTouches)
+    //   console.log('e', e)
+    //   console.log('e.scale', e.scale)
+    //   if (e.scale < 1.0) {
+    //     this.zoom(this.paper.scale().sx * 1.3)
+    //   } else if (e.scale > 1.0) {
+    //     this.zoom(this.paper.scale().sx * 0.7)
     //   }
     // })
-    // this.paper.on('cell:pointerup blank:pointerup', () => {
-    //   this.drag_start_pos = null
-    //   drag_enabled = false
-    //   this.container.unbind('mousemove', drag_listener)
-    // })
-    // this.paper.$el.on('mousewheel DOMMouseScroll', e =>
-    //   this.mouseZoomListener(e)
-    // )
-    // var el = this.paper.getArea()
-    // el.onpointerdown = this.pointerDownListener.bind(this)
-    // el.onpointermove = this.pinchListener.bind(this)
-    // // Use same handler for pointer{up,cancel,out,leave} events since
-    // // the semantics for these events - in this app - are the same.
-    // const up = this.pinchListener.bind(this)
-    // el.onpointerup = up
-    // el.onpointercancel = up
-    // el.onpointerout = up
-    // el.onpointerleave = up
+    // this.container.on('gesturechange', () => console.log('gesturechange'))
+    // this.container.on('gesturestart', () => console.log('gesturestart'))
   }
 
-  evCache = []
-  prevDiff = -1
-
-  pointerDownListener(ev) {
-    this.evCache.push(ev)
-    log('pointerDown', ev)
+  bindTouch() {
+    // minimap pinch zoom
+    this.bindTouchZoom(this.minimap.parentElement)
+    // TODO check
+    this.bindTouchZoom(this.paper.$el.get(0).parentElement)
   }
 
-  pointerUpListener(ev) {
-    log(ev.type, ev)
-    // Remove this pointer from the cache and reset the target's
-    // background and border
-    const i = this.evCache.findIndex(ev2 => ev.pointerId == ev2.pointerId)
-    this.evCache.splice(i, 1)
-    ev.target.style.background = 'white'
-    ev.target.style.border = '1px solid black'
+  bindTouchZoom(element: HTMLElement) {
+    // minimap pinch zoom
+    const el = this.minimap.parentNode
+    el.addEventListener('gesturestart', e => {
+      event.preventDefault(), false
+      console.log('gesturestart')
+    })
 
-    // If the number of pointers down is less than two then reset diff tracker
-    if (this.evCache.length < 2) this.prevDiff = -1
-  }
-
-  touchZoomListener(ev) {
-    // If two pointers are down, check for pinch gestures
-    if (this.evCache.length == 2) {
-      // Calculate the distance between the two pointers
-      var curDiff = Math.abs(this.evCache[0].clientX - this.evCache[1].clientX)
-
-      if (this.prevDiff > 0) {
-        if (curDiff > this.prevDiff) {
-          this.zoom(this.paper.scale().sx * 0.7)
-          // The distance between the two pointers has increased
-          log('Pinch moving OUT -> Zoom in', ev)
-          // ev.target.style.background = 'pink'
-        }
-        if (curDiff < this.prevDiff) {
-          this.zoom(this.paper.scale().sx * 1.3)
-          // The distance between the two pointers has decreased
-          log('Pinch moving IN -> Zoom out', ev)
-          // ev.target.style.background = 'lightblue'
-        }
+    const zoom = throttle(this.zoom.bind(this), 100, {
+      trailing: true,
+      leading: false
+    })
+    const pinchZoom = e => {
+      // TODO use e.clientX relative to the viewport as offset_x & y
+      if (e.scale < 1) {
+        zoom(Math.min(this.paper.scale().sx * 1.1, this.zoom_max))
+      } else if (e.scale > 1) {
+        zoom(Math.max(this.paper.scale().sx * 0.9, this.zoom_min))
       }
-
-      // Cache the distance for the next move event
-      this.prevDiff = curDiff
+      console.log('e.scale', e.scale)
     }
+
+    el.addEventListener(
+      'gesturechange',
+      e => {
+        // console.log('gesturechange')
+        pinchZoom(e)
+      },
+      false
+    )
+
+    el.addEventListener(
+      'touchmove',
+      e => {
+        // TODO check for one finder only and the lack of an active gesture
+        event.preventDefault()
+        console.log({ x: e.layerX, y: e.layerY })
+        console.log(
+          'this.scroll_element.scrollLeft / this.scroll_element.scrollTop',
+          [this.scroll_element.scrollLeft, this.scroll_element.scrollTop]
+        )
+        if (!(e.layerX > 5 || e.layerX < 5) || !(e.layerY > 5 || e.layerY < 5))
+          return
+        if (!this.drag_start_pos) return
+        // console.log(e.target)
+        const minimap_layer_x = parseInt(e.srcElement.style.left, 10) + e.layerX
+        const diff = {
+          x: -(this.drag_start_pos.x - e.layerX),
+          y: -(this.drag_start_pos.y - e.layerY)
+        }
+        // console.log(diff)
+        console.log('render')
+        this.scroll_element.scrollLeft =
+          el.clientWidth *
+          (diff.x /
+            this.minimap.clientWidth *
+            (this.container.width() / this.minimap.clientWidth))
+        this.scroll_element.scrollTop =
+          el.clientHeight *
+          (diff.y /
+            this.minimap.clientHeight *
+            (this.container.height() / this.minimap.clientHeight))
+        this.renderMinimap()
+      },
+      false
+    )
+
+    el.addEventListener(
+      'touchstart',
+      e => {
+        console.log(e.currentTarget)
+        if (e.currentTarget != el) return
+        if (this.drag_start_pos) return
+        this.drag_start_pos = { x: e.layerX, y: e.layerY }
+        event.preventDefault()
+        console.log('touchstart', e.target)
+      },
+      false
+    )
   }
 
   dragScrollListener(e) {
@@ -708,6 +709,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
     let toolbar_el = document.querySelector('.toolbar')
     el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
     this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
+    console.log(
+      `this.settings.set('scroll', { x: ${el.scrollLeft}, y: ${el.scrollTop} })`
+    )
     this.renderMinimap()
   }
 
@@ -789,32 +793,35 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   minimap_zoom_window: string
 
+  // TODO caching, based on is_dirty states?
   renderMinimap() {
+    if (!this.data) return
     const positions = this.settings.get().positions
-    console.time('renderMinimap')
+    // console.time('renderMinimap')
     const machines = this.data.cells.filter(c => c.type == 'uml.State')
-    // CLEAR
-    const canvas = this.minimap.getContext('2d')
-    canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
-    canvas.stroke()
-    // const x_ratio = this.minimap.clientWidth / this.width
-    // const y_ratio = this.minimap.clientHeight / this.height
-    $('#minimap').height($('#minimap').width() * (this.height / this.width))
+
+    // CALCULATE SIZES
+    const minimap = this.minimap.parentElement
+    this.minimap.width = $(minimap).width()
+    this.minimap.height = $(minimap).width() * (this.height / this.width)
+    $(minimap).height($(minimap).width() * (this.height / this.width))
     const clusters = this.layout.clusters
-    const x_ratio = this.minimap.clientWidth / clusters._label.width
-    const y_ratio = this.minimap.clientHeight / clusters._label.height
+    const x_ratio = this.minimap.clientWidth / this.width
+    const y_ratio = this.minimap.clientHeight / this.height
     const scale = this.paper.scale().sx
     const is_during_transition = $('#graph.during-transition').length
 
     // ZOOM WINDOW
     // TODO not accurate
-    this.minimap_zoom_window.css({
+    const current_width = this.container.width()
+    const current_height = this.container.height()
+    const window_css = {
       width:
         this.minimap.clientWidth *
-        (this.scroll_element.clientWidth / this.container.width()),
+        (this.scroll_element.clientWidth / current_width),
       height:
         this.minimap.clientHeight *
-        (this.scroll_element.clientHeight / this.container.height()),
+        (this.scroll_element.clientHeight / current_height),
       left:
         this.scroll_element.scrollLeft /
         this.container.width() *
@@ -823,7 +830,14 @@ export default class JointGraph extends UiBase<INetworkJson> {
         this.scroll_element.scrollTop /
         this.container.height() *
         this.minimap.clientHeight
-    })
+    }
+    this.minimap_zoom_window.css(window_css)
+    console.log('rect-positions-window', window_css)
+
+    // CLEAR
+    const canvas = this.minimap.getContext('2d')
+    canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
+    canvas.stroke()
 
     // LINKS
     for (const [id, machine] of Object.entries(clusters._nodes)) {
@@ -867,6 +881,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
         }
       }
     }
+
     // RECTANGLES
     for (const [id, machine] of Object.entries(clusters._nodes)) {
       const m = machines.find(m => m.id == id)
@@ -885,11 +900,14 @@ export default class JointGraph extends UiBase<INetworkJson> {
       canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${color.blue}, 1)`
       if (!m.is_touched && is_during_transition) {
         continue
-        canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${
-          color.blue
-        }, 0.5)`
+        // canvas.fillStyle = `rgba(${color.red}, ${color.green}, ${
+        //   color.blue
+        // }, 0.5)`
       }
-      // TODO drag&drop positions? settings?
+      console.log('rect-positions', {
+        x: (pos.x || machine.x) * x_ratio,
+        y: (pos.y || machine.y) * y_ratio
+      })
       canvas.fillRect(
         (pos.x || machine.x) * x_ratio,
         (pos.y || machine.y) * y_ratio,
@@ -898,6 +916,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
       )
       canvas.stroke()
     }
-    console.timeEnd('renderMinimap')
+    // console.timeEnd('renderMinimap')
   }
 }

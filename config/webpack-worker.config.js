@@ -5,7 +5,7 @@ const path = require('path')
 
 module.exports = {
   entry: {
-    'inspector-layout-worker': './src/inspector/joint/layout-worker'
+    'inspector-layout-worker': './src/inspector/joint/graph-layout-worker'
   },
   plugins: [
     // new AsyncAwaitPlugin({})

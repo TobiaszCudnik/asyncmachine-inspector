@@ -86,11 +86,12 @@ export default class GraphLayout {
       directed: false
     }) as TClusterGraph
     // TODO memorize the last position through DnD
+    console.log('options.dimensions', options.dimensions)
     this.clusters.setGraph({
       width: options.dimensions && options.dimensions.x || 0,
       height: options.dimensions && options.dimensions.y || 0,
       is_dirty: true,
-      marginx: 700,
+      // marginx: 700,
       // TODO remove once overlapping in dagre gets fixed
       ranksep: 200
     })
@@ -190,7 +191,7 @@ export default class GraphLayout {
   }
 
   /**
-   * Sync the source graph with a layout data comming from another worker.
+   * Sync the source graph with a layout data coming from another worker.
    *
    * TODO: rename to import()?
    */
