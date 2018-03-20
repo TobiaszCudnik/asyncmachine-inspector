@@ -543,6 +543,9 @@ export class Inspector implements ITransitions {
         }
         return 'states'
       },
+      get machines_states() {
+        return self.graph.getMachines()
+      },
       get logs() {
         return self.logs.slice(0, self.data_service.patch_position)
       },

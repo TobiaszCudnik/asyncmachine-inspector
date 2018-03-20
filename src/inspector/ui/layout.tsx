@@ -162,7 +162,10 @@ export class Main extends Component<
                 <MenuItem value="live" primaryText="Live" />
                 <MenuItem value="states" primaryText="States" />
                 <MenuItem value="transitions" primaryText="Transitions" />
-                <MenuItem value="nested_transitions" primaryText="Nested Transitions" />
+                <MenuItem
+                  value="nested_transitions"
+                  primaryText="Nested Transitions"
+                />
                 <MenuItem value="steps" primaryText="Every Step" />
               </SelectField>
             </ToolbarGroup>
@@ -229,7 +232,7 @@ export class Main extends Component<
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
           <div id="graph-container">
             <div id="minimap">
-              <canvas/>
+              <canvas />
               <div className="zoom-window" />
             </div>
 
@@ -426,7 +429,13 @@ export class Main extends Component<
                       {transitions}
                     </div>
                   )
-                  function MachineEntry({ machine }: { machine: TMachine }) {
+                  function MachineEntry({
+                    machine,
+                    states
+                  }: {
+                    machine: TMachine
+                    states?: { [name: string]: boolean }
+                  }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue
                     if (machine.processing_queue) {
@@ -450,6 +459,28 @@ export class Main extends Component<
                         </div>
                       )
                     }
+                    let state_list = states.reduce(
+                      (prev, data) => {
+                        prev.push(
+                          <div key={machine.id + ':' + data.name}
+                                style={{ marginLeft: '1em' }}>
+                            {data.is_set ? '' : '-'}
+                            <span className="state-name">{data.name}</span>
+                            <div className="state-details" >
+                              <span
+                                className="state-set"
+                              >
+                                {data.is_set ? 'unset' : 'set'}
+                              </span>{' '}
+                              <span className="state-scroll">scroll</span>{' '}
+                              {data.clock}
+                            </div>
+                          </div>
+                        )
+                        return prev
+                      },
+                      []
+                    )
                     return (
                       <div key={machine.id} className={class_name}>
                         <h3 style={{ marginBottom: '0' }}>{machine.name}</h3>
@@ -462,14 +493,21 @@ export class Main extends Component<
                         ) : (
                           ''
                         )}
+                        - STATES:
+                        {state_list}
                         {queue}
                       </div>
                     )
                   }
                   let machines = [<h2 key={'machines-title'}>Machines</h2>]
-                  for (let machine of Object.values(this.props.machines)) {
+                  const machines_states = this.props.machines_states
+                  for (const machine of Object.values(this.props.machines)) {
                     machines.push(
-                      <MachineEntry key={machine.id} machine={machine} />
+                      <MachineEntry
+                        key={machine.id}
+                        machine={machine}
+                        states={machines_states[machine.id]}
+                      />
                     )
                   }
                   container.push(<div key={'machines'}>{machines}</div>)

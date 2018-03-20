@@ -17,6 +17,7 @@ import adjustVertices from './vendor/adjust-vertices'
 import Settings from '../settings'
 import { colorIsDark, hexToRgb, isProd } from '../utils'
 import { StepTypes } from './data-service'
+import { orderBy } from 'lodash'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -614,12 +615,13 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   bindTouch() {
     // minimap pinch zoom
-    this.bindTouchZoom(this.minimap.parentElement)
+    this.bindTouchMinimapZoom(this.minimap.parentElement)
+    this.bindMinimapTouchDrag(this.minimap.parentElement)
     // TODO check
-    this.bindTouchZoom(this.paper.$el.get(0).parentElement)
+    // this.bindMinimapTouchDrag(this.paper.$el.get(0).parentElement)
   }
 
-  bindTouchZoom(element: HTMLElement) {
+  bindTouchMinimapZoom(element: HTMLElement) {
     // minimap pinch zoom
     const el = this.minimap.parentNode
     el.addEventListener('gesturestart', e => {
@@ -649,6 +651,17 @@ export default class JointGraph extends UiBase<INetworkJson> {
       },
       false
     )
+
+    el.removeEventListener('gesturechange', pinchZoom)
+  }
+
+  bindMinimapTouchDrag(element: HTMLElement) {
+    // minimap pinch zoom
+    const el = this.minimap.parentNode
+    el.addEventListener('gesturestart', e => {
+      event.preventDefault(), false
+      console.log('gesturestart')
+    })
 
     el.addEventListener(
       'touchmove',
@@ -917,5 +930,31 @@ export default class JointGraph extends UiBase<INetworkJson> {
       canvas.stroke()
     }
     // console.timeEnd('renderMinimap')
+    console.log(this.getMachines())
+  }
+
+  getMachines() {
+    if (!this.data) return
+    const machines = {}
+    let last_id
+    for (const cell of this.data.cells) {
+      if (cell.type == 'fsa.State') {
+        const state = cell.id.split(':')[1]
+        machines[last_id].push({ name: state, is_set: cell.is_set, clock: 0 })
+      }
+      if (cell.type != 'uml.State') continue
+      machines[cell.id] = []
+      last_id = cell.id
+    }
+    for (const [id, states] of Object.entries(machines)) {
+      machines[id] = orderBy(
+        states,
+        state => {
+          return (state.is_set ? 0 : 1) + state.name
+        },
+        ['asc']
+      )
+    }
+    return machines
   }
 }
