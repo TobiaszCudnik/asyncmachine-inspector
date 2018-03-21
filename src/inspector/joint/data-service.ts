@@ -230,7 +230,7 @@ class JointDataService extends EventEmitter {
    */
   protected scrollToPatch(position: number): string[] {
     if (!isProd()) console.time('scrollToPatch')
-    assert(typeof position == 'number')
+    if (typeof position != 'number') throw new Error(`wrong pos '${position}'`)
     this.last_scroll_add_remove = false
     let changed = new Set<string>()
     if (position < this.patch_position) {

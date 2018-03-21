@@ -129,11 +129,16 @@ workerio.publishInterface(self || window, 'api', {
   blindSetPosition(type: StepTypes, position: number) {
     const t = StepTypes
     switch (type) {
+      case t.LIVE:
+        return Number(position)
       case t.STATES:
         position = data_service.index.states.indexOf(position)
         break
       case t.TRANSITIONS:
         position = data_service.index.transitions.indexOf(position)
+        break
+      case t.NESTED_TRANSITIONS:
+        position = data_service.index.nested_transitions.indexOf(position)
         break
     }
     assert(position != -1)
