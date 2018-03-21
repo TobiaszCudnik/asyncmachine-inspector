@@ -128,8 +128,9 @@ export class Main extends Component<
   }
 
   handleToggleSidebarLeft() {
-    this.props.settings.set('machines_visible', !this.state.sidebar_left)
-    this.setState({ sidebar_left: !this.state.sidebar_left })
+    const new_state = !this.state.sidebar_left
+    this.props.settings.set('machines_visible', new_state)
+    this.setState({ sidebar_left: new_state })
   }
 
   handleToggleAutoplay() {
@@ -143,7 +144,7 @@ export class Main extends Component<
     log('render() data', d)
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
-        <main>
+        <main className={(this.state.sidebar ? 'right-sidebar-visible ' : '')+(this.state.sidebar_left ? 'left-sidebar-visible' : '')}>
           <Toolbar className="toolbar">
             <ToolbarGroup firstChild={true}>
               <div style={{ width: '7em', padding: '2em' }}>

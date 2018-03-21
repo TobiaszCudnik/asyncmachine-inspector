@@ -152,6 +152,22 @@ export default class JointGraph extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
+  cell_highlighter = {
+    name: 'stroke',
+    options: {
+      attrs: {
+        'stroke-width': 3,
+        stroke: 'red',
+        d:
+          'M 68, 66         m -75, 0         a 75,75 0 1,0 150,0         a 75,75 0 1,0 -150,0',
+        transform: 'scale(0.75, .75)'
+      }
+    }
+  }
+  machine_highlighter = {
+    name: 'stroke'
+  }
+
   // TODO use in the data_service as non-ignored fields
   patch_fields = ['step_style', 'is_set', 'is_touched', 'name']
 
@@ -850,35 +866,30 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.renderMinimap()
   }
 
-  highlight(changed_ids: string[]) {
-    const views = changed_ids
+  highlight(ids: string[]) {
+    const views = ids
       .map(id => this.graph.getCell(id))
       .map(cell => this.paper.findViewByModel(cell))
-    const highlighter = {
-      name: 'stroke',
-      options: {
-        attrs: {
-          'stroke-width': 3,
-          stroke: 'red',
-          d:
-            'M 68, 66         m -75, 0         a 75,75 0 1,0 150,0         a 75,75 0 1,0 -150,0',
-          transform: 'scale(0.75, .75)'
-        }
-      }
-    }
     for (const cell of views) {
+      console.log(this.getHighlighter(cell.model.get('type')))
       cell.highlight(null /* defaults to cellView.el */, {
-        highlighter: highlighter
+        highlighter: this.getHighlighter(cell.model.get('type'))
       })
     }
     setTimeout(() => {
       for (const cell of views) {
-        cell.unhighlight(null, { highlighter })
+        cell.unhighlight(null, {
+          highlighter: this.getHighlighter(cell.model.get('type'))
+        })
       }
     }, 1000)
   }
 
-  // minimap_zoom_window: string
+  getHighlighter(type) {
+    return type == 'fsa.State'
+      ? this.cell_highlighter
+      : this.machine_highlighter
+  }
 
   // TODO caching, based on is_dirty states?
   renderMinimap() {
@@ -928,7 +939,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           let [source_parent_id, source_id] = source_ids.split(':')
           let [target_parent_id, target_id] = target_ids.split(':')
           const data = this.data.cells.find(i => i.id == link)
-          if (!data || is_during_transition && !data.is_touched) {
+          if (!data || (is_during_transition && !data.is_touched)) {
             continue
           }
           // source_parent_id + target_parent_id
@@ -994,7 +1005,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
     // ZOOM WINDOW
     // log('rect-positions-window', window_css)
-    canvas.fillStyle = `rgba(255, 255, 255, 0.1)`
+    canvas.fillStyle = `rgba(255, 255, 255, 0.2)`
     canvas.fillRect(
       window_css.left,
       window_css.top,

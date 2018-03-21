@@ -177,3 +177,7 @@ section#settings-bar {
 .state-details {
   color: gray;
 }
+
+.right-sidebar-visible #minimap {
+  right: 300px;
+}
