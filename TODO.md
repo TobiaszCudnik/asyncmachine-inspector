@@ -1,6 +1,9 @@
-- live view, render in real time from a source
-  - add as a new step type "live"
-  - fps limit
+- scroll to a machine
+  - toolbar switch to auto scroll to the current transition while stepping
+  - click to scroll on machine and state names
+    - machines view
+    - transitions view
+    - log view
 
 # TODO
 
@@ -51,6 +54,9 @@
   - import snapshots in the async way
 
 #### Inspector
+- zoom with a keyboard
+- cursor jumping over states / machines (with a mod key)
+- clicking on the minimap scrolls to the (clicked) machine
 - TwoFingers gesture switches to drag scroll anywhere on the surface
 - Next / Prev button next to the step counter (left & right)
 - spread network diffing into a worker pool
@@ -92,6 +98,7 @@
     - including inactive (eg '-Foo')
     - clicking on a state triggers add('Foo')
       - use predefined states as forms, ideally in a separate machine
+	- text selection highlights the selected states / machines
 - keep in localstorage / settings
   - Step Type
   - last timeline scroll position
@@ -166,6 +173,7 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
+- move canvas rendering to a worker
 - preheat jointjs by rendering 10 machines with 10 states each
   - then customize the names with first fullsync
   - always keep a buffor of 5 rendered machines
