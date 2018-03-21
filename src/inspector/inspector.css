@@ -150,6 +150,7 @@ section#settings-bar {
 }
 
 #minimap {
+  opacity: 0.9;
   position: absolute;
   z-index: 99;
   width: 200px;

@@ -928,7 +928,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           let [source_parent_id, source_id] = source_ids.split(':')
           let [target_parent_id, target_id] = target_ids.split(':')
           const data = this.data.cells.find(i => i.id == link)
-          if (is_during_transition && !data.is_touched) {
+          if (!data || is_during_transition && !data.is_touched) {
             continue
           }
           // source_parent_id + target_parent_id
@@ -994,7 +994,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
     // ZOOM WINDOW
     // log('rect-positions-window', window_css)
-    canvas.fillStyle = `rgba(255, 255, 255, 0.5)`
+    canvas.fillStyle = `rgba(255, 255, 255, 0.1)`
     canvas.fillRect(
       window_css.left,
       window_css.top,
