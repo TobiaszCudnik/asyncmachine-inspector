@@ -5,6 +5,19 @@
 # TODO
 
 #### Bugs
+- worker dying while selecting a file (modial dialog, eg ios)
+  - this.layout_worker.reset - undefined is not an object
+- last position of playing doesnt change the button icon to Pause (from Playing)
+- rendering out of canvas (use clientWidth for dagre layout consts)
+- Play shouldbe grayed out on the last step
+- during Live step type
+  - Play button should be grayed out
+  - timeline should be scrollable
+- touch events for
+  - scrolling
+  - zooming
+- switching StepType while Playing
+  - causes a scrollTo with the old position value (of the next step)
 - "Transition - Next" with stepType=step isnt correct
 - resuming from a server with many diffs hangs the worker
   - increase the timeout
@@ -38,12 +51,17 @@
   - import snapshots in the async way
 
 #### Inspector
+- TwoFingers gesture switches to drag scroll anywhere on the surface
+- Next / Prev button next to the step counter (left & right)
 - spread network diffing into a worker pool
 - try to use directly from an HTML file
 - hotkeys
 	- go to step
 	- change step type
 - API for setting markers on the timeline
+  - query of state sets with context
+  - eg [Reading] set/unset while [Foo,Bar] touched
+- number of state changes or touched states as a flage graph above the timeline
 - fix scroll / zoom / restore
   - mark scroll borders
   - relative container size to min/max scroll and the scroller size (min)
@@ -114,6 +132,7 @@
 - split Machines Sidebar horizontally (transitions / machines), like in dev tools
 - change background to white and align other colors
 - sidebars
+  - two fingers scroll
   - size change by mouse / hotkey
 - minimap
   - using clusters graph positions
@@ -130,6 +149,9 @@
   - validate by hash
   
 #### Logger
+- worker pool for jsondiffpatch
+  - transfer data using redis / indexedb
+  - manage the order and GCs
 - optimize creating patches
   - port jsondiffpatch to wasm/rust?
 - use the new asyncmachine log handlers API
@@ -144,6 +166,9 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
+- preheat jointjs by rendering 10 machines with 10 states each
+  - then customize the names with first fullsync
+  - always keep a buffor of 5 rendered machines
 - disable console.time calls when in production
 - extract layout.tsx into separate react components
   - implement custom shouldComponentUpdate
