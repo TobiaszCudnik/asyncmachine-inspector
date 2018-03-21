@@ -618,18 +618,87 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.bindTouchMinimapZoom(this.minimap.parentElement)
     this.bindMinimapTouchDrag(this.minimap.parentElement)
     // TODO check
-    // this.bindMinimapTouchDrag(this.paper.$el.get(0).parentElement)
+    this.bindTouchDrag(this.paper.$el.get(0).parentElement)
+    this.bindTouchMinimapZoom(this.paper.$el.get(0).parentElement)
   }
 
-  bindTouchMinimapZoom(element: HTMLElement) {
+  /**
+   * TODO
+   * - reverse move, reuse the drag listener
+   * - disable when dragging a machine
+   * - make it work with pinch zoom
+   * @param {HTMLElement} element
+   */
+  bindTouchDrag(element: HTMLElement) {
     // minimap pinch zoom
-    const el = this.minimap.parentNode
+    const el = element
     el.addEventListener('gesturestart', e => {
       event.preventDefault(), false
       log('gesturestart')
     })
 
-    const zoom = throttle(this.zoom.bind(this), 100, {
+    el.addEventListener(
+      'touchmove',
+      e => {
+        // TODO check for one finder only and the lack of an active gesture
+        event.preventDefault()
+        log({ x: e.layerX, y: e.layerY })
+        // log(
+        //   'this.scroll_element.scrollLeft / this.scroll_element.scrollTop',
+        //   [this.scroll_element.scrollLeft, this.scroll_element.scrollTop]
+        // )
+        if (!(e.layerX > 5 || e.layerX < 5) || !(e.layerY > 5 || e.layerY < 5))
+          return
+        if (!this.drag_start_pos) return
+        // log(e.target)
+        const minimap_layer_x = parseInt(e.srcElement.style.left, 10) + e.layerX
+        const diff = {
+          x: -(this.drag_start_pos.x - e.layerX),
+          y: -(this.drag_start_pos.y - e.layerY)
+        }
+        log('diff', diff)
+        let scroll_left = e.layerX / el.clientWidth * this.container.width()
+        let scroll_top = e.layerY / el.clientHeight * this.container.height()
+
+        log('scroll', { scroll_left, scroll_top })
+        const zoom_window = this.getZoomWindowCss()
+        scroll_left -=
+          zoom_window.width / 2 * (this.container.width() / this.minimap.width)
+        scroll_top -=
+          zoom_window.height /
+          2 *
+          (this.container.height() / this.minimap.height)
+        // log('render')
+        this.scroll_element.scrollLeft = scroll_left
+        this.scroll_element.scrollTop = scroll_top
+        this.renderMinimap()
+      },
+      false
+    )
+
+    el.addEventListener(
+      'touchstart',
+      e => {
+        log(e.currentTarget)
+        if (e.currentTarget != el) return
+        if (this.drag_start_pos) return
+        this.drag_start_pos = { x: e.layerX, y: e.layerY }
+        event.preventDefault()
+        log('touchstart', this.drag_start_pos)
+      },
+      false
+    )
+  }
+
+  bindTouchMinimapZoom(element: HTMLElement) {
+    // minimap pinch zoom
+    const el = element
+    el.addEventListener('gesturestart', e => {
+      event.preventDefault(), false
+      log('gesturestart')
+    })
+
+    const zoom = throttle(this.zoom.bind(this), 10, {
       trailing: true,
       leading: true
     })
@@ -638,9 +707,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
       // and effectively stop zooming
       // TODO use e.clientX relative to the viewport as offset_x & y
       if (e.scale > 1.2) {
-        zoom(Math.min(this.paper.scale().sx * 1.2, this.zoom_max))
+        zoom(Math.min(this.paper.scale().sx * 1.05, this.zoom_max))
       } else if (e.scale < 0.8) {
-        zoom(Math.max(this.paper.scale().sx * 0.8, this.zoom_min))
+        zoom(Math.max(this.paper.scale().sx * 0.95, this.zoom_min))
       }
       log('e.scale', e.scale)
     }
