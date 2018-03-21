@@ -186,7 +186,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   async render(el) {
     this.container = $(el)
     this.minimap = $('#minimap canvas').get(0)
-    this.minimap_zoom_window = $('#minimap .zoom-window')
+    // this.minimap_zoom_window = $('#minimap .zoom-window')
     // this.container = $('<div/>')
     assert(this.container)
 
@@ -271,7 +271,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   zoom(level: number, offset_x?: number, offset_y?: number) {
     // @ts-ignore
     const current_level = this.paper.scale().sx
-    console.log(`zooming to level ${level}`)
+    log(`zooming to level ${level}`)
     this.paper.scale(level, level)
     const offset_x_ratio = offset_x ? offset_x / this.container.width() : 0.5
     const offset_y_ratio = offset_y ? offset_y / this.container.height() : 0.5
@@ -447,7 +447,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       if (!colorIsDark(rgb.r, rgb.g, rgb.b)) continue
       this.available_colors.push(hex as string)
     }
-    console.log(`${this.available_colors.length} colors available`)
+    log(`${this.available_colors.length} colors available`)
   }
 
   getGroups() {
@@ -498,7 +498,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   // TODO merge with joint.dia.ElementView.prototype.className
   syncClasses(changed_cells: string[]) {
-    console.log(`syncing classes for ${(changed_cells || []).length} elements`)
+    log(`syncing classes for ${(changed_cells || []).length} elements`)
     for (const id of changed_cells) {
       const cell = this.graph.getCell(id)
       if (!cell) {
@@ -584,7 +584,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       }
     })
     // this.paper.on('blank:pointermove', e => {
-    //   console.log('pointermove')
+    //   log('pointermove')
     //   this.scroll_element.scrollLeft += this.scroll_element.scrollLeft*
     // })
     this.paper.on('cell:pointerup blank:pointerup', ev => {
@@ -596,21 +596,21 @@ export default class JointGraph extends UiBase<INetworkJson> {
       this.mouseZoomListener(e)
     )
     // this.paper.on('gesturechange', e => {
-    //   console.log('gesturechange', e.changedTouches)
+    //   log('gesturechange', e.changedTouches)
     //   this.touchZoomListener(e)
     // })
     // this.container.on('gesturechange', e => {
-    //   console.log('e.changedTouches', e.changedTouches)
-    //   console.log('e', e)
-    //   console.log('e.scale', e.scale)
+    //   log('e.changedTouches', e.changedTouches)
+    //   log('e', e)
+    //   log('e.scale', e.scale)
     //   if (e.scale < 1.0) {
     //     this.zoom(this.paper.scale().sx * 1.3)
     //   } else if (e.scale > 1.0) {
     //     this.zoom(this.paper.scale().sx * 0.7)
     //   }
     // })
-    // this.container.on('gesturechange', () => console.log('gesturechange'))
-    // this.container.on('gesturestart', () => console.log('gesturestart'))
+    // this.container.on('gesturechange', () => log('gesturechange'))
+    // this.container.on('gesturestart', () => log('gesturestart'))
   }
 
   bindTouch() {
@@ -626,27 +626,29 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const el = this.minimap.parentNode
     el.addEventListener('gesturestart', e => {
       event.preventDefault(), false
-      console.log('gesturestart')
+      log('gesturestart')
     })
 
     const zoom = throttle(this.zoom.bind(this), 100, {
       trailing: true,
-      leading: false
+      leading: true
     })
     const pinchZoom = e => {
+      // TODO support easing after 3 scrolls which decreasis the sensitivity
+      // and effectively stop zooming
       // TODO use e.clientX relative to the viewport as offset_x & y
-      if (e.scale > 1) {
-        zoom(Math.min(this.paper.scale().sx * 1.1, this.zoom_max))
-      } else if (e.scale < 1) {
-        zoom(Math.max(this.paper.scale().sx * 0.9, this.zoom_min))
+      if (e.scale > 1.2) {
+        zoom(Math.min(this.paper.scale().sx * 1.2, this.zoom_max))
+      } else if (e.scale < 0.8) {
+        zoom(Math.max(this.paper.scale().sx * 0.8, this.zoom_min))
       }
-      console.log('e.scale', e.scale)
+      log('e.scale', e.scale)
     }
 
     el.addEventListener(
       'gesturechange',
       e => {
-        // console.log('gesturechange')
+        // log('gesturechange')
         pinchZoom(e)
       },
       false
@@ -660,7 +662,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const el = this.minimap.parentNode
     el.addEventListener('gesturestart', e => {
       event.preventDefault(), false
-      console.log('gesturestart')
+      log('gesturestart')
     })
 
     el.addEventListener(
@@ -668,32 +670,35 @@ export default class JointGraph extends UiBase<INetworkJson> {
       e => {
         // TODO check for one finder only and the lack of an active gesture
         event.preventDefault()
-        // console.log({ x: e.layerX, y: e.layerY })
-        // console.log(
+        log({ x: e.layerX, y: e.layerY })
+        // log(
         //   'this.scroll_element.scrollLeft / this.scroll_element.scrollTop',
         //   [this.scroll_element.scrollLeft, this.scroll_element.scrollTop]
         // )
         if (!(e.layerX > 5 || e.layerX < 5) || !(e.layerY > 5 || e.layerY < 5))
           return
         if (!this.drag_start_pos) return
-        // console.log(e.target)
+        // log(e.target)
         const minimap_layer_x = parseInt(e.srcElement.style.left, 10) + e.layerX
         const diff = {
           x: -(this.drag_start_pos.x - e.layerX),
           y: -(this.drag_start_pos.y - e.layerY)
         }
-        // console.log(diff)
-        // console.log('render')
-        this.scroll_element.scrollLeft =
-          el.clientWidth *
-          (diff.x /
-            this.minimap.clientWidth *
-            (this.container.width() / this.minimap.clientWidth))
-        this.scroll_element.scrollTop =
-          el.clientHeight *
-          (diff.y /
-            this.minimap.clientHeight *
-            (this.container.height() / this.minimap.clientHeight))
+        log('diff', diff)
+        let scroll_left = e.layerX / el.clientWidth * this.container.width()
+        let scroll_top = e.layerY / el.clientHeight * this.container.height()
+
+        log('scroll', { scroll_left, scroll_top })
+        const zoom_window = this.getZoomWindowCss()
+        scroll_left -=
+          zoom_window.width / 2 * (this.container.width() / this.minimap.width)
+        scroll_top -=
+          zoom_window.height /
+          2 *
+          (this.container.height() / this.minimap.height)
+        // log('render')
+        this.scroll_element.scrollLeft = scroll_left
+        this.scroll_element.scrollTop = scroll_top
         this.renderMinimap()
       },
       false
@@ -702,12 +707,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
     el.addEventListener(
       'touchstart',
       e => {
-        console.log(e.currentTarget)
+        log(e.currentTarget)
         if (e.currentTarget != el) return
         if (this.drag_start_pos) return
         this.drag_start_pos = { x: e.layerX, y: e.layerY }
         event.preventDefault()
-        console.log('touchstart', e.target)
+        log('touchstart', this.drag_start_pos)
       },
       false
     )
@@ -722,7 +727,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     let toolbar_el = document.querySelector('.toolbar')
     el.scrollTop += this.drag_start_pos.y - e.offsetY - toolbar_el.clientHeight
     this.settings.set('scroll', { x: el.scrollLeft, y: el.scrollTop })
-    console.log(
+    log(
       `this.settings.set('scroll', { x: ${el.scrollLeft}, y: ${el.scrollTop} })`
     )
     this.renderMinimap()
@@ -804,7 +809,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }, 1000)
   }
 
-  minimap_zoom_window: string
+  // minimap_zoom_window: string
 
   // TODO caching, based on is_dirty states?
   renderMinimap() {
@@ -833,24 +838,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
     // TODO not accurate
     const current_width = this.container.width()
     const current_height = this.container.height()
-    const window_css = {
-      width:
-        this.minimap.clientWidth *
-        (this.scroll_element.clientWidth / current_width),
-      height:
-        this.minimap.clientHeight *
-        (this.scroll_element.clientHeight / current_height),
-      left:
-        this.scroll_element.scrollLeft /
-        this.container.width() *
-        this.minimap.clientWidth,
-      top:
-        this.scroll_element.scrollTop /
-        this.container.height() *
-        this.minimap.clientHeight
-    }
+    const window_css = this.getZoomWindowCss()
     // this.minimap_zoom_window.css(window_css)
-    // console.log('rect-positions-window', {
+    // log('rect-positions-window', {
     //   x: window_css.left,
     //   y: window_css.top
     // })
@@ -864,7 +854,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
         if (!name.match(new RegExp(`^${id}|${id}$`))) continue
         for (const link of data.cells.values()) {
           if (link.slice(0, id.length + 1) != id + ':') continue
-          // console.log('DRAW', link)
+          // log('DRAW', link)
           let [source_ids, target_ids] = link.split('::')
           let [source_parent_id, source_id] = source_ids.split(':')
           let [target_parent_id, target_id] = target_ids.split(':')
@@ -920,7 +910,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
         //   color.blue
         // }, 0.5)`
       }
-      // console.log('rect-positions', {
+      // log('rect-positions', {
       //   x: (pos.x || machine.x) * x_ratio,
       //   y: (pos.y || machine.y) * y_ratio
       // })
@@ -934,7 +924,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
 
     // ZOOM WINDOW
-    // console.log('rect-positions-window', window_css)
+    // log('rect-positions-window', window_css)
     canvas.fillStyle = `rgba(255, 255, 255, 0.5)`
     canvas.fillRect(
       window_css.left,
@@ -944,6 +934,25 @@ export default class JointGraph extends UiBase<INetworkJson> {
     )
     canvas.stroke()
     // console.timeEnd('renderMinimap')
+  }
+
+  private getZoomWindowCss() {
+    return {
+      width:
+        this.minimap.clientWidth *
+        (this.scroll_element.clientWidth / this.container.width()),
+      height:
+        this.minimap.clientHeight *
+        (this.scroll_element.clientHeight / this.container.height()),
+      left:
+        this.scroll_element.scrollLeft /
+        this.container.width() *
+        this.minimap.clientWidth,
+      top:
+        this.scroll_element.scrollTop /
+        this.container.height() *
+        this.minimap.clientHeight
+    }
   }
 
   getMachines() {
