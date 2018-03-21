@@ -635,9 +635,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
     })
     const pinchZoom = e => {
       // TODO use e.clientX relative to the viewport as offset_x & y
-      if (e.scale < 1) {
+      if (e.scale > 1) {
         zoom(Math.min(this.paper.scale().sx * 1.1, this.zoom_max))
-      } else if (e.scale > 1) {
+      } else if (e.scale < 1) {
         zoom(Math.max(this.paper.scale().sx * 0.9, this.zoom_min))
       }
       console.log('e.scale', e.scale)
@@ -668,11 +668,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
       e => {
         // TODO check for one finder only and the lack of an active gesture
         event.preventDefault()
-        console.log({ x: e.layerX, y: e.layerY })
-        console.log(
-          'this.scroll_element.scrollLeft / this.scroll_element.scrollTop',
-          [this.scroll_element.scrollLeft, this.scroll_element.scrollTop]
-        )
+        // console.log({ x: e.layerX, y: e.layerY })
+        // console.log(
+        //   'this.scroll_element.scrollLeft / this.scroll_element.scrollTop',
+        //   [this.scroll_element.scrollLeft, this.scroll_element.scrollTop]
+        // )
         if (!(e.layerX > 5 || e.layerX < 5) || !(e.layerY > 5 || e.layerY < 5))
           return
         if (!this.drag_start_pos) return
@@ -683,7 +683,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           y: -(this.drag_start_pos.y - e.layerY)
         }
         // console.log(diff)
-        console.log('render')
+        // console.log('render')
         this.scroll_element.scrollLeft =
           el.clientWidth *
           (diff.x /
@@ -823,6 +823,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const y_ratio = this.minimap.clientHeight / this.height
     const scale = this.paper.scale().sx
     const is_during_transition = $('#graph.during-transition').length
+    const canvas = this.minimap.getContext('2d')
+
+    // CLEAR
+    canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
+    canvas.stroke()
 
     // ZOOM WINDOW
     // TODO not accurate
@@ -844,13 +849,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
         this.container.height() *
         this.minimap.clientHeight
     }
-    this.minimap_zoom_window.css(window_css)
-    console.log('rect-positions-window', window_css)
-
-    // CLEAR
-    const canvas = this.minimap.getContext('2d')
-    canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
-    canvas.stroke()
+    // this.minimap_zoom_window.css(window_css)
+    // console.log('rect-positions-window', {
+    //   x: window_css.left,
+    //   y: window_css.top
+    // })
 
     // LINKS
     for (const [id, machine] of Object.entries(clusters._nodes)) {
@@ -917,10 +920,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
         //   color.blue
         // }, 0.5)`
       }
-      console.log('rect-positions', {
-        x: (pos.x || machine.x) * x_ratio,
-        y: (pos.y || machine.y) * y_ratio
-      })
+      // console.log('rect-positions', {
+      //   x: (pos.x || machine.x) * x_ratio,
+      //   y: (pos.y || machine.y) * y_ratio
+      // })
       canvas.fillRect(
         (pos.x || machine.x) * x_ratio,
         (pos.y || machine.y) * y_ratio,
@@ -929,8 +932,18 @@ export default class JointGraph extends UiBase<INetworkJson> {
       )
       canvas.stroke()
     }
+
+    // ZOOM WINDOW
+    // console.log('rect-positions-window', window_css)
+    canvas.fillStyle = `rgba(255, 255, 255, 0.5)`
+    canvas.fillRect(
+      window_css.left,
+      window_css.top,
+      window_css.width,
+      window_css.height
+    )
+    canvas.stroke()
     // console.timeEnd('renderMinimap')
-    console.log(this.getMachines())
   }
 
   getMachines() {
@@ -940,7 +953,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
     for (const cell of this.data.cells) {
       if (cell.type == 'fsa.State') {
         const state = cell.id.split(':')[1]
-        machines[last_id].push({ name: state, is_set: cell.is_set, clock: cell.clock })
+        machines[last_id].push({
+          name: state,
+          is_set: cell.is_set,
+          clock: cell.clock
+        })
       }
       if (cell.type != 'uml.State') continue
       machines[cell.id] = []
