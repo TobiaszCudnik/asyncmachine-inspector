@@ -940,7 +940,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     for (const cell of this.data.cells) {
       if (cell.type == 'fsa.State') {
         const state = cell.id.split(':')[1]
-        machines[last_id].push({ name: state, is_set: cell.is_set, clock: 0 })
+        machines[last_id].push({ name: state, is_set: cell.is_set, clock: cell.clock })
       }
       if (cell.type != 'uml.State') continue
       machines[cell.id] = []

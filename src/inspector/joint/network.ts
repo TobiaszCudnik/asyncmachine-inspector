@@ -71,7 +71,8 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       is_set: node.is_set,
       is_auto: node.is_auto,
       is_multi: node.is_multi,
-      step_style: node.step_style
+      step_style: node.step_style,
+      clock: node.step_style
     }
   }
   stateUiName(name): string {

@@ -467,12 +467,12 @@ export class Main extends Component<
                             {data.is_set ? '' : '-'}
                             <span className="state-name">{data.name}</span>
                             <div className="state-details" >
-                              <span
+                              <a
                                 className="state-set"
                               >
                                 {data.is_set ? 'unset' : 'set'}
-                              </span>{' '}
-                              <span className="state-scroll">scroll</span>{' '}
+                              </a>{' '}
+                              <a className="state-scroll">scroll</a>{' '}
                               {data.clock}
                             </div>
                           </div>

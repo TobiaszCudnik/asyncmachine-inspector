@@ -96,6 +96,10 @@ export class Node {
     return `${this.machine_id}:${this.name}`
   }
 
+  get clock(): string {
+    return this.machine.clock(this.name)
+  }
+
   constructor(
     public name: string,
     public machine: AsyncMachine,
