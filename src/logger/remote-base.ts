@@ -1,5 +1,5 @@
 import Network, { IPatch } from '../network/network'
-import Logger from './base'
+import Logger, {IOptions} from './base'
 import * as fs from 'fs'
 
 export { Network, LoggerRemote as Logger }
@@ -9,7 +9,7 @@ export default class LoggerRemote extends Logger {
   connected = false
   url: string
 
-  constructor(public network: Network, url = 'http://localhost:3757', options = {}) {
+  constructor(public network: Network, url = 'http://localhost:3757', options?: IOptions) {
     super(network, options)
     url = url || 'http://localhost:3757'
     this.url = url.replace(/\/$/, '')

@@ -1,4 +1,4 @@
-import { IPatch, ITransitionData, PatchType } from '../network/network'
+import { IPatch, ITransitionData, PatchType } from '../../network/network'
 import * as fs from 'fs'
 import { inspect } from 'util'
 import * as workerpool from 'workerpool'

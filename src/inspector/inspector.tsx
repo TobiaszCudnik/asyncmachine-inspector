@@ -265,6 +265,7 @@ export class Inspector implements ITransitions {
   // }
 
   async DiffSync_state(patch: IPatch) {
+    if (patch.summary) console.log(patch.summary)
     // log(`patch type ${patch.type}`)
     const states = this.states
     // queue the patches until the worker is ready

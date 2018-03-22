@@ -8,7 +8,8 @@ import { JSONSnapshot } from '../network/network-json'
 
 export { Network, LoggerBase }
 export interface IOptions {
-  autostart: boolean
+  autostart?: boolean
+  summary_fn?: (network: Network) => string
 }
 
 export default class LoggerBase extends EventEmitter {
@@ -16,6 +17,8 @@ export default class LoggerBase extends EventEmitter {
   differ: JsonDiffFactory
   full_sync: INetworkJson
   patches: IPatch[] = []
+  summary_fn?: (network: Network) => string
+  options: IOptions = {}
 
   get snapshot(): JSONSnapshot {
     return {
@@ -33,6 +36,10 @@ export default class LoggerBase extends EventEmitter {
     if (this.options.autostart) {
       this.start()
     }
+
+    if (this.options.summary_fn) {
+      this.summary_fn = this.options.summary_fn
+    }
   }
 
   start() {
@@ -45,23 +52,35 @@ export default class LoggerBase extends EventEmitter {
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
-    let diff = this.differ.generateDiff()
-    let packet: IPatch = {
-      diff,
-      type,
-      machine_id
-    }
-    if (data) packet.data = data
-    // skip empty steps
+    const patch = this.createPatch(machine_id, type, data)
+    if (!patch) return
+    this.emit('diff-sync', patch)
+  }
+
+  createPatch(machine_id, type, data?): IPatch | null {
+    const diff = this.differ.generateDiff()
     if (
       type == PatchType.TRANSITION_STEP &&
       !diff &&
       !this.network.logs.length
     ) {
-      return
+      return null
     }
-    this.patches.push({ ...packet, logs: [...this.network.logs] })
+    let patch: IPatch = {
+      diff,
+      type,
+      machine_id,
+      logs: [...this.network.logs]
+    }
+    if (data) {
+      patch.data = data
+    }
+    if (this.summary_fn) {
+      // TODO use jsdiff
+      patch.summary = this.summary_fn(this.network)
+    }
     this.network.logs = []
-    this.emit('diff-sync', this.patches[this.patches.length - 1])
+    this.patches.push(patch)
+    return patch
   }
 }

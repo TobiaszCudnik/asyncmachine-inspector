@@ -1,9 +1,9 @@
 import Network, { IPatch } from '../network/network'
-import Logger from './base-remote'
+import Logger from './remote-base'
 import * as fs from 'fs'
 import * as io from 'socket.io-client'
 
-export * from './base-remote'
+export * from './remote-base'
 export { Network, LoggerRemote as Logger }
 
 export default class LoggerRemote extends Logger {
