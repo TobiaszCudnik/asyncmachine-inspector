@@ -920,6 +920,28 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
 
+  // support scaling up to show the whole cell
+  // dont scroll if already in the view
+  scrollTo(id) {
+    const model = this.graph.getCell(id)
+    const view = this.paper.findViewByModel(model)
+    const box = view.getBBox()
+    // const viewport_scale = {
+    //   x: this.width / this.container.width(),
+    //   y: this.height / this.container.height()
+    // }
+    const viewport = {
+      width: this.container.width(),
+      height: this.container.height(),
+      left: this.scroll_element.scrollLeft,
+      top: this.scroll_element.scrollTop
+    }
+    this.scroll_element.scrollLeft = Math.max(0, box.x - 20)
+    this.scroll_element.scrollTop = Math.max(0, box.y - 20)
+    console.log('viewport', viewport)
+    console.log('box', box)
+  }
+
   protected getHighlighter(type) {
     return type == 'fsa.State'
       ? this.cell_highlighter
@@ -950,9 +972,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
     canvas.stroke()
 
     // ZOOM WINDOW
-    // TODO not accurate
-    const current_width = this.container.width()
-    const current_height = this.container.height()
     const window_css = this.getZoomWindowCss()
     // this.minimap_zoom_window.css(window_css)
     // log('rect-positions-window', {

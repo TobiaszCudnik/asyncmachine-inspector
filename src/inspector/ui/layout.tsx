@@ -271,7 +271,7 @@ export class Main extends Component<
                 onClick={e => {
                   if (e.target.classList.contains('hover')) return
                   // this.props.onStateSet(e)
-                  // this.props.onScrollTo(e)
+                  this.props.onScrollTo(e)
                   this.props.onCellSelect(e)
                 }}
                 onMouseOver={e => {
