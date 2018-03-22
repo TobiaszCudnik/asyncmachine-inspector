@@ -32,18 +32,13 @@ import ConnectionDialog from './connection-form'
 import joint_css from '../joint/base.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
-import { TMachine } from '../joint/network'
+import { TCell, TMachine, TState } from '../joint/network'
 import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
 import { StepTypes } from '../joint/data-service'
 import { STEP_TYPE_CHANGE } from '../inspector'
-// import whyDidYouUpdate from 'why-did-you-update'
-
-// if (process.env.NODE_ENV !== 'production') {
-//   whyDidYouUpdate(React)
-// }
 
 const styles = {
   container: {
@@ -83,6 +78,9 @@ export type TLayoutProps = {
   prev_transitions_touched: { [machine_id: string]: string[] }
   next_transitions: ITransitionData[]
   next_transitions_touched: { [machine_id: string]: string[] }
+  // TODO type
+  machines_states: { [machine_id: string]: TSidebarMachineState[] }
+  highlighted_ids: { [id: string]: number }
   // listeners
   onDownloadSnapshot: Function
   onConnectButton: Function
@@ -94,8 +92,19 @@ export type TLayoutProps = {
   onPlayButton: Function
   onHelpButton: Function
   onConnectSubmit: Function
+  onCellSelect: Function
+  onScrollTo: Function
+  onStateSet: Function
   // instances
   settings: Settings
+}
+
+type TSidebarMachineState = {
+  name: string
+  clock: number
+  is_set: boolean
+  is_selected: boolean
+  is_touched: boolean
 }
 
 const log = (...args) => {}
@@ -144,7 +153,12 @@ export class Main extends Component<
     log('render() data', d)
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
-        <main className={(this.state.sidebar ? 'right-sidebar-visible ' : '')+(this.state.sidebar_left ? 'left-sidebar-visible' : '')}>
+        <main
+          className={
+            (this.state.sidebar ? 'right-sidebar-visible ' : '') +
+            (this.state.sidebar_left ? 'left-sidebar-visible' : '')
+          }
+        >
           <Toolbar className="toolbar">
             <ToolbarGroup firstChild={true}>
               <div style={{ width: '7em', padding: '2em' }}>
@@ -252,7 +266,14 @@ export class Main extends Component<
               open={this.state.sidebar_left}
               style={{ position: 'absolute' }}
             >
-              <div className="sidebar left">
+              <div
+                className="sidebar left"
+                onClick={e => {
+                  this.props.onStateSet(e)
+                  this.props.onScrollTo(e)
+                  this.props.onCellSelect(e)
+                }}
+              >
                 {(() => {
                   function getTransitionType(entry: {
                     type: StateChangeTypes
@@ -435,7 +456,7 @@ export class Main extends Component<
                     states
                   }: {
                     machine: TMachine
-                    states?: { [name: string]: boolean }
+                    states?: TSidebarMachineState[]
                   }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue
@@ -460,31 +481,53 @@ export class Main extends Component<
                         </div>
                       )
                     }
-                    let state_list = states.reduce(
-                      (prev, data) => {
-                        prev.push(
-                          <div key={machine.id + ':' + data.name}
-                                style={{ marginLeft: '1em' }}>
-                            {data.is_set ? '' : '-'}
-                            <span className="state-name">{data.name}</span>
-                            <div className="state-details" >
-                              <a
-                                className="state-set"
-                              >
-                                {data.is_set ? 'unset' : 'set'}
-                              </a>{' '}
-                              <a className="state-scroll">scroll</a>{' '}
-                              {data.clock}
-                            </div>
+                    // STATES
+                    let state_list = states.reduce((prev, state) => {
+                      // TODO extract / inherit
+                      const id = machine.id + ':' + state.name
+                      const check = prev.push(
+                        <div
+                          key={machine.id + ':' + state.name}
+                          style={{ marginLeft: '1em' }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: state.is_selected
+                                ? 'bolder'
+                                : 'normal'
+                            }}
+                          >
+                            {state.is_set ? '' : '-'}
+                            {state.name}
+                          </span>
+                          <div className="state-details">
+                            <a href="#" className="cell-select" data-id={id}>
+                              {state.is_selected ? '☑ un-select' : '☐ select'}
+                            </a>{' '}
+                            <a href="#" className="state-set" data-id={id}>
+                              {state.is_set ? 'unset' : 'set'}
+                            </a>{' '}
+                            <a href="#" className="cell-scrollto" data-id={id}>
+                              scroll-to
+                            </a>{' '}
+                            {state.clock}
                           </div>
-                        )
-                        return prev
-                      },
-                      []
-                    )
+                        </div>
+                      )
+                      return prev
+                    }, [])
+                    // MACHINE ENTRY
                     return (
                       <div key={machine.id} className={class_name}>
-                        <h3 style={{ marginBottom: '0' }}>{machine.name}</h3>
+                        <h3 style={{ marginBottom: '0' }}>
+                          <a
+                            className="machine-name"
+                            data-id={machine.id}
+                            href="#"
+                          >
+                            {machine.name}
+                          </a>
+                        </h3>
                         - listeners: {machine.listeners}
                         <br />
                         - ticks: {machine.ticks}

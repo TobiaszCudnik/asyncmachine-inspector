@@ -512,6 +512,7 @@ export class Inspector implements ITransitions {
   buildLayoutData(): TLayoutProps {
     const self = this
     let playstop = this.states.addByListener('PlayStopClicked')
+    // extract to LayoutDataFactory
     let data: TLayoutProps = {
       is_snapshot: false,
       get is_legend_visible() {
@@ -544,6 +545,7 @@ export class Inspector implements ITransitions {
         return 'states'
       },
       get machines_states() {
+        console.log(' self.graph.getMachines()',  self.graph.getMachines())
         return self.graph.getMachines()
       },
       get logs() {
@@ -668,6 +670,38 @@ export class Inspector implements ITransitions {
         // TODO handle progress, errors
         self.states.add('Connecting', data.url)
       },
+      onStateSet: (e: MouseEvent) => {
+        const el = e.target as HTMLAnchorElement
+        if (!el.classList.contains('state-set')) return
+        e.preventDefault()
+        const id = el.dataset.id
+        const is_set = this.graph.paper.getModelById(id).get('is_set')
+        if (is_set) {
+          this.socket.emit('state-drop', name)
+        } else {
+          this.socket.emit('state-add', name)
+        }
+        this.renderUI()
+      },
+      onScrollTo: (e: MouseEvent) => {
+        const el = e.target as HTMLAnchorElement
+        if (!el.classList.contains('cell-scrollto')) return
+        e.preventDefault()
+        const id = el.dataset.id
+        this.graph.scrollTo(id)
+      },
+      onCellSelect: (e: MouseEvent) => {
+        const el = e.target as HTMLAnchorElement
+        if (!el.classList.contains('cell-select')) return
+        e.preventDefault()
+        const id = el.dataset.id
+        if (this.graph.highlighted_ids[id]) {
+          this.graph.unhighlight([id])
+        } else {
+          this.graph.highlight([id], false)
+        }
+        this.renderUI()
+      },
       settings: this.settings
     }
     return data
@@ -761,8 +795,11 @@ export class Inspector implements ITransitions {
   }
 }
 
-export default function(container_selector?) {
-  const { query } = url.parse(window.document.location.toString(), true)
+export default function(
+  container_selector?,
+  manual_url = window.document.location.toString()
+) {
+  const { query } = url.parse(manual_url, true)
   return new Inspector(
     container_selector,
     query.server,

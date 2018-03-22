@@ -18,6 +18,7 @@ import Settings from '../settings'
 import { colorIsDark, hexToRgb, isProd } from '../utils'
 import { StepTypes } from './data-service'
 import { orderBy } from 'lodash'
+import * as moment from 'moment'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -866,26 +867,41 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.renderMinimap()
   }
 
-  highlight(ids: string[]) {
+  highlighted_ids: { [id: string]: number } = {}
+
+  highlight(ids: string[], permanent: number | boolean = true) {
     const views = ids
       .map(id => this.graph.getCell(id))
+      .filter(cell => cell)
       .map(cell => this.paper.findViewByModel(cell))
     for (const cell of views) {
-      console.log(this.getHighlighter(cell.model.get('type')))
       cell.highlight(null /* defaults to cellView.el */, {
         highlighter: this.getHighlighter(cell.model.get('type'))
       })
+      this.highlighted_ids[cell.model.id] = moment().unix()
+    }
+    if (permanent === false) {
+      return () => this.unhighlight(ids)
     }
     setTimeout(() => {
-      for (const cell of views) {
-        cell.unhighlight(null, {
-          highlighter: this.getHighlighter(cell.model.get('type'))
-        })
-      }
-    }, 1000)
+      this.unhighlight(ids)
+    }, (permanent === true ? null : permanent) || 1000)
   }
 
-  getHighlighter(type) {
+  unhighlight(ids: string[]) {
+    const views = ids
+      .map(id => this.graph.getCell(id))
+      .filter(cell => cell)
+      .map(cell => this.paper.findViewByModel(cell))
+    for (const cell of views) {
+      cell.unhighlight(null, {
+        highlighter: this.getHighlighter(cell.model.get('type'))
+      })
+      delete this.highlighted_ids[cell.model.id]
+    }
+  }
+
+  protected getHighlighter(type) {
     return type == 'fsa.State'
       ? this.cell_highlighter
       : this.machine_highlighter
@@ -1043,9 +1059,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
       if (cell.type == 'fsa.State') {
         const state = cell.id.split(':')[1]
         machines[last_id].push({
+          id: cell.id,
           name: state,
           is_set: cell.is_set,
-          clock: cell.clock
+          is_touched: cell.step_style,
+          clock: cell.clock,
+          is_selected: this.highlighted_ids[cell.id]
         })
       }
       if (cell.type != 'uml.State') continue
@@ -1056,7 +1075,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
       machines[id] = orderBy(
         states,
         state => {
-          return (state.is_set ? 0 : 1) + state.name
+          return (
+            (state.is_selected ? 0 : 1).toString() +
+            (state.is_set ? 0 : 1).toString() +
+            (state.is_touched ? 0 : 1).toString() +
+            state.name
+          )
         },
         ['asc']
       )

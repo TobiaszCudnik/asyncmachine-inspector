@@ -181,3 +181,16 @@ section#settings-bar {
 .right-sidebar-visible #minimap {
   right: 300px;
 }
+
+a,
+a:visited,
+a:active {
+  color: slategrey;
+  text-decoration: none;
+}
+
+a:hover {
+  color: lightskyblue;
+  text-decoration: underline;
+  /*text-underline: lightskyblue;*/
+}
