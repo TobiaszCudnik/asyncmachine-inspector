@@ -1090,6 +1090,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   }
 
   getMachines() {
+    // TODO cache
     if (!this.data) return
     const machines = {}
     let last_id
