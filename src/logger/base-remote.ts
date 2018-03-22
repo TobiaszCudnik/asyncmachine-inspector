@@ -23,6 +23,22 @@ export default class LoggerRemote extends Logger {
     this.io.on('error', err => {
       console.error(err)
     })
+    this.io.on('state-add', states => {
+      // TODO group by machines and add in bulks
+      for (const id of states) {
+        const [machine_id, name] = id.split(':')
+        const node = this.network.getNodeByName(name, machine_id)
+        node.machine.add(name)
+      }
+    })
+    this.io.on('state-drop', states => {
+      // TODO group by machines and add in bulks
+      for (const id of states) {
+        const [machine_id, name] = id.split(':')
+        const node = this.network.getNodeByName(name, machine_id)
+        node.machine.drop(name)
+      }
+    })
   }
 
   start() {

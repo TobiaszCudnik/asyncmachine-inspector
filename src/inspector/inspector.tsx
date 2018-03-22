@@ -679,9 +679,9 @@ export class Inspector implements ITransitions {
         const id = el.dataset.id
         const is_set = this.graph.paper.getModelById(id).get('is_set')
         if (is_set) {
-          this.socket.emit('state-drop', name)
+          this.socket.emit('state-drop', [id])
         } else {
-          this.socket.emit('state-add', name)
+          this.socket.emit('state-add', [id])
         }
         this.renderUI()
       },

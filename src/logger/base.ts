@@ -30,7 +30,7 @@ export default class LoggerBase extends EventEmitter {
     this.json = new NetworkJson(network)
     this.differ = new JsonDiffFactory(this.json)
 
-    if (autostart) {
+    if (this.options.autostart) {
       this.start()
     }
   }

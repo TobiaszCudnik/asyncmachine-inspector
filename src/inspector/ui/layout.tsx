@@ -270,7 +270,7 @@ export class Main extends Component<
                 className="sidebar left"
                 onClick={e => {
                   if (e.target.classList.contains('hover')) return
-                  // this.props.onStateSet(e)
+                  this.props.onStateSet(e)
                   this.props.onScrollTo(e)
                   this.props.onCellSelect(e)
                 }}
@@ -463,11 +463,13 @@ export class Main extends Component<
                   function MachineEntry({
                     machine,
                     states,
-                    selected_ids
+                    selected_ids,
+                    step_type
                   }: {
                     machine: TMachine
                     states?: TSidebarMachineState[]
                     selected_ids?: string[]
+                    step_type: string
                   }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue
@@ -517,9 +519,13 @@ export class Main extends Component<
                             <a href="#" className="cell-select" data-id={id}>
                               {state.is_selected ? '☑ un-select' : '☐ select'}
                             </a>{' '}
-                            <a href="#" className="state-set" data-id={id}>
-                              {state.is_set ? 'unset' : 'set'}
-                            </a>{' '}
+                            {step_type == 'live' ? (
+                              <a href="#" className="state-set" data-id={id}>
+                                {state.is_set ? 'unset' : 'set'}
+                              </a>
+                            ) : (
+                              ''
+                            )}{' '}
                             <a href="#" className="cell-scrollto" data-id={id}>
                               scroll-to
                             </a>{' '}
@@ -567,9 +573,9 @@ export class Main extends Component<
                         ) : (
                           ''
                         )}
+                        {queue}
                         - STATES:
                         {state_list}
-                        {queue}
                       </div>
                     )
                   }
@@ -582,6 +588,7 @@ export class Main extends Component<
                         machine={machine}
                         states={machines_states[machine.id]}
                         selected_ids={this.props.selected_ids}
+                        step_type={this.props.step_type}
                       />
                     )
                   }

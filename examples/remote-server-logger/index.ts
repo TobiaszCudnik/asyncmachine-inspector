@@ -16,13 +16,13 @@ const logger = new Logger(network, 'http://localhost:3757')
 
 // simulation logic
 example.add(['Foo', 'Bar'])
-setTimeout(() => {
+setInterval(() => {
   example.add('Baz')
 }, 3000)
 
 // output a helpful msg to the user
 setTimeout(() => {
-  const msg = `Start debugging by executing the following command:
-${logger.getDebugCommand()}`
+  const msg = `Start debugging by executing the following command:\n${
+    logger.getDebugCommand()}`
   console.log(msg)
 })

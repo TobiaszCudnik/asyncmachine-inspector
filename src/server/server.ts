@@ -12,7 +12,7 @@ export default function createServer(snapshot = null) {
 
   // LOGGER ENDPOINT
 
-  const loggerEndpoint = server.of('/logger')
+  const logger_endp = server.of('/logger')
   let data = snapshot
     ? snapshot
     : {
@@ -20,41 +20,43 @@ export default function createServer(snapshot = null) {
         patches: []
       }
 
-  loggerEndpoint.on('connection', function(socket: LoggerSocket) {
+  logger_endp.on('connection', function(logger_socket: LoggerSocket) {
     console.log('logger connected')
     data = {
       full_sync: null,
       patches: []
     }
     // TODO disconnect the previous logger
-    socket.on('diff-sync', function(diff) {
+    logger_socket.on('diff-sync', function(diff) {
       data.patches.push(diff)
-      uiEndpoint.emit('diff-sync', diff)
+      inspector_endp.emit('diff-sync', diff)
     })
-    socket.on('full-sync', function(full) {
+    logger_socket.on('full-sync', function(full) {
       data.full_sync = full
-      uiEndpoint.emit('full-sync', full)
+      inspector_endp.emit('full-sync', full)
     })
-    socket.on('error', console.error.bind(console))
+    logger_socket.on('error', console.error.bind(console))
   })
 
   // INSPECTOR ENDPOINT
 
   type clientSocket = SocketIO.Socket
-  const uiEndpoint = server.of('/client')
+  const inspector_endp = server.of('/client')
 
-  uiEndpoint.on('connection', async function(socket: clientSocket) {
+  inspector_endp.on('connection', async function(
+    inspector_socket: clientSocket
+  ) {
     console.log('inspector connected')
-    // loggerEndpoint.emit('full-sync')
+    // logger_endp.emit('full-sync')
     // re-send existing data if an inspector connects after the logger
     if (data.patches.length) {
-      socket.emit('full-sync', data.full_sync)
+      inspector_socket.emit('full-sync', data.full_sync)
       console.log(`sending ${data.patches.length} patches...`)
       let c = 0
       let buffer = []
       for (let patch of data.patches) {
         // TODO check if still connected / cancel the loop
-        // socket.emit('diff-sync', patch)
+        // inspector_socket.emit('diff-sync', patch)
         buffer.push(patch)
         c++
         // if (c % 100) {
@@ -62,17 +64,25 @@ export default function createServer(snapshot = null) {
         //   await delay(100)
         // }
         if (c % 1000 == 0) {
-          socket.emit('batch-sync', buffer)
+          inspector_socket.emit('batch-sync', buffer)
           buffer = []
           console.log(c)
           await delay(500)
         }
       }
       if (buffer.length) {
-        socket.emit('batch-sync', buffer)
+        inspector_socket.emit('batch-sync', buffer)
       }
     }
-    socket.on('error', console.error.bind(console))
+
+    // TODO hide it behind a flag
+    inspector_socket.on('state-add', states => {
+      logger_endp.emit('state-add', states)
+    })
+    inspector_socket.on('state-drop', states => {
+      logger_endp.emit('state-drop', states)
+    })
+    inspector_socket.on('error', console.error.bind(console))
   })
 
   return server
