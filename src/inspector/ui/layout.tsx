@@ -269,9 +269,18 @@ export class Main extends Component<
               <div
                 className="sidebar left"
                 onClick={e => {
-                  this.props.onStateSet(e)
-                  this.props.onScrollTo(e)
+                  if (e.target.classList.contains('hover')) return
+                  // this.props.onStateSet(e)
+                  // this.props.onScrollTo(e)
                   this.props.onCellSelect(e)
+                }}
+                onMouseOver={e => {
+                  if (!e.target.classList.contains('hover')) return
+                  this.props.onCellSelect(e, true)
+                }}
+                onMouseOut={e => {
+                  if (!e.target.classList.contains('hover')) return
+                  this.props.onCellSelect(e, false)
                 }}
               >
                 {(() => {
@@ -453,10 +462,12 @@ export class Main extends Component<
                   )
                   function MachineEntry({
                     machine,
-                    states
+                    states,
+                    selected_ids
                   }: {
                     machine: TMachine
                     states?: TSidebarMachineState[]
+                    selected_ids?: string[]
                   }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue
@@ -496,11 +507,13 @@ export class Main extends Component<
                                 ? 'bolder'
                                 : 'normal'
                             }}
+                            className={'cell-select hover'}
+                            data-id={id}
                           >
                             {state.is_set ? '' : '-'}
                             {state.name}
                           </span>
-                          <div className="state-details">
+                          <div className="state details">
                             <a href="#" className="cell-select" data-id={id}>
                               {state.is_selected ? '☑ un-select' : '☐ select'}
                             </a>{' '}
@@ -519,15 +532,32 @@ export class Main extends Component<
                     // MACHINE ENTRY
                     return (
                       <div key={machine.id} className={class_name}>
-                        <h3 style={{ marginBottom: '0' }}>
-                          <a
-                            className="machine-name"
-                            data-id={machine.id}
-                            href="#"
-                          >
-                            {machine.name}
-                          </a>
+                        <h3
+                          style={{ marginBottom: '0' }}
+                          className={'cell-select hover'}
+                          data-id={machine.id}
+                        >
+                          {machine.name}
                         </h3>
+                        <div className="machine details">
+                          <a
+                            href="#"
+                            className="cell-select hover"
+                            data-id={machine.id}
+                          >
+                            {selected_ids[machine.id]
+                              ? '☑ un-select'
+                              : '☐ select'}
+                          </a>{' '}
+                          <a
+                            href="#"
+                            className="cell-scrollto"
+                            data-id={machine.id}
+                          >
+                            scroll-to
+                          </a>{' '}
+                          {machine.ticks}
+                        </div>
                         - listeners: {machine.listeners}
                         <br />
                         - ticks: {machine.ticks}
@@ -551,6 +581,7 @@ export class Main extends Component<
                         key={machine.id}
                         machine={machine}
                         states={machines_states[machine.id]}
+                        selected_ids={this.props.selected_ids}
                       />
                     )
                   }

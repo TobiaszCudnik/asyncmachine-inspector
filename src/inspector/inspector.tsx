@@ -545,8 +545,10 @@ export class Inspector implements ITransitions {
         return 'states'
       },
       get machines_states() {
-        console.log(' self.graph.getMachines()',  self.graph.getMachines())
         return self.graph.getMachines()
+      },
+      get selected_ids() {
+        return self.graph.highlighted_ids
       },
       get logs() {
         return self.logs.slice(0, self.data_service.patch_position)
@@ -685,22 +687,26 @@ export class Inspector implements ITransitions {
       },
       onScrollTo: (e: MouseEvent) => {
         const el = e.target as HTMLAnchorElement
-        if (!el.classList.contains('cell-scrollto')) return
+        if (!el.classList.contains('cell-scrollto') || !el.dataset.id) return
         e.preventDefault()
         const id = el.dataset.id
         this.graph.scrollTo(id)
       },
-      onCellSelect: (e: MouseEvent) => {
-        const el = e.target as HTMLAnchorElement
-        if (!el.classList.contains('cell-select')) return
+      onCellSelect: (e: MouseEvent, manual_state?) => {
+        const el = e.target as HTMLElement
+        if (!el.classList.contains('cell-select') || !el.dataset.id) return
         e.preventDefault()
         const id = el.dataset.id
-        if (this.graph.highlighted_ids[id]) {
+        if (manual_state === true) {
+          this.graph.highlight([id], false, true)
+        } else if (manual_state === false) {
           this.graph.unhighlight([id])
+        } else if (this.graph.highlighted_ids[id]) {
+          this.graph.unhighlight([id], true)
         } else {
           this.graph.highlight([id], false)
         }
-        this.renderUI()
+        this.renderUIQueue()
       },
       settings: this.settings
     }

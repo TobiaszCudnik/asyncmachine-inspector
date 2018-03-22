@@ -174,7 +174,7 @@ section#settings-bar {
   opacity: 0.3;
 }
 
-.state-details {
+.details {
   color: gray;
 }
 
@@ -185,8 +185,14 @@ section#settings-bar {
 a,
 a:visited,
 a:active {
-  color: slategrey;
+  color: lightskyblue;
   text-decoration: none;
+}
+
+.details a,
+.details a:visited,
+.details a:active {
+  color: slategrey;
 }
 
 a:hover {

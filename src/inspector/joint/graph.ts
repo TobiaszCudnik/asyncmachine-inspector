@@ -166,7 +166,14 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
   machine_highlighter = {
-    name: 'stroke'
+    name: 'stroke',
+    options: {
+      attrs: {
+        'stroke-width': 3,
+        // TODO overridden
+        stroke: 'red'
+      }
+    }
   }
 
   // TODO use in the data_service as non-ignored fields
@@ -869,7 +876,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   highlighted_ids: { [id: string]: number } = {}
 
-  highlight(ids: string[], permanent: number | boolean = true) {
+  highlight(
+    ids: string[],
+    permanent: number | boolean = true,
+    skip_index = false
+  ) {
     const views = ids
       .map(id => this.graph.getCell(id))
       .filter(cell => cell)
@@ -878,26 +889,34 @@ export default class JointGraph extends UiBase<INetworkJson> {
       cell.highlight(null /* defaults to cellView.el */, {
         highlighter: this.getHighlighter(cell.model.get('type'))
       })
-      this.highlighted_ids[cell.model.id] = moment().unix()
+      if (!skip_index) {
+        this.highlighted_ids[cell.model.id] = moment().unix()
+      }
     }
-    if (permanent === false) {
+    if (permanent === true) {
       return () => this.unhighlight(ids)
     }
+    const time = Date.now()
     setTimeout(() => {
-      this.unhighlight(ids)
-    }, (permanent === true ? null : permanent) || 1000)
+      this.unhighlight(ids, skip_index ? false : time)
+    }, (permanent === false ? null : permanent) || 1000)
   }
 
-  unhighlight(ids: string[]) {
+  unhighlight(ids: string[], time?: number | boolean) {
     const views = ids
       .map(id => this.graph.getCell(id))
       .filter(cell => cell)
       .map(cell => this.paper.findViewByModel(cell))
     for (const cell of views) {
+      const id = cell.model.get('id')
+      if (time && time !== true && this.highlighted_ids[id] != time) continue
+      if (!time && this.highlighted_ids[id]) continue
       cell.unhighlight(null, {
         highlighter: this.getHighlighter(cell.model.get('type'))
       })
-      delete this.highlighted_ids[cell.model.id]
+      if (time) {
+        delete this.highlighted_ids[id]
+      }
     }
   }
 
