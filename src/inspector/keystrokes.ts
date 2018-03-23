@@ -1,4 +1,6 @@
-export default function(inspector) {
+import {Inspector} from "./inspector";
+
+export default function(inspector: Inspector) {
   const isLegendVisible = () => inspector.states.is('LegendVisible')
   return {
     'shift + /': () => {
@@ -36,6 +38,21 @@ export default function(inspector) {
     esc: () => {
       inspector.states.drop('LegendVisible')
       inspector.states.drop('ConnectionDialogVisible')
+    },
+    right(e) {
+      inspector.graph.onArrowListener('right', e)
+    },
+    left(e) {
+      inspector.graph.onArrowListener('left', e)
+    },
+    up(e) {
+      inspector.graph.onArrowListener('up', e)
+    },
+    down(e) {
+      inspector.graph.onArrowListener('down', e)
+    },
+    'ctrl + g'() {
+      inspector.graph.container.focus()
     }
   }
 }

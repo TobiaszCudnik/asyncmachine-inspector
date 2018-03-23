@@ -245,10 +245,10 @@ export class Inspector implements ITransitions {
     const release = await this.add_patches_mutex.acquire()
     try {
       const latest = patches.pop()
-      console.time('addPatches')
+      // console.time('addPatches')
       await db.set('addPatches', patches)
       await this.layout_worker.addPatches('addPatches')
-      console.timeEnd('addPatches')
+      // console.timeEnd('addPatches')
       let patch
       while ((patch = patches.shift())) {
         this.logs.push(patch.logs)
@@ -710,7 +710,7 @@ export class Inspector implements ITransitions {
         } else if (this.graph.highlighted_ids[id]) {
           this.graph.unhighlight([id], true)
         } else {
-          this.graph.highlight([id], false)
+          this.graph.highlight([id], true)
         }
         this.renderUIQueue()
       },

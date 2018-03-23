@@ -255,6 +255,7 @@ export class Main extends Component<
             <div id="graph-scroller">
               <div
                 id="graph"
+                tabIndex="0"
                 className={
                   this.props.is_during_transition && 'during-transition'
                 }

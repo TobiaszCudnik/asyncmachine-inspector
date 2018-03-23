@@ -19,6 +19,7 @@ import { colorIsDark, hexToRgb, isProd } from '../utils'
 import { StepTypes } from './data-service'
 import { orderBy } from 'lodash'
 import * as moment from 'moment'
+import * as radiansDegrees from 'radians-degrees'
 
 type IDelta = jsondiffpatch.IDeltas
 
@@ -153,14 +154,15 @@ export default class JointGraph extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
-  cell_highlighter = {
+  selected_id: string | null = null
+
+  state_highlighter = {
     name: 'stroke',
     options: {
       attrs: {
         'stroke-width': 3,
         stroke: 'red',
-        d:
-          'M 68, 66         m -75, 0         a 75,75 0 1,0 150,0         a 75,75 0 1,0 -150,0',
+        d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
         transform: 'scale(0.75, .75)'
       }
     }
@@ -172,6 +174,18 @@ export default class JointGraph extends UiBase<INetworkJson> {
         'stroke-width': 3,
         // TODO overridden
         stroke: 'red'
+      }
+    }
+  }
+  cursor_highlighter = {
+    name: 'stroke',
+    options: {
+      attrs: {
+        stroke: 'greenyellow',
+        'stroke-width': '5px',
+        'stroke-dasharray': 1,
+        d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
+        transform: 'scale(0.75, .75)'
       }
     }
   }
@@ -264,8 +278,9 @@ export default class JointGraph extends UiBase<INetworkJson> {
         return area
       }
 
-      this.bindMouseListeners()
+      this.bindMouse()
       this.bindTouch()
+      this.bindCursor()
 
       // adjust vertices when a cell is removed or its source/target
       // was changed
@@ -290,6 +305,46 @@ export default class JointGraph extends UiBase<INetworkJson> {
     if (this.data) {
       await this.setData(this.data)
     }
+  }
+
+  onArrowListener(arrow, event) {
+    console.log('onArrowListener', arrow, event)
+    const positions = this.positionsFromElement(
+      this.data.cells.find(n => n.id == this.selected_id)
+    )
+    console.log(positions)
+  }
+
+  positionsFromElement(source_node: TState): { deg: number; length: number }[] {
+    if (!this.data) return []
+    const ret = []
+    const positions = this.settings.get().positions
+    const source_model = this.graph.getCell(source_node.id)
+    for (const node of this.data.cells) {
+      if (node.id == source_node.id) continue
+      if (node.type != 'fsa.State') continue
+      const model = this.graph.getCell(node.id)
+      const pos = [
+        source_model.get('position'),
+        model.get('position')
+      ]
+      const angle = radiansDegrees(this.getAngle(pos[0], pos[1]))
+      const distance = Math.sqrt(
+        Math.pow(pos[1].x - pos[0].x, 2) + Math.pow(pos[1].y - pos[0].y, 2)
+      )
+      ret.push({ angle, distance, id: node.id })
+    }
+    return ret
+  }
+
+  getAngle(element, target) {
+    let angle = Math.atan2(target.y - element.y, target.x - element.x)
+
+    // if(angle < 0){
+    //     angle += 360;
+    // }
+
+    return angle
   }
 
   zoom(level: number, offset_x?: number, offset_y?: number) {
@@ -589,7 +644,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
 
-  bindMouseListeners() {
+  bindMouse() {
     const drag_listener = throttle(
       e => this.dragScrollListener(e),
       this.drag_tick_ms
@@ -879,7 +934,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
   highlight(
     ids: string[],
     permanent: number | boolean = true,
-    skip_index = false
+    skip_index = false,
+    highlighter?
   ) {
     const views = ids
       .map(id => this.graph.getCell(id))
@@ -888,7 +944,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const time = moment().unix()
     for (const cell of views) {
       cell.highlight(null /* defaults to cellView.el */, {
-        highlighter: this.getHighlighter(cell.model.get('type'))
+        highlighter: highlighter || this.getHighlighter(cell.model.get('type'))
       })
       if (!skip_index) {
         this.highlighted_ids[cell.model.id] = time
@@ -902,7 +958,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }, (permanent === false ? null : permanent) || 1000)
   }
 
-  unhighlight(ids: string[], time?: number | boolean) {
+  unhighlight(ids: string[], time?: number | boolean, highlighter?) {
     const views = ids
       .map(id => this.graph.getCell(id))
       .filter(cell => cell)
@@ -912,7 +968,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       if (time && time !== true && this.highlighted_ids[id] != time) continue
       if (!time && this.highlighted_ids[id]) continue
       cell.unhighlight(null, {
-        highlighter: this.getHighlighter(cell.model.get('type'))
+        highlighter: highlighter || this.getHighlighter(cell.model.get('type'))
       })
       if (time) {
         delete this.highlighted_ids[id]
@@ -944,7 +1000,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   protected getHighlighter(type) {
     return type == 'fsa.State'
-      ? this.cell_highlighter
+      ? this.state_highlighter
       : this.machine_highlighter
   }
 
@@ -1125,5 +1181,24 @@ export default class JointGraph extends UiBase<INetworkJson> {
       )
     }
     return machines
+  }
+
+  protected bindCursor() {
+    this.container.on('focus', e => {
+      console.log('focusin', e)
+      if (!this.data) return
+      // TODO first fsm.state
+      this.selected_id = this.selected_id || this.data.cells[1].id
+      this.highlight([this.selected_id], true, true, this.cursor_highlighter)
+      this.container.addClass('focued')
+    })
+    this.container.on('blur', e => {
+      console.log('blur', e)
+      if (!this.data) return
+      // TODO first fsm.state
+      this.selected_id = this.selected_id || this.data.cells[1].id
+      this.unhighlight([this.selected_id], true, this.cursor_highlighter)
+      this.container.removeClass('focued')
+    })
   }
 }
