@@ -174,7 +174,11 @@ export class Main extends Component<
                 value={this.props.step_type}
                 onChange={this.props.onStepType}
               >
-                <MenuItem value="live" primaryText="Live" />
+                {this.props.is_connected ? (
+                  <MenuItem value="live" primaryText="Live" />
+                ) : (
+                  ''
+                )}
                 <MenuItem value="states" primaryText="States" />
                 <MenuItem value="transitions" primaryText="Transitions" />
                 <MenuItem
@@ -202,7 +206,7 @@ export class Main extends Component<
                     : this.props.is_connected ? 'Connected' : 'Disconnected'
                 }
               />
-              {this.props.is_connected ? (
+              {this.props.is_rendered ? (
                 <IconButton
                   tooltip="Download as a snapshot"
                   onClick={this.props.onDownloadSnapshot}
@@ -241,9 +245,6 @@ export class Main extends Component<
               </div>
             </ToolbarGroup>
           </Toolbar>
-          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
-            {d.position} / {d.position_max}
-          </Chip>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
           <div id="graph-container">
             <div id="minimap">
@@ -628,6 +629,8 @@ export class Main extends Component<
             </Drawer>
           </div>
 
+          <div className="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+
           <section id="bottom-bar">
             <FloatingActionButton
               mini={true}
@@ -654,6 +657,9 @@ export class Main extends Component<
           ) : (
             ''
           )}
+          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
+            {d.position} / {d.position_max}
+          </Chip>
         </main>
       </MuiThemeProvider>
     )
