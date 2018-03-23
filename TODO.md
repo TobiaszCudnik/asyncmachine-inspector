@@ -8,7 +8,10 @@
 # TODO
 
 #### Bugs
-- worker dying while selecting a file (modial dialog, eg ios)
+- types missing when using ami-logger in a TS project
+- switching from LIVE to STATES mixes up the indexes
+- selecting the machine has no effect (left sidebar)
+- worker dying while selecting a file (modal dialog, eg ios)
   - this.layout_worker.reset - undefined is not an object
 - last position of playing doesnt change the button icon to Pause (from Playing)
 - rendering out of canvas (use clientWidth for dagre layout consts)
@@ -54,11 +57,16 @@
   - import snapshots in the async way
 
 #### Inspector
+- add materialui/paper to the minimap (shadow)
+- adjust zooming params
+  - scroll zoom snaps to edges
+  - pinch zoom works like a scroll zoom (`1, 2, 3` instead of `+1+1+1+1...`)
 - zoom with a keyboard
 - cursor jumping over states / machines (with a mod key)
 - clicking on the minimap scrolls to the (clicked) machine
 - TwoFingers gesture switches to drag scroll anywhere on the surface
 - Next / Prev button next to the step counter (left & right)
+  - materiaul ui Chip
 - spread network diffing into a worker pool
 - try to use directly from an HTML file
 - hotkeys
