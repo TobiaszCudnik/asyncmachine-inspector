@@ -446,7 +446,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     if (changed_ids && changed_ids.length) {
       // highlights
       if (step_type == StepTypes.STATES || step_type == StepTypes.LIVE) {
-        this.highlight(changed_ids)
+        this.highlight(changed_ids, false)
       }
       if (!isProd()) console.time('syncClasses')
       this.syncClasses(changed_ids)
@@ -885,18 +885,18 @@ export default class JointGraph extends UiBase<INetworkJson> {
       .map(id => this.graph.getCell(id))
       .filter(cell => cell)
       .map(cell => this.paper.findViewByModel(cell))
+    const time = moment().unix()
     for (const cell of views) {
       cell.highlight(null /* defaults to cellView.el */, {
         highlighter: this.getHighlighter(cell.model.get('type'))
       })
       if (!skip_index) {
-        this.highlighted_ids[cell.model.id] = moment().unix()
+        this.highlighted_ids[cell.model.id] = time
       }
     }
     if (permanent === true) {
       return () => this.unhighlight(ids)
     }
-    const time = Date.now()
     setTimeout(() => {
       this.unhighlight(ids, skip_index ? false : time)
     }, (permanent === false ? null : permanent) || 1000)
