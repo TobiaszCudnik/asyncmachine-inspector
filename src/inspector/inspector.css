@@ -200,3 +200,14 @@ a:hover {
   text-decoration: underline;
   /*text-underline: lightskyblue;*/
 }
+
+.summary {
+  position: absolute;
+  height: 200px;
+  left: 256px;
+  right: 580px;
+  background-color: rgba(0, 0, 0, 0.87);
+  padding: 2em;
+  color: white;
+  bottom: 100px;
+}

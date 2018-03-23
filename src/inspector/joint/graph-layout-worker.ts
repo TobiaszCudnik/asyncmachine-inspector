@@ -84,6 +84,7 @@ function syncDataService(): IDataServiceSync {
     'is_latest',
     'current_patch',
     'patch_position',
+    'summary',
     'last_scroll_add_remove'
   ) as IDataServiceSync // TODO loose casting
 }

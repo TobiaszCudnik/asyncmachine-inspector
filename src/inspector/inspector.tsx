@@ -265,7 +265,6 @@ export class Inspector implements ITransitions {
   // }
 
   async DiffSync_state(patch: IPatch) {
-    if (patch.summary) console.log(patch.summary)
     // log(`patch type ${patch.type}`)
     const states = this.states
     // queue the patches until the worker is ready
@@ -567,7 +566,10 @@ export class Inspector implements ITransitions {
         return ret
       },
       get is_connected() {
-        return self.states.is('Connected') || self.states.is('FullSync')
+        return self.states.is('Connected')
+      },
+      get is_rendered() {
+        return self.states.is('FullSync')
       },
       get on_last() {
         return self.data_service.is_latest
@@ -624,6 +626,9 @@ export class Inspector implements ITransitions {
           ret = deepMerge(ret, transition.touched, removeDuplicates)
         }
         return ret
+      },
+      get summary() {
+        return self.data_service.summary
       },
       /**
        * TODO export log entires within the patch object

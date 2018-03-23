@@ -27,6 +27,8 @@ export interface IPatch {
   machine_id: string
   logs?: ILogEntry[]
   data?: ITransitionData
+  summary?: string
+  // TODO used?
   start_index?: number
   start_index_first?: number
 }

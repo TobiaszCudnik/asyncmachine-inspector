@@ -9,7 +9,6 @@ import {
   ITransitionData
 } from '../../network/network'
 import * as assert from 'assert/'
-import { sortedIndex } from 'underscore'
 import { isProd } from '../utils'
 
 export enum Direction {
@@ -94,6 +93,10 @@ class JointDataService extends EventEmitter {
       case t.STEPS:
         return Math.max(0, this.patches.length - 1)
     }
+  }
+  // TODO use diffs
+  get summary() {
+    return this.patches[this.patch_position].summary
   }
 
   // stack of last TRANSITION_START indexes
