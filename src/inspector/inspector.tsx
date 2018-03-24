@@ -155,6 +155,11 @@ export class Inspector implements ITransitions {
     this.socket.on('disconnected', this.states.addByListener('Disconnected'))
   }
 
+  Connected_exit() {
+    this.socket.disconnect()
+    this.socket = null
+  }
+
   // TODO support resetting
   // TODO basedir
   async InitializingLayoutWorker_state() {
@@ -697,6 +702,7 @@ export class Inspector implements ITransitions {
         e.preventDefault()
         const id = el.dataset.id
         this.graph.scrollTo(id)
+        this.graph.highlight([id], false)
       },
       onCellSelect: (e: MouseEvent, manual_state?) => {
         const el = e.target as HTMLElement
@@ -764,6 +770,7 @@ export class Inspector implements ITransitions {
   async loadSnapshot(snapshot: JSONSnapshot) {
     // TODO make it a state
     this.layout_data.is_snapshot = true
+    this.states.add('Disconnected')
     this.states.drop('FullSync')
     this.states.add('FullSync', snapshot.full_sync)
     if (this.states.is('LayoutWorkerReady')) {

@@ -154,7 +154,17 @@ export default class JointGraph extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
-  selected_id: string | null = null
+  private selected_id_: string | null = null
+  get selected_id(): string | null {
+    // TODO check if the ID is still valid
+    if (!this.data.cells.find(c => c.id == this.selected_id_)) {
+      this.selected_id_ = null
+    }
+    return this.selected_id_ || this.data.cells[1].id
+  }
+  set selected_id(val) {
+    this.selected_id_ = val
+  }
 
   state_highlighter = {
     name: 'stroke',
@@ -307,15 +317,40 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
 
-  onArrowListener(arrow, event) {
-    console.log('onArrowListener', arrow, event)
-    const positions = this.positionsFromElement(
+  // TODO support ALT+arrow to jump between machines
+  onArrowListener(arrow, event: KeyboardEvent) {
+    if (!this.has_focus) return
+    // console.time('distances')
+    let distances = this.positionsFromElement(
       this.data.cells.find(n => n.id == this.selected_id)
     )
-    console.log(positions)
+    distances = orderBy(distances, ['distance'], ['asc'])
+    // console.timeEnd('distances')
+    const angles = {
+      ArrowRight: [[-45, 45]],
+      ArrowDown: [[45, 135]],
+      ArrowLeft: [[-180, -135], [135, 180]],
+      ArrowUp: [[-135, -45]]
+    }
+    const ranges = angles[event.code]
+    let found
+    for (const pos of distances) {
+      for (const range of ranges) {
+        if (pos.angle < range[0] || pos.angle > range[1]) continue
+        this.selectState(pos.id)
+        found = true
+        break
+      }
+      if (found) break
+    }
+    if (found) {
+      this.renderMinimap()
+    }
   }
 
-  positionsFromElement(source_node: TState): { deg: number; length: number }[] {
+  positionsFromElement(
+    source_node: TState
+  ): { angle: number; distance: number; id: string }[] {
     if (!this.data) return []
     const ret = []
     const positions = this.settings.get().positions
@@ -324,10 +359,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       if (node.id == source_node.id) continue
       if (node.type != 'fsa.State') continue
       const model = this.graph.getCell(node.id)
-      const pos = [
-        source_model.get('position'),
-        model.get('position')
-      ]
+      const pos = [source_model.get('position'), model.get('position')]
       const angle = radiansDegrees(this.getAngle(pos[0], pos[1]))
       const distance = Math.sqrt(
         Math.pow(pos[1].x - pos[0].x, 2) + Math.pow(pos[1].y - pos[0].y, 2)
@@ -982,20 +1014,28 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const model = this.graph.getCell(id)
     const view = this.paper.findViewByModel(model)
     const box = view.getBBox()
-    // const viewport_scale = {
-    //   x: this.width / this.container.width(),
-    //   y: this.height / this.container.height()
-    // }
     const viewport = {
       width: this.container.width(),
       height: this.container.height(),
       left: this.scroll_element.scrollLeft,
       top: this.scroll_element.scrollTop
     }
-    this.scroll_element.scrollLeft = Math.max(0, box.x - 20)
-    this.scroll_element.scrollTop = Math.max(0, box.y - 20)
-    console.log('viewport', viewport)
-    console.log('box', box)
+    view.$el.get(0).scrollIntoView()
+    const center = {
+      x: this.scroll_element.clientWidth / 2,
+      y: this.scroll_element.clientHeight / 2
+    }
+    const scroll_to = {
+      x: Math.max(0, box.x - center.x),
+      y: Math.max(0, box.y - center.y)
+    }
+    // TODO smooth scroll
+    this.scroll_element.scrollLeft = scroll_to.x
+    this.scroll_element.scrollTop = scroll_to.y
+
+    this.settings.set('scroll', { x: scroll_to.x, y: scroll_to.y })
+    // console.log('viewport', viewport)
+    // console.log('box', box)
   }
 
   protected getHighlighter(type) {
@@ -1183,22 +1223,28 @@ export default class JointGraph extends UiBase<INetworkJson> {
     return machines
   }
 
+  selectState(id: string) {
+    this.unhighlight([this.selected_id], true, this.cursor_highlighter)
+    this.highlight([id], true, true, this.cursor_highlighter)
+    this.selected_id = id
+    this.scrollTo(id)
+  }
+
   protected bindCursor() {
     this.container.on('focus', e => {
-      console.log('focusin', e)
       if (!this.data) return
       // TODO first fsm.state
-      this.selected_id = this.selected_id || this.data.cells[1].id
-      this.highlight([this.selected_id], true, true, this.cursor_highlighter)
+      this.selectState(this.selected_id)
       this.container.addClass('focued')
+      this.has_focus = true
     })
     this.container.on('blur', e => {
-      console.log('blur', e)
       if (!this.data) return
       // TODO first fsm.state
-      this.selected_id = this.selected_id || this.data.cells[1].id
       this.unhighlight([this.selected_id], true, this.cursor_highlighter)
-      this.container.removeClass('focued')
+      this.container.removeClass('focsued')
+      this.has_focus = true
     })
   }
+  has_focus: boolean
 }

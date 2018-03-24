@@ -631,7 +631,7 @@ export class Main extends Component<
           </div>
 
           {this.props.summary ? (
-            <div className="summary">{this.props.summary}</div>
+            <pre className="summary">{this.props.summary}</pre>
           ) : (
             ''
           )}

@@ -13,6 +13,7 @@
 /// <reference path="modules/chai/index.d.ts" />
 /// <reference path="modules/d3/index.d.ts" />
 /// <reference path="modules/jointjs/index.d.ts" />
+/// <reference path="modules/lodash/index.d.ts" />
 /// <reference path="modules/material-ui/index.d.ts" />
 /// <reference path="modules/node-uuid/index.d.ts" />
 /// <reference path="modules/react-dom/index.d.ts" />
