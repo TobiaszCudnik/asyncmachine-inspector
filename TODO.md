@@ -8,6 +8,8 @@
 # TODO
 
 #### Bugs
+- elements rendered out of the viewport (after layout)
+- loading a snapshot should disconnect
 - types missing when using ami-logger in a TS project
 - switching from LIVE to STATES mixes up the indexes
 - selecting the machine has no effect (left sidebar)
@@ -57,6 +59,11 @@
   - import snapshots in the async way
 
 #### Inspector
+- click on a state to give cursor
+  - Enter sets/unsets
+  - space selects
+- CLI flag to serve via the file protocol
+- focus graph keystroke
 - add materialui/paper to the minimap (shadow)
 - adjust zooming params
   - scroll zoom snaps to edges
