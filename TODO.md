@@ -1,18 +1,13 @@
-- scroll to a machine
-  - toolbar switch to auto scroll to the current transition while stepping
-  - click to scroll on machine and state names
-    - machines view
-    - transitions view
-    - log view
+- selecting the machine has no effect (left sidebar)
+- Show Summary
 
 # TODO
 
 #### Bugs
+- doesnt work on stackblitz
 - elements rendered out of the viewport (after layout)
-- loading a snapshot should disconnect
 - types missing when using ami-logger in a TS project
 - switching from LIVE to STATES mixes up the indexes
-- selecting the machine has no effect (left sidebar)
 - worker dying while selecting a file (modal dialog, eg ios)
   - this.layout_worker.reset - undefined is not an object
 - last position of playing doesnt change the button icon to Pause (from Playing)
@@ -59,34 +54,40 @@
   - import snapshots in the async way
 
 #### Inspector
+- summary
+  - Show Summary checkbox on the toolbar
+  - draggable
+  - change size?
+- tabindex for
+  - transitions sidebar
+  - machines sidebar
+  - logs sidebar
 - click on a state to give cursor
   - Enter sets/unsets
   - space selects
 - CLI flag to serve via the file protocol
-- focus graph keystroke
-- add materialui/paper to the minimap (shadow)
 - adjust zooming params
   - scroll zoom snaps to edges
   - pinch zoom works like a scroll zoom (`1, 2, 3` instead of `+1+1+1+1...`)
-- zoom with a keyboard
-- cursor jumping over states / machines (with a mod key)
-- clicking on the minimap scrolls to the (clicked) machine
 - TwoFingers gesture switches to drag scroll anywhere on the surface
 - Next / Prev button next to the step counter (left & right)
-  - materiaul ui Chip
-- spread network diffing into a worker pool
-- try to use directly from an HTML file
+  - material ui Chip
+- minimap
+  - show highlights and the cursor
+  - add materialui/paper (shadow)
+  - drag scroll the minimap with a mouse
+  - clicking on the minimap scrolls to the (clicked) machine
 - hotkeys
-	- go to step
-	- change step type
+  - go to step
+  - change step type
+  - zoom in/out
+  - show left sidebar
+  - show right sidebar
+- focus indicators
 - API for setting markers on the timeline
   - query of state sets with context
   - eg [Reading] set/unset while [Foo,Bar] touched
 - number of state changes or touched states as a flage graph above the timeline
-- fix scroll / zoom / restore
-  - mark scroll borders
-  - relative container size to min/max scroll and the scroller size (min)
-  - prevent mouse move of edges outside of the container area
 - regenerate am-types
 - catch errors when loading a snapshot
   - notify the user
@@ -100,7 +101,9 @@
     - log view
 - load snapshots from URLs
 - show the legend on the first load
-- reset confirmation message
+- confirmation message for Reset
+- Options menu
+  - put Reset inside
 - download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
 - machines sidebar
@@ -188,7 +191,8 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
-- move canvas rendering to a worker
+- send summary as a diff (npm:jsdiff)
+- move the canvas rendering to a worker
 - preheat jointjs by rendering 10 machines with 10 states each
   - then customize the names with first fullsync
   - always keep a buffor of 5 rendered machines
@@ -230,6 +234,7 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- divide joint/graph.ts into smaller files
 - extract layout.tsx into separate react components
   - implement custom shouldComponentUpdate
   - reduce re-renders, especially the log and machines view
