@@ -1,37 +1,31 @@
 - selecting the machine has no effect (left sidebar)
-- Show Summary
+- Show Summary toggle button
+- doesnt work on stackblitz
 
 # TODO
 
 #### Bugs
 - doesnt work on stackblitz
+- switching StepType while Playing
+  - causes a scrollTo with the old position value (of the next step)
+- switching from LIVE to STATES mixes up the indexes
+- 
+- selecting a machine isnt visible
 - elements rendered out of the viewport (after layout)
 - types missing when using ami-logger in a TS project
-- switching from LIVE to STATES mixes up the indexes
 - worker dying while selecting a file (modal dialog, eg ios)
   - this.layout_worker.reset - undefined is not an object
 - last position of playing doesnt change the button icon to Pause (from Playing)
 - rendering out of canvas (use clientWidth for dagre layout consts)
-- Play shouldbe grayed out on the last step
 - during Live step type
   - Play button should be grayed out
   - timeline should be scrollable
-- touch events for
-  - scrolling
-  - zooming
-- switching StepType while Playing
-  - causes a scrollTo with the old position value (of the next step)
-- "Transition - Next" with stepType=step isnt correct
-- resuming from a server with many diffs hangs the worker
-  - increase the timeout
-  - split packages into async batches
-- ami-server is missing a CLI / commander
 - uploading snapshots doesnt work on safari
-- is-touched highlighting during a transition is broken
 - Cancelled states dont get un-marked
   - repro?
 - cant distinguish cancelled from requested
   - during a transition
+  - repro?
 - sometimes drag-drop on a machine shifts states out of the machines borders
   - when dragging a machine during rendering (but not only)
   - every time in FF
@@ -54,6 +48,11 @@
   - import snapshots in the async way
 
 #### Inspector
+- progress indicator (on the toolbar, from material)
+- hovering over state / machine
+  - highlights them using cell-select
+  - implement in sidebars
+  - click scrolls to the element
 - summary
   - Show Summary checkbox on the toolbar
   - draggable
@@ -69,7 +68,6 @@
 - adjust zooming params
   - scroll zoom snaps to edges
   - pinch zoom works like a scroll zoom (`1, 2, 3` instead of `+1+1+1+1...`)
-- TwoFingers gesture switches to drag scroll anywhere on the surface
 - Next / Prev button next to the step counter (left & right)
   - material ui Chip
 - minimap
@@ -103,7 +101,11 @@
 - show the legend on the first load
 - confirmation message for Reset
 - Options menu
-  - put Reset inside
+  - Reset
+    - All Settings
+    - Positions
+    - Last Snapshot
+  - Autoplay (checkbox)
 - download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
 - machines sidebar
@@ -159,15 +161,6 @@
 - sidebars
   - two fingers scroll
   - size change by mouse / hotkey
-- minimap
-  - using clusters graph positions
-  - render as div[width,height], use the colors
-  - skip relations
-- hovering over state / machine / link names
-  - highlights them / dims the background
-  - AND/OR highlights all the other instances of that element
-  - places like machine info, log view, graph, even the timeline
-  - click scrolls to the element
   
 #### Data service worker
 - keep cache in IndexedDB
@@ -191,6 +184,8 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
+- cache more stuff
+  - `// TODO cache` comments
 - send summary as a diff (npm:jsdiff)
 - move the canvas rendering to a worker
 - preheat jointjs by rendering 10 machines with 10 states each
@@ -249,12 +244,8 @@
 - use the workerify webpack loader to simplify the build process
 
 #### Graph
-- Every Transition StepType
-  - highlighting each child transition in a separate step
+- TwoFingers gesture switches to drag scroll anywhere on the surface
 - states should have a restriction area of the parent machine
-- click on a state marks it with an outline
-  - so its easy to distinguish when zoomed out
-  - should work with marking transition-related states
 - Transition step type should have 3 steps per transition
   - involved machines are highlighted in all 3 steps
   - before the change, normal state styling

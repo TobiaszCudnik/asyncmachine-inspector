@@ -154,6 +154,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   drag_tick_ms = 10
   drag_start_pos: { x: number; y: number }
 
+  has_focus: boolean
   private selected_id_: string | null = null
   get selected_id(): string | null {
     // TODO check if the ID is still valid
@@ -1026,8 +1027,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
       y: this.scroll_element.clientHeight / 2
     }
     const scroll_to = {
-      x: Math.max(0, box.x - center.x),
-      y: Math.max(0, box.y - center.y)
+      x: Math.max(0, box.x - center.x + box.width / 2),
+      y: Math.max(0, box.y - center.y + box.height / 2)
     }
     // TODO smooth scroll
     this.scroll_element.scrollLeft = scroll_to.x
@@ -1246,5 +1247,4 @@ export default class JointGraph extends UiBase<INetworkJson> {
       this.has_focus = true
     })
   }
-  has_focus: boolean
 }
