@@ -667,6 +667,9 @@ export class Inspector implements ITransitions {
           self.states.drop('AutoplayOn')
         }
       },
+      onSummarySet: (state: boolean) => {
+        // void
+      },
       onHelpButton: () => {
         // TODO react repaints from ui events arent sync...
         self.states.addNext('LegendVisible')

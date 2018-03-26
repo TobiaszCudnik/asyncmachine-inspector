@@ -89,6 +89,7 @@ export type TLayoutProps = {
   onZoomSlider: Function
   onStepType: Function
   onAutoplaySet: (state: boolean) => void
+  onSummarySet: (state: boolean) => void
   onPlayButton: Function
   onHelpButton: Function
   onConnectSubmit: Function
@@ -107,13 +108,21 @@ type TSidebarMachineState = {
   is_touched: boolean
 }
 
+type TLayoutState = {
+  // rename to is_visible
+  sidebar?: boolean
+  // rename to is_visible
+  sidebar_left?: boolean
+  // rename to is_visible
+  autoplay?: boolean
+  // rename to is_visible
+  summary: boolean
+}
+
 const log = (...args) => {}
 // const log = (...args) => console.log(...args)
 
-export class Main extends Component<
-  TLayoutProps,
-  { sidebar?: boolean; sidebar_left?: boolean; autoplay?: boolean }
-> {
+export class Main extends Component<TLayoutProps, TLayoutState> {
   constructor(props, context) {
     super(props, context)
 
@@ -133,19 +142,25 @@ export class Main extends Component<
   // TODO merge those 3 state handlers
   handleToggleSidebar() {
     this.props.settings.set('logs_visible', !this.state.sidebar)
-    this.setState({ sidebar: !this.state.sidebar })
+    this.setState({ sidebar: !this.state.sidebar, ...this.state })
   }
 
   handleToggleSidebarLeft() {
     const new_state = !this.state.sidebar_left
     this.props.settings.set('machines_visible', new_state)
-    this.setState({ sidebar_left: new_state })
+    this.setState({ sidebar_left: new_state, ...this.state })
   }
 
   handleToggleAutoplay() {
     this.props.settings.set('autoplay', !this.state.autoplay)
-    this.setState({ autoplay: !this.state.autoplay })
+    this.setState({ autoplay: !this.state.autoplay, ...this.state })
     this.props.onAutoplaySet(!this.state.autoplay)
+  }
+
+  handleToggleSummary() {
+    this.props.settings.set('summary', !this.state.summary)
+    this.setState({ summary: !this.state.summary, ...this.state })
+    this.props.onSummarySet(!this.state.summary)
   }
 
   render() {
@@ -229,6 +244,13 @@ export class Main extends Component<
                 onClick={this.props.onHelpButton}
               />
               {/*TODO css */}
+              <div style={{ width: '9em', paddingRight: '2em' }}>
+                <Toggle
+                  label="Summary"
+                  defaultToggled={this.state.summary}
+                  onToggle={this.handleToggleSummary.bind(this)}
+                />
+              </div>
               <div style={{ width: '9em', paddingRight: '2em' }}>
                 <Toggle
                   label="Autoplay"
@@ -699,8 +721,8 @@ export class Main extends Component<
             </Drawer>
           </div>
 
-          {this.props.summary ? (
-            <pre className="summary">{this.props.summary}</pre>
+          {this.state.summary ? (
+            <pre className="summary">{this.state.summary}</pre>
           ) : (
             ''
           )}
