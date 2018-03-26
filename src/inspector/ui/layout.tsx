@@ -310,12 +310,36 @@ export class Main extends Component<
                         let class_name = `joint-group-${entry.machine}`
                         target_states = (
                           <span className={class_name}>
-                            [{machineName(entry.machine)}]{' '}
-                            {entry.states.join(' ')}
+                            <span
+                              key={entry.machine}
+                              className="cell-select hover"
+                              data-id={entry.machine}
+                            >
+                              [{machineName(entry.machine)}]{' '}
+                            </span>
+                            {entry.states.map(state => {
+                              const id = entry.machine + ':' + state
+                              return (
+                                <span
+                                  className="cell-select hover"
+                                  data-id={id}
+                                  key={id}
+                                >
+                                  {entry.states.join(' ')}
+                                </span>
+                              )
+                            })}
                           </span>
                         )
                       } else {
-                        target_states = <span>{entry.states.join(' ')}</span>
+                        target_states = entry.states.map(state => (
+                          <span
+                            className="cell-select hover"
+                            data-id={entry.machine + ':' + state}
+                          >
+                            {entry.states.join(' ')}
+                          </span>
+                        ))
                       }
                       return (
                         <span className={class_name} key={i}>
@@ -325,6 +349,23 @@ export class Main extends Component<
                       )
                     })
                     return <div>{items}</div>
+                  }
+
+                  function StateName({ name, machineId }) {
+                    const id = machineId + ':' + name
+                    return (
+                      <span className="cell-select hover" data-id={id} key={id}>
+                        {name}{' '}
+                      </span>
+                    )
+                  }
+
+                  function MachineName({ name, id }) {
+                    return (
+                      <span className="cell-select hover" data-id={id} key={id}>
+                        {name}
+                      </span>
+                    )
                   }
 
                   // TODO merge QueueList and ActiveTransitionsList
@@ -341,12 +382,29 @@ export class Main extends Component<
                         let class_name = `joint-group-${entry.machine_id}`
                         target_states = (
                           <span className={class_name}>
-                            [{machineName(entry.machine_id)}]{' '}
-                            {entry.states.join(' ')}
+                            [<MachineName
+                              name={machineName(entry.machine_id)}
+                              id={entry.machine_id}
+                            />]{' '}
+                            {entry.states.map(s => (
+                              <StateName
+                                name={s}
+                                machineId={entry.machine_id}
+                              />
+                            ))}
                           </span>
                         )
                       } else {
-                        target_states = <span>{entry.states.join(' ')}</span>
+                        target_states = (
+                          <span>
+                            {entry.states.map(s => (
+                              <StateName
+                                name={s}
+                                machineId={entry.machine_id}
+                              />
+                            ))}
+                          </span>
+                        )
                       }
                       return (
                         <span className={class_name} key={i}>
@@ -389,8 +447,19 @@ export class Main extends Component<
                         let class_name = `joint-group-${machine_id}`
                         return (
                           <div key={machine_id} className={class_name}>
-                            - <strong>{machineName(machine_id)}</strong>
-                            {states.length ? ': ' + states.join(' ') : ''}
+                            -{' '}
+                            <strong>
+                              <MachineName
+                                name={machineName(machine_id)}
+                                id={machine_id}
+                              />
+                            </strong>
+                            {states.length ? ': ' : ''}
+                            {states.length
+                              ? states.map(n => (
+                                  <StateName name={n} machineId={machine_id} />
+                                ))
+                              : ''}
                           </div>
                         )
                       }
@@ -550,7 +619,7 @@ export class Main extends Component<
                         <div className="machine details">
                           <a
                             href="#"
-                            className="cell-select hover"
+                            className="cell-select"
                             data-id={machine.id}
                           >
                             {selected_ids[machine.id]
