@@ -358,6 +358,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                       } else {
                         target_states = entry.states.map(state => (
                           <span
+                            key={entry.machine + ':' + state}
                             className="cell-select hover"
                             data-id={entry.machine + ':' + state}
                           >
@@ -378,7 +379,10 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   function StateName({ name, machineId }) {
                     const id = machineId + ':' + name
                     return (
-                      <span className="cell-select hover" data-id={id} key={id}>
+                      <span
+                        className="cell-select hover"
+                        data-id={id}
+                      >
                         {name}{' '}
                       </span>
                     )
@@ -386,7 +390,10 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 
                   function MachineName({ name, id }) {
                     return (
-                      <span className="cell-select hover" data-id={id} key={id}>
+                      <span
+                        className="cell-select hover"
+                        data-id={id}
+                      >
                         {name}
                       </span>
                     )
@@ -410,25 +417,23 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                               name={machineName(entry.machine_id)}
                               id={entry.machine_id}
                             />]{' '}
-                            {entry.states.map(s => (
+                            {entry.states.map(state_name => (
                               <StateName
-                                name={s}
+                                key={entry.machine_id + ':' + state_name}
+                                name={state_name}
                                 machineId={entry.machine_id}
                               />
                             ))}
                           </span>
                         )
                       } else {
-                        target_states = (
-                          <span>
-                            {entry.states.map(s => (
-                              <StateName
-                                name={s}
-                                machineId={entry.machine_id}
-                              />
-                            ))}
-                          </span>
-                        )
+                        target_states = entry.states.map(state_name => (
+                          <StateName
+                            key={entry.machine_id + ':' + state_name}
+                            name={state_name}
+                            machineId={entry.machine_id}
+                          />
+                        ))
                       }
                       return (
                         <span className={class_name} key={i}>
@@ -470,7 +475,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                       ([machine_id, states]) => {
                         let class_name = `joint-group-${machine_id}`
                         return (
-                          <div key={machine_id} className={class_name}>
+                          <div key={name + machine_id} className={class_name}>
                             -{' '}
                             <strong>
                               <MachineName
@@ -480,8 +485,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                             </strong>
                             {states.length ? ': ' : ''}
                             {states.length
-                              ? states.map(n => (
-                                  <StateName name={n} machineId={machine_id} />
+                              ? states.map(state_name => (
+                                  <StateName
+                                    name={state_name}
+                                    machineId={machine_id}
+                                    key={machine_id + ':' + state_name}
+                                  />
                                 ))
                               : ''}
                           </div>
@@ -507,10 +516,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         <h3>Previous</h3>
                         <TransitionsList
                           transitions={this.props.prev_transitions}
+                          name="previous"
                         />
                         <TouchedNodes
                           touched={this.props.prev_transitions_touched}
                           transitions={this.props.prev_transitions}
+                          name="previous"
                         />
                       </div>
                     )
@@ -521,10 +532,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         <h3>Current</h3>
                         <TransitionsList
                           transitions={this.props.active_transitions}
+                          name="active"
                         />
                         <TouchedNodes
                           touched={this.props.active_transitions_touched}
                           transitions={this.props.active_transitions}
+                          name="active"
                         />
                       </div>
                     )
@@ -542,10 +555,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         <h3>Next</h3>
                         <TransitionsList
                           transitions={this.props.next_transitions}
+                          name="next"
                         />
                         <TouchedNodes
                           touched={this.props.next_transitions_touched}
                           transitions={this.props.next_transitions}
+                          name="next"
                         />
                       </div>
                     )

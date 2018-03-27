@@ -344,9 +344,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
       }
       if (found) break
     }
-    if (found) {
-      this.renderMinimap()
-    }
   }
 
   positionsFromElement(
@@ -1035,6 +1032,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.scroll_element.scrollTop = scroll_to.y
 
     this.settings.set('scroll', { x: scroll_to.x, y: scroll_to.y })
+    this.renderMinimap()
     // console.log('viewport', viewport)
     // console.log('box', box)
   }
