@@ -213,6 +213,14 @@ export default function() {
                 <span>SPACE</span>
                 <span>Pause / Play</span>
               </li>
+              <li>
+                <span>CTRL + G</span>
+                <span>Focus the graph</span>
+              </li>
+              <li>
+                <span>ARROWS</span>
+                <span>Move the cursor around the graph</span>
+              </li>
             </ul>
             <h4>Relations</h4>
             <h5>Between states</h5>

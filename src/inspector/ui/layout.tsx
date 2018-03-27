@@ -131,7 +131,8 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
     this.state = {
       sidebar: props.settings.get().logs_visible,
       sidebar_left: props.settings.get().machines_visible,
-      autoplay: props.settings.get().autoplay
+      autoplay: props.settings.get().autoplay,
+      summary: props.settings.get().summary_visible
     }
 
     // Dummy call to not get stylesheets stripped out by webpack
@@ -141,25 +142,26 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 
   // TODO merge those 3 state handlers
   handleToggleSidebar() {
-    this.props.settings.set('logs_visible', !this.state.sidebar)
-    this.setState({ sidebar: !this.state.sidebar, ...this.state })
+    const new_state = !this.state.sidebar
+    this.props.settings.set('logs_visible', new_state)
+    this.setState({ ...this.state, sidebar: new_state })
   }
 
   handleToggleSidebarLeft() {
     const new_state = !this.state.sidebar_left
     this.props.settings.set('machines_visible', new_state)
-    this.setState({ sidebar_left: new_state, ...this.state })
+    this.setState({ ...this.state, sidebar_left: new_state })
   }
 
   handleToggleAutoplay() {
     this.props.settings.set('autoplay', !this.state.autoplay)
-    this.setState({ autoplay: !this.state.autoplay, ...this.state })
+    this.setState({ ...this.state, autoplay: !this.state.autoplay })
     this.props.onAutoplaySet(!this.state.autoplay)
   }
 
   handleToggleSummary() {
-    this.props.settings.set('summary', !this.state.summary)
-    this.setState({ summary: !this.state.summary, ...this.state })
+    this.props.settings.set('summary_visible', !this.state.summary)
+    this.setState({ ...this.state, summary: !this.state.summary })
     this.props.onSummarySet(!this.state.summary)
   }
 
@@ -183,6 +185,11 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   onToggle={this.handleToggleSidebarLeft.bind(this)}
                 />
               </div>
+              <FlatButton
+                style={{ margin: 0 }}
+                label="Help"
+                onClick={this.props.onHelpButton}
+              />
               <SelectField
                 style={{ margin: '0 1em' }}
                 floatingLabelText="Step by"
@@ -237,11 +244,6 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                 style={{ margin: 0 }}
                 label="Reset"
                 onClick={this.props.onResetButton}
-              />
-              <FlatButton
-                style={{ margin: 0 }}
-                label="Help"
-                onClick={this.props.onHelpButton}
               />
               {/*TODO css */}
               <div style={{ width: '9em', paddingRight: '2em' }}>
@@ -721,8 +723,8 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
             </Drawer>
           </div>
 
-          {this.state.summary ? (
-            <pre className="summary">{this.state.summary}</pre>
+          {this.state.summary && this.props.summary ? (
+            <pre className="summary">{this.props.summary}</pre>
           ) : (
             ''
           )}
