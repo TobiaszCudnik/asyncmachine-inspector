@@ -713,11 +713,11 @@ export class Inspector implements ITransitions {
         e.preventDefault()
         const id = el.dataset.id
         if (manual_state === true) {
-          this.graph.highlight([id], false, true)
           this.graph.manual_highlight_id = id
+          this.graph.highlight([id], false, true)
         } else if (manual_state === false) {
-          this.graph.unhighlight([id])
           this.graph.manual_highlight_id = null
+          this.graph.unhighlight([id])
         } else if (this.graph.highlighted_ids[id]) {
           this.graph.unhighlight([id], true)
         } else {

@@ -997,10 +997,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
       .map(cell => this.paper.findViewByModel(cell))
     for (const cell of views) {
       const id = cell.model.get('id')
-      if (this.manual_highlight_id == id)
-        this.manual_highlight_id = null
       if (time && time !== true && this.highlighted_ids[id] != time) continue
       if (!time && this.highlighted_ids[id]) continue
+      if (!time && this.manual_highlight_id == id)
+        this.manual_highlight_id = null
       cell.unhighlight(null, {
         highlighter: highlighter || this.getHighlighter(cell.model.get('type'))
       })
@@ -1173,7 +1173,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     canvas.stroke()
 
     // HIGHLIGHTS
-    console.log('highlighted_ids', highlighted_ids)
+    console.log('manual_highlight_id', this.manual_highlight_id)
     for (const id of highlighted_ids) {
       if (!id) continue
       const model = this.paper.getModelById(id)
@@ -1182,7 +1182,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
       const pos = positions[id] || {}
       const width = model.get('size').width * x_ratio
       const height = model.get('size').height * y_ratio
-      console.log(model.get('position'), width, height)
+      // console.log(model.get('position'), width, height)
       canvas.fillStyle = `red`
       canvas.fillRect(
         (pos.x || model.get('position').x) * x_ratio - 5,
@@ -1191,7 +1191,6 @@ export default class JointGraph extends UiBase<INetworkJson> {
         Math.max(10, height)
       )
       canvas.stroke()
-
     }
     // console.timeEnd('renderMinimap')
   }
