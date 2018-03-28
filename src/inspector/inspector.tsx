@@ -111,6 +111,13 @@ export class Inspector implements ITransitions {
 
     this.layout_data = this.buildLayoutData()
     this.data_service = new JointDataService()
+    // throttle UI updates
+    this.renderUIQueue = throttle(() => {
+      this.renderUI()
+    }, 100)
+    this.goToLast = throttle(() => {
+      this.states.add('Rendering', this.data_service.position_max)
+    }, 500)
 
     if (document.readyState == 'complete') {
       this.states.add('DOMReady')
@@ -121,13 +128,6 @@ export class Inspector implements ITransitions {
       )
     }
     this.initPlayStep()
-    // throttle UI updates
-    this.renderUIQueue = throttle(() => {
-      this.renderUI()
-    }, 100)
-    this.goToLast = throttle(() => {
-      this.states.add('Rendering', this.data_service.position_max)
-    }, 500)
   }
   goToLast: Function
 

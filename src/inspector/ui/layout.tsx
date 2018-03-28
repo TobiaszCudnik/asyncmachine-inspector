@@ -339,8 +339,8 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                               className="cell-select hover"
                               data-id={entry.machine}
                             >
-                              [{machineName(entry.machine)}]{' '}
-                            </span>
+                              [{machineName(entry.machine)}]
+                            </span>{' '}
                             {entry.states.map(state => {
                               const id = entry.machine + ':' + state
                               return (
@@ -349,7 +349,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                                   data-id={id}
                                   key={id}
                                 >
-                                  {entry.states.join(' ')}
+                                  {state}
                                 </span>
                               )
                             })}
@@ -362,7 +362,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                             className="cell-select hover"
                             data-id={entry.machine + ':' + state}
                           >
-                            {entry.states.join(' ')}
+                            {state}
                           </span>
                         ))
                       }
@@ -721,7 +721,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                       let content = entry.msg
                       content = content.replace(
                         new RegExp(
-                          `(\\s|\\+)(${states.join('|')})(\\s|,|$)`,
+                          `(\\s|\\+|-)(${states.join('|')})(\\s|,|$)`,
                           'g'
                         ),
                         (m, pre, state, post) => `

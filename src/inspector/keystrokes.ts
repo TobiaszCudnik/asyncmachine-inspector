@@ -1,4 +1,4 @@
-import {Inspector} from "./inspector";
+import { Inspector } from './inspector'
 
 export default function(inspector: Inspector) {
   const isLegendVisible = () => inspector.states.is('LegendVisible')

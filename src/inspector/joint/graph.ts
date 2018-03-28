@@ -1173,11 +1173,11 @@ export default class JointGraph extends UiBase<INetworkJson> {
     canvas.stroke()
 
     // HIGHLIGHTS
-    console.log('manual_highlight_id', this.manual_highlight_id)
+    log('manual_highlight_id', this.manual_highlight_id)
     for (const id of highlighted_ids) {
       if (!id) continue
       const model = this.paper.getModelById(id)
-      console.log(model)
+      log(model)
       if (!model) continue
       const pos = positions[id] || {}
       const width = model.get('size').width * x_ratio
