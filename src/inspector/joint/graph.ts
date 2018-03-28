@@ -960,6 +960,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
   }
 
   highlighted_ids: { [id: string]: number } = {}
+  manual_highlight_id: string | null = null
 
   highlight(
     ids: string[],
@@ -986,6 +987,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     setTimeout(() => {
       this.unhighlight(ids, skip_index ? false : time)
     }, (permanent === false ? null : permanent) || 1000)
+    this.renderMinimap()
   }
 
   unhighlight(ids: string[], time?: number | boolean, highlighter?) {
@@ -995,6 +997,8 @@ export default class JointGraph extends UiBase<INetworkJson> {
       .map(cell => this.paper.findViewByModel(cell))
     for (const cell of views) {
       const id = cell.model.get('id')
+      if (this.manual_highlight_id == id)
+        this.manual_highlight_id = null
       if (time && time !== true && this.highlighted_ids[id] != time) continue
       if (!time && this.highlighted_ids[id]) continue
       cell.unhighlight(null, {
@@ -1004,6 +1008,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
         delete this.highlighted_ids[id]
       }
     }
+    this.renderMinimap()
   }
 
   // support scaling up to show the whole cell
@@ -1061,6 +1066,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const scale = this.paper.scale().sx
     const is_during_transition = $('#graph.during-transition').length
     const canvas = this.minimap.getContext('2d')
+    const highlighted_ids = [
+      this.manual_highlight_id,
+      ...Object.keys(this.highlighted_ids)
+    ]
 
     // CLEAR
     canvas.clearRect(0, 0, this.minimap.width, this.minimap.height)
@@ -1162,6 +1171,28 @@ export default class JointGraph extends UiBase<INetworkJson> {
       window_css.height
     )
     canvas.stroke()
+
+    // HIGHLIGHTS
+    console.log('highlighted_ids', highlighted_ids)
+    for (const id of highlighted_ids) {
+      if (!id) continue
+      const model = this.paper.getModelById(id)
+      console.log(model)
+      if (!model) continue
+      const pos = positions[id] || {}
+      const width = model.get('size').width * x_ratio
+      const height = model.get('size').height * y_ratio
+      console.log(model.get('position'), width, height)
+      canvas.fillStyle = `red`
+      canvas.fillRect(
+        (pos.x || model.get('position').x) * x_ratio - 5,
+        (pos.y || model.get('position').y) * y_ratio - 5,
+        Math.max(10, width),
+        Math.max(10, height)
+      )
+      canvas.stroke()
+
+    }
     // console.timeEnd('renderMinimap')
   }
 
