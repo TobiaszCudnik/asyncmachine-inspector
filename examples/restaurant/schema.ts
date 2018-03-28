@@ -1,72 +1,76 @@
-import AsyncMachine, { PipeFlags } from 'asyncmachine'
+import AsyncMachine, { machine } from 'asyncmachine'
 import _ from 'lodash'
 import delay from 'delay'
 import random from 'random-int'
+import { Network } from 'asyncmachine-inspector'
 
 const LOG_LEVEL = 0
 
-export class Chef extends AsyncMachine<any, any, any> {
-  Waiting = { auto: true }
-  Cooking = { drop: ['Waiting'] }
+export const chef_state = {
+  Waiting: { auto: true },
+  Cooking: { drop: ['Waiting'] }
+}
 
+export class Chef {
   restaurant: Restaurant
+  state = machine(chef_state)
 
   constructor(name) {
-    super()
-    this.id(`Chef ${name}`)
-    this.logLevel(LOG_LEVEL)
-    this.registerAll()
+    this.state.id(`Chef ${name}`)
+    this.state.logLevel(LOG_LEVEL)
   }
 
   async Cooking_state(customer_id: string) {
     await delay(random(3, 5) * 1000)
-    this.restaurant.add('MealReady', customer_id)
-    this.restaurant.drop(this, 'Cooking')
+    this.restaurant.state.add('MealReady', customer_id)
+    this.restaurant.state.drop(this.state, 'Cooking')
   }
 
   Cooking_end() {
-    if (this.restaurant.orders_pending.length)
-      this.add('Cooking', this.restaurant.orders_pending.shift())
+    if (this.restaurant.orders_pending.length) {
+      this.state.add('Cooking', this.restaurant.orders_pending.shift())
+    }
   }
 }
 
-export class Waiter extends AsyncMachine<any, any, any> {
-  Waiting = { drop: ['Busy'], auto: true }
-  Busy = { drop: ['Waiting'], auto: true }
-  TakingOrder = {
+export const waiter_state = {
+  Waiting: { drop: ['Busy'], auto: true },
+  Busy: { drop: ['Waiting'], auto: true },
+  TakingOrder: {
     add: ['Busy'],
     drop: ['Waiting', 'RequestingMeal', 'DeliveringMeal']
-  }
-  RequestingMeal = { add: ['Busy'], drop: ['TakingOrder', 'DeliveringMeal'] }
-  DeliveringMeal = { add: ['Busy'], drop: ['Waiting', 'TakingOrder'] }
+  },
+  RequestingMeal: { add: ['Busy'], drop: ['TakingOrder', 'DeliveringMeal'] },
+  DeliveringMeal: { add: ['Busy'], drop: ['Waiting', 'TakingOrder'] }
+}
 
+export class Waiter {
   restaurant: Restaurant
+  state = machine(waiter_state)
 
   constructor(name) {
-    super()
-    this.id(`Waiter ${name}`)
-    this.logLevel(LOG_LEVEL)
-    this.registerAll()
+    this.state.id(`Waiter ${name}`).setTarget(this)
+    this.state.logLevel(LOG_LEVEL)
   }
 
   TakingOrder_enter(customer: Customer) {
-    return Boolean(customer.is('WaitingToOrder'))
+    return Boolean(customer.state.is('WaitingToOrder'))
   }
 
   async TakingOrder_state(customer: Customer) {
-    this.restaurant.add(customer, 'Ordering')
-    this.restaurant.add(this, 'TakingOrder')
+    this.restaurant.state.add(customer.state, 'Ordering')
+    this.restaurant.state.add(this.state, 'TakingOrder')
     await delay(1000)
     // TODO check the abort function
-    this.restaurant.add(customer, 'WaitingForMeal')
-    this.restaurant.add(this, 'RequestingMeal', customer.id())
+    this.restaurant.state.add(customer.state, 'WaitingForMeal')
+    this.restaurant.state.add(this.state, 'RequestingMeal', customer.state.id())
   }
 
   RequestingMeal_state(customer_id: string) {
-    const chef = _.find(this.restaurant.chefs, w => w.is('Waiting'))
-    if (chef) this.restaurant.add(chef, 'Cooking', customer_id)
+    const chef = _.find(this.restaurant.chefs, w => w.state.is('Waiting'))
+    if (chef) this.restaurant.state.add(chef.state, 'Cooking', customer_id)
     else this.restaurant.orders_pending.push(customer_id)
-    this.restaurant.drop(this, ['RequestingMeal', 'Busy'])
+    this.restaurant.state.drop(this.state, ['RequestingMeal', 'Busy'])
   }
 
   DeliveringMeal_enter() {
@@ -80,49 +84,58 @@ export class Waiter extends AsyncMachine<any, any, any> {
       c => c.id() == customer_id
     )
     // check if the customer exists (didnt leave)
-    if (customer && !customer.is('Left')) {
+    if (customer && !customer.state.is('Left')) {
       await delay(random(1, 2) * 1000)
       // TODO check the abort function
-      this.restaurant.add(customer, 'Eating')
-    } else this.restaurant.add('MealWasted')
-    this.restaurant.drop(this, ['DeliveringMeal', 'Busy'])
-    if (this.restaurant.meals_pending.length)
-      this.restaurant.add(this, 'DeliveringMeal')
+      this.restaurant.state.add(customer.state, 'Eating')
+    } else {
+      this.restaurant.state.add('MealWasted')
+    }
+    this.restaurant.state.drop(this.state, ['DeliveringMeal', 'Busy'])
+    if (this.restaurant.meals_pending.length) {
+      this.restaurant.state.add(this.state, 'DeliveringMeal')
+    }
   }
 }
 
-export class Customer extends AsyncMachine<any, any, any> {
-  WaitingToOrder = {}
-  Ordering = { drop: ['WaitingToOrder'] }
-  WaitingForMeal = { drop: ['Ordering'] }
-  Eating = { drop: ['WaitingForMeal'] }
-  Left = { drop: ['Eating', 'WaitingForMeal', 'Ordering', 'WaitingToOrder'] }
+export const customer_state = {
+  WaitingToOrder: {},
+  Ordering: { drop: ['WaitingToOrder'] },
+  WaitingForMeal: { drop: ['Ordering'] },
+  Eating: { drop: ['WaitingForMeal'] },
+  Left: { drop: ['Eating', 'WaitingForMeal', 'Ordering', 'WaitingToOrder'] }
+}
+
+export class Customer {
+  state = machine(customer_state)
 
   constructor(name) {
-    super()
-    this.id(`Customer ${name}`)
-    this.logLevel(LOG_LEVEL)
-    this.registerAll()
+    this.state.id(`Customer ${name}`).setTarget(this)
+    this.state.logLevel(LOG_LEVEL)
   }
 
   async Eating_state() {
     await delay(2000)
-    this.add('Left')
+    this.state.add('Left')
   }
 }
 
-// TODO extract states to a separate class
-export class Restaurant extends AsyncMachine<any, any, any> {
-  WaiterAvailable = { multi: true }
-  ChefAvailable = { multi: true }
-  CustomerWaiting = { multi: true }
-  CustomerEating = { multi: true }
-  MealReady = { multi: true, drop: ['ServingCustomer'] }
-  ServingCustomer = {
+export const restaurant_state = {
+  WaiterAvailable: { multi: true },
+  ChefAvailable: { multi: true },
+  CustomerWaiting: { multi: true },
+  CustomerEating: { multi: true },
+  MealReady: { multi: true, drop: ['ServingCustomer'] },
+  ServingCustomer: {
     require: ['WaiterAvailable', 'CustomerWaiting'],
     auto: true
-  }
-  MealWasted = {}
+  },
+  MealWasted: {}
+}
+
+// TODO extract states to a separate class
+export class Restaurant {
+  state = machine(restaurant_state)
 
   chefs: Chef[] = []
   waiters: Waiter[] = []
@@ -131,87 +144,77 @@ export class Restaurant extends AsyncMachine<any, any, any> {
   orders_pending: string[] = []
   meals_pending: string[] = []
 
-  constructor(public network) {
-    super()
-    this.id(`Restaurant`)
-    this.logLevel(LOG_LEVEL)
-    this.register(
-      'WaiterAvailable',
-      'ChefAvailable',
-      'CustomerWaiting',
-      'CustomerEating',
-      'ServingCustomer',
-      'MealReady',
-      'MealWasted'
-    )
-    network.addMachine(this)
+  constructor(public network: Network) {
+    this.state.id(`Restaurant`).setTarget(this)
+    this.state.logLevel(LOG_LEVEL)
+    network.addMachine(this.state)
   }
 
   addChef(chef: Chef) {
     chef.restaurant = this
     this.chefs.push(chef)
-    this.network.addMachine(chef)
-    chef.pipe('Waiting', this, 'ChefAvailable')
-    this.add(chef, 'Waiting')
+    this.network.addMachine(chef.state)
+    chef.state.pipe('Waiting', this.state, 'ChefAvailable')
+    this.state.add(chef.state, 'Waiting')
   }
 
   addWaiter(waiter: Waiter) {
     waiter.restaurant = this
     this.waiters.push(waiter)
-    this.network.addMachine(waiter)
-    waiter.pipe('Waiting', this, 'WaiterAvailable')
-    this.add(waiter, 'Waiting')
+    this.network.addMachine(waiter.state)
+    waiter.state.pipe('Waiting', this.state, 'WaiterAvailable')
+    this.state.add(waiter.state, 'Waiting')
   }
 
   addCustomer(customer: Customer) {
     this.customers.push(customer)
-    this.network.addMachine(customer)
-    customer.pipe('WaitingToOrder', this, 'CustomerWaiting')
-    customer.pipe('Eating', this, 'CustomerEating')
-    this.add(customer, 'WaitingToOrder')
+    this.network.addMachine(customer.state)
+    customer.state.pipe('WaitingToOrder', this.state, 'CustomerWaiting')
+    customer.state.pipe('Eating', this.state, 'CustomerEating')
+    this.state.add(customer.state, 'WaitingToOrder')
   }
 
   CustomerEating_exit() {
-    return !this.customers.some(c => c.is('Eating'))
+    return !this.customers.some(c => c.state.is('Eating'))
   }
 
   MealWasted_state() {
-    this.drop('MealWasted')
+    this.state.drop('MealWasted')
   }
 
   MealReady_state(customer_id: string) {
     this.meals_pending.push(customer_id)
-    const waiter = _.find(this.waiters, w => w.is('Waiting'))
-    if (waiter) this.add(waiter, 'DeliveringMeal')
-    this.drop('MealReady')
+    const waiter = _.find(this.waiters, w => w.state.is('Waiting'))
+    if (waiter) this.state.add(waiter.state, 'DeliveringMeal')
+    this.state.drop('MealReady')
   }
 
   WaiterAvailable_enter() {
-    const waiter = _.find(this.waiters, w => w.is('Waiting'))
+    const waiter = _.find(this.waiters, w => w.state.is('Waiting'))
     if (this.meals_pending.length) {
-      this.add(waiter, 'DeliveringMeal')
+      this.state.add(waiter.state, 'DeliveringMeal')
       return false
     }
   }
 
   ChefAvailable_exit() {
-    return !this.chefs.some(w => w.is('Waiting'))
+    return !this.chefs.some(w => w.state.is('Waiting'))
   }
 
   WaiterAvailable_exit() {
-    return !this.waiters.some(w => w.is('Waiting'))
+    return !this.waiters.some(w => w.state.is('Waiting'))
   }
 
   ServingCustomer_enter() {
-    const waiter = _.find(this.waiters, w => w.is('Waiting'))
-    const customer = _.find(this.customers, c => c.is('WaitingToOrder'))
+    const waiter = _.find(this.waiters, w => w.state.is('Waiting'))
+    const customer = _.find(this.customers, c => c.state.is('WaitingToOrder'))
     if (!customer || !waiter) return false
   }
 
   ServingCustomer_state() {
-    const waiter = _.find(this.waiters, w => w.is('Waiting'))
-    const customer = _.find(this.customers, c => c.is('WaitingToOrder'))
-    this.add(waiter, 'TakingOrder', customer)
-    this.drop('ServingCustomer')
+    const waiter = _.find(this.waiters, w => w.state.is('Waiting'))
+    const customer = _.find(this.customers, c => c.state.is('WaitingToOrder'))
+    this.state.add(waiter.state, 'TakingOrder', customer)
+    this.state.drop('ServingCustomer')
   }
 }

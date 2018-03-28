@@ -20,8 +20,8 @@ async function produceCustomers(restaurant, max) {
 async function onNewCustomer(customer: Customer, number: number) {
   if (number == 2) {
     // the second customer will leave before getting his meal
-    await customer.when('WaitingForMeal')
+    await customer.state.when('WaitingForMeal')
     await delay(1000)
-    customer.add('Left')
+    customer.state.add('Left')
   }
 }
