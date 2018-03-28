@@ -1,5 +1,4 @@
-- selecting the machine has no effect (left sidebar)
-- Show Summary toggle button
+- highlight state names from the logs
 - doesnt work on stackblitz
 
 # TODO
@@ -38,16 +37,15 @@
   - state_style, is_touched, .during-transition
 - scrollbars in both sidebars
   - should have a dark background
-  - overlap the last line and last chars in a line (padding required)
 - material UI components dont bubble the hotkeys
 - jointjs sometimes incorrectly renders links (out of the viewport)
 - BUG? step_type == transitions - cancelled transitions not included
 - the left sidebar gets repainted when new diff arrives, although the content
   doesnt change
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
-  - import snapshots in the async way
 
 #### Inspector
+- two finger trackpad zoom / out
 - progress indicator (on the toolbar, from material)
 - hovering over state / machine
   - highlights them using cell-select
@@ -94,8 +92,6 @@
 - scroll to a machine
   - toolbar switch to auto scroll to the current transition while stepping
   - click to scroll on machine and state names
-    - machines view
-    - transitions view
     - log view
 - load snapshots from URLs
 - show the legend on the first load
@@ -184,6 +180,7 @@
 - support multiple loggers simultaneously
 
 #### Optimizations
+- take advantage of canceling async rendering available in the latest jointjs
 - cache more stuff
   - `// TODO cache` comments
 - send summary as a diff (npm:jsdiff)
@@ -191,7 +188,6 @@
 - preheat jointjs by rendering 10 machines with 10 states each
   - then customize the names with first fullsync
   - always keep a buffor of 5 rendered machines
-- disable console.time calls when in production
 - extract layout.tsx into separate react components
   - implement custom shouldComponentUpdate
   - reduce re-renders, especially the log and machines view
@@ -248,13 +244,11 @@
 - states should have a restriction area of the parent machine
 - Transition step type should have 3 steps per transition
   - involved machines are highlighted in all 3 steps
-  - before the change, normal state styling
-  - involved states highlighted and with the transition styling
-  - after the change, normal state styling
+  - 1 before the change, normal state styling
+  - 2 involved states highlighted and with the transition styling
+  - 3 after the change, normal state styling
   - after & before from different transitions represent the same step
     but are seperate steps on the timeline
-- ability to see nested transitions separately
-- play mode with transition step should fast-forward the single steps
   - 0.2s per step?
 - visualize if a machine is during transition
   - to distinguish nested transitions
@@ -267,7 +261,6 @@
 - more descriptive transition styles
 - 'pipe' isnt exactly like add, nor 'pipe invert' like drop
   - although shown like that
-- take advantage of canceling async rendering available in the latest jointjs
 
 #### Transition Tree
 - show transition as a tree
@@ -290,6 +283,6 @@
 - comments in the stackblitz demo file
   - Restaurant class should have a separate target
 - short screencasts showing off specific features
-  - links to live demos on stackblitz
+  - links to live demos on stackblitz / asciinema
 - maybe - extract the cluster graph, worker-based dagre layout for jointjs
-  into a module
+  - into a npm module
