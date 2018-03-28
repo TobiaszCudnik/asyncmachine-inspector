@@ -36,3 +36,4 @@ examples/file-logger/snapshot.json
 examples/remote-browser-logger/am-demo.umd.js
 examples/remote-server-logger/index.js
 examples/remote-server-logger/index.js.map
+/examples/restaurant/.awcache/
