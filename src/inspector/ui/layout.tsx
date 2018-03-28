@@ -78,6 +78,8 @@ export type TLayoutProps = {
   prev_transitions_touched: { [machine_id: string]: string[] }
   next_transitions: ITransitionData[]
   next_transitions_touched: { [machine_id: string]: string[] }
+  selected_ids: Set<string>
+  is_rendered: boolean
   // TODO type
   machines_states: { [machine_id: string]: TSidebarMachineState[] }
   highlighted_ids: { [id: string]: number }
@@ -572,7 +574,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   }: {
                     machine: TMachine
                     states?: TSidebarMachineState[]
-                    selected_ids?: string[]
+                    selected_ids?: Set<string>
                     step_type: string
                   }) {
                     let class_name = `joint-group-${machine.id}`
@@ -655,7 +657,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                             className="cell-select"
                             data-id={machine.id}
                           >
-                            {selected_ids[machine.id]
+                            {selected_ids.has(machine.id)
                               ? '☑ un-select'
                               : '☐ select'}
                           </a>{' '}

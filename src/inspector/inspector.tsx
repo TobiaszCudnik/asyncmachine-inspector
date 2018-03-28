@@ -550,10 +550,10 @@ export class Inspector implements ITransitions {
         return 'states'
       },
       get machines_states() {
-        return self.graph.getMachines()
+        return self.graph.getMachinesWithStates()
       },
       get selected_ids() {
-        return self.graph.highlighted_ids
+        return self.graph.selected_ids
       },
       get logs() {
         return self.logs.slice(0, self.data_service.patch_position)
@@ -705,23 +705,21 @@ export class Inspector implements ITransitions {
         e.preventDefault()
         const id = el.dataset.id
         this.graph.scrollTo(id)
-        this.graph.highlight([id], false)
+        this.graph.tmpHighlight([id])
       },
       onCellSelect: (e: MouseEvent, manual_state?) => {
         const el = e.target as HTMLElement
         if (!el.classList.contains('cell-select') || !el.dataset.id) return
         e.preventDefault()
         const id = el.dataset.id
-        if (manual_state === true) {
-          this.graph.manual_highlight_id = id
-          this.graph.highlight([id], false, true)
-        } else if (manual_state === false) {
-          this.graph.manual_highlight_id = null
-          this.graph.unhighlight([id])
-        } else if (this.graph.highlighted_ids[id]) {
-          this.graph.unhighlight([id], true)
+        if (manual_state === true || manual_state === false) {
+          if (manual_state) {
+            this.graph.tmpHighlight([id])
+          }
+        } else if (this.graph.selected_ids.has(id)) {
+          this.graph.selectID(id, false)
         } else {
-          this.graph.highlight([id], true)
+          this.graph.selectID(id, false)
         }
         this.renderUIQueue()
       },

@@ -155,52 +155,42 @@ export default class JointGraph extends UiBase<INetworkJson> {
   drag_start_pos: { x: number; y: number }
 
   has_focus: boolean
-  private selected_id_: string | null = null
-  get selected_id(): string | null {
-    // TODO check if the ID is still valid
-    if (!this.data.cells.find(c => c.id == this.selected_id_)) {
-      this.selected_id_ = null
-    }
-    return this.selected_id_ || this.data.cells[1].id
-  }
-  set selected_id(val) {
-    this.selected_id_ = val
-  }
 
-  state_highlighter = {
-    name: 'stroke',
-    options: {
-      attrs: {
-        'stroke-width': 3,
-        stroke: 'red',
-        d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
-        transform: 'scale(0.75, .75)'
+  highlighters = {
+    state: {
+      name: 'stroke',
+      options: {
+        attrs: {
+          'stroke-width': 3,
+          stroke: 'red',
+          d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
+          transform: 'scale(0.75, .75)'
+        }
+      }
+    },
+    machine: {
+      name: 'stroke',
+      options: {
+        attrs: {
+          'stroke-width': 3,
+          // TODO overridden
+          stroke: 'red'
+        }
+      }
+    },
+    cursor: {
+      name: 'stroke',
+      options: {
+        attrs: {
+          stroke: 'greenyellow',
+          'stroke-width': '5px',
+          'stroke-dasharray': 1,
+          d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
+          transform: 'scale(0.75, .75)'
+        }
       }
     }
   }
-  machine_highlighter = {
-    name: 'stroke',
-    options: {
-      attrs: {
-        'stroke-width': 3,
-        // TODO overridden
-        stroke: 'red'
-      }
-    }
-  }
-  cursor_highlighter = {
-    name: 'stroke',
-    options: {
-      attrs: {
-        stroke: 'greenyellow',
-        'stroke-width': '5px',
-        'stroke-dasharray': 1,
-        d: 'M 68, 66 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0',
-        transform: 'scale(0.75, .75)'
-      }
-    }
-  }
-
   // TODO use in the data_service as non-ignored fields
   patch_fields = ['step_style', 'is_set', 'is_touched', 'name']
 
@@ -323,7 +313,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     if (!this.has_focus) return
     // console.time('distances')
     let distances = this.positionsFromElement(
-      this.data.cells.find(n => n.id == this.selected_id)
+      this.data.cells.find(n => n.id == this.cursor_id)
     )
     distances = orderBy(distances, ['distance'], ['asc'])
     // console.timeEnd('distances')
@@ -338,7 +328,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     for (const pos of distances) {
       for (const range of ranges) {
         if (pos.angle < range[0] || pos.angle > range[1]) continue
-        this.selectState(pos.id)
+        this.cursorID(pos.id, true)
         found = true
         break
       }
@@ -531,7 +521,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     if (changed_ids && changed_ids.length) {
       // highlights
       if (step_type == StepTypes.STATES || step_type == StepTypes.LIVE) {
-        this.highlight(changed_ids, false)
+        this.tmpHighlight(changed_ids)
       }
       if (!isProd()) console.time('syncClasses')
       this.syncClasses(changed_ids)
@@ -959,55 +949,79 @@ export default class JointGraph extends UiBase<INetworkJson> {
     this.renderMinimap()
   }
 
-  highlighted_ids: { [id: string]: number } = {}
-  manual_highlight_id: string | null = null
+  highlighted_ids = new Map<string, number>()
+  selected_ids = new Set<string>()
+  hovered_id: string | null = null
+  cursor_id: string | null = null
 
-  highlight(
-    ids: string[],
-    permanent: number | boolean = true,
-    skip_index = false,
-    highlighter?
-  ) {
-    const views = ids
-      .map(id => this.graph.getCell(id))
-      .filter(cell => cell)
-      .map(cell => this.paper.findViewByModel(cell))
-    const time = moment().unix()
-    for (const cell of views) {
-      cell.highlight(null /* defaults to cellView.el */, {
-        highlighter: highlighter || this.getHighlighter(cell.model.get('type'))
+  selectID(id: string, is_selected: boolean) {
+    const model = this.paper.getModelById(id)
+    const view = this.paper.findViewByModel(model)
+    if (is_selected) {
+      this.selected_ids.add(id)
+      view.highlight(null /* defaults to cellView.el */, {
+        highlighter: this.getHighlighter(model.get('type'))
       })
-      if (!skip_index) {
-        this.highlighted_ids[cell.model.id] = time
-      }
+    } else {
+      this.selected_ids.delete(id)
+      view.unhighlight(null /* defaults to cellView.el */, {
+        highlighter: this.getHighlighter(model.get('type'))
+      })
     }
-    if (permanent === true) {
-      return () => this.unhighlight(ids)
-    }
-    setTimeout(() => {
-      this.unhighlight(ids, skip_index ? false : time)
-    }, (permanent === false ? null : permanent) || 1000)
     this.renderMinimap()
   }
 
-  unhighlight(ids: string[], time?: number | boolean, highlighter?) {
-    const views = ids
-      .map(id => this.graph.getCell(id))
-      .filter(cell => cell)
-      .map(cell => this.paper.findViewByModel(cell))
-    for (const cell of views) {
-      const id = cell.model.get('id')
-      if (time && time !== true && this.highlighted_ids[id] != time) continue
-      if (!time && this.highlighted_ids[id]) continue
-      if (!time && this.manual_highlight_id == id)
-        this.manual_highlight_id = null
-      cell.unhighlight(null, {
-        highlighter: highlighter || this.getHighlighter(cell.model.get('type'))
-      })
-      if (time) {
-        delete this.highlighted_ids[id]
+  cursorID(id: string, is_highlighted: boolean) {
+    const model = this.paper.getModelById(id)
+    const view = this.paper.findViewByModel(model)
+    if (is_highlighted) {
+      if (this.cursor_id) {
+        this.cursorID(this.cursor_id, false)
       }
+      view.highlight(null /* defaults to cellView.el */, {
+        highlighter: this.highlighters.cursor
+      })
+    } else {
+      view.unhighlight(null /* defaults to cellView.el */, {
+        highlighter: this.highlighters.cursor
+      })
     }
+    this.cursor_id = is_highlighted ? id : null
+    this.renderMinimap()
+  }
+
+  tmpHighlight(ids: string[]) {
+    const time = moment().unix()
+    for (const id of ids) {
+      const model = this.paper.getModelById(id)
+      if (!model) continue
+      const view = this.paper.findViewByModel(model)
+      if (!view) continue
+      view.highlight(null /* defaults to cellView.el */, {
+        highlighter: this.getHighlighter(model.get('type'))
+      })
+      this.highlighted_ids.set(id, time)
+    }
+    setTimeout(() => {
+      for (const id of ids) {
+        const model = this.paper.getModelById(id)
+        if (!model) {
+          this.highlighted_ids.delete(id)
+          continue
+        }
+        const view = this.paper.findViewByModel(model)
+        if (!view) {
+          this.highlighted_ids.delete(id)
+          continue
+        }
+        if (this.highlighted_ids.get(id) !== time) continue
+        view.unhighlight(null /* defaults to cellView.el */, {
+          highlighter: this.getHighlighter(model.get('type'))
+        })
+        this.highlighted_ids.delete(id)
+      }
+      this.renderMinimap()
+    }, 1000)
     this.renderMinimap()
   }
 
@@ -1044,11 +1058,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
 
   protected getHighlighter(type) {
     return type == 'fsa.State'
-      ? this.state_highlighter
-      : this.machine_highlighter
+      ? this.highlighters.state
+      : this.highlighters.machine
   }
 
   // TODO caching, based on is_dirty states?
+  // TODO extract to a separate file
   renderMinimap() {
     if (!this.data) return
     const positions = this.settings.get().positions
@@ -1066,9 +1081,12 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const scale = this.paper.scale().sx
     const is_during_transition = $('#graph.during-transition').length
     const canvas = this.minimap.getContext('2d')
-    const highlighted_ids = [
-      this.manual_highlight_id,
-      ...Object.keys(this.highlighted_ids)
+    // TODO align
+    const highlighted_ids: string[] = [
+      this.cursor_id,
+      this.hovered_id,
+      ...this.selected_ids.keys(),
+      ...this.highlighted_ids.keys()
     ]
 
     // CLEAR
@@ -1173,7 +1191,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     canvas.stroke()
 
     // HIGHLIGHTS
-    log('manual_highlight_id', this.manual_highlight_id)
+    log('manual_highlight_id', this.hover_id)
     for (const id of highlighted_ids) {
       if (!id) continue
       const model = this.paper.getModelById(id)
@@ -1214,7 +1232,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     }
   }
 
-  getMachines() {
+  getMachinesWithStates() {
     // TODO cache
     if (!this.data) return
     const machines = {}
@@ -1228,7 +1246,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           is_set: cell.is_set,
           is_touched: cell.step_style,
           clock: cell.clock,
-          is_selected: this.highlighted_ids[cell.id]
+          is_selected: this.selected_ids.has(cell.id)
         })
       }
       if (cell.type != 'uml.State') continue
@@ -1252,26 +1270,19 @@ export default class JointGraph extends UiBase<INetworkJson> {
     return machines
   }
 
-  selectState(id: string) {
-    this.unhighlight([this.selected_id], true, this.cursor_highlighter)
-    this.highlight([id], true, true, this.cursor_highlighter)
-    this.selected_id = id
-    this.scrollTo(id)
-  }
-
   protected bindCursor() {
     this.container.on('focus', e => {
       if (!this.data) return
       // TODO first fsm.state
-      this.selectState(this.selected_id)
-      this.container.addClass('focued')
+      this.cursorID(this.cursor_id, true)
+      this.container.addClass('focused')
       this.has_focus = true
     })
     this.container.on('blur', e => {
       if (!this.data) return
       // TODO first fsm.state
-      this.unhighlight([this.selected_id], true, this.cursor_highlighter)
-      this.container.removeClass('focsued')
+      this.cursorID(this.cursor_id, false)
+      this.container.removeClass('focused')
       this.has_focus = true
     })
   }

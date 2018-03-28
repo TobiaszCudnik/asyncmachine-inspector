@@ -7,12 +7,10 @@ abstract class Ui<T> {
 
   abstract setData(data: any)
 
-  abstract highlight(
+  abstract tmpHighlight(
     ids: string[],
     persistent: number | boolean
   ): void | (() => void)[]
-
-  abstract unhighlight(ids: string[])
 
   abstract scrollTo(id: string)
 
