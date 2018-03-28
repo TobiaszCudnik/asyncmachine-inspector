@@ -270,7 +270,23 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
             </ToolbarGroup>
           </Toolbar>
           {/*<ConnectionDialog config={this.props.connectionDialog} />*/}
-          <div id="graph-container">
+          <div
+            id="graph-container"
+            onClick={e => {
+              if (e.target.classList.contains('hover')) return
+              this.props.onStateSet(e)
+              this.props.onScrollTo(e)
+              this.props.onCellSelect(e)
+            }}
+            onMouseOver={e => {
+              if (!e.target.classList.contains('hover')) return
+              this.props.onCellSelect(e, true)
+            }}
+            onMouseOut={e => {
+              if (!e.target.classList.contains('hover')) return
+              this.props.onCellSelect(e, false)
+            }}
+          >
             <div id="minimap">
               <canvas />
               <div className="zoom-window" />
@@ -292,23 +308,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
               open={this.state.sidebar_left}
               style={{ position: 'absolute' }}
             >
-              <div
-                className="sidebar left"
-                onClick={e => {
-                  if (e.target.classList.contains('hover')) return
-                  this.props.onStateSet(e)
-                  this.props.onScrollTo(e)
-                  this.props.onCellSelect(e)
-                }}
-                onMouseOver={e => {
-                  if (!e.target.classList.contains('hover')) return
-                  this.props.onCellSelect(e, true)
-                }}
-                onMouseOut={e => {
-                  if (!e.target.classList.contains('hover')) return
-                  this.props.onCellSelect(e, false)
-                }}
-              >
+              <div className="sidebar left">
                 {(() => {
                   function getTransitionType(entry: {
                     type: StateChangeTypes
@@ -379,10 +379,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   function StateName({ name, machineId }) {
                     const id = machineId + ':' + name
                     return (
-                      <span
-                        className="cell-select hover"
-                        data-id={id}
-                      >
+                      <span className="cell-select hover" data-id={id}>
                         {name}{' '}
                       </span>
                     )
@@ -390,10 +387,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 
                   function MachineName({ name, id }) {
                     return (
-                      <span
-                        className="cell-select hover"
-                        data-id={id}
-                      >
+                      <span className="cell-select hover" data-id={id}>
                         {name}
                       </span>
                     )
@@ -720,15 +714,35 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   const logs = this.props.logs
                   for (let i = 0; i < logs.length; i++) {
                     for (let ii = 0; ii < logs[i].length; ii++) {
-                      let entry = logs[i][ii]
-                      let key = `log-${i}-${ii}`
-                      let class_name = `joint-group-${entry.id}`
+                      const entry = logs[i][ii]
+                      const states = this.props.machines_states[entry.id].map(
+                        s => s.name
+                      )
+                      let content = entry.msg
+                      content = content.replace(
+                        new RegExp(
+                          `(\\s|\\+)(${states.join('|')})(\\s|,|$)`,
+                          'g'
+                        ),
+                        (m, pre, state, post) => `
+                          ${pre}<span
+                            class="cell-select hover"
+                            data-id="${entry.id}:${state}"
+                          >${state}
+                          </span>
+                          ${post}`
+                      )
+                      const key = `log-${i}-${ii}`
+                      const class_name = `joint-group-${entry.id}`
                       // TODO inline-block
                       container.push(
-                        <span className={class_name} key={key}>
-                          {entry.msg}
-                          <br />
-                        </span>
+                        <span
+                          className={class_name}
+                          key={key}
+                          dangerouslySetInnerHTML={{
+                            __html: content + '<br />'
+                          }}
+                        />
                       )
                     }
                   }

@@ -211,3 +211,7 @@ a:hover {
   color: white;
   bottom: 100px;
 }
+
+.cell-select {
+  display: inline-block;
+}
