@@ -518,8 +518,10 @@ export class Inspector implements ITransitions {
    */
   setLogger(logger: Logger) {
     logger.start()
+    this.states.add('LocalLogger')
     this.states.add('FullSync', logger.full_sync)
     logger.on('diff-sync', this.states.addByListener('DiffSync'))
+    this.logger = logger
   }
 
   buildLayoutData(): TLayoutProps {
@@ -700,10 +702,18 @@ export class Inspector implements ITransitions {
         e.preventDefault()
         const id = el.dataset.id
         const is_set = this.graph.paper.getModelById(id).get('is_set')
-        if (is_set) {
-          this.socket.emit('state-drop', [id])
-        } else {
-          this.socket.emit('state-add', [id])
+        if (this.states.is('Connected')) {
+          if (is_set) {
+            this.socket.emit('state-drop', [id])
+          } else {
+            this.socket.emit('state-add', [id])
+          }
+        } else if (this.states.is('LocalLogger')) {
+          if (is_set) {
+            this.logger.emit('state-drop', [id])
+          } else {
+            this.logger.emit('state-add', [id])
+          }
         }
         this.renderUI()
       },
@@ -731,7 +741,8 @@ export class Inspector implements ITransitions {
         }
         this.renderUIQueue()
       },
-      settings: this.settings
+      settings: this.settings,
+      state: this.states
     }
     return data
   }

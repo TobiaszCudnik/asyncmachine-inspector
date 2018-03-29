@@ -83,6 +83,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   }
   LegendVisible: IState = {}
   ConnectionDialogVisible: IState = {}
+  LocalLogger: IState = {}
   // TODO later
   // SidebarVisible: IState = {};
   // MachinesSidebarVisible: IState = {};

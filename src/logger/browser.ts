@@ -38,6 +38,27 @@ export default class LoggerLocal extends EventEmitter {
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
+    this.bindSetState()
+  }
+
+  // TODO state set mixin
+  bindSetState() {
+    this.on('state-add', states => {
+      // TODO group by machines and add in bulks
+      for (const id of states) {
+        const [machine_id, name] = id.split(':')
+        const node = this.network.getNodeByName(name, machine_id)
+        node.machine.add(name)
+      }
+    })
+    this.on('state-drop', states => {
+      // TODO group by machines and add in bulks
+      for (const id of states) {
+        const [machine_id, name] = id.split(':')
+        const node = this.network.getNodeByName(name, machine_id)
+        node.machine.drop(name)
+      }
+    })
   }
 
   start() {

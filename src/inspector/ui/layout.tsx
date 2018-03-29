@@ -197,7 +197,8 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                 value={this.props.step_type}
                 onChange={this.props.onStepType}
               >
-                {this.props.is_connected ? (
+                {this.props.is_connected ||
+                this.props.state.is('LocalLogger') ? (
                   <MenuItem value="live" primaryText="Live" />
                 ) : (
                   ''
@@ -226,7 +227,11 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                 text={
                   this.props.is_snapshot
                     ? 'Snapshot'
-                    : this.props.is_connected ? 'Connected' : 'Disconnected'
+                    : this.props.is_connected
+                      ? 'Connected'
+                      : this.props.state.is('LocalLogger')
+                        ? 'Local'
+                        : 'Disconnected'
                 }
               />
               {this.props.is_rendered ? (
