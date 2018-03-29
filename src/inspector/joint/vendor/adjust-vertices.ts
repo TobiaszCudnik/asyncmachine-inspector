@@ -9,6 +9,7 @@ export default function adjustVertices(graph, cell) {
   // If the cell is a view, find its model.
   cell = cell.model || cell
 
+  // @ts-ignore
   if (cell instanceof joint.shapes.uml.State) {
     for (const child of cell.getEmbeddedCells()) {
       if (!child) continue
@@ -20,9 +21,11 @@ export default function adjustVertices(graph, cell) {
     let links = graph.getConnectedLinks(cell) || []
     links = _.groupBy(links, function(link) {
       // the key of the group is the model id of the link's source or target, but not our cell id.
+      // @ts-ignore
       return _.omit([link.get('source').id, link.get('target').id], cell.id)[0]
     })
     for (let [key, group] of Object.entries(links)) {
+      // @ts-ignore
       if (key !== undefined) adjustVertices(graph, _.first(group))
     }
     // .each(function(group, key) {
@@ -41,7 +44,9 @@ export default function adjustVertices(graph, cell) {
   if (!srcId || !trgId) return
 
   var siblings = _.filter(graph.getLinks(), function(sibling) {
+    // @ts-ignore
     var _srcId = sibling.get('source').id
+    // @ts-ignore
     var _trgId = sibling.get('target').id
 
     return (
@@ -99,6 +104,7 @@ export default function adjustVertices(graph, cell) {
         // We found the vertex.
         var vertex = g.point.fromPolar(offset, angle, midPoint)
 
+        // @ts-ignore
         sibling.set('vertices', [{ x: vertex.x, y: vertex.y }])
       })
   }

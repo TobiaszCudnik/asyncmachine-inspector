@@ -7,6 +7,7 @@ import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 import * as downloadAsFile from 'download-as-file'
 import * as bindKey from 'keymaster'
+import { IOptions } from './base'
 
 export { Network, LoggerLocal as Logger }
 
@@ -15,6 +16,8 @@ export default class LoggerLocal extends EventEmitter {
   differ: JsonDiffFactory
   full_sync: INetworkJson
   patches: IPatch[] = []
+  summary_fn?: (network: Network) => string
+  is_started = false
 
   get snapshot(): JSONSnapshot {
     return {
@@ -23,23 +26,29 @@ export default class LoggerLocal extends EventEmitter {
     }
   }
 
-  constructor(public network: Network, autostart = true) {
+  constructor(public network: Network, public options: IOptions = null) {
     super()
     this.json = new NetworkJson(network)
     this.differ = new JsonDiffFactory(this.json)
 
-    if (autostart) {
+    if (options.autostart) {
       this.start()
+    }
+
+    if (this.options.summary_fn) {
+      this.summary_fn = this.options.summary_fn
     }
   }
 
   start() {
+    if (this.is_started) return
     this.differ.generateJson()
     this.full_sync = this.differ.previous_json
 
     this.json.network.on('change', (type, machine_id, data) =>
       this.onGraphChange(type, machine_id, data)
     )
+    this.is_started = true
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
@@ -57,6 +66,10 @@ export default class LoggerLocal extends EventEmitter {
       !this.network.logs.length
     ) {
       return
+    }
+    if (this.summary_fn) {
+      // TODO use jsdiff
+      packet.summary = this.summary_fn(this.network)
     }
     this.patches.push({ ...packet, logs: [...this.network.logs] })
     this.network.logs = []

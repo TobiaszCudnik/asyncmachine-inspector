@@ -8,6 +8,7 @@ export default class LoggerRemote extends Logger {
   io: SocketIOClient.Socket
   connected = false
   url: string
+  is_started = false
 
   constructor(public network: Network, url = 'http://localhost:3757', options?: IOptions) {
     super(network, options)
@@ -42,6 +43,7 @@ export default class LoggerRemote extends Logger {
   }
 
   start() {
+    if (this.is_started) return
     super.start()
 
     console.log(`Logger connected to ${this.url}`)
@@ -52,6 +54,7 @@ export default class LoggerRemote extends Logger {
     this.on('diff-sync', (patch: IPatch) => {
       this.io.emit('diff-sync', patch)
     })
+    this.is_started = true
   }
 
   getDebugCommand() {

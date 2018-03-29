@@ -80,9 +80,8 @@ export type TLayoutProps = {
   next_transitions_touched: { [machine_id: string]: string[] }
   selected_ids: Set<string>
   is_rendered: boolean
-  // TODO type
   machines_states: { [machine_id: string]: TSidebarMachineState[] }
-  highlighted_ids: { [id: string]: number }
+  summary: string
   // listeners
   onDownloadSnapshot: Function
   onConnectButton: Function
@@ -102,7 +101,7 @@ export type TLayoutProps = {
   settings: Settings
 }
 
-type TSidebarMachineState = {
+export type TSidebarMachineState = {
   name: string
   clock: number
   is_set: boolean
@@ -717,23 +716,25 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   for (let i = 0; i < logs.length; i++) {
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       const entry = logs[i][ii]
-                      const states = this.props.machines_states[entry.id].map(
-                        s => s.name
-                      )
+                      const states = this.props.machines_states[entry.id]
+                        ? this.props.machines_states[entry.id].map(s => s.name)
+                        : []
                       let content = entry.msg
-                      content = content.replace(
-                        new RegExp(
-                          `(\\s|\\+|-)(${states.join('|')})(\\s|,|$)`,
-                          'g'
-                        ),
-                        (m, pre, state, post) => `
+                      if (states.length) {
+                        content = content.replace(
+                          new RegExp(
+                            `(\\s|\\+|-)(${states.join('|')})(\\s|,|$)`,
+                            'g'
+                          ),
+                          (m, pre, state, post) => `
                           ${pre}<span
                             class="cell-select hover"
                             data-id="${entry.id}:${state}"
                           >${state}
                           </span>
                           ${post}`
-                      )
+                        )
+                      }
                       const key = `log-${i}-${ii}`
                       const class_name = `joint-group-${entry.id}`
                       // TODO inline-block

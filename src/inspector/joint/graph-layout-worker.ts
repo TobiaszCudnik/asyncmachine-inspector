@@ -23,6 +23,7 @@ export interface IDataServiceSync {
   current_patch: Object
   logs: string[]
   last_scroll_add_remove: boolean
+  summary?: string
 }
 
 export interface ISync {

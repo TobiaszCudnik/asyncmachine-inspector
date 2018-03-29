@@ -46,12 +46,16 @@ export class Inspector implements ITransitions {
   graph = new Graph(null, this.settings)
   layout_data: TLayoutProps
   frametime = 0.5
-  socket: io.Socket
+  // TODO kills the d.ts file
+  // socket: io.Socket
+  socket
   layout
   container: Element
   step_timer: number
   step_fn: Function
-  differ: jsondiffpatch
+  // TODO kills the d.ts file
+  // differ: jsondiffpatch
+  differ
   logs: ILogEntry[][] = []
   // TODO type
   layout_worker: any
@@ -183,6 +187,9 @@ export class Inspector implements ITransitions {
   // TRANSITIONS
 
   async FullSync_state(graph_data: INetworkJson) {
+    if (!graph_data) {
+      throw new Error('No data')
+    }
     // TODO avoid duplication
     if (!this.states.is('AutoplayOn')) {
       this.last_manual_scroll = 0
@@ -510,6 +517,7 @@ export class Inspector implements ITransitions {
    * Bind the inspector to a local logger's instance.
    */
   setLogger(logger: Logger) {
+    logger.start()
     this.states.add('FullSync', logger.full_sync)
     logger.on('diff-sync', this.states.addByListener('DiffSync'))
   }
@@ -719,7 +727,7 @@ export class Inspector implements ITransitions {
         } else if (this.graph.selected_ids.has(id)) {
           this.graph.selectID(id, false)
         } else {
-          this.graph.selectID(id, false)
+          this.graph.selectID(id, true)
         }
         this.renderUIQueue()
       },
