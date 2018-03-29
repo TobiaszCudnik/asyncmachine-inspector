@@ -4,9 +4,9 @@ const path = require('path')
 
 const config = {
   entry: {
-    'inspector': './src/inspector/inspector',
+    inspector: './src/inspector/inspector',
     'logger-browser': './src/logger/browser',
-    'logger-remote-browser': './src/logger/remote-browser',
+    'logger-remote-browser': './src/logger/remote-browser'
   },
   plugins: [
       // new BundleAnalyzerPlugin(),
@@ -24,7 +24,7 @@ const config = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
-      g: "jointjs/dist/geometry.js"
+      g: 'jointjs/dist/geometry.js'
     }
   },
   output: {
