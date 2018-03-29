@@ -106,4 +106,10 @@ publish:
 npmi:
 	npm link asyncmachine
 
+dts:
+	./node_modules/dts-bundle/lib/dts-bundle.js \
+		--name "test" \
+		--main build/inspector/inspector.d.ts \
+		--emitOnIncludedFileNotFound
+
 .PHONY: test break build dist

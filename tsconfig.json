@@ -3,11 +3,13 @@
         "sourceMap": true,
         "target": "es2017",
         "module": "commonjs",
-        "allowJs": true,
+//        "allowJs": true,
         "lib": ["es6", "es7", "dom", "es2017"],
         "jsx": "react",
         "moduleResolution": "node",
-        "outDir": "build"
+        "outDir": "build",
+        "declaration": true
+//        "declarationDir": "./"
     },
     "files": [
         "typings/index.d.ts",
@@ -17,7 +19,7 @@
         "src/logger/remote.ts",
         "src/logger/browser.ts",
         "src/logger/remote-browser.ts",
-        "src/inspector/inspector.tsx",
+        "src/inspector/inspector.ts",
         "src/inspector/joint/graph-layout-worker.ts"
     ],
     "awesomeTypescriptLoaderOptions": {
