@@ -1,4 +1,4 @@
-import { Restaurant, Chef, Customer, Waiter } from './schema'
+import {Restaurant, Chef, Customer, Waiter, Dev} from './schema'
 import transitions from './transitions'
 import render, { Network, Logger } from 'asyncmachine-inspector'
 
@@ -6,6 +6,7 @@ const network = new Network()
 
 function createRestaurant(network) {
   const restaurant = new Restaurant(network)
+  network.addMachine(new Dev(restaurant).state)
 
   for (let name of ['A', 'B']) {
     restaurant.addChef(new Chef(name))
@@ -20,4 +21,12 @@ function createRestaurant(network) {
 const restaurant = createRestaurant(network)
 transitions(restaurant)
 
-render('#app').setLogger(new Logger(network))
+const logger = new Logger(network, {summary_fn})
+render('#app').setLogger(logger)
+
+function summary_fn(network) {
+  return (
+`Active customers: ${restaurant.customers.length}
+Meals eaten: ${restaurant.meals_eaten}
+Meals wasted: ${restaurant.meals_wasted}`)
+}

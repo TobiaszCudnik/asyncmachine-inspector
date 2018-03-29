@@ -103,6 +103,7 @@ export const customer_state = {
   Ordering: { drop: ['WaitingToOrder'] },
   WaitingForMeal: { drop: ['Ordering'] },
   Eating: { drop: ['WaitingForMeal'] },
+  Ate: { drop: ['Eating'] },
   Left: { drop: ['Eating', 'WaitingForMeal', 'Ordering', 'WaitingToOrder'] }
 }
 
@@ -144,6 +145,9 @@ export class Restaurant {
   orders_pending: string[] = []
   meals_pending: string[] = []
 
+  meals_wasted = 0
+  meals_eaten = 0
+
   constructor(public network: Network) {
     this.state.id(`Restaurant`).setTarget(this)
     this.state.logLevel(LOG_LEVEL)
@@ -167,6 +171,14 @@ export class Restaurant {
   }
 
   addCustomer(customer: Customer) {
+    customer.state.once('Left_state', () => {
+      if (customer.state.is('Ate')) {
+        this.meals_eaten++
+      } else {
+        this.meals_wasted++
+      }
+      this.customers.splice(this.customers.indexOf(customer), 1)
+    })
     this.customers.push(customer)
     this.network.addMachine(customer.state)
     customer.state.pipe('WaitingToOrder', this.state, 'CustomerWaiting')
@@ -216,5 +228,29 @@ export class Restaurant {
     const customer = _.find(this.customers, c => c.state.is('WaitingToOrder'))
     this.state.add(waiter.state, 'TakingOrder', customer)
     this.state.drop('ServingCustomer')
+  }
+}
+
+export const user_state = {
+  AddNewCustomer: {}
+}
+
+/**
+ * User to activate states via the Inspector.
+ */
+export class Dev {
+  state = machine(user_state)
+
+  constructor(public restaurant: Restaurant) {
+    this.state.setTarget(this)
+    this.state.id('dev')
+  }
+
+  AddNewCustomer_state() {
+    const number = this.restaurant.customers.length + 1
+    const customer = new Customer(number)
+    this.restaurant.addCustomer(customer)
+    this.state.log('Added a new customer')
+    this.state.drop('AddNewCustomer')
   }
 }
