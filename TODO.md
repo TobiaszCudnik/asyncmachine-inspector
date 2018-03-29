@@ -1,9 +1,18 @@
-- highlight state names from the logs
-- doesnt work on stackblitz
-
 # TODO
 
 #### Bugs
+- d.ts files missing in the npm package
+- autoplay doesnt resume when set and timeline on the last position
+- minimap sometimes shows the previous step
+  - eg when going back in time with step type = steps
+- logs scrollbar is forcefully scrolled down even if not at the bottom
+- selection vs hover issue
+  - 1 select a state/machine using the machines sidebar
+  - hover over it to trigger the hover highlight
+  - mouseout and wait for the cell to unhighlight
+  - should still be highlighted
+- highlighting changed states mark them as selected (should be temp only)
+- nested transitions are missing the stable-state/between-transitions step
 - doesnt work on stackblitz
 - switching StepType while Playing
   - causes a scrollTo with the old position value (of the next step)
@@ -47,12 +56,9 @@
 #### Inspector
 - two finger trackpad zoom / out
 - progress indicator (on the toolbar, from material)
-- hovering over state / machine
-  - highlights them using cell-select
-  - implement in sidebars
-  - click scrolls to the element
+- hovering over a graph cell highlights all the instances in the sidebars
+- merge select, scroll-to, state names and the unicode checkbox into 1 feature
 - summary
-  - Show Summary checkbox on the toolbar
   - draggable
   - change size?
 - tabindex for
@@ -225,6 +231,7 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- update to webpack4 / parcel
 - divide joint/graph.ts into smaller files
 - extract layout.tsx into separate react components
   - implement custom shouldComponentUpdate
