@@ -1010,7 +1010,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
           continue
         }
         const view = this.paper.findViewByModel(model)
-        if (!view) {
+        if (!view || this.selected_ids.has(id)) {
           this.highlighted_ids.delete(id)
           continue
         }
