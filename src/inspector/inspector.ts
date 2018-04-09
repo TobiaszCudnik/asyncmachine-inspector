@@ -725,8 +725,7 @@ export class Inspector implements ITransitions {
         this.graph.scrollTo(id)
         this.graph.tmpHighlight([id])
       },
-      onCellSelect: (e: MouseEvent, manual_state?) => {
-        const el = e.target as HTMLElement
+      onCellSelect: (el: HTMLElement, e: MouseEvent, manual_state?) => {
         if (!el.classList.contains('cell-select') || !el.dataset.id) return
         e.preventDefault()
         const id = el.dataset.id

@@ -282,15 +282,26 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
               if (e.target.classList.contains('hover')) return
               this.props.onStateSet(e)
               this.props.onScrollTo(e)
-              this.props.onCellSelect(e)
+              this.props.onCellSelect(e.target, e)
             }}
             onMouseOver={e => {
-              if (!e.target.classList.contains('hover')) return
-              this.props.onCellSelect(e, true)
+              if (!e.target.classList.contains('hover')) {
+                // TODO parent hack
+                if (e.target.parentNode.classList.contains('hover')) {
+                  this.props.onCellSelect(e.target.parentNode, e, true)
+                }
+                return
+              }
+              this.props.onCellSelect(e.target, e, true)
             }}
             onMouseOut={e => {
-              if (!e.target.classList.contains('hover')) return
-              this.props.onCellSelect(e, false)
+              if (!e.target.classList.contains('hover')) {
+                if (e.target.parentNode.classList.contains('hover')) {
+                  this.props.onCellSelect(e.target.parentNode, e, false)
+                }
+                return
+              }
+              this.props.onCellSelect(e.target, e, false)
             }}
           >
             <div id="minimap">
@@ -719,13 +730,34 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                   let container = []
                   const logs = this.props.logs
                   for (let i = 0; i < logs.length; i++) {
+                    let inner_container = []
+                    let last_entry_id
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       const entry = logs[i][ii]
+                      const key = `log-${i}-${ii}`
+                      // flush
+                      if (last_entry_id && last_entry_id != entry.id) {
+                        const class_name = `joint-group joint-group-${
+                          entry.id
+                        } cell-select hover`
+                        container.push(
+                          <div
+                            data-id={entry.id}
+                            className={class_name}
+                            key={key}
+                          >
+                            {inner_container}
+                          </div>
+                        )
+                        inner_container = []
+                      }
+                      last_entry_id = entry.id
                       const states = this.props.machines_states[entry.id]
                         ? this.props.machines_states[entry.id].map(s => s.name)
                         : []
                       let content = entry.msg
                       if (states.length) {
+                        // TODO extract
                         content = content.replace(
                           new RegExp(
                             `(\\s|\\+|-)(${states.join('|')})(\\s|,|$)`,
@@ -740,11 +772,11 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                           ${post}`
                         )
                       }
-                      const key = `log-${i}-${ii}`
-                      const class_name = `joint-group-${entry.id}`
+                      const class_name = `joint-group joint-group-${entry.id}`
                       // TODO inline-block
-                      container.push(
+                      inner_container.push(
                         <span
+                          style={{ display: 'block' }}
                           className={class_name}
                           key={key}
                           dangerouslySetInnerHTML={{
@@ -803,9 +835,10 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 
 export default function(container, props) {
   let right_sidebar = document.querySelector('.sidebar.right')
-  const right_sidebar_scrolled = right_sidebar ?
-    right_sidebar.clientHeight + right_sidebar.scrollTop ==
-    right_sidebar.scrollHeight : true
+  const right_sidebar_scrolled = right_sidebar
+    ? right_sidebar.clientHeight + right_sidebar.scrollTop ==
+      right_sidebar.scrollHeight
+    : true
 
   const layout = <Main {...props} />
   render(layout, container)

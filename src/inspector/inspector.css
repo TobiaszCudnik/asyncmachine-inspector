@@ -215,3 +215,11 @@ a:hover {
 .cell-select {
   display: inline-block;
 }
+
+div.cell-select {
+  display: block;
+}
+
+.joint-group.hover:hover {
+  background: black;
+}
