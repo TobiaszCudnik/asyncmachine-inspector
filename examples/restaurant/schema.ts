@@ -234,7 +234,7 @@ export class Restaurant {
 
 export const user_state = {
   AddNewCustomer: {},
-  NewCustomerComming: {}
+  NewCustomersComing: {}
 }
 
 /**
@@ -246,7 +246,7 @@ export class Dev {
   constructor(public restaurant: Restaurant) {
     this.state.setTarget(this)
     this.state.id('dev')
-    this.state.add('NewCustomerComming')
+    this.state.add('NewCustomersComing')
     this.restaurant.dev = this
   }
 

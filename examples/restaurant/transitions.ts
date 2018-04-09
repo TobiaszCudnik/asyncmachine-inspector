@@ -9,7 +9,7 @@ export default function(restaurant: Restaurant) {
 
 async function produceCustomers(restaurant, max) {
   while (restaurant.customers.length < max) {
-    if (restaurant.dev.state.is('NewCustomerComming')) {
+    if (restaurant.dev.state.is('NewCustomersComing')) {
       const number = restaurant.customers.length + 1
       const customer = new Customer(number)
       restaurant.addCustomer(customer)
