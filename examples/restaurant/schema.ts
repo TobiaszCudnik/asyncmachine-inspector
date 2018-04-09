@@ -141,6 +141,7 @@ export class Restaurant {
   chefs: Chef[] = []
   waiters: Waiter[] = []
   customers: Customer[] = []
+  dev: Dev | null = null
 
   orders_pending: string[] = []
   meals_pending: string[] = []
@@ -232,7 +233,8 @@ export class Restaurant {
 }
 
 export const user_state = {
-  AddNewCustomer: {}
+  AddNewCustomer: {},
+  NewCustomerComming: {}
 }
 
 /**
@@ -244,6 +246,8 @@ export class Dev {
   constructor(public restaurant: Restaurant) {
     this.state.setTarget(this)
     this.state.id('dev')
+    this.state.add('NewCustomerComming')
+    this.restaurant.dev = this
   }
 
   AddNewCustomer_state() {

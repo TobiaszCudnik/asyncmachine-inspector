@@ -9,10 +9,12 @@ export default function(restaurant: Restaurant) {
 
 async function produceCustomers(restaurant, max) {
   while (restaurant.customers.length < max) {
-    const number = restaurant.customers.length + 1
-    const customer = new Customer(number)
-    restaurant.addCustomer(customer)
-    onNewCustomer(customer, number)
+    if (restaurant.dev.state.is('NewCustomerComming')) {
+      const number = restaurant.customers.length + 1
+      const customer = new Customer(number)
+      restaurant.addCustomer(customer)
+      onNewCustomer(customer, number)
+    }
     await delay(random(3, 10) * 1000)
   }
 }
