@@ -802,10 +802,20 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 }
 
 export default function(container, props) {
+  let right_sidebar = document.querySelector('.sidebar.right')
+  const right_sidebar_scrolled = right_sidebar ?
+    right_sidebar.clientHeight + right_sidebar.scrollTop ==
+    right_sidebar.scrollHeight : true
+
   const layout = <Main {...props} />
   render(layout, container)
+
+  right_sidebar = document.querySelector('.sidebar.right')
+
   // scroll to the bottom
-  document.querySelector('.sidebar.right').scrollTop = 99999
+  if (right_sidebar_scrolled) {
+    right_sidebar.scrollTop = right_sidebar.scrollHeight
+  }
 
   return layout
 }
