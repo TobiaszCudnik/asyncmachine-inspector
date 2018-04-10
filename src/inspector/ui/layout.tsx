@@ -67,7 +67,7 @@ export type TLayoutProps = {
   on_last: boolean
   is_playing: boolean
   logs: ILogEntry[][]
-  step_type: string
+  step_type: 'live' | 'transitions' | 'nested_transitions' | 'steps' | 'states'
   is_legend_visible: boolean
   is_connection_dialog_visible: boolean
   // TODO dont use a layout specific type
@@ -798,35 +798,39 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
             ''
           )}
 
-          <section id="bottom-bar">
-            <FloatingActionButton
-              mini={true}
-              style={{ marginRight: '1em' }}
-              onClick={d.onPlayButton}
-              id="play-button"
-              disabled={this.props.on_last}
-            >
-              {this.props.is_playing ? <PauseIcon /> : <PlayIcon />}
-            </FloatingActionButton>
-            <Slider
-              id="step-slider"
-              min={0}
-              max={this.props.position_max || 1}
-              disabled={!this.props.position_max}
-              step={1}
-              value={this.props.position}
-              onChange={this.props.onTimelineSlider}
-            />
-          </section>
+          {this.props.step_type != 'live' ? (
+            <section id="bottom-bar">
+              <FloatingActionButton
+                mini={true}
+                style={{ marginRight: '1em' }}
+                onClick={d.onPlayButton}
+                id="play-button"
+                disabled={this.props.on_last}
+              >
+                {this.props.is_playing ? <PauseIcon /> : <PlayIcon />}
+              </FloatingActionButton>
+              <Slider
+                id="step-slider"
+                min={0}
+                max={this.props.position_max || 1}
+                disabled={!this.props.position_max}
+                step={1}
+                value={this.props.position}
+                onChange={this.props.onTimelineSlider}
+              />
+            </section>
+          ) : null}
+          {this.props.step_type != 'live' ? (
+          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
+            {d.position} / {d.position_max}
+          </Chip>
+          ) : null}
           {d.is_legend_visible ? <Legend /> : ''}
           {d.is_connection_dialog_visible ? (
             <ConnectionDialog onSubmit={this.props.onConnectSubmit} />
           ) : (
             ''
           )}
-          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
-            {d.position} / {d.position_max}
-          </Chip>
         </main>
       </MuiThemeProvider>
     )
