@@ -952,7 +952,15 @@ export default class JointGraph extends UiBase<INetworkJson> {
   highlighted_ids = new Map<string, number>()
   selected_ids = new Set<string>()
   hovered_id: string | null = null
-  cursor_id: string | null = null
+  cursor_id_: string | null = null
+  get cursor_id(): string | null {
+    return this.cursor_id_
+      ? this.cursor_id_
+      : this.data && this.data.cells[1].id
+  }
+  set cursor_id(v) {
+    this.cursor_id_ = v
+  }
 
   selectID(id: string, is_selected: boolean) {
     const model = this.paper.getModelById(id)
@@ -1083,7 +1091,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     const canvas = this.minimap.getContext('2d')
     // TODO align
     const highlighted_ids: string[] = [
-      this.cursor_id,
+      this.has_focus ? this.cursor_id : null,
       this.hovered_id,
       ...this.selected_ids.keys(),
       ...this.highlighted_ids.keys()
@@ -1277,13 +1285,15 @@ export default class JointGraph extends UiBase<INetworkJson> {
       this.cursorID(this.cursor_id, true)
       this.container.addClass('focused')
       this.has_focus = true
+      this.renderMinimap()
     })
     this.container.on('blur', e => {
       if (!this.data) return
       // TODO first fsm.state
       this.cursorID(this.cursor_id, false)
       this.container.removeClass('focused')
-      this.has_focus = true
+      this.has_focus = false
+      this.renderMinimap()
     })
   }
 }
