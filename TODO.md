@@ -1,23 +1,20 @@
 # TODO
 
 #### Bugs
-- d.ts files missing in the npm package
+- bundle d.ts files
+  - ami-logger
+  - ami-server
 - autoplay doesnt resume when set and timeline on the last position
 - minimap sometimes shows the previous step
   - eg when going back in time with step type = steps
+  - stiil reporo?
 - logs scrollbar is forcefully scrolled down even if not at the bottom
-- selection vs hover issue
-  - 1 select a state/machine using the machines sidebar
-  - hover over it to trigger the hover highlight
-  - mouseout and wait for the cell to unhighlight
-  - should still be highlighted
-- highlighting changed states mark them as selected (should be temp only)
 - nested transitions are missing the stable-state/between-transitions step
 - doesnt work on stackblitz
 - switching StepType while Playing
   - causes a scrollTo with the old position value (of the next step)
 - switching from LIVE to STATES mixes up the indexes
-- 
+- not all touched machines drawn on the minimap
 - selecting a machine isnt visible
 - elements rendered out of the viewport (after layout)
 - types missing when using ami-logger in a TS project
@@ -75,7 +72,6 @@
 - Next / Prev button next to the step counter (left & right)
   - material ui Chip
 - minimap
-  - show highlights and the cursor
   - add materialui/paper (shadow)
   - drag scroll the minimap with a mouse
   - clicking on the minimap scrolls to the (clicked) machine
@@ -103,11 +99,13 @@
 - show the legend on the first load
 - confirmation message for Reset
 - Options menu
+  - Remember current positions
   - Reset
     - All Settings
     - Positions
     - Last Snapshot
   - Autoplay (checkbox)
+  - Show Minimap
 - download a snapshot keybinding
 - mark a cancelled transition on the transition sidebar
 - machines sidebar
