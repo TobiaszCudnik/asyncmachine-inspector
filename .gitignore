@@ -37,3 +37,5 @@ examples/remote-browser-logger/am-demo.umd.js
 examples/remote-server-logger/index.js
 examples/remote-server-logger/index.js.map
 /examples/restaurant/.awcache/
+/examples/restaurant/build/
+/examples/restaurant/node_modules/
