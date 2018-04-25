@@ -45,7 +45,7 @@ export interface ITransitionData {
 export interface ILogEntry {
   id: string
   msg: string
-  level?: number
+  level: number
 }
 
 export enum PatchType {

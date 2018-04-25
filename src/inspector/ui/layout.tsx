@@ -282,6 +282,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
               if (e.target.classList.contains('hover')) return
               this.props.onStateSet(e)
               this.props.onScrollTo(e)
+              this.props.onTimelineScrollTo(e)
               this.props.onCellSelect(e.target, e)
             }}
             onMouseOver={e => {
@@ -733,16 +734,18 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     let inner_container = []
                     let last_entry_id
                     for (let ii = 0; ii < logs[i].length; ii++) {
+                      const patch_id = i
                       const entry = logs[i][ii]
                       const key = `log-${i}-${ii}`
                       // flush
                       if (last_entry_id && last_entry_id != entry.id) {
                         const class_name = `joint-group joint-group-${
                           entry.id
-                        } cell-select hover`
+                        } cell-select hover timeline-scroll-to`
                         container.push(
                           <div
                             data-id={entry.id}
+                            data-patch_id={'test '+patch_id}
                             className={class_name}
                             key={key}
                           >
@@ -757,10 +760,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         : []
                       let content = entry.msg
                       if (states.length) {
-                        // TODO extract
+                        // TODO extract markStatesInHTML
+                        // TODO exception `[pipe] 'Eating'
+                        //   as 'CustomerEating' to 'Restaurant'`
                         content = content.replace(
                           new RegExp(
-                            `(\\s|\\+|-)(${states.join('|')})(\\s|,|$)`,
+                            `(\\s|\\+|-|')(${states.join('|')})(\\s|,|$|')`,
                             'g'
                           ),
                           (m, pre, state, post) => `
@@ -821,9 +826,9 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
             </section>
           ) : null}
           {this.props.step_type != 'live' ? (
-          <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
-            {d.position} / {d.position_max}
-          </Chip>
+            <Chip id="step-counter" style={{ border: '1px solid #808080' }}>
+              {d.position} / {d.position_max}
+            </Chip>
           ) : null}
           {d.is_legend_visible ? <Legend /> : ''}
           {d.is_connection_dialog_visible ? (

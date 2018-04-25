@@ -70,6 +70,7 @@ export class Inspector implements ITransitions {
   overlayListener: EventListenerOrEventListenerObject
   worker_patches_pending: IPatch[] = []
   last_manual_scroll: number = null
+  add_patches_mutex = new Mutex()
 
   renderUIQueue: (() => void) | null
 
@@ -120,7 +121,7 @@ export class Inspector implements ITransitions {
       this.renderUI()
     }, 100)
     this.goToLast = throttle(() => {
-      this.states.add('Rendering', this.data_service.position_max)
+      this.scrollTimelineTo(this.data_service.position_max)
     }, 500)
 
     if (document.readyState == 'complete') {
@@ -245,7 +246,10 @@ export class Inspector implements ITransitions {
     await this.addPatches(this.worker_patches_pending)
   }
 
-  add_patches_mutex = new Mutex()
+  // TODO support steptype
+  scrollTimelineTo(pos: number) {
+    this.states.add('Rendering', pos)
+  }
 
   // Add patches in a bulk, but ending with a regular render
   // @param patches List of patches. MODIFIED by reference.
@@ -739,6 +743,21 @@ export class Inspector implements ITransitions {
           this.graph.selectID(id, true)
         }
         this.renderUIQueue()
+      },
+      onTimelineScrollTo(e: MouseEvent) {
+        // TODO parent hack
+        let el
+        for (const node of [e.target, e.target.parentNode]) {
+          if (
+            node.classList.contains('timeline-scroll-to') &&
+            node.dataset.id
+          ) {
+            el = node
+          }
+        }
+        if (!el) return
+        e.preventDefault()
+        self.scrollTimelineTo(parseInt(el.dataset.patch_id))
       },
       settings: this.settings,
       state: this.states
