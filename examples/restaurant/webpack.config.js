@@ -19,7 +19,7 @@ module.exports = {
   },
   output: {
     // path: path.join(__dirname, 'dist'),
-    filename: `am-[name].umd.js`,
+    filename: `build/am-[name].umd.js`,
     library: 'am-[name]',
     libraryTarget: 'umd'
   },
