@@ -31,6 +31,7 @@
   "main": "logger.js",
   "browser": "browser.js",
   "dependencies": {
+    "assert": "latest",
     "eventemitter3": "^1.1.1",
     "uuid": "^3.1.0",
     "graphs-tob": "^2.0.0",

@@ -31,6 +31,7 @@
   "main": "dist/am_logger-file.umd.js",
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
+    "assert": "latest",
     "@types/socket.io-client": "^1.4.32",
     "await-semaphore": "latest",
     "deep-copy": "^1.4.1",
