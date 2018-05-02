@@ -32,7 +32,7 @@ import ConnectionDialog from './connection-form'
 import joint_css from '../joint/base.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
-import { TCell, TMachine, TState } from '../joint/network'
+import { TCell, TMachine, TState } from '../../network/joint'
 import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'

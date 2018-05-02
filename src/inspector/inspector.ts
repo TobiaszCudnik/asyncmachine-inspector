@@ -3,7 +3,7 @@ import renderLayout, { TLayoutProps } from './ui/layout'
 import Graph from './joint/graph'
 // TODO loose this magic once worker modules are here
 import * as LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
-import { INetworkJson } from './joint/network'
+import { INetworkJson } from '../network/joint'
 import * as io from 'socket.io-client'
 import Network, { ILogEntry, IPatch } from '../network/network'
 import * as jsondiffpatch from 'jsondiffpatch'

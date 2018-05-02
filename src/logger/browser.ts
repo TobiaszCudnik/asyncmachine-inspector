@@ -2,7 +2,7 @@ import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
 import NetworkJson, {
   JsonDiffFactory,
   INetworkJson
-} from '../inspector/joint/network'
+} from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 import * as downloadAsFile from 'download-as-file'

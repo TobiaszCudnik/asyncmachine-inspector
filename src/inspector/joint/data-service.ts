@@ -1,6 +1,6 @@
 import { IDelta } from 'jsondiffpatch'
 import * as jsondiffpatch from 'jsondiffpatch'
-import { INetworkJson, TCell } from './network'
+import { INetworkJson, TCell } from '../../network/joint'
 import { EventEmitter } from 'events'
 import {
   IPatch,

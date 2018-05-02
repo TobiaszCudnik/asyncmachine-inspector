@@ -2,7 +2,7 @@
 import * as workerpool from 'workerpool'
 import * as fs from 'fs'
 import * as util from 'util'
-import { JsonDiffFactory } from '../../inspector/joint/network'
+import { JsonDiffFactory } from '../../network/joint'
 
 const readFileAsync = util.promisify(fs.readFile)
 const jsons = []

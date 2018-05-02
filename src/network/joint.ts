@@ -3,10 +3,12 @@ import {
   NetworkJsonFactory as NetworkJsonFactoryBase,
   JsonDiffFactory as JsonDiffFactoryBase,
   NODE_LINK_TYPE
-} from '../../network/network-json'
+} from './network-json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
 import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
+import { Node as GraphNode } from './network'
+
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,

@@ -4,7 +4,7 @@ import Network, { ILogEntry, IPatch, Node as GraphNode } from './network'
 import { PipeFlags } from 'asyncmachine'
 import { AsyncMachine } from 'asyncmachine/build/types'
 // TODO shouldnt point to a layout-specific type
-import { INetworkJson } from '../inspector/joint/network'
+import { INetworkJson } from './joint'
 
 export interface JSONSnapshot {
   full_sync: INetworkJson
