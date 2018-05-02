@@ -51,6 +51,8 @@
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
 
 #### Inspector
+- narrow down timeline steps
+  - to those related (touching) a selected machine(s)
 - two finger trackpad zoom / out
 - progress indicator (on the toolbar, from material)
 - hovering over a graph cell highlights all the instances in the sidebars
@@ -229,6 +231,9 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- extract /src/network to a separate module
+- update jsondiffpatch
+  - pull request the webworker compat
 - update to webpack4 / parcel
 - divide joint/graph.ts into smaller files
 - extract layout.tsx into separate react components
