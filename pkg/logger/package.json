@@ -33,6 +33,7 @@
   "dependencies": {
     "assert": "latest",
     "eventemitter3": "^1.1.1",
+    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
     "uuid": "^3.1.0",
     "graphs-tob": "^2.0.0",
     "socket.io-client": "^2.0.4"

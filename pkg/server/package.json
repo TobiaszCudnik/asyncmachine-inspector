@@ -34,6 +34,7 @@
   "main": "server/server.js",
   "dependencies": {
     "assert": "latest",
+    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
     "socket.io": "^1.4.8"
   }
 }
