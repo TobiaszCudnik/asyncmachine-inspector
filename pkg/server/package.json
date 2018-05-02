@@ -35,6 +35,11 @@
   "dependencies": {
     "assert": "latest",
     "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
+    "graphs-tob": "^2.0.0",
+    "uuid": "^3.1.0",
+    "underscore": "^1.8.3",
+    "eventemitter3": "^1.1.1",
+    "asyncmachine": "^3.2.3",
     "socket.io": "^1.4.8"
   }
 }
