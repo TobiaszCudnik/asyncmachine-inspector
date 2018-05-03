@@ -1,27 +1,40 @@
 import { IPatch, ITransitionData, PatchType } from '../../network/network'
-import * as fs from 'fs'
-import { inspect } from 'util'
 import * as workerpool from 'workerpool'
 import * as randomID from 'simple-random-id'
 import { Semaphore } from 'await-semaphore'
 
-type Constructor<T = {}> = new (...args: any[]) => T
+export type Constructor<T = {}> = new (...args: any[]) => T
 
-function Workerpool<TBase extends Constructor>(Base: TBase) {
+export { WorkerPoolMixin }
+
+// TODO implement a common interface with LoggerBase
+// TODO browser compatibility
+export default function WorkerPoolMixin<TBase extends Constructor>(
+  Base: TBase
+) {
   return class extends Base {
     last_end = 0
-    differSemaphore = new Semaphore(3)
-    pool = workerpool.pool(__dirname + '/diff-worker.js')
+    differ_semaphore = new Semaphore(this.options.workers || 4)
+    pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
+    // TODO rename
+    jsons: { id, status: false }[] = []
+
+    // constructor(...args: any[]) {
+    //   super(...args)
+    //   if (this.options.granularity) {
+    //     this.granularity = this.options.granularity
+    //   }
+    // }
+
     start() {
       super.start()
-      console.log('logger start')
+      // console.log('logger start')
       const json = this.differ.generateJson()
       const id = randomID()
       this.jsons.push({ id, status: false })
       this.full_sync = this.differ.previous_json
 
       this.json.network.on('change', (type, machine_id, data) => {
-        if (type == PatchType.TRANSITION_STEP && this.skip_steps) return
         this.onGraphChange(type, machine_id, data)
       })
     }
@@ -31,10 +44,11 @@ function Workerpool<TBase extends Constructor>(Base: TBase) {
       machine_id: string,
       data?: ITransitionData
     ) {
+      if (!this.checkGranularity(type)) return
       // let diff = this.differ.generateDiff()
       const id = randomID()
       let prev = this.differ.previous_json
-      const prev_id = this.jsons[this.jsons.length - 1].id
+      // const prev_id = this.jsons[this.jsons.length - 1].id
       // console.time(`generate ${id}`)
       let json = this.differ.generateJson()
       // console.timeEnd(`generate ${id}`)
@@ -46,20 +60,14 @@ function Workerpool<TBase extends Constructor>(Base: TBase) {
       const logs = [...this.network.logs]
       this.network.logs = []
 
-      const release = await this.differSemaphore.acquire()
+      const release = await this.differ_semaphore.acquire()
       try {
         // console.log('request', pos)
-        console.time(id)
+        // console.time(id)
         let diff = await this.pool.exec('createDiffSync', [prev, json, pos])
         prev = null
         json = null
-        // let diff = await this.pool.exec('createDiffID', [prev_id, json, pos])
-        console.timeEnd(id)
-        // console.log('request-end', pos)
-        // let diff = await this.pool.exec('createDiff', [id, json, prev_id])
-        // if (diff == prev_id) {
-        //   diff = await this.pool.exec('createDiff2', [id, prev_id, prev])
-        // }
+        // console.timeEnd(id)
         let packet: IPatch = {
           logs,
           diff,
@@ -79,9 +87,9 @@ function Workerpool<TBase extends Constructor>(Base: TBase) {
       }
     }
 
+    // TODO dispose older jsons
     flushOrderedBuffer(pos) {
       // console.log('flushOrderedBuffer', pos)
-      // TODO flush this.jsons in order, then GC
       let send = 1
       let i
       for (i = this.last_end + 1; i <= pos; i++) {

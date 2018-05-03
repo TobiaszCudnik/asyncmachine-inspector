@@ -11,6 +11,7 @@ export enum Granularity {
 
 export { Network, LoggerBase }
 export interface IOptions {
+  // TODO autostart is problematic with inheritance and field inits in TS
   autostart?: boolean
   summary_fn?: (network: Network) => string
   workers?: number
@@ -39,14 +40,14 @@ export default class LoggerBase extends EventEmitter {
     this.json = new NetworkJson(network)
     this.differ = new JsonDiffFactory(this.json)
 
-    if (this.options.autostart) {
-      this.start()
-    }
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
     if (this.options.granularity) {
       this.granularity = this.options.granularity
+    }
+    if (this.options.autostart) {
+      this.start()
     }
 
     this.bindSetState()
