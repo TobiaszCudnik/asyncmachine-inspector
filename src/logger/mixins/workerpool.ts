@@ -13,8 +13,9 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
   Base: TBase
 ) {
   return class extends Base {
-    last_end = 0
-    differ_semaphore = new Semaphore(this.options.workers || 4)
+    last_end = -1
+    // TODO check if helpful, if yes, get the number from the workerpool module
+    differ_semaphore = new Semaphore(this.options.workers || 3)
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
     // TODO rename
     sent_map: { id: string; status: boolean }[] = []
@@ -43,6 +44,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       //   this.jsons.length - this.last_end,
       //   this.pool.stats()
       // )
+      debugger
       const pos = this.sent_map.push({ id, status: false }) - 1
       const logs = [...this.network.logs]
       this.network.logs = []
@@ -51,6 +53,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       try {
         // console.log('request', pos)
         // console.time(id)
+        // console.dir(this.pool.stats())
         let diff = await this.pool.exec('createDiffSync', [prev, json, pos])
         prev = null
         json = null
@@ -64,8 +67,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         if (data) packet.data = data
         // delete this.jsons[pos].json
         this.sent_map[pos].status = true
-        debugger
-        this.patches[pos - 1] = packet
+        this.patches[pos] = packet
         // console.dir(this.jsons.map(r => r.status))
         this.flushOrderedBuffer(pos)
       } catch (e) {
@@ -89,6 +91,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       }
       if (!send) return
       let flushed = 0
+      debugger
       for (i = this.last_end + 1; i <= pos; i++) {
         // console.log(this.patches[i])
         // console.log('sent', i)
@@ -98,7 +101,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
           flushed++
         }
       }
-      console.log(`flushed ${flushed} patches`)
+      // console.log(`flushed ${flushed} patches`)
       this.last_end = pos
     }
   }
