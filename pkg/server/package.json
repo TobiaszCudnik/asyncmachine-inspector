@@ -1,6 +1,6 @@
 {
   "name": "ami-server",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Server component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
