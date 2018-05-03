@@ -1,17 +1,15 @@
 import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
-import NetworkJson, {
-  JsonDiffFactory,
-  INetworkJson
-} from '../network/joint'
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 import * as downloadAsFile from 'download-as-file'
 import * as bindKey from 'keymaster'
 import { IOptions } from './base'
 
-export { Network, LoggerLocal as Logger }
+export { Network, Logger }
 
-export default class LoggerLocal extends EventEmitter {
+// TODO default options.autostart should be true
+export default class Logger extends EventEmitter {
   json: NetworkJson
   differ: JsonDiffFactory
   full_sync: INetworkJson
@@ -26,6 +24,7 @@ export default class LoggerLocal extends EventEmitter {
     }
   }
 
+  // TODO inherit from ./base OR extract the options logic
   constructor(public network: Network, public options: IOptions = null) {
     super()
     this.json = new NetworkJson(network)

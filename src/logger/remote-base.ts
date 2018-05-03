@@ -10,6 +10,7 @@ export default class LoggerRemote extends Logger {
   url: string
   is_started = false
 
+  // TODO put url into options
   constructor(public network: Network, url = 'http://localhost:3757', options?: IOptions) {
     super(network, options)
     url = url || 'http://localhost:3757'

@@ -1,15 +1,20 @@
 import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
-import NetworkJson, {
-  JsonDiffFactory,
-  INetworkJson
-} from '../network/joint'
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
+
+export enum Granularity {
+  STATES,
+  TRANSITIONS,
+  STEPS
+}
 
 export { Network, LoggerBase }
 export interface IOptions {
   autostart?: boolean
   summary_fn?: (network: Network) => string
+  workers?: number
+  granularity?: Granularity
 }
 
 export default class LoggerBase extends EventEmitter {
@@ -19,6 +24,7 @@ export default class LoggerBase extends EventEmitter {
   patches: IPatch[] = []
   summary_fn?: (network: Network) => string
   options: IOptions = {}
+  granularity = this.options.granularity || Granularity.STEPS
 
   get snapshot(): JSONSnapshot {
     return {
@@ -36,11 +42,37 @@ export default class LoggerBase extends EventEmitter {
     if (this.options.autostart) {
       this.start()
     }
-
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
+    if (this.options.granularity) {
+      this.granularity = this.options.granularity
+    }
+
     this.bindSetState()
+  }
+
+  checkGranularity(type) {
+    const t = PatchType
+    switch (type) {
+      case t.TRANSITION_STEP:
+      case t.PIPE:
+      case t.NEW_MACHINE:
+      case t.MACHINE_REMOVED:
+      case t.QUEUE_CHANGED:
+        if (this.granularity !== Granularity.STEPS) {
+          return false
+        }
+      case t.TRANSITION_END:
+      case t.TRANSITION_START:
+        if (
+          this.granularity !== Granularity.TRANSITIONS &&
+          this.granularity !== Granularity.STEPS
+        ) {
+          return false
+        }
+    }
+    return true
   }
 
   // TODO state set mixin
@@ -73,6 +105,7 @@ export default class LoggerBase extends EventEmitter {
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
+    if (!this.checkGranularity(type)) return
     const patch = this.createPatch(machine_id, type, data)
     if (!patch) return
     this.emit('diff-sync', patch)
