@@ -2,10 +2,10 @@ import { LoggerBase } from './base'
 import Network from '../network/network'
 import * as fs from 'fs'
 
-export { Network, LoggerLocal as Logger }
+export { Network, Logger }
 
 // TODO default options.autostart should be true
-export default class LoggerLocal extends LoggerBase {
+export default class Logger extends LoggerBase {
   saveFile(path) {
     fs.writeFileSync(path, JSON.stringify(this.snapshot))
   }

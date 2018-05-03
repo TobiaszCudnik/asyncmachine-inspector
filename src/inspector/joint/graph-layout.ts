@@ -85,8 +85,7 @@ export default class GraphLayout {
     this.clusters = new Graph({
       directed: false
     }) as TClusterGraph
-    // TODO memorize the last position through DnD
-    console.log('options.dimensions', options.dimensions)
+    log('options.dimensions', options.dimensions)
     this.clusters.setGraph({
       width: options.dimensions && options.dimensions.x || 0,
       height: options.dimensions && options.dimensions.y || 0,
