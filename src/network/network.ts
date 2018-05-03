@@ -50,7 +50,7 @@ export interface ILogEntry {
 
 export enum PatchType {
   STATE_CHANGED,
-  NEW_MACHINE,
+  MACHINE_ADDED,
   TRANSITION_START,
   TRANSITION_END,
   TRANSITION_STEP,
@@ -161,15 +161,17 @@ export default class Network extends EventEmitter {
     return [...this.graph.set]
   }
 
-  /**
-   * TODO accept machines in the constructor
-   */
-  constructor() {
+  constructor(machines?: AsyncMachine[]) {
     super()
     this.graph = new Graph() as NodeGraph
     this.machines = new Map() as MachinesMap
     this.machine_ids = {}
     this.id = uuid()
+    if (machines) {
+      for (const machine of machines) {
+        this.addMachine(machine)
+      }
+    }
   }
 
   addMachine(machine: AsyncMachine) {
@@ -185,7 +187,7 @@ export default class Network extends EventEmitter {
       this.linkPipedStates(machine)
     }
 
-    this.emit('change', PatchType.NEW_MACHINE, id)
+    this.emit('change', PatchType.MACHINE_ADDED, id)
   }
 
   // TODO

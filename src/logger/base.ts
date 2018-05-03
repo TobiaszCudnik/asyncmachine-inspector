@@ -11,8 +11,6 @@ export enum Granularity {
 
 export { Network, LoggerBase }
 export interface IOptions {
-  // TODO autostart is problematic with inheritance and field inits in TS
-  autostart?: boolean
   summary_fn?: (network: Network) => string
   workers?: number
   granularity?: Granularity
@@ -46,9 +44,7 @@ export default class LoggerBase extends EventEmitter {
     if (this.options.granularity) {
       this.granularity = this.options.granularity
     }
-    if (this.options.autostart) {
-      this.start()
-    }
+    this.network.once('change', () => this.start())
 
     this.bindSetState()
   }
@@ -58,7 +54,7 @@ export default class LoggerBase extends EventEmitter {
     switch (type) {
       case t.TRANSITION_STEP:
       case t.PIPE:
-      case t.NEW_MACHINE:
+      case t.MACHINE_ADDED:
       case t.MACHINE_REMOVED:
       case t.QUEUE_CHANGED:
         if (this.granularity !== Granularity.STEPS) {
@@ -109,6 +105,7 @@ export default class LoggerBase extends EventEmitter {
     if (!this.checkGranularity(type)) return
     const patch = this.createPatch(machine_id, type, data)
     if (!patch) return
+    this.patches.push(patch)
     this.emit('diff-sync', patch)
   }
 
@@ -135,7 +132,6 @@ export default class LoggerBase extends EventEmitter {
       patch.summary = this.summary_fn(this.network)
     }
     this.network.logs = []
-    this.patches.push(patch)
     return patch
   }
 }

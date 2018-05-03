@@ -17,7 +17,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
     differ_semaphore = new Semaphore(this.options.workers || 4)
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
     // TODO rename
-    jsons: { id, status: false }[] = []
+    sent_map: { id: string; status: boolean }[] = []
 
     // constructor(...args: any[]) {
     //   super(...args)
@@ -25,19 +25,6 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
     //     this.granularity = this.options.granularity
     //   }
     // }
-
-    start() {
-      super.start()
-      // console.log('logger start')
-      const json = this.differ.generateJson()
-      const id = randomID()
-      this.jsons.push({ id, status: false })
-      this.full_sync = this.differ.previous_json
-
-      this.json.network.on('change', (type, machine_id, data) => {
-        this.onGraphChange(type, machine_id, data)
-      })
-    }
 
     async onGraphChange(
       type: PatchType,
@@ -56,7 +43,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       //   this.jsons.length - this.last_end,
       //   this.pool.stats()
       // )
-      const pos = this.jsons.push({ id, status: false }) - 1
+      const pos = this.sent_map.push({ id, status: false }) - 1
       const logs = [...this.network.logs]
       this.network.logs = []
 
@@ -76,7 +63,8 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         }
         if (data) packet.data = data
         // delete this.jsons[pos].json
-        this.jsons[pos].status = true
+        this.sent_map[pos].status = true
+        debugger
         this.patches[pos - 1] = packet
         // console.dir(this.jsons.map(r => r.status))
         this.flushOrderedBuffer(pos)
@@ -93,21 +81,24 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       let send = 1
       let i
       for (i = this.last_end + 1; i <= pos; i++) {
-        if (!this.jsons[i].status) {
+        if (!this.sent_map[i].status) {
           send = 0
           break
         }
         send = 1
       }
       if (!send) return
+      let flushed = 0
       for (i = this.last_end + 1; i <= pos; i++) {
         // console.log(this.patches[i])
         // console.log('sent', i)
         // console.log(inspect(this.patches[i - 1], { depth: 100 }))
         if (this.patches[i - 1]) {
           this.emit('diff-sync', this.patches[i - 1])
+          flushed++
         }
       }
+      console.log(`flushed ${flushed} patches`)
       this.last_end = pos
     }
   }
