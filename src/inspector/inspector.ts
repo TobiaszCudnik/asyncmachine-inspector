@@ -793,6 +793,7 @@ export class Inspector implements ITransitions {
   }
 
   protected initSnapshotUpload() {
+    // TODO promisify and forward errors to the machine
     onFileUpload(
       document.getElementById('snapshot-upload'),
       { type: 'text' },

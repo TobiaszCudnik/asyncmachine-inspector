@@ -44,7 +44,16 @@ class LocalStorage {
     return this.data[this.uri]
   }
   save() {
-    localStorage.setItem(this.namespace, JSON.stringify(this.data))
+    try {
+      localStorage.setItem(this.namespace, JSON.stringify(this.data))
+    } catch (e) {
+      // TODO this should be caught by the Exception state from Inspector
+      if (e.name == 'QuotaExceededError') {
+        console.error('Saving settings failed, quota exceeded')
+        return
+      }
+      throw e
+    }
   }
   reset(everything = false) {
     if (everything) {
