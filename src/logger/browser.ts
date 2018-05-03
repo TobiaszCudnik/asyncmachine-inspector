@@ -60,6 +60,7 @@ export default class Logger extends EventEmitter {
     })
   }
 
+  // TODO loose
   start() {
     if (this.is_started) return
     this.differ.generateJson()

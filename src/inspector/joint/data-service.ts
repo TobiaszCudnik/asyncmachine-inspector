@@ -112,7 +112,9 @@ class JointDataService extends EventEmitter {
     this.patches_active_transitions +=
       patch.type == PatchType.TRANSITION_START
         ? 1
-        : patch.type == PatchType.TRANSITION_END ? -1 : 0
+        : patch.type == PatchType.TRANSITION_END
+          ? -1
+          : 0
     if (patch.type == PatchType.TRANSITION_START) {
       this.patches_last_transition_start.push(this.patches.length)
     }
@@ -133,7 +135,7 @@ class JointDataService extends EventEmitter {
       prev_patch_state_change
     ) {
       this.index.states.push(this.patches.length)
-      // add also the prev step (STATE_CHANGE or TRANSITION_STEP)
+      // add also the prev step (STATE_CHANGE)
       this.index.transitions.push(this.patches.length - 1)
       this.index.transitions.push(this.patches.length)
       this.index.nested_transitions.push(this.patches.length - 1)

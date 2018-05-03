@@ -187,6 +187,9 @@ export default class Network extends EventEmitter {
       this.linkPipedStates(machine)
     }
 
+    if (this.machines.size == 1) {
+      this.emit('ready')
+    }
     this.emit('change', PatchType.MACHINE_ADDED, id)
   }
 
@@ -247,6 +250,7 @@ export default class Network extends EventEmitter {
       if (this.transition_origin === machine) {
         // if the first transition ended, cleanup everything
         this.transition_origin = null
+        // TODO outer transition happens to finish BEFORE the inner ones
         this.machines_during_transition.clear()
         this.transition_links.clear()
         // TODO potentially skips other queue sources (from nested transitions)

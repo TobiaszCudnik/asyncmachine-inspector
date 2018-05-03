@@ -3,6 +3,7 @@ import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 
+// TODO outer transitions
 export enum Granularity {
   STATES,
   TRANSITIONS,
@@ -14,6 +15,10 @@ export interface IOptions {
   summary_fn?: (network: Network) => string
   workers?: number
   granularity?: Granularity
+}
+
+export const options_defaults = {
+  granularity: Granularity.STEPS
 }
 
 export default class LoggerBase extends EventEmitter {
@@ -34,40 +39,41 @@ export default class LoggerBase extends EventEmitter {
 
   constructor(public network: Network, options: IOptions = null) {
     super()
-    this.options = options || {}
+    this.options = { ...options_defaults, ...options }
     this.json = new NetworkJson(network)
     this.differ = new JsonDiffFactory(this.json)
 
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
-    if (this.options.granularity) {
-      this.granularity = this.options.granularity
-    }
-    this.network.once('change', () => this.start())
 
     this.bindSetState()
   }
 
-  checkGranularity(type) {
+  checkGranularity(type: PatchType): boolean {
     const t = PatchType
-    switch (type) {
-      case t.TRANSITION_STEP:
-      case t.PIPE:
-      case t.MACHINE_ADDED:
-      case t.MACHINE_REMOVED:
-      case t.QUEUE_CHANGED:
-        if (this.granularity !== Granularity.STEPS) {
+    const granularity = this.options.granularity
+    if (granularity == Granularity.STATES) {
+      switch (type) {
+        case t.TRANSITION_STEP:
+        case t.PIPE:
+        case t.MACHINE_ADDED:
+        case t.MACHINE_REMOVED:
+        case t.QUEUE_CHANGED:
           return false
-        }
-      case t.TRANSITION_END:
-      case t.TRANSITION_START:
-        if (
-          this.granularity !== Granularity.TRANSITIONS &&
-          this.granularity !== Granularity.STEPS
-        ) {
-          return false
-        }
+        case t.STATE_CHANGED:
+        case t.TRANSITION_START:
+          // accept state changes only from the outer transition
+          return this.network.machines_during_transition.size == 1
+        case t.TRANSITION_END:
+          // accept state changes only from the outer transition
+          return this.network.machines_during_transition.size == 0
+      }
+    } else if (
+      granularity == Granularity.TRANSITIONS &&
+      type == t.TRANSITION_STEP
+    ) {
+      return false
     }
     return true
   }
@@ -93,12 +99,20 @@ export default class LoggerBase extends EventEmitter {
   }
 
   start() {
-    this.differ.generateJson()
-    this.full_sync = this.differ.previous_json
+    if (!this.network.machines.size) {
+      this.network.on('ready', () => this.generateFullSync())
+    } else {
+      this.generateFullSync()
+    }
 
     this.json.network.on('change', (type, machine_id, data) =>
       this.onGraphChange(type, machine_id, data)
     )
+  }
+
+  protected generateFullSync() {
+    this.differ.generateJson()
+    this.full_sync = this.differ.previous_json
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
