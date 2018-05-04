@@ -26,9 +26,7 @@ const snapshot = params.snapshot_file
   ? JSON.parse(fs.readFileSync(params.snapshot_file))
   : null
 
-console.log(`Listening on ${params.port}`)
+console.log(`Listening on http://${params.host}:${params.port}/`)
 require('./server/server')
   .default(snapshot)
-  // .listen(params.port, params.host)
   .listen(params.port)
-console.log(`.listen(${params.port}, '${params.host}')`)
