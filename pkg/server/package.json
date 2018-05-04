@@ -1,6 +1,6 @@
 {
   "name": "ami-server",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "Server component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -39,7 +39,7 @@
     "uuid": "^3.1.0",
     "underscore": "^1.8.3",
     "eventemitter3": "^1.1.1",
-    "asyncmachine": "^3.2.3",
+    "asyncmachine": "^3.2",
     "socket.io": "^1.4.8"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "ami-logger",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "Logger component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -37,7 +37,7 @@
     "uuid": "^3.1.0",
     "graphs-tob": "^2.0.0",
     "underscore": "^1.8.3",
-    "asyncmachine": "^3.2.3",
+    "asyncmachine": "^3.2",
     "socket.io-client": "^2.0.4",
     "workerpool": "^2.3.0"
   }
