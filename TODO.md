@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- when trying to load the 3rd snapshot, nothing happens
 - bundle d.ts files
   - ami-logger
   - ami-server
@@ -100,6 +101,7 @@
 - load snapshots from URLs
 - show the legend on the first load
 - confirmation message for Reset
+- Compare 2 snapshots with a diff on the timeline
 - Options menu
   - Remember current positions
   - Reset
@@ -169,9 +171,13 @@
   - validate by hash
   
 #### Logger
+- Browser Logger is broken/outdated
+- extract features as mixins
+  - only 2 base loggers - node, browser
+  - file-http, remote-browser, remote-node, file-fs
 - worker pool for jsondiffpatch
   - transfer data using redis / indexedb
-  - manage the order and GCs
+  - GC
 - optimize creating patches
   - port jsondiffpatch to wasm/rust?
 - use the new asyncmachine log handlers API
@@ -231,6 +237,8 @@
   - ideally cancel the current rendering
   
 #### Refactoring
+- migrate to stock workerio
+- switch from underscore to lodash
 - extract /src/network to a separate module
 - update jsondiffpatch
   - pull request the webworker compat
