@@ -108,6 +108,7 @@ class JointDataService extends EventEmitter {
   }
 
   addPatch(patch: IPatch) {
+    log(PatchType[patch.type])
     // TODO assert the integrity somehow
     this.patches_active_transitions +=
       patch.type == PatchType.TRANSITION_START

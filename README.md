@@ -49,14 +49,15 @@ import { machine } from 'asyncmachine'
 const state = {
   Wet: { drop: ['Dry'], require: ['Water'] },
   Dry: { drop: ['Wet'] },
-  Water: {}
+  Water: { add: ['Wet'] }
 }
 const example = machine(state)
 // instantiate the logger
 const network = new Network(example)
-const logger = new Logger
+const logger = new Logger(network)
 // make changes
 example.add('Dry')
+example.add('Water')
 // save a snapshot
 logger.saveFile('./snapshot.json')
 ```
