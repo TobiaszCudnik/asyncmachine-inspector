@@ -2,7 +2,7 @@
 
 Inspector and a debugger for [AsyncMachine](https://github.com/TobiaszCudnik/asyncmachine).
 
-[![Preview](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.png)](https://photos.app.goo.gl/ZZCQ6vH9iD1o9tEw6)
+[![Preview](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.png)](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.mp4)
 
 ## Features
 - shows a graph of asyncmachines with their states and relations
@@ -64,13 +64,13 @@ logger.saveFile('./snapshot.json')
 
 ## Usage
 
-### Using snapshots
+**Using snapshots**
 
 1. Generate a snapshot
 1. Run `am-inspector`
 1. Load the snapshot using the toolbar
 
-### Using the server
+**Using the server**
 
 1. Run `am-server`
 1. Use the `ami-logger/remote` module
