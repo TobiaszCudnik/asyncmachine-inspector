@@ -33,6 +33,8 @@
   },
   "main": "server/server.js",
   "dependencies": {
+    "keymaster": "^1.6.2",
+    "download-as-file": "^1.1.0",
     "assert": "latest",
     "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
     "graphs-tob": "^2.0.0",

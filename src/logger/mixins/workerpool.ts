@@ -1,14 +1,21 @@
-import { IPatch, ITransitionData, PatchType } from '../../network/network'
 import * as workerpool from 'workerpool'
 import * as randomID from 'simple-random-id'
 import { Semaphore } from 'await-semaphore'
-
-export type Constructor<T = {}> = new (...args: any[]) => T
+import { IOptions, Logger, Granularity, Constructor } from '../logger'
+import Network, {
+  IPatch,
+  ITransitionData,
+  PatchType
+} from '../../network/network'
+import NetworkJson, {
+  JsonDiffFactory,
+  INetworkJson
+} from '../../network/joint'
+import * as EventEmitter from 'eventemitter3'
+import { JSONSnapshot } from '../../network/network-json'
 
 export { WorkerPoolMixin }
 
-// TODO implement a common interface with LoggerBase
-// TODO browser compatibility
 export default function WorkerPoolMixin<TBase extends Constructor>(
   Base: TBase
 ) {
@@ -17,15 +24,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
     // TODO check if helpful, if yes, get the number from the workerpool module
     differ_semaphore = new Semaphore(this.options.workers || 3)
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
-    // TODO rename
     sent_map: { id: string; status: boolean }[] = []
-
-    // constructor(...args: any[]) {
-    //   super(...args)
-    //   if (this.options.granularity) {
-    //     this.granularity = this.options.granularity
-    //   }
-    // }
 
     async onGraphChange(
       type: PatchType,
@@ -33,17 +32,9 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       data?: ITransitionData
     ) {
       if (!this.checkGranularity(type)) return
-      // let diff = this.differ.generateDiff()
       const id = randomID()
       let prev = this.differ.previous_json
-      // const prev_id = this.jsons[this.jsons.length - 1].id
-      // console.time(`generate ${id}`)
       let json = this.differ.generateJson()
-      // console.timeEnd(`generate ${id}`)
-      // console.log(
-      //   this.jsons.length - this.last_end,
-      //   this.pool.stats()
-      // )
       debugger
       const pos = this.sent_map.push({ id, status: false }) - 1
       const logs = [...this.network.logs]
@@ -51,9 +42,6 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
 
       const release = await this.differ_semaphore.acquire()
       try {
-        // console.log('request', pos)
-        // console.time(id)
-        // console.dir(this.pool.stats())
         let diff = await this.pool.exec('createDiffSync', [prev, json, pos])
         prev = null
         json = null
@@ -68,7 +56,6 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         // delete this.jsons[pos].json
         this.sent_map[pos].status = true
         this.patches[pos] = packet
-        // console.dir(this.jsons.map(r => r.status))
         this.flushOrderedBuffer(pos)
       } catch (e) {
         throw e
@@ -91,17 +78,12 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       }
       if (!send) return
       let flushed = 0
-      debugger
       for (i = this.last_end + 1; i <= pos; i++) {
-        // console.log(this.patches[i])
-        // console.log('sent', i)
-        // console.log(inspect(this.patches[i - 1], { depth: 100 }))
         if (this.patches[i - 1]) {
           this.emit('diff-sync', this.patches[i - 1])
           flushed++
         }
       }
-      // console.log(`flushed ${flushed} patches`)
       this.last_end = pos
     }
   }

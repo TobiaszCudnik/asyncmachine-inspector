@@ -3,25 +3,28 @@ import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
 
-// TODO outer transitions
+// TODO try to export all required symbols used by the mixins
 export enum Granularity {
   STATES,
   TRANSITIONS,
   STEPS
 }
 
-export { Network, LoggerBase }
+export { Network, Logger }
 export interface IOptions {
   summary_fn?: (network: Network) => string
   workers?: number
   granularity?: Granularity
+  url?: string
 }
 
 export const options_defaults = {
   granularity: Granularity.STEPS
 }
 
-export default class LoggerBase extends EventEmitter {
+export type Constructor<T = Logger> = new (...args: any[]) => T
+
+export default class Logger extends EventEmitter {
   json: NetworkJson
   differ: JsonDiffFactory
   full_sync: INetworkJson
@@ -46,8 +49,6 @@ export default class LoggerBase extends EventEmitter {
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
-
-    this.bindSetState()
   }
 
   checkGranularity(type: PatchType): boolean {
@@ -78,26 +79,6 @@ export default class LoggerBase extends EventEmitter {
     return true
   }
 
-  // TODO state set mixin
-  bindSetState() {
-    this.on('state-add', states => {
-      // TODO group by machines and add in bulks
-      for (const id of states) {
-        const [machine_id, name] = id.split(':')
-        const node = this.network.getNodeByName(name, machine_id)
-        node.machine.add(name)
-      }
-    })
-    this.on('state-drop', states => {
-      // TODO group by machines and add in bulks
-      for (const id of states) {
-        const [machine_id, name] = id.split(':')
-        const node = this.network.getNodeByName(name, machine_id)
-        node.machine.drop(name)
-      }
-    })
-  }
-
   start() {
     if (!this.network.machines.size) {
       this.network.on('ready', () => this.generateFullSync())
@@ -110,7 +91,7 @@ export default class LoggerBase extends EventEmitter {
     )
   }
 
-  protected generateFullSync() {
+  generateFullSync() {
     this.differ.generateJson()
     this.full_sync = this.differ.previous_json
   }
