@@ -1,1 +1,1 @@
-/Users/dev/workspace/asyncmachine-inspector/build/logger/logger.d.ts
+export * from './logger/logger'
