@@ -7,10 +7,20 @@ compile:
 compile-watch:
 	node_modules/.bin/tsc --pretty --watch --noEmit
 
+clean:
+	rm -R build
+	mkdir build
+
+clean-dist:
+	rm -R dist
+	mkdir dist
+
 build:
+	make clean
 	node_modules/.bin/tsc
 
 build-watch:
+	make clean
 	node_modules/.bin/tsc --watch
 
 dist-worker-dev:
@@ -23,32 +33,35 @@ dist-worker-prod:
 	webpack --config config/webpack-worker-prod.config.js
 
 dist-dev:
+	make clean-dist
 	webpack --config config/webpack-worker.config.js
 	webpack --config config/webpack.config.js
 
 dist-dev-watch:
+	make clean-dist
 	webpack --config config/webpack-worker.config.js --watch &
 		webpack --config config/webpack.config.js --watch
 
 dist-debug:
+	make clean-dist
 	webpack --config config/webpack-worker-prod.config.js
 	webpack --config config/webpack.config.js --devtool sourcemap
 
 dist-debug-watch:
+	make clean-dist
 	webpack --config config/webpack-worker.config.js --watch &
 		webpack --config config/webpack.config.js \
 			--devtool sourcemap --watch
 
 dist-prod:
+	make clean-dist
 	webpack --config config/webpack-worker-prod.config.js
 	webpack --config config/webpack-prod.config.js
 
 dist-prod-watch:
+	make clean-dist
 	webpack --config config/webpack-worker-prod.config.js
 	webpack --config config/webpack-prod.config.js --watch
-
-dist-stackblitz:
-	webpack --config webpack-stackblitz.config.js
 
 format:
 	prettier --single-quote --no-semi --write examples/*/*.ts
