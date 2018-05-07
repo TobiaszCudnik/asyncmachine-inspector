@@ -2,6 +2,7 @@ import renderLayout, { TLayoutProps } from './ui/layout'
 // UI type
 import Graph from './joint/graph'
 // TODO loose this magic once worker modules are here
+// @ts-ignore
 import * as LayoutWorker from 'raw-loader!../../dist/am-inspector-layout-worker.umd.js'
 import { INetworkJson } from '../network/joint'
 import * as io from 'socket.io-client'
@@ -15,8 +16,8 @@ import Settings from './settings'
 import { ITransitions } from './states-types'
 import workerio from 'workerio/src/workerio/index'
 import * as url from 'url'
-import Logger from '../logger/browser'
-import LoggerRemote from '../logger/remote-browser'
+import Logger from '../logger/logger'
+import LoggerRemote from '../logger/browser-remote'
 import * as downloadAsFile from 'download-as-file'
 import * as onFileUpload from 'upload-element'
 import * as bindKey from 'keymaster'
@@ -30,7 +31,7 @@ import { isProd } from './utils'
 const log = (...args) => {}
 // const log = console.log.bind(console)
 
-export { Logger, Network }
+export { Logger, LoggerRemote, Network }
 
 export enum STEP_TYPE_CHANGE {
   TRANSITION = 'transitions',
@@ -88,8 +89,9 @@ export class Inspector implements ITransitions {
     return this._data_service
   }
 
+  logger: Logger
   self_network: Network
-  self_logger: LoggerRemote
+  self_logger: Logger
 
   constructor(
     public container_selector = '#am-inspector',
@@ -111,10 +113,13 @@ export class Inspector implements ITransitions {
     if (debug_server) {
       this.self_network = new Network()
       this.self_network.addMachine(this.states)
-      this.self_logger = new LoggerRemote(this.self_network, debug_server)
+      this.self_logger = new LoggerRemote(this.self_network, {
+        url: debug_server
+      })
     }
 
     this.layout_data = this.buildLayoutData()
+    // @ts-ignore worker dataservice
     this.data_service = new JointDataService()
     // throttle UI updates
     this.renderUIQueue = throttle(() => {
@@ -372,7 +377,7 @@ export class Inspector implements ITransitions {
     this.states.drop('PlayStopClicked')
   }
 
-  Rendering_enter(position): boolean {
+  Rendering_enter(position?: number): boolean {
     if (position === undefined) {
       log('no position')
       return false
@@ -395,7 +400,7 @@ export class Inspector implements ITransitions {
 
   // TODO rename to DiffRendering and keep Rendering as:
   // (+FullSync-InitialRenderingDone) | DiffRendering
-  async Rendering_state(position) {
+  async Rendering_state(position?: number) {
     log('DiffRendering start')
     if (!isProd()) console.time('DiffRendering')
     const abort = this.states.getAbort('Rendering')
@@ -747,10 +752,11 @@ export class Inspector implements ITransitions {
       onTimelineScrollTo(e: MouseEvent) {
         // TODO parent hack
         let el
-        for (const node of [e.target, e.target.parentNode]) {
+        for (const node of [e.target, (e.target as HTMLElement).parentNode]) {
+          const node2 = node as HTMLElement
           if (
-            node.classList.contains('timeline-scroll-to') &&
-            node.dataset.id
+            node2.classList.contains('timeline-scroll-to') &&
+            node2.dataset.id
           ) {
             el = node
           }

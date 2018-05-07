@@ -29,7 +29,9 @@ import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar'
 import Legend from './legend'
 import ConnectionDialog from './connection-form'
 // TODO joint-specific imports
+// @ts-ignore
 import joint_css from '../joint/base.css'
+// @ts-ignore
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
 import { TCell, TMachine, TState } from '../../network/joint'
@@ -39,6 +41,7 @@ import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
 import { StepTypes } from '../joint/data-service'
 import { STEP_TYPE_CHANGE } from '../inspector'
+import States from '../states'
 
 const styles = {
   container: {
@@ -97,8 +100,10 @@ export type TLayoutProps = {
   onCellSelect: Function
   onScrollTo: Function
   onStateSet: Function
+  onTimelineScrollTo: Function
   // instances
   settings: Settings
+  state: States
 }
 
 export type TSidebarMachineState = {
@@ -745,7 +750,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         container.push(
                           <div
                             data-id={entry.id}
-                            data-patch_id={'test '+patch_id}
+                            data-patch_id={'test ' + patch_id}
                             className={class_name}
                             key={key}
                           >

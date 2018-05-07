@@ -1,4 +1,4 @@
-STATES_TYPES_BIN = node_modules/asyncmachine/tools/states-to-types.js
+STATES_TYPES_BIN = node_modules/.bin/am-types
 MOCHA = node_modules/.bin/mocha
 
 compile:
@@ -70,10 +70,11 @@ format:
 	prettier --single-quote --no-semi --write src/**/**/*.ts
 	prettier --single-quote --no-semi --write src/**/**/*.tsx
 
-state-types:
+am-types:
 	-`make build`
-	node $(STATES_TYPES_BIN) src/ui/states.js -s
-	prettier --single-quote --no-semi --write src/ui/states.js
+	$(STATES_TYPES_BIN) build/inspector/states.js \
+		-o src/inspector/states-types.ts
+	prettier --single-quote --no-semi --write src/inspector/states-types.ts
 
 test:
 	$(MOCHA) test/no-ui/
