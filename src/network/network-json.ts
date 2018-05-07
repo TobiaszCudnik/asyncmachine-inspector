@@ -93,6 +93,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     this.externals = new Map()
 
     // process nodes
+    // TODO ideally go through this.changed_ids only
     this.network.graph.forEach(node => {
       this.parseNode(node, prev_json, index)
     })
@@ -105,41 +106,32 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     return this.json
   }
 
+  abstract getCachedNode<Node>(
+    id: string,
+    prev_json: Json,
+    index: TJSONIndex
+  ): Node
+
   parseMachine(machine: TAsyncMachine, prev_json: Json, index: TJSONIndex) {
     const machine_id = machine.id(true)
-    let machine_node
-    // try to reuse an existing node
-    if (prev_json && !this.changed_ids.has(machine_id) && index[machine_id]) {
-      // TODO extract join specific code
-      machine_node = prev_json.cells[index[machine_id]]
-    } else {
-      machine_node = this.createMachineNode(machine)
-    }
+    const machine_node =
+      this.getCachedNode<Machine>(machine_id, prev_json, index) ||
+      this.createMachineNode(machine)
     this.addMachineNode(machine_node)
-    // TODO not needed when cached?
     this.machine_ids.add(machine_id)
     this.machine_nodes[machine_id] = machine_node
   }
 
   parseNode(graph_node: GraphNode, prev_json: Json, index: TJSONIndex) {
     const machine = graph_node.machine
-    let node
 
     if (!this.machine_ids.has(graph_node.machine_id)) {
       this.parseMachine(machine, prev_json, index)
     }
 
-    // try to reuse an existing node
-    if (
-      prev_json &&
-      !this.changed_ids.has(graph_node.full_name) &&
-      index[graph_node.full_name]
-    ) {
-      // TODO extract joinjs specific code
-      node = prev_json.cells[index[graph_node.full_name]]
-    } else {
-      node = this.createStateNode(graph_node)
-    }
+    const node =
+      this.getCachedNode<State>(graph_node.full_name, prev_json, index) ||
+      this.createStateNode(graph_node)
 
     // add to json
     this.addStateNode(node)
@@ -167,15 +159,10 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         // @ts-ignore
         const type = relation_type as NODE_LINK_TYPE
 
-        let link_node
-        // try to reuse an existing node
         const link_id = this.createLinkID(from, to, type)
-        if (prev_json && !this.changed_ids.has(link_id) && index[link_id]) {
-          // TODO extract joinjs specific code
-          link_node = prev_json.cells[index[link_id]]
-        } else {
-          link_node = this.createLinkNode(from, to, type)
-        }
+        const link_node =
+          this.getCachedNode<Link>(link_id, prev_json, index) ||
+          this.createLinkNode(from, to, type)
         this.addLinkNode(link_node)
       }
       // piped states
@@ -195,18 +182,13 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         else if (pipe.flags & PipeFlags.INVERT)
           type = NODE_LINK_TYPE.PIPE_INVERTED
 
-        let link_node
-        // try to reuse an existing node
         const link_id = this.createLinkID(from, to, type)
-        if (prev_json && !this.changed_ids.has(link_id) && index[link_id]) {
-          // TODO extract joinjs specific code
-          link_node = prev_json.cells[index[link_id]]
-        } else {
-          link_node = this.createLinkNode(from, to, type)
-        }
+        const link_node =
+          this.getCachedNode<Link>(link_id, prev_json, index) ||
+          this.createLinkNode(from, to, type)
         this.addLinkNode(link_node)
 
-        // pipe is represented by 2 entries (enter and exit)
+        // break after finding the piped connection
         break
       }
     }

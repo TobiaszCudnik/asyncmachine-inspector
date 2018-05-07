@@ -2,7 +2,8 @@
 import {
   NetworkJsonFactory as NetworkJsonFactoryBase,
   JsonDiffFactory as JsonDiffFactoryBase,
-  NODE_LINK_TYPE
+  NODE_LINK_TYPE,
+  TJSONIndex
 } from './network-json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
@@ -21,13 +22,32 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     }
   }
 
+  getCachedNode<Node>(
+    id: string,
+    prev_json: INetworkJson,
+    index: TJSONIndex
+  ): Node | null {
+    if (prev_json && !this.changed_ids.has(id) && index[id]) {
+      // @ts-ignore
+      return prev_json.cells[index[id]]
+    }
+    return null
+  }
+
+  onNewNode() {
+    const index = this.json.cells.length - 1
+    const node = this.json.cells[index]
+    this.json_index[node.id] = index
+    this.network.emit('new-node', node.id, index)
+  }
+
   addMachineNode(node: TMachine) {
     this.json.cells.push(node)
-    this.json_index[node.id] = this.json.cells.length - 1
+    this.onNewNode()
   }
   addStateNode(node: TState) {
     this.json.cells.push(node)
-    this.json_index[node.id] = this.json.cells.length - 1
+    this.onNewNode()
 
     let machine = <TMachine>this.getNodeById(node.parent)
     if (!machine.embeds.includes(node.id)) {
@@ -36,7 +56,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   }
   addLinkNode(node: TLink) {
     this.json.cells.push(node)
-    this.json_index[node.id] = this.json.cells.length - 1
+    this.onNewNode()
   }
 
   // TODO number of listeners
