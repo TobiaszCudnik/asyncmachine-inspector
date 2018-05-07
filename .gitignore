@@ -39,3 +39,6 @@ examples/remote-server-logger/index.js.map
 /examples/restaurant/.awcache/
 /examples/restaurant/build/
 /examples/restaurant/node_modules/
+/examples/restaurant/transitions.js.map
+/examples/restaurant/schema.js.map
+/examples/restaurant/index.js.map
