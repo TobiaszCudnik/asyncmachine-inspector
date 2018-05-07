@@ -11,17 +11,17 @@
         "declaration": true
 //        "declarationDir": "./"
     },
+    "include": [
+        "src/logger/mixins/**/*"
+    ],
     "files": [
         "typings/index.d.ts",
         "src/server/server.ts",
         "src/server/mock-server.ts",
-        "src/logger/node.ts",
-        "src/logger/remote.ts",
         "src/logger/browser.ts",
-        "src/logger/remote-browser.ts",
+        "src/logger/browser-remote.ts",
         "src/inspector/inspector.ts",
-        "src/inspector/joint/graph-layout-worker.ts",
-        "src/logger/mixins/workerpool.ts"
+        "src/inspector/joint/graph-layout-worker.ts"
     ],
     "awesomeTypescriptLoaderOptions": {
       "useTranspileModule": true,
