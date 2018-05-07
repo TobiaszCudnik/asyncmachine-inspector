@@ -114,7 +114,7 @@ export type TSidebarMachineState = {
   is_touched: boolean
 }
 
-type TLayoutState = {
+export type TLayoutState = {
   // rename to is_visible
   sidebar?: boolean
   // rename to is_visible
@@ -399,7 +399,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     return <div>{items}</div>
                   }
 
-                  function StateName({ name, machineId }) {
+                  function StateName({ name, machineId, key }) {
                     const id = machineId + ':' + name
                     return (
                       <span className="cell-select hover" data-id={id}>
@@ -418,14 +418,16 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
 
                   // TODO merge QueueList and ActiveTransitionsList
                   function TransitionsList({
-                    transitions
+                    transitions,
+                    name
                   }: {
                     transitions: ITransitionData[]
+                    name: string
                   }) {
                     const items = transitions.map((entry, i) => {
                       let class_name = `joint-group-${entry.queue_machine_id}`
                       let type = getTransitionType(entry)
-                      let target_states = ''
+                      let target_states
                       if (entry.machine_id != entry.queue_machine_id) {
                         let class_name = `joint-group-${entry.machine_id}`
                         target_states = (
@@ -591,12 +593,14 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     machine,
                     states,
                     selected_ids,
-                    step_type
+                    step_type,
+                    key
                   }: {
                     machine: TMachine
                     states?: TSidebarMachineState[]
                     selected_ids?: Set<string>
                     step_type: string
+                    key: string
                   }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue

@@ -189,6 +189,7 @@
 - dont depend on the asyncmachine module
 
 #### Server
+- https support
 - support multiple loggers simultaneously
 
 #### Optimizations
