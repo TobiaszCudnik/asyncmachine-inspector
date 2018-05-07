@@ -9,9 +9,11 @@ import {
   TAsyncMachine,
   ITransitionStep,
   IStateStruct,
-  StateChangeTypes
+  StateChangeTypes,
+  IState
 } from 'asyncmachine/src/types'
 import Graph from 'graphs-tob'
+import { difference } from 'lodash'
 import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
@@ -57,7 +59,8 @@ export enum PatchType {
   PIPE,
   FULL_SYNC,
   MACHINE_REMOVED,
-  QUEUE_CHANGED
+  QUEUE_CHANGED,
+  PIPE_REMOVED
 }
 
 // TODO not needed?
@@ -98,7 +101,7 @@ export class Node {
     return `${this.machine_id}:${this.name}`
   }
 
-  get clock(): string {
+  get clock(): number {
     return this.machine.clock(this.name)
   }
 
@@ -131,6 +134,7 @@ export class Node {
     return this.machine.getRelationsOf(this.name, name)
   }
 
+  // TODO not used?
   isFromState(state_struct: IStateStruct): boolean {
     let f = StateStructFields
     return (
@@ -206,6 +210,11 @@ export default class Network extends EventEmitter {
     this.emit('change', PatchType.MACHINE_REMOVED, id)
   }
 
+  unlinkPipedStates(machine: TAsyncMachine) {
+    throw new Error('not implemented')
+    // TODO this.emit('change', PatchType.PIPE_REMOVED, machine_id)
+  }
+
   isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
     // TODO handle the relation param
     return (
@@ -222,18 +231,23 @@ export default class Network extends EventEmitter {
     // - adding / removing a state
     // TODO unbind on dispose
     // TODO group the same changes emitted by a couple of machines
-    const id = machine.id(true)
-    machine.on('tick', () => this.emit('change', PatchType.STATE_CHANGED))
+    const machine_id = machine.id(true)
+    machine.on('tick', (states_before: string[]) => {
+      const changed_ids = difference(states_before, machine.is()).map(id => {
+        return this.getNodeByName(id, machine_id).full_name
+      })
+      this.emit('change', PatchType.STATE_CHANGED, machine_id, changed_ids)
+    })
     machine.on('pipe', () => {
-      this.linkPipedStates(machine)
-      this.emit('change', PatchType.PIPE, id)
+      const links = this.linkPipedStates(machine)
+      this.emit('change', PatchType.PIPE, machine_id, links)
     })
     machine.on('transition-init', (transition: Transition) => {
       // TODO match both the machine and the transition (for lock based cancellation)
       if (!this.transition_origin) {
         this.transition_origin = machine
       }
-      this.machines_during_transition.add(id)
+      this.machines_during_transition.add(machine_id)
       const transition_data: ITransitionData = {
         machine_id: transition.machine.id(true),
         queue_machine_id: transition.source_machine.id(true),
@@ -242,7 +256,12 @@ export default class Network extends EventEmitter {
         type: transition.type
       }
       // TODO this fires too early and produces an empty diff (reproduce)
-      this.emit('change', PatchType.TRANSITION_START, id, transition_data)
+      this.emit(
+        'change',
+        PatchType.TRANSITION_START,
+        machine_id,
+        transition_data
+      )
     })
     machine.on('transition-end', (transition: Transition) => {
       let touched = {}
@@ -263,6 +282,7 @@ export default class Network extends EventEmitter {
           node.step_style = null
         }
       }
+      // TODO try to build this data on the client
       const transition_data: ITransitionData = {
         machine_id: transition.machine.id(true),
         queue_machine_id: transition.source_machine.id(true),
@@ -271,19 +291,19 @@ export default class Network extends EventEmitter {
         type: transition.type,
         touched: touched
       }
-      this.emit('change', PatchType.TRANSITION_END, id, transition_data)
+      this.emit('change', PatchType.TRANSITION_END, machine_id, transition_data)
     })
     machine.on('transition-step', (...steps) => {
-      this.parseTransitionSteps(machine.id(true), ...steps)
+      this.parseTransitionSteps(machine_id, ...steps)
     })
     machine.on('queue-changed', () =>
-      this.emit('change', PatchType.QUEUE_CHANGED)
+      this.emit('change', PatchType.QUEUE_CHANGED, machine_id)
     )
     // TODO dispose
     machine.log_handlers.push((msg, level) => {
       // TODO accept all the logs once Inspector supports filtering
       if (level > 2) return
-      this.logs.push({ id, msg, level })
+      this.logs.push({ id: machine_id, msg, level })
     })
   }
 
@@ -295,24 +315,29 @@ export default class Network extends EventEmitter {
     machine_id: string,
     ...steps: ITransitionStep[]
   ) {
-    let fields = TransitionStepFields
-    let types = TransitionStepTypes
+    const fields = TransitionStepFields
+    const types = TransitionStepTypes
+    const changed_nodes = new Set<string>()
     for (let step of steps) {
       let type = step[fields.TYPE]
 
       let node = this.getNodeByStruct(step[fields.STATE])
+      changed_nodes.add(node.full_name)
       node.updateStepStyle(type)
 
       if (step[fields.SOURCE_STATE]) {
         // TODO handle the "Any" state
         let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
-        if (type != types.PIPE)
+        if (type != types.PIPE) {
+          changed_nodes.add(source_node.full_name)
           // dont mark the source node as piped, as it already has
           // styles
           source_node.updateStepStyle(type)
-        else
-          // be a little ahead of time here, for better styling
+        }
+        // stay a little bit ahead of time here, for better styling
+        else {
           this.machines_during_transition.add(node.machine_id)
+        }
 
         // mark the link as touched
         // TODO create tmp links for active_transitions between states
@@ -322,7 +347,9 @@ export default class Network extends EventEmitter {
       }
     }
 
-    this.emit('change', PatchType.TRANSITION_STEP, machine_id)
+    this.emit('change', PatchType.TRANSITION_STEP, machine_id, [
+      ...changed_nodes
+    ])
   }
 
   private statesToNodes(names: string[], machine_id: string) {
@@ -337,7 +364,9 @@ export default class Network extends EventEmitter {
 
     // get edges from relations
     // all the nodes have to be parsed prior to this
-    for (let node of new_nodes) this.getRelationsFromNode(node, machine_id)
+    for (let node of new_nodes) {
+      this.getRelationsFromNode(node, machine_id)
+    }
   }
 
   private getRelationsFromNode(node: Node, machine_id: string) {
@@ -370,7 +399,8 @@ export default class Network extends EventEmitter {
     )
   }
 
-  protected linkPipedStates(machine: TAsyncMachine) {
+  protected linkPipedStates(machine: TAsyncMachine): [string, string][] {
+    const linked = []
     for (let state in machine.piped) {
       for (let target of machine.piped[state]) {
         const source_state = this.getNodeByName(
@@ -384,9 +414,14 @@ export default class Network extends EventEmitter {
           this.machines.get(target.machine)
         )
         if (!target_state) continue
-        this.graph.link(source_state, target_state)
+        // TODO add this.graph.isLinked(source, target)
+        if (!this.graph._linked(source_state).has(target_state)) {
+          this.graph.link(source_state, target_state)
+          linked.push([source_state, target_state])
+        }
       }
     }
+    return linked
   }
 
   toString() {

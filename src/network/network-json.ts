@@ -1,6 +1,11 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
-import Network, { ILogEntry, IPatch, Node as GraphNode } from './network'
+import Network, {
+  ILogEntry,
+  IPatch,
+  Node as GraphNode,
+  PatchType
+} from './network'
 import { PipeFlags } from 'asyncmachine'
 import { TAsyncMachine } from 'asyncmachine/build/types'
 // TODO shouldnt point to a layout-specific type
@@ -14,6 +19,8 @@ export interface JSONSnapshot {
 export interface INetworkJsonFactory<Json> {
   generateJson(): Json
 }
+
+export type TJSONIndex = { [index: string]: number }
 
 /**
  * Produce JSON from a Network instance, ready to be consumed by the UI layer.
@@ -33,62 +40,143 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   externals: Map<GraphNode, Set<GraphNode>>
 
   json: Json
+  // ID to position in the array
+  json_index: TJSONIndex
+  changed_ids: Set<string> = new Set()
 
   constructor(public network: Network) {
     assert(network)
+    this.network.on(
+      'change',
+      (type: PatchType, machine_id: string, ...data) => {
+        let changed_ids = []
+        switch (type) {
+          case PatchType.STATE_CHANGED:
+          case PatchType.TRANSITION_STEP:
+            changed_ids = [...(data[0] as string[])]
+            changed_ids.unshift(machine_id)
+            break
+          case PatchType.MACHINE_ADDED:
+          case PatchType.MACHINE_REMOVED:
+            changed_ids.push(machine_id)
+            const machine = this.network.machine_ids[machine_id]
+            changed_ids.push(...machine.states_all)
+            break
+          case PatchType.TRANSITION_START:
+          case PatchType.TRANSITION_END:
+          case PatchType.QUEUE_CHANGED:
+            changed_ids.push(machine_id)
+            break
+          case PatchType.PIPE:
+            const changed_link_ids = [...(data[0] as string[])]
+            // TODO encode the IDs to strings
+            changed_ids.push(machine_id)
+            break
+        }
+        for (const id of changed_ids) {
+          this.changed_ids.add(id)
+        }
+      }
+    )
   }
 
   generateJson(): Json {
     // TODO cleanup at the end
+    const prev_json = this.json
+    const index = this.json_index
+    // reset everything besides `this.changed_ids`
     this.json = this.initJson()
+    this.json_index = {}
     this.machine_ids = new Set()
     this.nodes = new Map()
     this.machine_nodes = {}
     this.externals = new Map()
 
     // process nodes
-    this.network.graph.forEach(node => this.parseNode(node))
-    this.network.graph.traverseAll((from, to) => this.parseLink(from, to))
+    this.network.graph.forEach(node => {
+      this.parseNode(node, prev_json, index)
+    })
+    this.network.graph.traverseAll((from, to) => {
+      this.parseLink(from, to, prev_json, index)
+    })
+
+    this.changed_ids = new Set()
 
     return this.json
   }
 
-  parseMachine(machine: TAsyncMachine) {
+  parseMachine(machine: TAsyncMachine, prev_json: Json, index: TJSONIndex) {
     const machine_id = machine.id(true)
-    const machine_node = this.createMachineNode(machine)
+    let machine_node
+    // try to reuse an existing node
+    if (prev_json && !this.changed_ids.has(machine_id) && index[machine_id]) {
+      // TODO extract join specific code
+      machine_node = prev_json.cells[index[machine_id]]
+    } else {
+      machine_node = this.createMachineNode(machine)
+    }
     this.addMachineNode(machine_node)
+    // TODO not needed when cached?
     this.machine_ids.add(machine_id)
     this.machine_nodes[machine_id] = machine_node
   }
 
-  parseNode(graph_node: GraphNode) {
+  parseNode(graph_node: GraphNode, prev_json: Json, index: TJSONIndex) {
     const machine = graph_node.machine
+    let node
 
     if (!this.machine_ids.has(graph_node.machine_id)) {
-      this.parseMachine(machine)
+      this.parseMachine(machine, prev_json, index)
     }
 
-    const node = this.createStateNode(graph_node)
+    // try to reuse an existing node
+    if (
+      prev_json &&
+      !this.changed_ids.has(graph_node.full_name) &&
+      index[graph_node.full_name]
+    ) {
+      // TODO extract joinjs specific code
+      node = prev_json.cells[index[graph_node.full_name]]
+    } else {
+      node = this.createStateNode(graph_node)
+    }
 
     // add to json
     this.addStateNode(node)
 
     // index the reference
+    // TODO never used?
     this.nodes.set(graph_node, node)
   }
 
   /**
-   * create a link for every relation
+   * Create a link for every relation
    */
-  parseLink(from: GraphNode, to: GraphNode) {
+  parseLink(
+    from: GraphNode,
+    to: GraphNode,
+    prev_json: Json,
+    index: TJSONIndex
+  ) {
     // state relations
     if (from.machine_id == to.machine_id) {
       let relations = from.relations(to)
       for (let relation of relations) {
         let relation_type = RELATION_TO_LINK_TYPE[relation]
         assert(relation_type !== undefined)
+        // @ts-ignore
+        const type = relation_type as NODE_LINK_TYPE
 
-        this.addLinkNode(this.createLinkNode(from, to, relation_type))
+        let link_node
+        // try to reuse an existing node
+        const link_id = this.createLinkID(from, to, type)
+        if (prev_json && !this.changed_ids.has(link_id) && index[link_id]) {
+          // TODO extract joinjs specific code
+          link_node = prev_json.cells[index[link_id]]
+        } else {
+          link_node = this.createLinkNode(from, to, type)
+        }
+        this.addLinkNode(link_node)
       }
       // piped states
     } else {
@@ -107,7 +195,16 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         else if (pipe.flags & PipeFlags.INVERT)
           type = NODE_LINK_TYPE.PIPE_INVERTED
 
-        this.addLinkNode(this.createLinkNode(from, to, type))
+        let link_node
+        // try to reuse an existing node
+        const link_id = this.createLinkID(from, to, type)
+        if (prev_json && !this.changed_ids.has(link_id) && index[link_id]) {
+          // TODO extract joinjs specific code
+          link_node = prev_json.cells[index[link_id]]
+        } else {
+          link_node = this.createLinkNode(from, to, type)
+        }
+        this.addLinkNode(link_node)
 
         // pipe is represented by 2 entries (enter and exit)
         break
@@ -149,6 +246,11 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
 
   abstract createMachineNode(machine: TAsyncMachine): Machine
   abstract createStateNode(node: GraphNode): State
+  abstract createLinkID(
+    from: GraphNode,
+    to: GraphNode,
+    relation: NODE_LINK_TYPE
+  )
   abstract createLinkNode(
     from: GraphNode,
     to: GraphNode,
@@ -182,7 +284,7 @@ export abstract class JsonDiffFactory<
 
   generateJson() {
     // generate a new json and keep it as the last one
-    return this.previous_json = this.network.generateJson()
+    return (this.previous_json = this.network.generateJson())
   }
 
   generateDiff(base_json?: Json) {

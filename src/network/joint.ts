@@ -9,7 +9,6 @@ import * as _ from 'underscore'
 import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
 import { Node as GraphNode } from './network'
 
-
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,
   TMachine,
@@ -24,15 +23,20 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
 
   addMachineNode(node: TMachine) {
     this.json.cells.push(node)
+    this.json_index[node.id] = this.json.cells.length - 1
   }
   addStateNode(node: TState) {
     this.json.cells.push(node)
+    this.json_index[node.id] = this.json.cells.length - 1
 
     let machine = <TMachine>this.getNodeById(node.parent)
-    machine.embeds.push(node.id)
+    if (!machine.embeds.includes(node.id)) {
+      machine.embeds.push(node.id)
+    }
   }
   addLinkNode(node: TLink) {
     this.json.cells.push(node)
+    this.json_index[node.id] = this.json.cells.length - 1
   }
 
   // TODO number of listeners
@@ -80,6 +84,11 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   stateUiName(name): string {
     return name.replace(/([a-z])([A-Z])/g, '$1\n$2')
   }
+  createLinkID(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE) {
+    return `${this.getStateNodeId(from)}::${this.getStateNodeId(
+      to
+    )}::${relation}`
+  }
   createLinkNode(
     from: GraphNode,
     to: GraphNode,
@@ -95,9 +104,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         id: this.getStateNodeId(to)
       },
       relation,
-      id: `${this.getStateNodeId(from)}::${this.getStateNodeId(
-        to
-      )}::${relation}`,
+      id: this.createLinkID(from, to, relation),
       labels: [
         {
           id: `${this.getStateNodeId(from)}::${this.getStateNodeId(
@@ -223,7 +230,7 @@ export type TLink = {
   is_touched?: boolean
 }
 
-type JsonNode = TMachine | TState | TLink
+export type JsonNode = TMachine | TState | TLink
 
 export interface INetworkJson {
   cells: Array<TState | TLink | TMachine>
