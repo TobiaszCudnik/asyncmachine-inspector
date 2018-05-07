@@ -1,6 +1,7 @@
-import {Restaurant, Chef, Customer, Waiter, Dev} from './schema'
+import { Restaurant, Chef, Customer, Waiter, Dev } from './schema'
 import transitions from './transitions'
-import render, { Network, Logger } from 'asyncmachine-inspector'
+import render from 'asyncmachine-inspector'
+import { Network, Logger } from 'ami-logger'
 
 const network = new Network()
 
@@ -21,12 +22,11 @@ function createRestaurant(network) {
 const restaurant = createRestaurant(network)
 transitions(restaurant)
 
-const logger = new Logger(network, {summary_fn})
+const logger = new Logger(network, { summary_fn })
 render('#app').setLogger(logger)
 
-function summary_fn(network) {
-  return (
-`Active customers: ${restaurant.customers.length}
+function summary_fn(network: Network) {
+  return `Active customers: ${restaurant.customers.length}
 Meals eaten: ${restaurant.meals_eaten}
-Meals wasted: ${restaurant.meals_wasted}`)
+Meals wasted: ${restaurant.meals_wasted}`
 }

@@ -1,4 +1,4 @@
-= Asyncmachine Inspector Restaurant Example
+= Asyncmachine Inspector Remote Browser Example
 
 1. Execute ./start.sh
 

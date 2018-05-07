@@ -1,6 +1,6 @@
 {
-  "name": "asyncmachine-file-logger-example",
-  "desc": "AsyncMachine File Logger Example",
+  "name": "ami-file-logger-example",
+  "desc": "AsyncMachine Inspector File Logger Example",
   "version": "1.0.0",
   "description": "",
   "main": "am_demo.umd.js",

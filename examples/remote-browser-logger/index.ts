@@ -1,5 +1,5 @@
 import Asyncmachine from 'asyncmachine'
-import { Logger, Network } from 'ami-logger/remote'
+import { Logger, Network } from 'ami-logger/browser-remote'
 
 // an example machine and its instance
 class Example extends Asyncmachine {
@@ -16,8 +16,7 @@ class Example extends Asyncmachine {
 const example = new Example()
 
 // hook up the instance to a logger client
-const network = new Network()
-network.addMachine(example)
+const network = new Network([example])
 const logger = new Logger(network, 'http://localhost:3757')
 
 // simulation logic

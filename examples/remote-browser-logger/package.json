@@ -1,6 +1,6 @@
 {
-  "name": "asyncmachine-logger-remote-example",
-  "description": "AsyncMachine Remote Logger Example",
+  "name": "ami-logger-remote-example",
+  "description": "AsyncMachine Inspector Remote Logger Example",
   "version": "1.0.0",
   "main": "am-demo.umd.js",
   "author": "Tobiasz Cudnik",
@@ -14,6 +14,8 @@
     "ami-logger": "^0.3.3",
     "ami-server": "^0.3.3",
     "httpserver": "^0.3.0",
+    "webpack": "^3.10.0",
+    "awesome-typescript-loader": "^3.2.3",
     "asyncmachine": "^3.2"
   }
 }

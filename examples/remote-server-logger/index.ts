@@ -1,5 +1,6 @@
 import { machine } from 'asyncmachine'
-import { Logger, Network } from 'ami-logger/remote'
+import { Logger, Network } from 'ami-logger'
+import RemoteNodeMixin from 'ami-logger/mixins/remote-node'
 
 // an example machine and its instance
 const example_states = {
@@ -10,9 +11,12 @@ const example_states = {
 const example = machine(example_states).id('example')
 
 // hook up the instance to a logger client
-const network = new Network()
-network.addMachine(example)
-const logger = new Logger(network, 'http://localhost:3757', { summary_fn })
+const network = new Network([example])
+const LoggerClass = RemoteNodeMixin(Logger)
+const logger = new LoggerClass(network, {
+  url: 'http://localhost:3757',
+  summary_fn
+})
 
 // simulation logic
 example.add(['Foo', 'Bar'])

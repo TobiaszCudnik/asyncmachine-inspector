@@ -1,6 +1,6 @@
 {
-  "name": "asyncmachine-logger-remote-example",
-  "description": "AsyncMachine Remote Logger Example",
+  "name": "ami-logger-remote-example",
+  "description": "AsyncMachine Inspector Remote Logger Example",
   "version": "1.0.0",
   "main": "am-demo.umd.js",
   "author": "Tobiasz Cudnik",
