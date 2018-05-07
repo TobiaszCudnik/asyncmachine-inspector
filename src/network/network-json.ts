@@ -2,7 +2,7 @@ import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
 import Network, { ILogEntry, IPatch, Node as GraphNode } from './network'
 import { PipeFlags } from 'asyncmachine'
-import { AsyncMachine } from 'asyncmachine/build/types'
+import { TAsyncMachine } from 'asyncmachine/build/types'
 // TODO shouldnt point to a layout-specific type
 import { INetworkJson } from './joint'
 
@@ -53,7 +53,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     return this.json
   }
 
-  parseMachine(machine: AsyncMachine) {
+  parseMachine(machine: TAsyncMachine) {
     const machine_id = machine.id(true)
     const machine_node = this.createMachineNode(machine)
     this.addMachineNode(machine_node)
@@ -147,7 +147,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   abstract addStateNode(node: State)
   abstract addLinkNode(node: Link)
 
-  abstract createMachineNode(machine: AsyncMachine): Machine
+  abstract createMachineNode(machine: TAsyncMachine): Machine
   abstract createStateNode(node: GraphNode): State
   abstract createLinkNode(
     from: GraphNode,

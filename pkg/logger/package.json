@@ -33,13 +33,13 @@
   "types": "logger.d.ts",
   "dependencies": {
     "assert": "latest",
-    "eventemitter3": "^1.1.1",
-    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
-    "uuid": "^3.1.0",
+    "asyncmachine": "^3.2.5",
+    "eventemitter3": "^3.1.0",
     "graphs-tob": "^2.0.0",
+    "jsondiffpatch": "github:TobiaszCudnik/jsondiffpatch",
+    "socket.io-client": "^2.1.0",
     "underscore": "^1.8.3",
-    "asyncmachine": "^3.2",
-    "socket.io-client": "^2.0.4",
+    "uuid": "^3.1.0",
     "workerpool": "^2.3.0"
   }
 }

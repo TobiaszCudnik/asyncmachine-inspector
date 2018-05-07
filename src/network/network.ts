@@ -6,7 +6,7 @@ import {
   Transition
 } from 'asyncmachine'
 import {
-  AsyncMachine,
+  TAsyncMachine,
   ITransitionStep,
   IStateStruct,
   StateChangeTypes
@@ -18,7 +18,7 @@ import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
 import { NODE_LINK_TYPE } from './network-json'
 
-export type MachinesMap = Map<AsyncMachine, string>
+export type MachinesMap = Map<TAsyncMachine, string>
 export type NodeGraph = Graph<Node>
 
 export interface IPatch {
@@ -63,7 +63,7 @@ export enum PatchType {
 // TODO not needed?
 export interface ExternalNode {
   node: Node
-  machine: AsyncMachine
+  machine: TAsyncMachine
 }
 
 export class Node {
@@ -104,7 +104,7 @@ export class Node {
 
   constructor(
     public name: string,
-    public machine: AsyncMachine,
+    public machine: TAsyncMachine,
     public machine_id: string
   ) {}
 
@@ -151,17 +151,17 @@ export default class Network extends EventEmitter {
   id: string
   graph: NodeGraph
   machines: MachinesMap
-  machine_ids: { [index: string]: AsyncMachine }
+  machine_ids: { [index: string]: TAsyncMachine }
   logs: ILogEntry[] = []
   machines_during_transition: Set<string> = new Set()
   private transition_links = new Map<Node, Set<Node>>()
-  transition_origin: AsyncMachine
+  transition_origin: TAsyncMachine
 
   get states() {
     return [...this.graph.set]
   }
 
-  constructor(machines?: AsyncMachine[]) {
+  constructor(machines?: TAsyncMachine[]) {
     super()
     this.graph = new Graph() as NodeGraph
     this.machines = new Map() as MachinesMap
@@ -174,7 +174,7 @@ export default class Network extends EventEmitter {
     }
   }
 
-  addMachine(machine: AsyncMachine) {
+  addMachine(machine: TAsyncMachine) {
     assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
     if (this.machine_ids[id]) return
@@ -194,7 +194,7 @@ export default class Network extends EventEmitter {
   }
 
   // TODO
-  removeMachine(machine: AsyncMachine) {
+  removeMachine(machine: TAsyncMachine) {
     assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
     if (!this.machine_ids[id]) return
@@ -213,7 +213,7 @@ export default class Network extends EventEmitter {
     )
   }
 
-  private bindToMachine(machine: AsyncMachine) {
+  private bindToMachine(machine: TAsyncMachine) {
     // bind to the state change
     // TODO bind to:
     // - piping (removed ones)
@@ -370,7 +370,7 @@ export default class Network extends EventEmitter {
     )
   }
 
-  protected linkPipedStates(machine: AsyncMachine) {
+  protected linkPipedStates(machine: TAsyncMachine) {
     for (let state in machine.piped) {
       for (let target of machine.piped[state]) {
         const source_state = this.getNodeByName(
