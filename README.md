@@ -71,18 +71,23 @@ logger.saveFile('./snapshot.json')
 
 **Using snapshots**
 
-1. Generate a snapshot
+1. Generate a snapshot using one of the following mixins
+   - `ami-logger/mixins/file-fs` (node)
+   - `ami-logger/mixins/file-http` (browser)
 1. `$ am-inspector`
 1. Load the snapshot using the toolbar
 
 **Using the server**
 
-1. `$ am-server`
-1. Use the `ami-logger/remote` module
+1. `$ ami-server`
+1. Use one of the following mixins
+   - `ami-logger/mixins/remote-node`
+   - `ami-logger/mixins/remote-browser`
 1. `$ am-inspector -s`
 
-**Logging in the browser**
+**Browser bundles**
 
 - `import { Logger, Network } from 'ami-logger/browser`
 - `import { Logger, Network } from 'ami-logger/browser-remote`
-- Both are bundled UMD modules, so `<script src='ami-logger/browser.js'><script>`
+- Both are bundled UMD modules, so the following will also work
+  - `<script src='ami-logger/browser.js'><script>`
