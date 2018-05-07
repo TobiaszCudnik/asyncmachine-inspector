@@ -6,7 +6,7 @@ const config = {
   entry: {
     inspector: './src/inspector/inspector',
     'logger-browser': './src/logger/browser',
-    'logger-remote-browser': './src/logger/remote-browser'
+    'logger-browser-remote': './src/logger/browser-remote'
   },
   plugins: [
       // new BundleAnalyzerPlugin(),
