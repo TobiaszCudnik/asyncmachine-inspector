@@ -1,6 +1,6 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.3.16",
+  "version": "0.3.18",
   "description": "Inspector and a debugger for the Asyncmachine",
   "author": "Tobiasz Cudnik",
   "repository": {
