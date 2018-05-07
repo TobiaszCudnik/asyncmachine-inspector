@@ -171,22 +171,14 @@
   - validate by hash
   
 #### Logger
-- Browser Logger is broken/outdated
-- extract features as mixins
-  - only 2 base loggers - node, browser
-  - file-http, remote-browser, remote-node, file-fs
 - worker pool for jsondiffpatch
   - transfer data using redis / indexedb
   - GC
 - optimize creating patches
   - port jsondiffpatch to wasm/rust?
-- use the new asyncmachine log handlers API
-- ability to hook-in a custom logger, visible in the log sidebar
 - allow configurable CORS for the server bin
-- make it easier to bind to your machines
 - transaction's source machine (the active queue) should also be marked as touched
 - live stream to a file
-- dont depend on the asyncmachine module
 
 #### Server
 - https support
