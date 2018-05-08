@@ -22,8 +22,13 @@ const network = {
 // @ts-ignore
 const differ = new JsonDiffFactory(network)
 
+function versionedID(node: TMachine | TLink | TState) {
+  return `${node.id}:${node.version}`
+}
+
 async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
   // get only unique IDs
+  // TODO cache the latest version of every node and avoid re-reads
   const ids = chain(prev_ids)
     .concat(json_ids)
     .uniq()
@@ -45,19 +50,25 @@ async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
   for (let [index, node_json] of results.entries()) {
     const node: TMachine | TLink | TState = JSON.parse(node_json)
     if (!node_json) console.log('missing', ids[index])
-    if (json_ids.includes(`${node.id}:${node.version}`)) {
+    if (json_ids.includes(versionedID(node))) {
       json.cells.push(node)
     }
-    if (prev_ids.includes(`${node.id}:${node.version}`)) {
+    if (prev_ids.includes(versionedID(node))) {
       prev.cells.push(node)
     }
   }
   // sort both jsons like the ID list
   json.cells.sort(
-    (a, b) => (json_ids.indexOf(a) < json_ids.indexOf(b) ? -1 : 1)
+    (a, b) =>
+      json_ids.indexOf(versionedID(a)) < json_ids.indexOf(versionedID(b))
+        ? -1
+        : 1
   )
   prev.cells.sort(
-    (a, b) => (prev_ids.indexOf(a) < prev_ids.indexOf(b) ? -1 : 1)
+    (a, b) =>
+      prev_ids.indexOf(versionedID(a)) < prev_ids.indexOf(versionedID(b))
+        ? -1
+        : 1
   )
 
   differ.previous_json = prev
