@@ -399,7 +399,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     return <div>{items}</div>
                   }
 
-                  function StateName({ name, machineId, key }) {
+                  function StateName({ name, machineId }) {
                     const id = machineId + ':' + name
                     return (
                       <span className="cell-select hover" data-id={id}>
@@ -593,14 +593,12 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     machine,
                     states,
                     selected_ids,
-                    step_type,
-                    key
+                    step_type
                   }: {
                     machine: TMachine
                     states?: TSidebarMachineState[]
                     selected_ids?: Set<string>
                     step_type: string
-                    key: string
                   }) {
                     let class_name = `joint-group-${machine.id}`
                     let queue
