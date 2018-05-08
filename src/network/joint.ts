@@ -48,7 +48,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     return this.json.cells.push(node) - 1
   }
   addStateNode(node: TState) {
-    const index = this.json.cells.push(node) -1
+    const index = this.json.cells.push(node) - 1
 
     let machine = <TMachine>this.getNodeById(node.parent)
     if (!machine.embeds.includes(node.id)) {

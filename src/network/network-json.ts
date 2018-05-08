@@ -33,8 +33,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   machine_nodes: {
     [index: string]: Machine
   }
-  // map of graph nodes to their d3 nodes
-  nodes: Map<GraphNode, State>
   // map of created external nodes
   // also used for creating links between machine nodes
   externals: Map<GraphNode, Set<GraphNode>>
@@ -88,7 +86,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     this.json = this.initJson()
     this.json_index = {}
     this.machine_ids = new Set()
-    this.nodes = new Map()
     this.machine_nodes = {}
     this.externals = new Map()
 
@@ -146,13 +143,6 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       const node_index = this.addStateNode(node)
       this.onNodeChange(node_index)
     }
-
-    // add to json
-    this.addStateNode(node)
-
-    // index the reference
-    // TODO never used?
-    this.nodes.set(graph_node, node)
   }
 
   /**
