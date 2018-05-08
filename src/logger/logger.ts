@@ -98,7 +98,13 @@ export default class Logger extends EventEmitter {
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
     if (!this.checkGranularity(type)) return
-    const patch = this.createPatch(machine_id, type, data)
+    const transition_data = [
+      PatchType.TRANSITION_START,
+      PatchType.TRANSITION_END
+    ].includes(type)
+      ? data
+      : null
+    const patch = this.createPatch(machine_id, type, transition_data)
     if (!patch) return
     this.patches.push(patch)
     this.emit('diff-sync', patch)

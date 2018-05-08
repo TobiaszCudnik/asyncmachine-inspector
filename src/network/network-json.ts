@@ -273,7 +273,11 @@ export abstract class JsonDiffFactory<
   constructor(public network: T) {
     assert(network)
     this.diffpatcher = jsondiffpatch.create({
-      objectHash: this.objectHash()
+      objectHash: this.objectHash(),
+      propertyFilter(name, context) {
+        // skip revision numbers
+        return name != 'version'
+      }
     })
   }
 
