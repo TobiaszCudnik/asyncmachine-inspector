@@ -89,6 +89,9 @@
     "webpack-shell-plugin": "^0.5.0",
     "workerio": "github:TobiaszCudnik/workerio"
   },
+  "peerDependency": {
+    "redis": "^2.8.0"
+  },
   "prettier": {
     "singleQuote": true,
     "semi": false

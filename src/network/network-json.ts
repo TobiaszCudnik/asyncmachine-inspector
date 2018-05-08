@@ -112,12 +112,19 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     index: TJSONIndex
   ): Node
 
+  abstract onNodeChange(index: number, skip_increment?: boolean)
+
   parseMachine(machine: TAsyncMachine, prev_json: Json, index: TJSONIndex) {
     const machine_id = machine.id(true)
-    const machine_node =
-      this.getCachedNode<Machine>(machine_id, prev_json, index) ||
-      this.createMachineNode(machine)
-    this.addMachineNode(machine_node)
+    let machine_node = this.getCachedNode<Machine>(machine_id, prev_json, index)
+    if (machine_node) {
+      const node_index = this.addMachineNode(machine_node)
+      this.json_index[machine_node.id] = node_index
+    } else {
+      machine_node = this.createMachineNode(machine)
+      const node_index = this.addMachineNode(machine_node)
+      this.onNodeChange(node_index)
+    }
     this.machine_ids.add(machine_id)
     this.machine_nodes[machine_id] = machine_node
   }
@@ -129,9 +136,16 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       this.parseMachine(machine, prev_json, index)
     }
 
-    const node =
-      this.getCachedNode<State>(graph_node.full_name, prev_json, index) ||
-      this.createStateNode(graph_node)
+    let node = this.getCachedNode<State>(graph_node.full_name, prev_json, index)
+    if (node) {
+      const node_index = this.addStateNode(node)
+      this.json_index[node.id] = node_index
+    } else {
+      node = this.createStateNode(graph_node)
+      // add to json
+      const node_index = this.addStateNode(node)
+      this.onNodeChange(node_index)
+    }
 
     // add to json
     this.addStateNode(node)
@@ -160,10 +174,17 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         const type = relation_type as NODE_LINK_TYPE
 
         const link_id = this.createLinkID(from, to, type)
-        const link_node =
-          this.getCachedNode<Link>(link_id, prev_json, index) ||
-          this.createLinkNode(from, to, type)
-        this.addLinkNode(link_node)
+        let link_node = this.getCachedNode<Link>(link_id, prev_json, index)
+
+        if (link_node) {
+          const node_index = this.addLinkNode(link_node)
+          this.json_index[link_node.id] = node_index
+        } else {
+          link_node = this.createLinkNode(from, to, type)
+          // add to json
+          const node_index = this.addLinkNode(link_node)
+          this.onNodeChange(node_index)
+        }
       }
       // piped states
     } else {
@@ -183,10 +204,17 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
           type = NODE_LINK_TYPE.PIPE_INVERTED
 
         const link_id = this.createLinkID(from, to, type)
-        const link_node =
-          this.getCachedNode<Link>(link_id, prev_json, index) ||
-          this.createLinkNode(from, to, type)
-        this.addLinkNode(link_node)
+        let link_node = this.getCachedNode<Link>(link_id, prev_json, index)
+
+        if (link_node) {
+          const node_index = this.addLinkNode(link_node)
+          this.json_index[link_node.id] = node_index
+        } else {
+          link_node = this.createLinkNode(from, to, type)
+          // add to json
+          const node_index = this.addLinkNode(link_node)
+          this.onNodeChange(node_index)
+        }
 
         // break after finding the piped connection
         break

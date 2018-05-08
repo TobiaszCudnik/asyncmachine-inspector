@@ -16,4 +16,5 @@
 /// <reference path="modules/node-uuid/index.d.ts" />
 /// <reference path="modules/react-dom/index.d.ts" />
 /// <reference path="modules/react/index.d.ts" />
+/// <reference path="modules/redis/index.d.ts" />
 /// <reference path="modules/sinon/index.d.ts" />

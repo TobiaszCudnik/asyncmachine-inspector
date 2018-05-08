@@ -34,29 +34,32 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     return null
   }
 
-  onNewNode() {
-    const index = this.json.cells.length - 1
+  onNodeChange(index: number, skip_increment = false) {
     const node = this.json.cells[index]
+    if (!skip_increment) {
+      node.version++
+    }
     this.json_index[node.id] = index
-    this.network.emit('new-node', node.id, index)
+    // TODO inherit from emitter and emit on self
+    this.network.emit('node-change', node.id, index)
   }
 
   addMachineNode(node: TMachine) {
-    this.json.cells.push(node)
-    this.onNewNode()
+    return this.json.cells.push(node) - 1
   }
   addStateNode(node: TState) {
-    this.json.cells.push(node)
-    this.onNewNode()
+    const index = this.json.cells.push(node) -1
 
     let machine = <TMachine>this.getNodeById(node.parent)
     if (!machine.embeds.includes(node.id)) {
       machine.embeds.push(node.id)
+      this.onNodeChange(this.json_index[machine.id], true)
     }
+
+    return index
   }
   addLinkNode(node: TLink) {
-    this.json.cells.push(node)
-    this.onNewNode()
+    return this.json.cells.push(node) - 1
   }
 
   // TODO number of listeners
@@ -64,6 +67,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     const machine_id = machine.id(true)
     const queue = machine.queue().length ? `(Q: ${machine.queue().length})` : ''
     return {
+      version: 0,
       type: 'uml.State',
       name: machine.id(),
       id: machine_id,
@@ -88,6 +92,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   createStateNode(node: GraphNode): TState {
     const ui_name = this.stateUiName(node.name)
     return {
+      version: 0,
       type: 'fsa.State',
       id: this.getStateNodeId(node),
       parent: node.machine_id,
@@ -115,6 +120,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     relation: NODE_LINK_TYPE
   ): TLink {
     return {
+      version: 0,
       type: 'fsa.Arrow',
       smooth: true,
       source: {
@@ -171,6 +177,7 @@ export type MachineStateId = string
 export type StateName = string
 
 export type TMachine = {
+  version: number
   type: 'uml.State'
   name: string
   embeds: string[]
@@ -193,6 +200,7 @@ export type TMachine = {
 }
 
 export type TState = {
+  version: number
   type: 'fsa.State'
   id: MachineStateId
   parent: string
@@ -220,6 +228,7 @@ export type TState = {
 }
 
 export type TLink = {
+  version: number
   type: 'fsa.Arrow'
   id: string
   source: {

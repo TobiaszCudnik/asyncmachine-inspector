@@ -1,8 +1,16 @@
 import * as workerpool from 'workerpool'
 import * as fs from 'fs'
 import * as util from 'util'
-import { JsonDiffFactory } from '../../../network/joint'
+import {
+  JsonDiffFactory,
+  TLink,
+  TMachine,
+  TState
+} from '../../../network/joint'
+import * as redis from 'redis'
+import { chain, sortBy } from 'lodash'
 
+const db = redis.createClient()
 const readFileAsync = util.promisify(fs.readFile)
 const jsons = []
 const network = {
@@ -14,56 +22,50 @@ const network = {
 // @ts-ignore
 const differ = new JsonDiffFactory(network)
 
-async function createDiffID(prev_id, id, pos) {
-  const [prev, json] = await Promise.all([
-    readFileAsync(`./tmp/${prev_id}.json`),
-    readFileAsync(`./tmp/${id}.json`)
-  ])
-  differ.previous_json = prev
-  network.json = json
-  // console.log('generateDiff', workerpool.isMainThread)
-  const diff = differ.generateDiff()
-  // fs.unlink(`./tmp/${prev_id}.json`)
-  // console.log('generate diff END', pos)
-  return diff
-}
-
-function createDiffSync(prev, json, pos) {
-  differ.previous_json = prev
-  network.json = json
-  // console.log('generateDiff', workerpool.isMainThread)
-  const diff = differ.generateDiff()
-  // console.log('generate diff END', pos)
-  return diff
-}
-
-function createDiff(id, json, previous_id) {
-  jsons.push({ time: Date.now(), id, json })
-  let previous = jsons.find(r => r.id == previous_id)
-  if (!previous) {
-    return previous_id
-  } else {
-    differ.previous_json = previous.json
-    network.json = json
-    // console.log('generate diff 1')
-    return differ.generateDiff()
+async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
+  // get only unique IDs
+  const ids = chain(prev_ids)
+    .concat(json_ids)
+    .uniq()
+    .value()
+  let multi = db.multi()
+  for (const id of ids) {
+    multi = multi.get(id)
   }
-}
+  // TODO <any> bc of wrong typing
+  const results: string[] = <any>await new Promise((resolve, reject) => {
+    multi.exec((err, results) => {
+      if (err) reject(err)
+      resolve(results)
+    })
+  })
+  // build both jsons
+  const json = { cells: [] }
+  const prev = { cells: [] }
+  for (let [index, node_json] of results.entries()) {
+    const node: TMachine | TLink | TState = JSON.parse(node_json)
+    if (!node_json) console.log('missing', ids[index])
+    if (json_ids.includes(`${node.id}:${node.version}`)) {
+      json.cells.push(node)
+    }
+    if (prev_ids.includes(`${node.id}:${node.version}`)) {
+      prev.cells.push(node)
+    }
+  }
+  // sort both jsons like the ID list
+  json.cells.sort(
+    (a, b) => (json_ids.indexOf(a) < json_ids.indexOf(b) ? -1 : 1)
+  )
+  prev.cells.sort(
+    (a, b) => (prev_ids.indexOf(a) < prev_ids.indexOf(b) ? -1 : 1)
+  )
 
-function createDiff2(id, previous_id, previous) {
-  jsons.push({ time: Date.now(), previous_id, previous })
-  differ.previous_json = previous
-  network.json = jsons.find(r => r.id == id).json
-  // console.log('generate diff 2 start')
-  let diff = differ.generateDiff()
-  // console.log('generate diff 2 end')
-  return diff
+  differ.previous_json = prev
+  network.json = json
+  return differ.generateDiff()
 }
 
 // create a worker and register functions
 workerpool.worker({
-  createDiffID,
-  createDiffSync,
-  createDiff,
-  createDiff2
+  createDiff
 })
