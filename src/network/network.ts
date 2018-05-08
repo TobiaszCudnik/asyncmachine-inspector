@@ -233,7 +233,10 @@ export default class Network extends EventEmitter {
     // TODO group the same changes emitted by a couple of machines
     const machine_id = machine.id(true)
     machine.on('tick', (states_before: string[]) => {
-      const changed_ids = difference(states_before, machine.is()).map(id => {
+      const changed_ids = [
+        ...difference(states_before, machine.is()),
+        ...difference(machine.is(), states_before)
+      ].map(id => {
         return this.getNodeByName(id, machine_id).full_name
       })
       this.emit('change', PatchType.STATE_CHANGED, machine_id, changed_ids)

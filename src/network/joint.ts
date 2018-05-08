@@ -47,6 +47,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   addMachineNode(node: TMachine) {
     return this.json.cells.push(node) - 1
   }
+
   addStateNode(node: TState) {
     const index = this.json.cells.push(node) - 1
 
@@ -63,11 +64,19 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   }
 
   // TODO number of listeners
-  createMachineNode(machine: AsyncMachine<any, any, any>): TMachine {
+  createMachineNode(
+    machine: AsyncMachine<any, any, any>,
+    prev_json: INetworkJson,
+    index: TJSONIndex
+  ): TMachine {
     const machine_id = machine.id(true)
-    const queue = machine.queue().length ? `(Q: ${machine.queue().length})` : ''
+    const prev_version =
+      prev_json &&
+      index[machine_id] &&
+      prev_json.cells[index[machine_id]].version
+
     return {
-      version: 0,
+      version: prev_version || 0,
       type: 'uml.State',
       name: machine.id(),
       id: machine_id,
@@ -89,12 +98,21 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       ticks: Object.values(machine.clock_).reduce((r, n) => r + n)
     }
   }
-  createStateNode(node: GraphNode): TState {
+
+  createStateNode(
+    node: GraphNode,
+    prev_json: INetworkJson,
+    index: TJSONIndex
+  ): TState {
+    // TODO ID not from node.full_name ?!
+    const id = this.getStateNodeId(node)
+    const prev_version =
+      prev_json && index[id] && prev_json.cells[index[id]].version
     const ui_name = this.stateUiName(node.name)
     return {
-      version: 0,
+      version: prev_version || 0,
       type: 'fsa.State',
-      id: this.getStateNodeId(node),
+      id,
       parent: node.machine_id,
       attrs: { text: { text: ui_name } },
       z: 3,
@@ -106,21 +124,19 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       clock: node.clock
     }
   }
-  stateUiName(name): string {
-    return name.replace(/([a-z])([A-Z])/g, '$1\n$2')
-  }
-  createLinkID(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE) {
-    return `${this.getStateNodeId(from)}::${this.getStateNodeId(
-      to
-    )}::${relation}`
-  }
+
   createLinkNode(
     from: GraphNode,
     to: GraphNode,
-    relation: NODE_LINK_TYPE
+    relation: NODE_LINK_TYPE,
+    prev_json: INetworkJson,
+    index: TJSONIndex
   ): TLink {
+    const id = this.createLinkID(from, to, relation)
+    const prev_version =
+      prev_json && index[id] && prev_json.cells[index[id]].version
     return {
-      version: 0,
+      version: prev_version || 0,
       type: 'fsa.Arrow',
       smooth: true,
       source: {
@@ -130,7 +146,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         id: this.getStateNodeId(to)
       },
       relation,
-      id: this.createLinkID(from, to, relation),
+      id,
       labels: [
         {
           id: `${this.getStateNodeId(from)}::${this.getStateNodeId(
@@ -145,6 +161,16 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       z: 2,
       is_touched: this.network.isLinkTouched(from, to, relation)
     }
+  }
+
+  stateUiName(name): string {
+    return name.replace(/([a-z])([A-Z])/g, '$1\n$2')
+  }
+
+  createLinkID(from: GraphNode, to: GraphNode, relation: NODE_LINK_TYPE) {
+    return `${this.getStateNodeId(from)}::${this.getStateNodeId(
+      to
+    )}::${relation}`
   }
 
   getNodeSize(name: string) {

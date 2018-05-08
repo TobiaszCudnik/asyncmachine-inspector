@@ -11,7 +11,6 @@ import NetworkJson, { JsonDiffFactory, INetworkJson } from '../../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../../network/network-json'
 import * as redis from 'redis'
-import * as os from 'os'
 
 export { WorkerPoolMixin }
 

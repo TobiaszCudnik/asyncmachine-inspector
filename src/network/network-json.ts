@@ -82,6 +82,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     // TODO cleanup at the end
     const prev_json = this.json
     const index = this.json_index
+    // console.log(`Generating JSON for ${this.changed_ids.size} IDs`)
     // reset everything besides `this.changed_ids`
     this.json = this.initJson()
     this.json_index = {}
@@ -138,7 +139,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       const node_index = this.addStateNode(node)
       this.json_index[node.id] = node_index
     } else {
-      node = this.createStateNode(graph_node)
+      node = this.createStateNode(graph_node, prev_json, index)
       // add to json
       const node_index = this.addStateNode(node)
       this.onNodeChange(node_index)
@@ -244,18 +245,18 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   abstract addStateNode(node: State)
   abstract addLinkNode(node: Link)
 
-  abstract createMachineNode(machine: TAsyncMachine): Machine
-  abstract createStateNode(node: GraphNode): State
+  abstract createMachineNode(machine: TAsyncMachine, prev_json, index): Machine
+  abstract createStateNode(node: GraphNode, prev_json, index): State
+  abstract createLinkNode(
+    from: GraphNode,
+    to: GraphNode,
+    relation: NODE_LINK_TYPE, prev_json, index
+  ): Link
   abstract createLinkID(
     from: GraphNode,
     to: GraphNode,
     relation: NODE_LINK_TYPE
-  )
-  abstract createLinkNode(
-    from: GraphNode,
-    to: GraphNode,
-    relation: NODE_LINK_TYPE
-  ): Link
+  ): string
 }
 
 /**
