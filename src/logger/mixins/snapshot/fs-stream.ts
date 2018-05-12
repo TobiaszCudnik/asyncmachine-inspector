@@ -56,5 +56,11 @@ export default function FileFSMixing<TBase extends Constructor>(Base: TBase) {
       // close the JSON
       this.stream.end(']}')
     }
+
+    dispose() {
+      try {
+        this.stream.end(']}')
+      } catch {}
+    }
   }
 }

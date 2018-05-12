@@ -10,17 +10,19 @@ import {
 import * as redis from 'redis'
 import { chain, sortBy } from 'lodash'
 
-const db = redis.createClient()
 const cache = {}
-// TODO run after redis connects
-// db.subscribe('ami-logger-cache')
-// db.on('message', function(channel, vid) {
-//   if (channel != 'ami-logger-cache') return
-//   disposeNode(vid)
-// })
+const db = redis.createClient()
+const sub = redis.createClient()
+sub.subscribe('ami-logger-cache')
+sub.subscribe('ami-logger')
+sub.on('message', function(channel, msg) {
+  if (channel == 'ami-logger-cache') {
+    disposeNode(msg)
+  } else if (channel == 'ami-logger-cache' && msg == 'exit') {
+    process.exit()
+  }
+})
 
-const readFileAsync = util.promisify(fs.readFile)
-const jsons = []
 const network = {
   json: null,
   generateJson() {
@@ -34,17 +36,14 @@ function versionedID(node: TMachine | TLink | TState) {
   return `${node.id}:${node.version}`
 }
 
-// TODO broadcast to all workers is missing in the workerpool module
-// so caching is not possible
 function disposeNode(vid: string) {
-  console.log(`Disposed ${vid} in a worker`)
   delete cache[vid]
 }
 
 async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
   // get only unique IDs
-  const ids = chain(prev_ids)
-    .concat(json_ids)
+  const ids = chain(prev_ids.filter(vid => !cache[vid]))
+    .concat(json_ids.filter(vid => !cache[vid]))
     .uniq()
     .value()
   let multi = db.multi()
@@ -74,9 +73,19 @@ async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
     if (prev_ids.includes(vid)) {
       prev.cells.push(node)
     }
-    // TODO broadcast to all workers is missing in the workerpool module
-    // so caching is not possible
-    // cache[vid] = node
+    // cache the parsed JSON
+    cache[vid] = node
+  }
+  // read the missing IDs from cache
+  for (const vid of prev_ids) {
+    if (!prev.cells.includes(vid)) {
+      prev.cells.push(cache[vid])
+    }
+  }
+  for (const vid of json_ids) {
+    if (!json.cells.includes(vid)) {
+      json.cells.push(cache[vid])
+    }
   }
   // sort both jsons like the ID list
   json.cells.sort(

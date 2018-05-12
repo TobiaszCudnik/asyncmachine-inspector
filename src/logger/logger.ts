@@ -137,4 +137,8 @@ export default class Logger extends EventEmitter {
     this.network.logs = []
     return patch
   }
+
+  dispose() {
+
+  }
 }
