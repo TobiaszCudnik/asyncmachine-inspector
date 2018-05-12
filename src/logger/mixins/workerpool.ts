@@ -21,7 +21,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
   return class extends Base {
     last_end = -1
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
-    sent_index: { id: string; status: boolean }[] = []
+    sent_index: { id: string; status: boolean; version_ids: string[][] }[] = []
 
     constructor(...args: any[]) {
       super(...args)
@@ -40,18 +40,28 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
     ) {
       if (!this.checkGranularity(type)) return
 
-      let prev_ids = this.differ.previous_json.cells.map(
+      const prev_ids = this.differ.previous_json.cells.map(
         node => `${node.id}:${node.version}`
       )
-      let json_ids = this.differ
-        .generateJson()
-        .cells.map(node => `${node.id}:${node.version}`)
+      let cells = this.differ.generateJson().cells
+      const json_ids = cells.map(node => `${node.id}:${node.version}`)
+      const json_ids_struct = cells.map(node => [
+        node.id,
+        node.version.toString()
+      ])
 
       const id = randomID()
-      const pos = this.sent_index.push({ id, status: false }) - 1
+      const pos =
+        this.sent_index.push({
+          id,
+          status: false,
+          version_ids: json_ids_struct
+        }) - 1
       const logs = [...this.network.logs]
       this.network.logs = []
 
+      // TODO race condition with node-change listener - all the required IDs
+      // should be asserted before calling the worker
       let diff = await this.pool.exec('createDiff', [prev_ids, json_ids, pos])
       // console.timeEnd(id)
       let packet: IPatch = {
@@ -91,6 +101,19 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         if (this.patches[i - 1]) {
           this.emit('diff-sync', this.patches[i - 1], i - 1)
           flushed++
+          // dispose all IDs older than than the ones used to create
+          // the patch which just got flushed
+          for (const [id, ver] of this.sent_index[i - 1].version_ids) {
+            if (ver < 2) continue
+            // TODO keep the map of all of the redis entries?
+            // console.log(`DISPOSED ${id}:${ver - 1}`)
+            db.del(`${id}:${ver - 1}`)
+            // TODO broadcast to ALL the worksers to clear the local cache
+            // but dont wait for the result
+          }
+          if (this.sent_index[i - 2]) {
+            delete this.sent_index[i - 2]
+          }
         }
       }
       this.last_end = pos

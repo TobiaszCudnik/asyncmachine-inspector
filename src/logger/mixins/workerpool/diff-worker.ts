@@ -11,6 +11,7 @@ import * as redis from 'redis'
 import { chain, sortBy } from 'lodash'
 
 const db = redis.createClient()
+const cache = {}
 const readFileAsync = util.promisify(fs.readFile)
 const jsons = []
 const network = {
@@ -26,9 +27,15 @@ function versionedID(node: TMachine | TLink | TState) {
   return `${node.id}:${node.version}`
 }
 
+// TODO broadcast to all workers is missing in the workerpool module
+// so caching is not possible
+function disposeNode(vid: string) {
+  console.log(`Disposed ${vid} in a worker`)
+  delete cache[vid]
+}
+
 async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
   // get only unique IDs
-  // TODO cache the latest version of every node and avoid re-reads
   const ids = chain(prev_ids)
     .concat(json_ids)
     .uniq()
@@ -48,14 +55,21 @@ async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
   const json = { cells: [] }
   const prev = { cells: [] }
   for (let [index, node_json] of results.entries()) {
+    if (!node_json) {
+      console.error('missing', ids[index])
+      continue
+    }
     const node: TMachine | TLink | TState = JSON.parse(node_json)
-    if (!node_json) console.log('missing', ids[index])
-    if (json_ids.includes(versionedID(node))) {
+    const vid = versionedID(node)
+    if (json_ids.includes(vid)) {
       json.cells.push(node)
     }
-    if (prev_ids.includes(versionedID(node))) {
+    if (prev_ids.includes(vid)) {
       prev.cells.push(node)
     }
+    // TODO broadcast to all workers is missing in the workerpool module
+    // so caching is not possible
+    // cache[vid] = node
   }
   // sort both jsons like the ID list
   json.cells.sort(
@@ -78,5 +92,6 @@ async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
 
 // create a worker and register functions
 workerpool.worker({
-  createDiff
+  createDiff,
+  disposeNode
 })

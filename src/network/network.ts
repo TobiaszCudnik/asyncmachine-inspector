@@ -243,6 +243,7 @@ export default class Network extends EventEmitter {
     })
     machine.on('pipe', () => {
       const links = this.linkPipedStates(machine)
+      // TODO add the IDs of the link itself to the IDs of the linked nodes
       this.emit('change', PatchType.PIPE, machine_id, links)
     })
     machine.on('transition-init', (transition: Transition) => {
@@ -420,7 +421,7 @@ export default class Network extends EventEmitter {
         // TODO add this.graph.isLinked(source, target)
         if (!this.graph._linked(source_state).has(target_state)) {
           this.graph.link(source_state, target_state)
-          linked.push([source_state, target_state])
+          linked.push([source_state.full_name, target_state.full_name])
         }
       }
     }

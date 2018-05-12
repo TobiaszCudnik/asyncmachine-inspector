@@ -51,7 +51,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         switch (type) {
           case PatchType.STATE_CHANGED:
           case PatchType.TRANSITION_STEP:
-            changed_ids = [...(data[0] as string[])]
+            changed_ids.push(...(data[0] as string[]))
             changed_ids.unshift(machine_id)
             break
           case PatchType.MACHINE_ADDED:
@@ -60,14 +60,13 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
             const machine = this.network.machine_ids[machine_id]
             changed_ids.push(...machine.states_all)
             break
+          case PatchType.PIPE:
+            changed_ids.push(...(data[0] as string[]))
+            changed_ids.unshift(machine_id)
+            break
           case PatchType.TRANSITION_START:
           case PatchType.TRANSITION_END:
           case PatchType.QUEUE_CHANGED:
-            changed_ids.push(machine_id)
-            break
-          case PatchType.PIPE:
-            const changed_link_ids = [...(data[0] as string[])]
-            // TODO encode the IDs to strings
             changed_ids.push(machine_id)
             break
         }
