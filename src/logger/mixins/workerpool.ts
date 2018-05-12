@@ -11,6 +11,7 @@ import NetworkJson, { JsonDiffFactory, INetworkJson } from '../../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../../network/network-json'
 import * as redis from 'redis'
+import { remove as removeArrayEl } from 'lodash'
 
 export { WorkerPoolMixin }
 
@@ -22,14 +23,20 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
     last_end = -1
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
     sent_index: { id: string; status: boolean; version_ids: string[][] }[] = []
+    redis_index = []
 
     constructor(...args: any[]) {
       super(...args)
       this.network.on('node-change', (id: string, index: number) => {
         // TODO jointjs related code
         const node = this.json.json.cells[index]
+        const vid = `${id}:${node.version}`
+        // console.log(`save ${vid}`)
         // TODO make it race safe - finish all sets before generating the patch
-        db.set(`${id}:${node.version}`, JSON.stringify(node))
+        db.set(vid, JSON.stringify(node), () => {
+          this.redis_index.push(vid)
+          this.emit('node-change-saved', vid)
+        })
       })
     }
 
@@ -62,7 +69,24 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
 
       // TODO race condition with node-change listener - all the required IDs
       // should be asserted before calling the worker
-      let diff = await this.pool.exec('createDiff', [prev_ids, json_ids, pos])
+      await new Promise(resolve => {
+        const missing_ids = json_ids.filter(
+          id => !this.redis_index.includes(id)
+        )
+        const listener = vid => {
+          // console.log('vid', vid, missing_ids.length)
+          if (missing_ids.includes(vid)) {
+            removeArrayEl(missing_ids, vid)
+          }
+          if (missing_ids.length == 0) {
+            resolve()
+            this.removeListener('node-change-saved', listener)
+          }
+        }
+        this.on('node-change-saved', listener)
+      })
+      console.log('DONE')
+      const diff = await this.pool.exec('createDiff', [prev_ids, json_ids, pos])
       // console.timeEnd(id)
       let packet: IPatch = {
         logs,
@@ -105,11 +129,11 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
           // the patch which just got flushed
           for (const [id, ver] of this.sent_index[i - 1].version_ids) {
             if (ver < 2) continue
-            // TODO keep the map of all of the redis entries?
-            // console.log(`DISPOSED ${id}:${ver - 1}`)
-            db.del(`${id}:${ver - 1}`)
-            // TODO broadcast to ALL the worksers to clear the local cache
-            // but dont wait for the result
+            const vid = `${id}:${ver - 1}`
+            db.del(vid)
+            removeArrayEl(this.redis_index, vid)
+            // broadcast to all the workers
+            db.publish('ami-logger-cache', vid)
           }
           if (this.sent_index[i - 2]) {
             delete this.sent_index[i - 2]

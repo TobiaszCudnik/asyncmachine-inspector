@@ -12,6 +12,13 @@ import { chain, sortBy } from 'lodash'
 
 const db = redis.createClient()
 const cache = {}
+// TODO run after redis connects
+// db.subscribe('ami-logger-cache')
+// db.on('message', function(channel, vid) {
+//   if (channel != 'ami-logger-cache') return
+//   disposeNode(vid)
+// })
+
 const readFileAsync = util.promisify(fs.readFile)
 const jsons = []
 const network = {
