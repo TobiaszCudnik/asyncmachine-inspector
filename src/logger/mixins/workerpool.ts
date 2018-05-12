@@ -60,8 +60,13 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         type,
         machine_id
       }
-      if (data) packet.data = data
-      // delete this.jsons[pos].json
+      const is_transaction = [
+        PatchType.TRANSITION_START,
+        PatchType.TRANSITION_END
+      ].includes(type)
+      if (is_transaction && data) {
+        packet.data = data
+      }
       this.sent_index[pos].status = true
       this.patches[pos] = packet
       this.flushOrderedBuffer(pos)
@@ -84,7 +89,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       let flushed = 0
       for (i = this.last_end + 1; i <= pos; i++) {
         if (this.patches[i - 1]) {
-          this.emit('diff-sync', this.patches[i - 1])
+          this.emit('diff-sync', this.patches[i - 1], i - 1)
           flushed++
         }
       }

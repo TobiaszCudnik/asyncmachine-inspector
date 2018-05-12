@@ -1,5 +1,5 @@
 import { Logger, Granularity, IOptions } from './logger'
-import FileHTTPMixin from './mixins/file-http'
+import FileHTTPMixin from './mixins/snapshot/http'
 import RemoteBrowserMixin from './mixins/remote-browser'
 import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
 import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'

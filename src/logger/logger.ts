@@ -2,6 +2,7 @@ import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
 import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
 import * as EventEmitter from 'eventemitter3'
 import { JSONSnapshot } from '../network/network-json'
+import WritableStream = NodeJS.WritableStream
 
 // TODO try to export all required symbols used by the mixins
 export enum Granularity {
@@ -16,6 +17,7 @@ export interface IOptions {
   workers?: number
   granularity?: Granularity
   url?: string
+  stream?: WritableStream
 }
 
 export const options_defaults = {
@@ -94,24 +96,24 @@ export default class Logger extends EventEmitter {
   generateFullSync() {
     this.differ.generateJson()
     this.full_sync = this.differ.previous_json
+    this.emit('full-sync', this.full_sync)
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
     if (!this.checkGranularity(type)) return
-    const transition_data = [
-      PatchType.TRANSITION_START,
-      PatchType.TRANSITION_END
-    ].includes(type)
-      ? data
-      : null
-    const patch = this.createPatch(machine_id, type, transition_data)
+    const patch = this.createPatch(machine_id, type, data)
     if (!patch) return
     this.patches.push(patch)
-    this.emit('diff-sync', patch)
+    this.emit('diff-sync', patch, this.patches.length - 1)
   }
 
   createPatch(machine_id, type, data?): IPatch | null {
     const diff = this.differ.generateDiff()
+    // only transition data is useful for the patches
+    const is_transaction = [
+      PatchType.TRANSITION_START,
+      PatchType.TRANSITION_END
+    ].includes(type)
     if (
       type == PatchType.TRANSITION_STEP &&
       !diff &&
@@ -125,7 +127,7 @@ export default class Logger extends EventEmitter {
       machine_id,
       logs: [...this.network.logs]
     }
-    if (data) {
+    if (is_transaction && data) {
       patch.data = data
     }
     if (this.summary_fn) {
