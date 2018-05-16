@@ -806,7 +806,6 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         />
                       )
                     }
-                    console.log(inner_container)
                     closeGroup(
                       inner_container,
                       last_machine_id,

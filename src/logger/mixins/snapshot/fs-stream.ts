@@ -54,7 +54,9 @@ export default function FileFSMixing<TBase extends Constructor>(Base: TBase) {
     }
 
     async endStream() {
-      await promisify(this.stream.end).call(this.stream, ']}')
+      try {
+        await promisify(this.stream.end).call(this.stream, ']}')
+      } catch {}
     }
 
     async dispose() {
