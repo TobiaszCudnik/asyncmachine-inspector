@@ -810,6 +810,7 @@ export class Inspector implements ITransitions {
           this.loadSnapshot(snapshot)
           break
         }
+        document.getElementById('snapshot-upload').value = null
       }
     )
   }
