@@ -34,7 +34,7 @@ import joint_css from '../joint/base.css'
 // @ts-ignore
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
-import { TCell, TMachine, TState } from '../../network/joint'
+import { TCell, TMachine, TState } from '../../network/json/joint'
 import { StateChangeTypes } from 'asyncmachine/build/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'

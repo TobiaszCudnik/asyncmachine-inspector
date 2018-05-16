@@ -4,11 +4,11 @@ import {
   JsonDiffFactory as JsonDiffFactoryBase,
   NODE_LINK_TYPE,
   TJSONIndex
-} from './network-json'
+} from '../json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
 import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
-import { Node as GraphNode } from './network'
+import { Node as GraphNode } from '../network'
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   INetworkJson,
@@ -70,6 +70,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     index: TJSONIndex
   ): TMachine {
     const machine_id = machine.id(true)
+    // check cache
     const prev_version =
       prev_json &&
       index[machine_id] &&
@@ -106,6 +107,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   ): TState {
     // TODO ID not from node.full_name ?!
     const id = this.getStateNodeId(node)
+    // check cache
     const prev_version =
       prev_json && index[id] && prev_json.cells[index[id]].version
     const ui_name = this.stateUiName(node.name)
@@ -133,6 +135,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     index: TJSONIndex
   ): TLink {
     const id = this.createLinkID(from, to, relation)
+    // check cache
     const prev_version =
       prev_json && index[id] && prev_json.cells[index[id]].version
     return {

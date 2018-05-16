@@ -9,7 +9,7 @@ import Network, {
 import { PipeFlags } from 'asyncmachine'
 import { TAsyncMachine } from 'asyncmachine/build/types'
 // TODO shouldnt point to a layout-specific type
-import { INetworkJson } from './joint'
+import { INetworkJson } from './json/joint'
 
 export interface JSONSnapshot {
   full_sync: INetworkJson
@@ -118,7 +118,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       const node_index = this.addMachineNode(machine_node)
       this.json_index[machine_node.id] = node_index
     } else {
-      machine_node = this.createMachineNode(machine)
+      machine_node = this.createMachineNode(machine, prev_json, index)
       const node_index = this.addMachineNode(machine_node)
       this.onNodeChange(node_index)
     }
@@ -170,7 +170,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
           const node_index = this.addLinkNode(link_node)
           this.json_index[link_node.id] = node_index
         } else {
-          link_node = this.createLinkNode(from, to, type)
+          link_node = this.createLinkNode(from, to, type, prev_json, index)
           // add to json
           const node_index = this.addLinkNode(link_node)
           this.onNodeChange(node_index)
@@ -200,7 +200,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
           const node_index = this.addLinkNode(link_node)
           this.json_index[link_node.id] = node_index
         } else {
-          link_node = this.createLinkNode(from, to, type)
+          link_node = this.createLinkNode(from, to, type, prev_json, index)
           // add to json
           const node_index = this.addLinkNode(link_node)
           this.onNodeChange(node_index)

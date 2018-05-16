@@ -4,7 +4,7 @@ import {
   IEmit as IEmitBase
 } from 'asyncmachine/build/types'
 import AsyncMachine from 'asyncmachine'
-import {INetworkJson} from "../network/joint";
+import {INetworkJson} from "../network/json/joint";
 import {IPatch} from "../network/network";
 import {STEP_TYPE_CHANGE} from "./inspector";
 

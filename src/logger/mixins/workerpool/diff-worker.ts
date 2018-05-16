@@ -6,7 +6,7 @@ import {
   TLink,
   TMachine,
   TState
-} from '../../../network/joint'
+} from '../../../network/json/joint'
 import * as redis from 'redis'
 import { chain, sortBy } from 'lodash'
 

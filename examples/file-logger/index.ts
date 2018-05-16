@@ -1,6 +1,6 @@
 import Asyncmachine from 'asyncmachine'
 import { Logger, Network } from 'ami-logger'
-import FileFSMixing from "ami-logger/mixins/file-fs";
+import FileFSMixing from 'ami-logger/mixins/snapshot/fs'
 
 // an example machine and its instance
 class Example extends Asyncmachine<any, any, any> {
@@ -19,10 +19,10 @@ const example = new Example()
 // build the Logger class
 const LoggerClass = FileFSMixing(Logger)
 
-// hook up the instance to a logger client
+// hook up the instance to the logger client and start it
 const network = new Network([example])
-const logger = new LoggerClass(network, { url: 'http://localhost:3757' })
-
+const logger = new LoggerClass(network)
+logger.start()
 // make some changes
 example.add(['Foo', 'Bar'])
 example.add('Baz')

@@ -18,7 +18,7 @@ import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
-import { NODE_LINK_TYPE } from './network-json'
+import { NODE_LINK_TYPE } from './json'
 
 export type MachinesMap = Map<TAsyncMachine, string>
 export type NodeGraph = Graph<Node>
@@ -51,11 +51,11 @@ export interface ILogEntry {
 }
 
 export enum PatchType {
-  STATE_CHANGED,
+  STATE_CHANGED, // 0
   MACHINE_ADDED,
   TRANSITION_START,
-  TRANSITION_END,
-  TRANSITION_STEP,
+  TRANSITION_END, // 3
+  TRANSITION_STEP, // 4
   PIPE,
   FULL_SYNC,
   MACHINE_REMOVED,

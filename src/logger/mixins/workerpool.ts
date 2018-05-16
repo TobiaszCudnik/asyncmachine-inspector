@@ -7,9 +7,9 @@ import Network, {
   ITransitionData,
   PatchType
 } from '../../network/network'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../../network/joint'
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../../network/json/joint'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../network/network-json'
+import { JSONSnapshot } from '../../network/json'
 import * as redis from 'redis'
 
 export { WorkerPoolMixin }
@@ -158,7 +158,7 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
       // console.log('flushOrderedBuffer', pos)
     }
 
-    dispose() {
+    async dispose() {
       super.dispose()
       db.publish('ami-logger', 'exit')
     }

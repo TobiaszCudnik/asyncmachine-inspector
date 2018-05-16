@@ -1,7 +1,7 @@
 import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/joint'
+import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/json/joint'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../network/network-json'
+import { JSONSnapshot } from '../network/json'
 import WritableStream = NodeJS.WritableStream
 
 // TODO try to export all required symbols used by the mixins
@@ -138,7 +138,6 @@ export default class Logger extends EventEmitter {
     return patch
   }
 
-  dispose() {
-
+  async dispose() {
   }
 }

@@ -8,9 +8,9 @@ import Network, {
 import NetworkJson, {
   JsonDiffFactory,
   INetworkJson
-} from '../../../network/joint'
+} from '../../../network/json/joint'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../../network/network-json'
+import { JSONSnapshot } from '../../../network/json'
 
 export { Constructor }
 

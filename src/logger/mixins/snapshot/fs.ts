@@ -8,9 +8,9 @@ import Network, {
 import NetworkJson, {
   JsonDiffFactory,
   INetworkJson
-} from '../../../network/joint'
+} from '../../../network/json/joint'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../../network/network-json'
+import { JSONSnapshot } from '../../../network/json'
 
 export { FileFSMixing }
 
@@ -19,12 +19,7 @@ export default function FileFSMixing<TBase extends Constructor>(
 ) {
   return class extends Base {
     saveFile(path) {
-      let json
-      try {
-        json = JSON.stringify(this.snapshot)
-      } catch {
-        debugger
-      }
+      const json = JSON.stringify(this.snapshot)
       fs.writeFileSync(path, json)
     }
   }

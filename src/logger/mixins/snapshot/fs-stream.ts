@@ -8,11 +8,12 @@ import Network, {
 import NetworkJson, {
   JsonDiffFactory,
   INetworkJson
-} from '../../../network/joint'
+} from '../../../network/json/joint'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../../network/network-json'
+import { JSONSnapshot } from '../../../network/json'
 import WritableStream = NodeJS.WritableStream
 import * as assert from 'assert/'
+import { promisify } from 'util'
 
 export { FileFSMixing }
 
@@ -52,15 +53,12 @@ export default function FileFSMixing<TBase extends Constructor>(Base: TBase) {
       })
     }
 
-    endStream() {
-      // close the JSON
-      this.stream.end(']}')
+    async endStream() {
+      await promisify(this.stream.end).call(this.stream, ']}')
     }
 
-    dispose() {
-      try {
-        this.stream.end(']}')
-      } catch {}
+    async dispose() {
+      await this.endStream()
     }
   }
 }
