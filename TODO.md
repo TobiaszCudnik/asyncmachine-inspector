@@ -1,6 +1,11 @@
 # TODO
 
 #### Bugs
+- no UI msg when trying to load a broken snapshot
+- links inside of the machine with step-type=step arent marked as touched
+  - related to changed_ids logic
+- clicking on the log sidebar to scroll the timeline with AutoPlay off
+  - scrolls properly and then plays till the end
 - when trying to load the 3rd snapshot, nothing happens
 - bundle d.ts files
   - ami-logger
@@ -61,6 +66,7 @@
 - summary
   - draggable
   - change size?
+  - show the toolbar button only if there is a summary
 - tabindex for
   - transitions sidebar
   - machines sidebar

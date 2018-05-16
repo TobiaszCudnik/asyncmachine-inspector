@@ -46,7 +46,7 @@ npm install -g ami-server
 // main logger class
 import { Logger, Network } from 'ami-logger'
 // mixin to save files using the fs module
-import FileFSMixin from 'ami-logger/mixins/file-fs'
+import FileFSMixin from 'ami-logger/mixins/snapshot/fs'
 import { machine } from 'asyncmachine'
 // example machine
 const state = {
@@ -60,6 +60,7 @@ const LoggerClass = FileFSMixin(Logger)
 // instantiate the logger
 const network = new Network(example)
 const logger = new LoggerClass(network)
+logger.start()
 // make changes
 example.add('Dry')
 example.add('Water')
