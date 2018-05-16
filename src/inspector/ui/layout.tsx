@@ -736,32 +736,41 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
               <div className="sidebar right">
                 {(() => {
                   let container = []
+                  function closeGroup(nodes, machine_id, patch_id, key) {
+                    if (!nodes.length) return
+                    const class_name = `joint-group joint-group-${machine_id} cell-select hover timeline-scroll-to`
+                    container.push(
+                      <div
+                        data-id={machine_id}
+                        data-patch_id={patch_id}
+                        className={class_name}
+                        key={key}
+                      >
+                        {nodes}
+                      </div>
+                    )
+                  }
                   const logs = this.props.logs
                   for (let i = 0; i < logs.length; i++) {
                     let inner_container = []
-                    let last_entry_id
+                    let last_machine_id, last_key, last_patch_id
                     for (let ii = 0; ii < logs[i].length; ii++) {
                       const patch_id = i
                       const entry = logs[i][ii]
                       const key = `log-${i}-${ii}`
                       // flush
-                      if (last_entry_id && last_entry_id != entry.id) {
-                        const class_name = `joint-group joint-group-${
-                          entry.id
-                        } cell-select hover timeline-scroll-to`
-                        container.push(
-                          <div
-                            data-id={entry.id}
-                            data-patch_id={'test ' + patch_id}
-                            className={class_name}
-                            key={key}
-                          >
-                            {inner_container}
-                          </div>
+                      if (last_machine_id && last_machine_id != entry.id) {
+                        closeGroup(
+                          inner_container,
+                          last_machine_id,
+                          last_patch_id,
+                          last_key
                         )
                         inner_container = []
                       }
-                      last_entry_id = entry.id
+                      last_machine_id = entry.id
+                      last_key = key
+                      last_patch_id = patch_id
                       const states = this.props.machines_states[entry.id]
                         ? this.props.machines_states[entry.id].map(s => s.name)
                         : []
@@ -797,6 +806,13 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                         />
                       )
                     }
+                    console.log(inner_container)
+                    closeGroup(
+                      inner_container,
+                      last_machine_id,
+                      last_patch_id,
+                      last_key
+                    )
                   }
                   return container
                 })()}
