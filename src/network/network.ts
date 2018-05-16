@@ -243,7 +243,7 @@ export default class Network extends EventEmitter {
     })
     machine.on('pipe', () => {
       const links = this.linkPipedStates(machine)
-      // TODO add the IDs of the link itself to the IDs of the linked nodes
+      // TODO add the ID of the link itself to the IDs of the linked nodes
       this.emit('change', PatchType.PIPE, machine_id, links)
     })
     machine.on('transition-init', (transition: Transition) => {

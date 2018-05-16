@@ -44,34 +44,61 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
 
   constructor(public network: Network) {
     assert(network)
+    // keep track of all changed ID during a transition-per-machine
+    // to be able to un-mark them once the transition is over
+    let transition_changed_ids = {}
     this.network.on(
       'change',
       (type: PatchType, machine_id: string, ...data) => {
         let changed_ids = []
+        const machine = this.network.machine_ids[machine_id]
         switch (type) {
           case PatchType.STATE_CHANGED:
           case PatchType.TRANSITION_STEP:
+            // TODO handle this.network.transition_links
             changed_ids.push(...(data[0] as string[]))
             changed_ids.unshift(machine_id)
             break
           case PatchType.MACHINE_ADDED:
           case PatchType.MACHINE_REMOVED:
             changed_ids.push(machine_id)
-            const machine = this.network.machine_ids[machine_id]
-            changed_ids.push(...machine.states_all)
+            changed_ids.push(
+              ...machine.states_all.map(s => `${machine_id}:${s}`)
+            )
             break
           case PatchType.PIPE:
             changed_ids.push(...(data[0] as string[]))
             changed_ids.unshift(machine_id)
             break
-          case PatchType.TRANSITION_START:
           case PatchType.TRANSITION_END:
+          // re-generate all the changed states to loose the during-transition
+          // styling
+          if (this.network.machines_during_transition.size == 0) {
+            // add all remaining IDs
+            changed_ids.push(
+              ...Object.values(transition_changed_ids).reduce(
+                (ret, ids) => ret.push(...ids) && ret,
+                []
+              )
+            )
+            transition_changed_ids = {}
+          } else if (transition_changed_ids[machine_id]) {
+            changed_ids.push(...transition_changed_ids[machine_id])
+            delete transition_changed_ids[machine_id]
+          }
+          // fall
+          case PatchType.TRANSITION_START:
           case PatchType.QUEUE_CHANGED:
             changed_ids.push(machine_id)
             break
         }
         for (const id of changed_ids) {
           this.changed_ids.add(id)
+          if (type == PatchType.TRANSITION_END) continue
+          if (!transition_changed_ids[machine_id]) {
+            transition_changed_ids[machine_id] = new Set()
+          }
+          transition_changed_ids[machine_id].add(id)
         }
       }
     )
@@ -249,7 +276,9 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   abstract createLinkNode(
     from: GraphNode,
     to: GraphNode,
-    relation: NODE_LINK_TYPE, prev_json, index
+    relation: NODE_LINK_TYPE,
+    prev_json,
+    index
   ): Link
   abstract createLinkID(
     from: GraphNode,

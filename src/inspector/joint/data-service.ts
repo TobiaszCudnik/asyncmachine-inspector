@@ -126,7 +126,8 @@ class JointDataService extends EventEmitter {
     //   this.patches.length &&
     //   this.patches[this.patches.length - 1].type == PatchType.TRANSITION_END
     if (
-      patch.type == PatchType.MACHINE_ADDED &&
+      (patch.type == PatchType.MACHINE_ADDED ||
+        patch.type == PatchType.MACHINE_REMOVED) &&
       !this.patches_active_transitions
     ) {
       this.index.states.push(this.patches.length)

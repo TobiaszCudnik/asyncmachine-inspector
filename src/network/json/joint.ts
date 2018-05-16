@@ -27,6 +27,8 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     prev_json: INetworkJson,
     index: TJSONIndex
   ): Node | null {
+    // TODO turn on once change detection works well
+    return null
     if (prev_json && !this.changed_ids.has(id) && index[id]) {
       // @ts-ignore
       return prev_json.cells[index[id]]
