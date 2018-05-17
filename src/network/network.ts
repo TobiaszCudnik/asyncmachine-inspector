@@ -1,16 +1,16 @@
 import {
-  StateStructFields,
-  TransitionStepTypes,
-  TransitionStepFields,
+  PipeFlags,
   StateRelations,
-  Transition
+  StateStructFields,
+  Transition,
+  TransitionStepFields,
+  TransitionStepTypes
 } from 'asyncmachine'
 import {
-  TAsyncMachine,
-  ITransitionStep,
   IStateStruct,
+  ITransitionStep,
   StateChangeTypes,
-  IState
+  TAsyncMachine
 } from 'asyncmachine/src/types'
 import Graph from 'graphs-tob'
 import { difference } from 'lodash'
@@ -18,7 +18,6 @@ import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
-import { NODE_LINK_TYPE } from './json'
 
 export type MachinesMap = Map<TAsyncMachine, string>
 export type NodeGraph = Graph<Node>
@@ -61,6 +60,24 @@ export enum PatchType {
   MACHINE_REMOVED,
   QUEUE_CHANGED,
   PIPE_REMOVED
+}
+
+export enum NODE_LINK_TYPE {
+  REQUIRE,
+  DROP,
+  AFTER,
+  ADD,
+  PIPE,
+  PIPE_INVERTED,
+  PIPE_NEGOTIATION,
+  PIPE_INVERTED_NEGOTIATION
+}
+
+export enum RELATION_TO_LINK_TYPE {
+  require = NODE_LINK_TYPE.REQUIRE,
+  drop = NODE_LINK_TYPE.DROP,
+  add = NODE_LINK_TYPE.ADD,
+  after = NODE_LINK_TYPE.AFTER
 }
 
 // TODO not needed?
@@ -130,7 +147,7 @@ export class Node {
   }
 
   relations(node: Node | string): StateRelations[] {
-    var name = node instanceof Node ? node.name : node.toString()
+    const name = node instanceof Node ? node.name : node.toString()
     return this.machine.getRelationsOf(this.name, name)
   }
 
@@ -311,6 +328,36 @@ export default class Network extends EventEmitter {
     })
   }
 
+  /**
+   * Returns the type of the connection between 2 passed nodes. Only one
+   * connection is supported.
+   */
+  getLinkType(source: Node, target: Node): NODE_LINK_TYPE {
+    if (source.machine_id == target.machine_id) {
+      const relation = source.relations(target)[0]
+      // @ts-ignore
+      return RELATION_TO_LINK_TYPE[relation]
+    } else {
+      for (let pipe of source.machine.piped[source.name]) {
+        if (pipe.machine != target.machine || pipe.state != target.name)
+          continue
+
+        if (!pipe.flags) {
+          return NODE_LINK_TYPE.PIPE
+        } else if (
+          pipe.flags & PipeFlags.INVERT &&
+          pipe.flags & PipeFlags.NEGOTIATION
+        ) {
+          return NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
+        } else if (pipe.flags & PipeFlags.NEGOTIATION) {
+          return NODE_LINK_TYPE.PIPE_NEGOTIATION
+        } else if (pipe.flags & PipeFlags.INVERT) {
+          return NODE_LINK_TYPE.PIPE_INVERTED
+        }
+      }
+    }
+  }
+
   dispose() {
     // TODO unbind listeners
   }
@@ -348,12 +395,27 @@ export default class Network extends EventEmitter {
         if (!this.transition_links.get(source_node))
           this.transition_links.set(source_node, new Set<Node>())
         this.transition_links.get(source_node).add(node)
+        const link_type = this.getLinkType(source_node, node)
+        changed_nodes.add(this.createLinkID(source_node, node, link_type))
       }
     }
 
     this.emit('change', PatchType.TRANSITION_STEP, machine_id, [
       ...changed_nodes
     ])
+  }
+
+  // TODO jointjs related code
+  createLinkID(from, to, relation: NODE_LINK_TYPE) {
+    return `${this.getStateNodeId(from)}::${this.getStateNodeId(
+      to
+    )}::${relation}`
+  }
+
+  // TODO jointjs related code
+  protected getStateNodeId(node): string {
+    // TODO extract normalize()
+    return `${node.machine_id}:${node.name.replace(/[^\w]/g, '-')}`
   }
 
   private statesToNodes(names: string[], machine_id: string) {

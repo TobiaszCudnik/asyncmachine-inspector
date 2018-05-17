@@ -1,10 +1,11 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
 import Network, {
-  ILogEntry,
   IPatch,
   Node as GraphNode,
-  PatchType
+  NODE_LINK_TYPE,
+  PatchType,
+  RELATION_TO_LINK_TYPE
 } from './network'
 import { PipeFlags } from 'asyncmachine'
 import { TAsyncMachine } from 'asyncmachine/build/types'
@@ -50,11 +51,13 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     this.network.on(
       'change',
       (type: PatchType, machine_id: string, ...data) => {
+        console.log(PatchType[type])
         let changed_ids = []
         const machine = this.network.machine_ids[machine_id]
         switch (type) {
           case PatchType.STATE_CHANGED:
           case PatchType.TRANSITION_STEP:
+            debugger
             // TODO handle this.network.transition_links
             changed_ids.push(...(data[0] as string[]))
             changed_ids.unshift(machine_id)
@@ -71,21 +74,21 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
             changed_ids.unshift(machine_id)
             break
           case PatchType.TRANSITION_END:
-          // re-generate all the changed states to loose the during-transition
-          // styling
-          if (this.network.machines_during_transition.size == 0) {
-            // add all remaining IDs
-            changed_ids.push(
-              ...Object.values(transition_changed_ids).reduce(
-                (ret, ids) => ret.push(...ids) && ret,
-                []
+            // re-generate all the changed states to loose the during-transition
+            // styling
+            if (this.network.machines_during_transition.size == 0) {
+              // add all remaining IDs
+              changed_ids.push(
+                ...Object.values(transition_changed_ids).reduce(
+                  (ret, ids) => ret.push(...ids) && ret,
+                  []
+                )
               )
-            )
-            transition_changed_ids = {}
-          } else if (transition_changed_ids[machine_id]) {
-            changed_ids.push(...transition_changed_ids[machine_id])
-            delete transition_changed_ids[machine_id]
-          }
+              transition_changed_ids = {}
+            } else if (transition_changed_ids[machine_id]) {
+              changed_ids.push(...transition_changed_ids[machine_id])
+              delete transition_changed_ids[machine_id]
+            }
           // fall
           case PatchType.TRANSITION_START:
           case PatchType.QUEUE_CHANGED:
@@ -209,16 +212,18 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         if (pipe.machine != to.machine || pipe.state != to.name) continue
 
         let type
-        if (!pipe.flags) type = NODE_LINK_TYPE.PIPE
-        else if (
+        if (!pipe.flags) {
+          type = NODE_LINK_TYPE.PIPE
+        } else if (
           pipe.flags & PipeFlags.INVERT &&
           pipe.flags & PipeFlags.NEGOTIATION
-        )
+        ) {
           type = NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
-        else if (pipe.flags & PipeFlags.NEGOTIATION)
+        } else if (pipe.flags & PipeFlags.NEGOTIATION) {
           type = NODE_LINK_TYPE.PIPE_NEGOTIATION
-        else if (pipe.flags & PipeFlags.INVERT)
+        } else if (pipe.flags & PipeFlags.INVERT) {
           type = NODE_LINK_TYPE.PIPE_INVERTED
+        }
 
         const link_id = this.createLinkID(from, to, type)
         let link_node = this.getCachedNode<Link>(link_id, prev_json, index)
@@ -330,24 +335,6 @@ export abstract class JsonDiffFactory<
     // generate the diff
     return this.diffpatcher.diff(base_json, this.previous_json)
   }
-}
-
-export enum NODE_LINK_TYPE {
-  REQUIRE,
-  DROP,
-  AFTER,
-  ADD,
-  PIPE,
-  PIPE_INVERTED,
-  PIPE_NEGOTIATION,
-  PIPE_INVERTED_NEGOTIATION
-}
-
-export enum RELATION_TO_LINK_TYPE {
-  require = NODE_LINK_TYPE.REQUIRE,
-  drop = NODE_LINK_TYPE.DROP,
-  add = NODE_LINK_TYPE.ADD,
-  after = NODE_LINK_TYPE.AFTER
 }
 
 export enum OBJECT_TYPE {
