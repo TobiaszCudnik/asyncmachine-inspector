@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- links (edges) are highlighted as changed elements (red border)
 - no UI msg when trying to load a broken snapshot
 - links inside of the machine with step-type=step arent marked as touched
   - related to changed_ids logic

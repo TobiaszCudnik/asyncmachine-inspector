@@ -51,14 +51,11 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     this.network.on(
       'change',
       (type: PatchType, machine_id: string, ...data) => {
-        console.log(PatchType[type])
         let changed_ids = []
         const machine = this.network.machine_ids[machine_id]
         switch (type) {
           case PatchType.STATE_CHANGED:
           case PatchType.TRANSITION_STEP:
-            debugger
-            // TODO handle this.network.transition_links
             changed_ids.push(...(data[0] as string[]))
             changed_ids.unshift(machine_id)
             break
@@ -87,7 +84,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
               transition_changed_ids = {}
             } else if (transition_changed_ids[machine_id]) {
               changed_ids.push(...transition_changed_ids[machine_id])
-              delete transition_changed_ids[machine_id]
+              // TODO this is not really correct, but it works
+              // delete transition_changed_ids[machine_id]
             }
           // fall
           case PatchType.TRANSITION_START:

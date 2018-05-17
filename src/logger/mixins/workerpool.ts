@@ -1,3 +1,11 @@
+/**
+ * This mixin spreads diff computations across a workerpool with shared memory
+ * and local per node caching. To achieve this, the node change detection needs
+ * to function well, which is currently not the case, thus using this mixin
+ * brings performance down, instead of boosting it.
+ *
+ * See /src/network/json/joint.ts - getCachedNode() method
+ */
 import * as workerpool from 'workerpool'
 import * as randomID from 'simple-random-id'
 import { Semaphore } from 'await-semaphore'

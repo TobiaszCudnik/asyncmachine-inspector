@@ -50,9 +50,9 @@ import FileFSMixin from 'ami-logger/mixins/snapshot/fs'
 import { machine } from 'asyncmachine'
 // example machine
 const state = {
-  Wet: { drop: ['Dry'], require: ['Water'] },
+  Wet: { require: ['Water'] },
   Dry: { drop: ['Wet'] },
-  Water: { add: ['Wet'] }
+  Water: { add: ['Wet'], drop: ['Dry'] }
 }
 const example = machine(state)
 // construct the logger class

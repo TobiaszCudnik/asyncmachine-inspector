@@ -627,9 +627,9 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     let state_list = states.reduce((prev, state) => {
                       // TODO extract / inherit
                       const id = machine.id + ':' + state.name
-                      const check = prev.push(
+                      prev.push(
                         <div
-                          key={machine.id + ':' + state.name}
+                          key={id}
                           style={{ marginLeft: '1em' }}
                         >
                           <span
