@@ -63,7 +63,7 @@
     "graphs-tob": "^2.0.0",
     "jointjs": "^2.0.1",
     "json-loader": "^0.5.4",
-    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
+    "jsondiffpatch": "github:TobiaszCudnik/jsondiffpatch",
     "keymaster": "^1.6.2",
     "lodash": "^4.17.4",
     "material-ui": "^0.17.4",

@@ -1,7 +1,7 @@
 {
   "name": "asyncmachine-inspector",
   "version": "0.3.20",
-  "description": "Inspector and a debugger for the Asyncmachine",
+  "description": "Inspector and a debugger for AsyncMachine",
   "author": "Tobiasz Cudnik",
   "repository": {
     "type": "git",
@@ -33,7 +33,6 @@
   },
   "main": "am-inspector.umd.js",
   "dependencies": {
-    "ami-server": "^0.3",
     "commander": "^2.12.2",
     "open": "0.0.5",
     "graphs-tob": "^2.0.0"
