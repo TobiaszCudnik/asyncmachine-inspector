@@ -58,6 +58,8 @@
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
 
 #### Inspector
+- ability to define the state of the UI when initializing the inspector
+  - open sidebars, buttons states, step type
 - narrow down timeline steps
   - to those related (touching) a selected machine(s)
 - two finger trackpad zoom / out
@@ -85,6 +87,7 @@
   - add materialui/paper (shadow)
   - drag scroll the minimap with a mouse
   - clicking on the minimap scrolls to the (clicked) machine
+  - size should be responsive to the viewport size
 - hotkeys
   - go to step
   - change step type

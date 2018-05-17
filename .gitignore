@@ -42,3 +42,4 @@ examples/remote-server-logger/index.js.map
 /examples/restaurant/transitions.js.map
 /examples/restaurant/schema.js.map
 /examples/restaurant/index.js.map
+**/package-lock.json

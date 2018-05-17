@@ -1,6 +1,6 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "Inspector and a debugger for AsyncMachine",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -32,8 +32,8 @@
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
     "@types/socket.io-client": "^1.4.32",
-    "assert": "latest",
-    "asyncmachine": "^3.2.3",
+    "assert": "^1.4.1",
+    "asyncmachine": "^3.2.8",
     "await-semaphore": "latest",
     "deep-copy": "^1.4.1",
     "delay": "^2.0.0",
@@ -63,7 +63,7 @@
     "graphs-tob": "^2.0.0",
     "jointjs": "^2.0.1",
     "json-loader": "^0.5.4",
-    "jsondiffpatch": "github:TobiaszCudnik/jsondiffpatch",
+    "jsondiffpatch": "^0.3.10",
     "keymaster": "^1.6.2",
     "lodash": "^4.17.4",
     "material-ui": "^0.17.4",
@@ -87,7 +87,7 @@
     "webpack-async-await": "^1.1.0",
     "webpack-bundle-analyzer": "^2.9.0",
     "webpack-shell-plugin": "^0.5.0",
-    "workerio": "github:TobiaszCudnik/workerio"
+    "workerio": "^0.3.0"
   },
   "peerDependency": {
     "redis": "^2.8.0"

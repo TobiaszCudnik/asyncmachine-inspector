@@ -31,7 +31,7 @@ import { isProd } from './utils'
 const log = (...args) => {}
 // const log = console.log.bind(console)
 
-export { Logger, LoggerRemote, Network }
+export { LoggerRemote }
 
 export enum STEP_TYPE_CHANGE {
   TRANSITION = 'transitions',

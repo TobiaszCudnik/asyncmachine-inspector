@@ -1,6 +1,6 @@
 {
   "name": "ami-server",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "Server component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -36,7 +36,7 @@
     "keymaster": "^1.6.2",
     "download-as-file": "^1.1.0",
     "assert": "latest",
-    "jsondiffpatch": "TobiaszCudnik/jsondiffpatch",
+    "jsondiffpatch": "^0.3.10",
     "graphs-tob": "^2.0.0",
     "uuid": "^3.1.0",
     "underscore": "^1.8.3",

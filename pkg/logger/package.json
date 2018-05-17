@@ -1,6 +1,6 @@
 {
   "name": "ami-logger",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "Logger component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -32,11 +32,11 @@
   "browser": "browser.js",
   "types": "logger.d.ts",
   "dependencies": {
-    "assert": "latest",
-    "asyncmachine": "^3.2.5",
+    "assert": "^1.4.1",
+    "asyncmachine": "^3.2.8",
     "eventemitter3": "^3.1.0",
     "graphs-tob": "^2.0.0",
-    "jsondiffpatch": "github:TobiaszCudnik/jsondiffpatch",
+    "jsondiffpatch": "^0.3.10",
     "socket.io-client": "^2.1.0",
     "underscore": "^1.8.3",
     "uuid": "^3.1.0",
