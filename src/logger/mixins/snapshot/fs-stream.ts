@@ -15,9 +15,9 @@ import WritableStream = NodeJS.WritableStream
 import * as assert from 'assert/'
 import { promisify } from 'util'
 
-export { FileFSMixing }
+export { FileFSStreamMixin }
 
-export default function FileFSMixing<TBase extends Constructor>(Base: TBase) {
+export default function FileFSStreamMixin<TBase extends Constructor>(Base: TBase) {
   return class extends Base {
     stream: WritableStream
 

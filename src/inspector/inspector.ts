@@ -810,7 +810,10 @@ export class Inspector implements ITransitions {
           this.loadSnapshot(snapshot)
           break
         }
-        document.getElementById('snapshot-upload').value = null
+        const element = document.getElementById(
+          'snapshot-upload'
+        ) as HTMLInputElement
+        element.value = null
       }
     )
   }

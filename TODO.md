@@ -1,6 +1,7 @@
 # TODO
 
 #### Bugs
+- involved states in the transiton sidebar are missing separators
 - links (edges) are highlighted as changed elements (red border)
 - no UI msg when trying to load a broken snapshot
 - links inside of the machine with step-type=step arent marked as touched
