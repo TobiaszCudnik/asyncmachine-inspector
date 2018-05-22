@@ -11,7 +11,7 @@ import {
   ITransitionStep,
   StateChangeTypes,
   TAsyncMachine
-} from 'asyncmachine/src/types'
+} from 'asyncmachine/types'
 import Graph from 'graphs-tob'
 import { difference } from 'lodash'
 import * as uuid from 'uuid/v4'

@@ -1,6 +1,6 @@
 {
   "name": "ami-logger",
-  "version": "0.3.21",
+  "version": "0.3.22",
   "description": "Logger component for AsyncMachine Inspector",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -33,7 +33,7 @@
   "types": "logger.d.ts",
   "dependencies": {
     "assert": "^1.4.1",
-    "asyncmachine": "^3.2.8",
+    "asyncmachine": "^3.3.0",
     "eventemitter3": "^3.1.0",
     "graphs-tob": "^2.0.0",
     "jsondiffpatch": "^0.3.10",

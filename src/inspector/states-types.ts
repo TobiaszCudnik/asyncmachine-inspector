@@ -2,7 +2,7 @@ import {
   IState as IStateBase,
   IBind as IBindBase,
   IEmit as IEmitBase
-} from 'asyncmachine/build/types'
+} from 'asyncmachine/types'
 import AsyncMachine from 'asyncmachine'
 import {INetworkJson} from "../network/json/joint";
 import {IPatch} from "../network/network";

@@ -8,7 +8,7 @@ import Network, {
   RELATION_TO_LINK_TYPE
 } from './network'
 import { PipeFlags } from 'asyncmachine'
-import { TAsyncMachine } from 'asyncmachine/build/types'
+import { TAsyncMachine } from 'asyncmachine/types'
 // TODO shouldnt point to a layout-specific type
 import { INetworkJson } from './json/joint'
 

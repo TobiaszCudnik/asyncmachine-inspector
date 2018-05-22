@@ -1,6 +1,6 @@
 {
   "name": "asyncmachine-inspector",
-  "version": "0.3.21",
+  "version": "0.3.22",
   "description": "Inspector and a debugger for AsyncMachine",
   "author": "Tobiasz Cudnik",
   "repository": {
@@ -33,7 +33,7 @@
   "dependencies": {
     "@types/socket.io-client": "^1.4.32",
     "assert": "^1.4.1",
-    "asyncmachine": "^3.2.8",
+    "asyncmachine": "^3.3.0",
     "await-semaphore": "latest",
     "deep-copy": "^1.4.1",
     "delay": "^2.0.0",

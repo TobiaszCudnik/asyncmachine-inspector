@@ -35,7 +35,7 @@ import joint_css from '../joint/base.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
 import { TCell, TMachine, TState } from '../../network/json/joint'
-import { StateChangeTypes } from 'asyncmachine/build/types'
+import { StateChangeTypes } from 'asyncmachine/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'

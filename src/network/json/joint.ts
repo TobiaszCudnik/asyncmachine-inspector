@@ -6,7 +6,7 @@ import {
 } from '../json'
 import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
 import * as _ from 'underscore'
-import { QueueRowFields, StateChangeTypes } from 'asyncmachine/build/types'
+import { QueueRowFields, StateChangeTypes } from 'asyncmachine/types'
 import { Node as GraphNode, NODE_LINK_TYPE } from '../network'
 
 export class NetworkJsonFactory extends NetworkJsonFactoryBase<
