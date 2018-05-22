@@ -72,7 +72,7 @@ export class Inspector implements ITransitions {
   worker_patches_pending: IPatch[] = []
   last_manual_scroll: number = null
   add_patches_mutex = new Mutex()
-
+  goToLast: Function
   renderUIQueue: (() => void) | null
 
   get overlay_el() {
@@ -139,16 +139,8 @@ export class Inspector implements ITransitions {
     }
     this.initPlayStep()
   }
-  goToLast: Function
 
-  private initPlayStep() {
-    // setup the play interval
-    if (this.step_timer) {
-      clearInterval(this.step_timer)
-    }
-    this.step_fn = this.playStep.bind(this)
-    this.step_timer = setInterval(this.step_fn, this.frametime * 1000)
-  }
+  // TRANSITIONS
 
   Connecting_state(url = 'http://localhost:3757') {
     url = url.replace(/\/$/, '')
@@ -189,8 +181,6 @@ export class Inspector implements ITransitions {
     this.layout_worker = new LayoutWorkerRemote()
     this.states.add('LayoutWorkerReady')
   }
-
-  // TRANSITIONS
 
   async FullSync_state(graph_data: INetworkJson) {
     if (!graph_data) {
@@ -360,7 +350,7 @@ export class Inspector implements ITransitions {
   async PlayStopClicked_state() {
     // TODO should restart the playStep interval to react immediately
     const abort = this.states.getAbort('PlayStopClicked')
-    if (this.last_manual_scroll) {
+    if (this.last_manual_scroll !== null) {
       this.last_manual_scroll = null
       this.renderUIQueue()
     } else {
@@ -485,6 +475,15 @@ export class Inspector implements ITransitions {
   }
 
   // METHODS
+
+  private initPlayStep() {
+    // setup the play interval
+    if (this.step_timer) {
+      clearInterval(this.step_timer)
+    }
+    this.step_fn = this.playStep.bind(this)
+    this.step_timer = setInterval(this.step_fn, this.frametime * 1000)
+  }
 
   // TODO merge with Render_exit
   protected async playStep() {
