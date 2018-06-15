@@ -41,7 +41,7 @@
     "hex-rgb": "^2.0.0",
     "idb-keyval": "^2.3.0",
     "radians-degrees": "^1.0.0",
-    "simple-random-id": "latest",
+    "simple-random-id": "^1.0.1",
     "socket.io": "^1.4.8",
     "socket.io-client": "^1.7.4",
     "underscore": "^1.8.3",
