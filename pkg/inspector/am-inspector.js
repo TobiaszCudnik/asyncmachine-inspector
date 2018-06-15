@@ -20,7 +20,7 @@ cli
 const params = {
   port: cli.port || 3797,
   host: cli.host || 'localhost',
-  server: cli.server === true ? 'http://localhost:3797/' : cli.server
+  server: cli.server === true ? 'http://localhost:3757/' : cli.server
 }
 
 http
@@ -51,6 +51,7 @@ http
     fs.createReadStream(dir + path).pipe(res)
   })
   .listen(params.port, params.host)
+  .on('error', console.error.bind(console))
 
 let url = `http://${params.host}:${params.port}/`
 if (params.server) {
