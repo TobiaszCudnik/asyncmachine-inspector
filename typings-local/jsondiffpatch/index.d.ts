@@ -5,6 +5,7 @@ declare module "jsondiffpatch" {
     
     export interface IDiffPatchConfig {
         objectHash(obj: Object): string;
+        propertyFilter(name: string, context: object): boolean;
     }
     
     export interface IDiffPatch {

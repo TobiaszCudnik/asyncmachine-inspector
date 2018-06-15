@@ -1,3 +1,6 @@
+// TODO pull request generic-less version
+// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/graphlib/index.d.ts
+
 declare module 'cinea-graphlib' {
     export interface IEdge {
         v: string,
