@@ -33,9 +33,11 @@ export default function RemoteBaseMixin<TBase extends Constructor>(
       })
 
       this.io.on('connect', () => {
-        // TODO support re-connecting
+        // send the initial json
         this.io.emit('full-sync', this.full_sync)
-        // @ts-ignore
+        // send all the existing patches
+        this.patches.forEach(p => this.io.emit('diff-sync', p))
+        // send new ones as they come
         this.on('diff-sync', (patch: IPatch) => {
           this.io.emit('diff-sync', patch)
         })
@@ -43,6 +45,7 @@ export default function RemoteBaseMixin<TBase extends Constructor>(
       this.io.on('error', err => {
         console.error(err)
       })
+      // TODO hide behind a flag
       // compatibility with /src/logger/mixin/state-change
       this.io.on('state-add', states => {
         // @ts-ignore

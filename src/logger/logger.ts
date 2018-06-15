@@ -103,6 +103,8 @@ export default class Logger extends EventEmitter {
     if (!this.checkGranularity(type)) return
     const patch = this.createPatch(machine_id, type, data)
     if (!patch) return
+    patch.id = this.patches.length
+    // TODO remove this along with the /mixins/fs.ts
     this.patches.push(patch)
     this.emit('diff-sync', patch, this.patches.length - 1)
   }
