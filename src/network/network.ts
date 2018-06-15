@@ -10,7 +10,8 @@ import {
   IStateStruct,
   ITransitionStep,
   StateChangeTypes,
-  TAsyncMachine
+  TAsyncMachine,
+  IState
 } from 'asyncmachine/types'
 import Graph from 'graphs-tob'
 import { difference } from 'lodash'
@@ -67,10 +68,11 @@ export enum NODE_LINK_TYPE {
   DROP,
   AFTER,
   ADD,
-  PIPE,
-  PIPE_INVERTED,
-  PIPE_NEGOTIATION,
-  PIPE_INVERTED_NEGOTIATION
+  PIPE
+  // TODO figure out how to mark all the PipeFlags permutations
+  // PIPE_INVERTED,
+  // PIPE_NEGOTIATION,
+  // PIPE_INVERTED_NEGOTIATION
 }
 
 export enum RELATION_TO_LINK_TYPE {
@@ -227,6 +229,10 @@ export default class Network extends EventEmitter {
     this.emit('change', PatchType.MACHINE_REMOVED, id)
   }
 
+  unbindFromMachine(machine: TAsyncMachine) {
+    throw new Error('not implemented')
+  }
+
   unlinkPipedStates(machine: TAsyncMachine) {
     throw new Error('not implemented')
     // TODO this.emit('change', PatchType.PIPE_REMOVED, machine_id)
@@ -342,18 +348,20 @@ export default class Network extends EventEmitter {
         if (pipe.machine != target.machine || pipe.state != target.name)
           continue
 
-        if (!pipe.flags) {
-          return NODE_LINK_TYPE.PIPE
-        } else if (
-          pipe.flags & PipeFlags.INVERT &&
-          pipe.flags & PipeFlags.NEGOTIATION
-        ) {
-          return NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
-        } else if (pipe.flags & PipeFlags.NEGOTIATION) {
-          return NODE_LINK_TYPE.PIPE_NEGOTIATION
-        } else if (pipe.flags & PipeFlags.INVERT) {
-          return NODE_LINK_TYPE.PIPE_INVERTED
-        }
+        // TODO figure out how to mark all the
+        // PipeFlags permutations
+        // if (!pipe.flags) {
+        return NODE_LINK_TYPE.PIPE
+        // } else if (
+        //   pipe.flags & PipeFlags.INVERT &&
+        //   pipe.flags & PipeFlags.NEGOTIATION
+        // ) {
+        //   return NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
+        // } else if (pipe.flags & PipeFlags.NEGOTIATION) {
+        //   return NODE_LINK_TYPE.PIPE_NEGOTIATION
+        // } else if (pipe.flags & PipeFlags.INVERT) {
+        //   return NODE_LINK_TYPE.PIPE_INVERTED
+        // }
       }
     }
   }
@@ -481,6 +489,7 @@ export default class Network extends EventEmitter {
         )
         if (!target_state) continue
         // TODO add this.graph.isLinked(source, target)
+        // @ts-ignore
         if (!this.graph._linked(source_state).has(target_state)) {
           this.graph.link(source_state, target_state)
           linked.push([source_state.full_name, target_state.full_name])

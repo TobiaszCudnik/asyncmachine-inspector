@@ -211,18 +211,18 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         if (pipe.machine != to.machine || pipe.state != to.name) continue
 
         let type
-        if (!pipe.flags) {
+        // if (!pipe.flags) {
           type = NODE_LINK_TYPE.PIPE
-        } else if (
-          pipe.flags & PipeFlags.INVERT &&
-          pipe.flags & PipeFlags.NEGOTIATION
-        ) {
-          type = NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
-        } else if (pipe.flags & PipeFlags.NEGOTIATION) {
-          type = NODE_LINK_TYPE.PIPE_NEGOTIATION
-        } else if (pipe.flags & PipeFlags.INVERT) {
-          type = NODE_LINK_TYPE.PIPE_INVERTED
-        }
+        // } else if (
+        //   pipe.flags & PipeFlags.INVERT &&
+        //   pipe.flags & PipeFlags.NEGOTIATION
+        // ) {
+        //   type = NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
+        // } else if (pipe.flags & PipeFlags.NEGOTIATION) {
+        //   type = NODE_LINK_TYPE.PIPE_NEGOTIATION
+        // } else if (pipe.flags & PipeFlags.INVERT) {
+        //   type = NODE_LINK_TYPE.PIPE_INVERTED
+        // }
 
         const link_id = this.createLinkID(from, to, type)
         let link_node = this.getCachedNode<Link>(link_id, prev_json, index)
@@ -256,12 +256,12 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
         return 'add'
       case t.PIPE:
         return 'add'
-      case t.PIPE_INVERTED:
-        return 'drop'
-      case t.PIPE_NEGOTIATION:
-        return 'add neg'
-      case t.PIPE_INVERTED_NEGOTIATION:
-        return 'drop neg'
+      // case t.PIPE_INVERTED:
+      //   return 'drop'
+      // case t.PIPE_NEGOTIATION:
+      //   return 'add neg'
+      // case t.PIPE_INVERTED_NEGOTIATION:
+      //   return 'drop neg'
     }
   }
 
