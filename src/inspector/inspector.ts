@@ -241,40 +241,6 @@ export class Inspector implements ITransitions {
     await this.addPatches(this.worker_patches_pending)
   }
 
-  // TODO support steptype
-  scrollTimelineTo(pos: number) {
-    this.states.add('Rendering', pos)
-  }
-
-  // Add patches in a bulk, but ending with a regular render
-  // @param patches List of patches. MODIFIED by reference.
-  async addPatches(patches: IPatch[]) {
-    if (!this.states.is('LayoutWorkerReady')) {
-      this.worker_patches_pending.push(...patches)
-      return
-    }
-    const release = await this.add_patches_mutex.acquire()
-    try {
-      const latest = patches.pop()
-      // console.time('addPatches')
-      await db.set('addPatches', patches)
-      await this.layout_worker.addPatches('addPatches')
-      // console.timeEnd('addPatches')
-      let patch
-      while ((patch = patches.shift())) {
-        this.logs.push(patch.logs)
-      }
-      // log(`latest ${latest.type}`)
-      // the last patch should trigger the regular procedure
-      this.states.add('DiffSync', latest)
-    } finally {
-      release()
-    }
-  }
-
-  //   // TODO GC this.layout_worker
-  // }
-
   async DiffSync_state(patch: IPatch) {
     // log(`patch type ${patch.type}`)
     const states = this.states
@@ -475,6 +441,40 @@ export class Inspector implements ITransitions {
   }
 
   // METHODS
+
+  // TODO support steptype
+  scrollTimelineTo(pos: number) {
+    this.states.add('Rendering', pos)
+  }
+
+  // Add patches in a bulk, but ending with a regular render
+  // @param patches List of patches. MODIFIED by reference.
+  async addPatches(patches: IPatch[]) {
+    if (!this.states.is('LayoutWorkerReady')) {
+      this.worker_patches_pending.push(...patches)
+      return
+    }
+    const release = await this.add_patches_mutex.acquire()
+    try {
+      const latest = patches.pop()
+      // console.time('addPatches')
+      await db.set('addPatches', patches)
+      await this.layout_worker.addPatches('addPatches')
+      // console.timeEnd('addPatches')
+      let patch
+      while ((patch = patches.shift())) {
+        this.logs.push(patch.logs)
+      }
+      // log(`latest ${latest.type}`)
+      // the last patch should trigger the regular procedure
+      this.states.add('DiffSync', latest)
+    } finally {
+      release()
+    }
+  }
+
+  //   // TODO GC this.layout_worker
+  // }
 
   private initPlayStep() {
     // setup the play interval

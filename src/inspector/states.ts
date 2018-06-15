@@ -75,6 +75,7 @@ export default class States extends AsyncMachine<TStates, IBind, IEmit> {
   StepTypeChanged: IState = {}
   // network inputs
   FullSync: IState = {
+    // TODO multi isnt necessary?
     multi: true,
     add: ['TimelineOnFirst']
   }
