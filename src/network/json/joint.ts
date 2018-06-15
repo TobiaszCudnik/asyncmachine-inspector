@@ -36,13 +36,14 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   }
 
   onNodeChange(index: number, skip_increment = false) {
-    const node = this.json.cells[index]
-    if (!skip_increment) {
-      node.version++
-    }
-    this.json_index[node.id] = index
-    // TODO inherit from emitter and emit on self
-    this.network.emit('node-change', node.id, index)
+    // TODO turn on once caching works well
+    // const node = this.json.cells[index]
+    // if (!skip_increment) {
+    //   node.version++
+    // }
+    // this.json_index[node.id] = index
+    // // TODO inherit from emitter and emit on self
+    // this.network.emit('node-change', node.id, index)
   }
 
   addMachineNode(node: TMachine) {
@@ -124,7 +125,8 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       is_auto: node.is_auto,
       is_multi: node.is_multi,
       step_style: node.step_style,
-      clock: node.clock
+      // TODO turn on for caching
+      // clock: node.clock
     }
   }
 
