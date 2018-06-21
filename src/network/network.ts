@@ -9,7 +9,7 @@ import {
 import {
   IStateStruct,
   ITransitionStep,
-  StateChangeTypes,
+  MutationTypes,
   TAsyncMachine,
   IState
 } from 'asyncmachine/types'
@@ -36,7 +36,7 @@ export interface IPatch {
 }
 
 export interface ITransitionData {
-  type: StateChangeTypes
+  type: MutationTypes
   states: string[]
   queue_machine_id: string
   machine_id: string

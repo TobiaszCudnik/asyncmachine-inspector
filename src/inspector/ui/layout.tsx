@@ -35,7 +35,7 @@ import joint_css from '../joint/base.css'
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
 import { TCell, TMachine, TState } from '../../network/json/joint'
-import { StateChangeTypes } from 'asyncmachine/types'
+import { MutationTypes } from 'asyncmachine/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
 import { partial } from 'underscore'
@@ -334,16 +334,16 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
               <div className="sidebar left">
                 {(() => {
                   function getTransitionType(entry: {
-                    type: StateChangeTypes
+                    type: MutationTypes
                     auto: boolean
                   }) {
                     let auto = entry.auto ? ':auto' : ''
                     switch (entry.type) {
-                      case StateChangeTypes.ADD:
+                      case MutationTypes.ADD:
                         return `[add${auto}]`
-                      case StateChangeTypes.DROP:
+                      case MutationTypes.DROP:
                         return `[drop${auto}]`
-                      case StateChangeTypes.SET:
+                      case MutationTypes.SET:
                         return `[set${auto}]`
                     }
                   }

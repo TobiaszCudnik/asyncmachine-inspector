@@ -255,7 +255,8 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       case t.ADD:
         return 'add'
       case t.PIPE:
-        return 'add'
+        // TODO return a detailed pipe info
+        return 'pipe'
       // case t.PIPE_INVERTED:
       //   return 'drop'
       // case t.PIPE_NEGOTIATION:
