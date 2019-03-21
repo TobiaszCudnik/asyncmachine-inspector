@@ -26,25 +26,24 @@ export type TJSONIndex = { [index: string]: number }
 /**
  * Produce JSON from a Network instance, ready to be consumed by the UI layer.
  */
-export abstract class NetworkJsonFactory<Json, Machine, State, Link>
-  implements INetworkJsonFactory<Json> {
+export abstract class NetworkJsonFactory<
+  Json,
+  Machine extends { id: string },
+  State extends { id: string },
+  Link extends { id: string }
+> implements INetworkJsonFactory<Json> {
+  network: Network
   // list of created machine nodes
-  machine_ids: Set<string>
-  // map of machine IDs to machine nodes
-  machine_nodes: {
-    [index: string]: Machine
-  }
-  // map of created external nodes
-  // also used for creating links between machine nodes
-  externals: Map<GraphNode, Set<GraphNode>>
+  parsed_machine_ids: Set<string>
 
   json: Json
   // ID to position in the array
   json_index: TJSONIndex
   changed_ids: Set<string> = new Set()
 
-  constructor(public network: Network) {
+  constructor(network: Network) {
     assert(network)
+    this.network = network
     // TODO turn on once caching is done
     // keep track of all changed ID during a transition-per-machine
     // to be able to un-mark them once the transition is over
@@ -114,9 +113,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
     // reset everything besides `this.changed_ids`
     this.json = this.initJson()
     this.json_index = {}
-    this.machine_ids = new Set()
-    this.machine_nodes = {}
-    this.externals = new Map()
+    this.parsed_machine_ids = new Set()
 
     // process nodes
     // TODO ideally go through this.changed_ids only
@@ -151,14 +148,13 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
       const node_index = this.addMachineNode(machine_node)
       this.onNodeChange(node_index)
     }
-    this.machine_ids.add(machine_id)
-    this.machine_nodes[machine_id] = machine_node
+    this.parsed_machine_ids.add(machine_id)
   }
 
   parseNode(graph_node: GraphNode, prev_json: Json, index: TJSONIndex) {
     const machine = graph_node.machine
 
-    if (!this.machine_ids.has(graph_node.machine_id)) {
+    if (!this.parsed_machine_ids.has(graph_node.machine_id)) {
       this.parseMachine(machine, prev_json, index)
     }
 
@@ -185,6 +181,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
   ) {
     // state relations
     if (from.machine_id == to.machine_id) {
+      // TODO read from the graph
       let relations = from.relations(to)
       for (let relation of relations) {
         let relation_type = RELATION_TO_LINK_TYPE[relation]
@@ -212,7 +209,7 @@ export abstract class NetworkJsonFactory<Json, Machine, State, Link>
 
         let type
         // if (!pipe.flags) {
-          type = NODE_LINK_TYPE.PIPE
+        type = NODE_LINK_TYPE.PIPE
         // } else if (
         //   pipe.flags & PipeFlags.INVERT &&
         //   pipe.flags & PipeFlags.NEGOTIATION

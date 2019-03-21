@@ -60,7 +60,6 @@
     "del": "^2.0.2",
     "download-as-file": "^1.1.0",
     "dts-bundle": "^0.7.3",
-    "graphs-tob": "^2.0.0",
     "jointjs": "^2.0.1",
     "json-loader": "^0.5.4",
     "jsondiffpatch": "^0.3.10",

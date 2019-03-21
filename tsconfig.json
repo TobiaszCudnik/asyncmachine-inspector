@@ -4,7 +4,7 @@
         "target": "es2017",
         "module": "commonjs",
 //        "allowJs": true,
-        "lib": ["es6", "es7", "dom", "es2017"],
+        "lib": ["es6", "es7", "dom", "es2017", "es2017.object"],
         "jsx": "react",
         "moduleResolution": "node",
         "outDir": "build",

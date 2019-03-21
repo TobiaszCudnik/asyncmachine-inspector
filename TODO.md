@@ -1,5 +1,20 @@
 # TODO
 
+#### json-worker
+- remove Map and Set
+  - network
+  - graphs
+- add `serialize` to `Network` and `Node`
+- add `serialize(include?: string[], exclude?: string[])` to asyncmachine
+- send jsondiff patches of `Network` (and nested stuff) to a web worker
+  - generate JSON and JSON diff in the worker
+  - keep a queue of `Network` patches and dont block the UI
+- add IDs to the queue entries (asyncmachine)
+- STEP 2
+  - spread the json-worker across a worker pool
+  - coordinate the workers in the main thread
+  - sync via redis
+
 #### Bugs
 - involved states in the transiton sidebar are missing separators
 - links (edges) are highlighted as changed elements (red border)

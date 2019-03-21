@@ -1,5 +1,10 @@
-// TODO rename to joint/graph.ts and joint/graph.css
-import { INetworkJson, TState, TMachine, TLink, TCell } from './joint-network'
+import {
+  INetworkJson,
+  TState,
+  TMachine,
+  TLink,
+  TCell
+} from '../../network/json/joint'
 import { TransitionStepTypes } from 'asyncmachine'
 import UiBase from '../graph'
 import * as joint from 'jointjs'
@@ -25,11 +30,13 @@ type IDelta = jsondiffpatch.IDeltas
 
 // simplify the link markup
 // TODO move to shapes.ts
+// @ts-ignore
 joint.shapes.fsa.Arrow = joint.shapes.fsa.Arrow.extend({
   markup:
     '<path class="connection"/><path class="marker-target"/><g class="labels" />'
 })
 const oldLinkClassName = joint.dia.LinkView.prototype.className
+// @ts-ignore
 joint.dia.LinkView.prototype.className = function() {
   let class_names: string = oldLinkClassName.apply(this, arguments)
   const types = this.model.get('labels')['0'].attrs.text.text || 'pipe'
@@ -40,6 +47,7 @@ joint.dia.LinkView.prototype.className = function() {
   return class_names
 }
 const oldElementClassName = joint.dia.ElementView.prototype.className
+// @ts-ignore
 joint.dia.ElementView.prototype.className = function() {
   let class_names: string = oldElementClassName.apply(this, arguments)
   const model = this.model
@@ -756,16 +764,16 @@ export default class JointGraph extends UiBase<INetworkJson> {
           y: -(this.drag_start_pos.y - e.layerY)
         }
         log('diff', diff)
-        let scroll_left = e.layerX / el.clientWidth * this.container.width()
-        let scroll_top = e.layerY / el.clientHeight * this.container.height()
+        let scroll_left = (e.layerX / el.clientWidth) * this.container.width()
+        let scroll_top = (e.layerY / el.clientHeight) * this.container.height()
 
         log('scroll', { scroll_left, scroll_top })
         const zoom_window = this.getZoomWindowCss()
         scroll_left -=
-          zoom_window.width / 2 * (this.container.width() / this.minimap.width)
+          (zoom_window.width / 2) *
+          (this.container.width() / this.minimap.width)
         scroll_top -=
-          zoom_window.height /
-          2 *
+          (zoom_window.height / 2) *
           (this.container.height() / this.minimap.height)
         // log('render')
         this.scroll_element.scrollLeft = scroll_left
@@ -836,7 +844,7 @@ export default class JointGraph extends UiBase<INetworkJson> {
     el.addEventListener(
       'touchmove',
       e => {
-        // TODO check for one finder only and the lack of an active gesture
+        // TODO check for one finger only and the lack of an active gesture
         event.preventDefault()
         log({ x: e.layerX, y: e.layerY })
         // log(
@@ -853,16 +861,16 @@ export default class JointGraph extends UiBase<INetworkJson> {
           y: -(this.drag_start_pos.y - e.layerY)
         }
         log('diff', diff)
-        let scroll_left = e.layerX / el.clientWidth * this.container.width()
-        let scroll_top = e.layerY / el.clientHeight * this.container.height()
+        let scroll_left = (e.layerX / el.clientWidth) * this.container.width()
+        let scroll_top = (e.layerY / el.clientHeight) * this.container.height()
 
         log('scroll', { scroll_left, scroll_top })
         const zoom_window = this.getZoomWindowCss()
         scroll_left -=
-          zoom_window.width / 2 * (this.container.width() / this.minimap.width)
+          (zoom_window.width / 2) *
+          (this.container.width() / this.minimap.width)
         scroll_top -=
-          zoom_window.height /
-          2 *
+          (zoom_window.height / 2) *
           (this.container.height() / this.minimap.height)
         // log('render')
         this.scroll_element.scrollLeft = scroll_left
@@ -1230,12 +1238,10 @@ export default class JointGraph extends UiBase<INetworkJson> {
         this.minimap.clientHeight *
         (this.scroll_element.clientHeight / this.container.height()),
       left:
-        this.scroll_element.scrollLeft /
-        this.container.width() *
+        (this.scroll_element.scrollLeft / this.container.width()) *
         this.minimap.clientWidth,
       top:
-        this.scroll_element.scrollTop /
-        this.container.height() *
+        (this.scroll_element.scrollTop / this.container.height()) *
         this.minimap.clientHeight
     }
   }

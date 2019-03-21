@@ -8,26 +8,32 @@ import { Graph } from 'graphlib'
 import * as joint from 'jointjs'
 import * as md5 from 'md5'
 import * as deepcopy from 'deep-copy'
-import { INetworkJson, TCell, TState, TLink, TMachine } from './joint-network'
+import {
+  INetworkJson,
+  TCell,
+  TState,
+  TLink,
+  TMachine
+} from '../../network/json/joint'
 import { PositionsMap } from '../settings'
 import { isProd } from '../utils'
 
 // TODO types from dagre
-type TNode = {
+export type TNode = {
   width: number
   height: number
   x: number
   y: number
 }
 
-type TEdge = {
+export type TEdge = {
   minLen: number
   width: number
   height: number
   points: number[][]
 }
 
-type TClusterEdge = {
+export type TClusterEdge = {
   cells: Set<string>
   minLen: number
   width: number
@@ -35,22 +41,22 @@ type TClusterEdge = {
   points: number[][]
 }
 
-type TGraphData = {
+export type TGraphData = {
   width: number
   height: number
   hash: string
   is_dirty?: boolean
 }
 
-type TClusterData = {
+export type TClusterData = {
   width: number
   height: number
   is_dirty?: boolean
 }
 
 // TODO update the definitions
-type TDagreGraph = Graph<TNode, TEdge, TGraphData>
-type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
+export type TDagreGraph = Graph<TNode, TEdge, TGraphData>
+export type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
 
 function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
   return deepcopy(graph, function(target) {
@@ -87,8 +93,8 @@ export default class GraphLayout {
     }) as TClusterGraph
     log('options.dimensions', options.dimensions)
     this.clusters.setGraph({
-      width: options.dimensions && options.dimensions.x || 0,
-      height: options.dimensions && options.dimensions.y || 0,
+      width: (options.dimensions && options.dimensions.x) || 0,
+      height: (options.dimensions && options.dimensions.y) || 0,
       is_dirty: true,
       // marginx: 700,
       // TODO remove once overlapping in dagre gets fixed
@@ -141,7 +147,7 @@ export default class GraphLayout {
     )
     // layout the clusters (machines)
     if (this.clusters.graph().is_dirty && this.clusters.nodes()) {
-    // if (this.clusters.nodes()) {
+      // if (this.clusters.nodes()) {
       // TODO support the hash based cache
       dirty++
       start = Date.now()

@@ -1,5 +1,3 @@
-import NetworkJson from '../network/network'
-
 abstract class Ui<T> {
   constructor(public data: T) {}
 
