@@ -24,6 +24,7 @@ Inspector and a debugger for [AsyncMachine](https://github.com/TobiaszCudnik/asy
 - automatic colors
 - keyboard navigation
 - legend
+- workerpool for logger diffs
 - still [work in progress](https://github.com/TobiaszCudnik/asyncmachine-inspector/blob/master/docs/TODO.md)
 
 ## [Live demo](https://stackblitz.com/edit/asyncmachine-inspector-restaurant)

@@ -15,7 +15,29 @@
   - coordinate the workers in the main thread
   - sync via redis
 
+# 1st Release
+- define custom log level for the inspected machines
+- hide minimap
+- toolbar button grouping "show xxx" to save width
+- draw machine from JSON (pasted into a textarea, auto bind a local logger)
+
 #### Bugs
+- scrolling to timeline by clicking on the log entry in the sidebar
+  - has no effect
+  - hover should be throttled, bc its slow
+- changing machine's ID after adding to the network breaks the inspector
+- `Node not found null from 'm1'`
+  - more descriptive error
+  - repro:
+    ```
+    m1.A_state = function() {
+      m2.add(m1, 'B')
+    }
+    ```
+  - test the fix for transition.ts:addStep
+  - `export * from '...'` doesnt have a default export
+    - used for the logger mixins
+    - import the default one and export as a default one (huh)
 - involved states in the transiton sidebar are missing separators
 - links (edges) are highlighted as changed elements (red border)
 - no UI msg when trying to load a broken snapshot
@@ -74,6 +96,9 @@
 - the worker sometimes times out with debug=3 because of the DiffSync state flooding
 
 #### Inspector
+- mark PipeFlags correctly on the links (using getPFLabels())
+- generating a diagram from am.statesToString(true) output
+  - paste into a textarea
 - ability to define the state of the UI when initializing the inspector
   - open sidebars, buttons states, step type
 - narrow down timeline steps
@@ -197,20 +222,46 @@
   - validate by hash
   
 #### Logger
+- fix missing d.ts types
+  - SocketIOClientStatic
+- define custom log level for the inspected machines
+- features/network-graph-cache
+  - TypeError: Converting circular structure to JSON
 - worker pool for jsondiffpatch
-  - transfer data using redis / indexedb
   - GC
+  - dont output the version number to the resulting diff
+  - make it browser compatible again (via mixins and indexedDB)
 - optimize creating patches
   - port jsondiffpatch to wasm/rust?
-- allow configurable CORS for the server bin
 - transaction's source machine (the active queue) should also be marked as touched
 - live stream to a file
+  - flush patches and free memory
 
 #### Server
+- allow configurable CORS for the server bin
 - https support
 - support multiple loggers simultaneously
 
 #### Optimizations
+- MinimalLogger exporting only minimal data
+	- binary format, consider apache arrow
+    - fields: states_all, clock, piped, relations, queue_length, listeners
+    - an object with the fields above ran through jsondiffpatch
+      - potentially send everything to a worker to create the diffs
+    - and an array of events
+    - build JSONs on the fly in the client
+    - based on changed IDs
+    - synchronize the JSON stream in a separate z5        worker
+      - using the main thread only in the browser and only to output
+    - encode names as numbers (in a global index, as they come in)
+      - try to keep everything as numbers
+    - should be streamable
+    - link (edges) between nodes should be better managed
+      - relations and pipes, more > 1 type, shouldn't require any lookups
+  - option 2 - log all the events, at the end of a transition gather the data
+    - try to avoid using the network
+- get transition data - touched nodes - from the json
+  - avoid sending it over every time
 - take advantage of canceling async rendering available in the latest jointjs
 - cache more stuff
   - `// TODO cache` comments
@@ -314,6 +365,7 @@
   - TS files / d.ts
   - source maps
 - webpack & typescript deps for the examples
+- pull-request graphlib typings
 - examples on stackblitz
   - generated state types
   - fixed types generator for merges
