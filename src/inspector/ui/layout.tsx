@@ -34,7 +34,7 @@ import joint_css from '../joint/base.css'
 // @ts-ignore
 import inspector_css from '../inspector.css'
 // TODO joint-specific imports END
-import { TCell, TMachine, TState } from '../../network/json/joint'
+import { TCell, JointMachineNode, TState } from '../../network/json/joint'
 import { MutationTypes } from 'asyncmachine/types'
 import Settings from '../settings'
 import * as deepCopy from 'deepcopy'
@@ -74,7 +74,7 @@ export type TLayoutProps = {
   is_legend_visible: boolean
   is_connection_dialog_visible: boolean
   // TODO dont use a layout specific type
-  machines: { [machine_id: string]: TMachine }
+  machines: { [machine_id: string]: JointMachineNode }
   active_transitions: ITransitionData[]
   active_transitions_touched: { [machine_id: string]: string[] }
   prev_transitions: ITransitionData[]
@@ -595,7 +595,7 @@ export class Main extends Component<TLayoutProps, TLayoutState> {
                     selected_ids,
                     step_type
                   }: {
-                    machine: TMachine
+                    machine: JointMachineNode
                     states?: TSidebarMachineState[]
                     selected_ids?: Set<string>
                     step_type: string

@@ -38,6 +38,7 @@ export interface ISync {
 let data_service = new DataService()
 const layout = new Layout()
 const differ = jsondiffpatch.create({
+  // @ts-ignore
   objectHash: obj => obj.id
 })
 

@@ -1,7 +1,12 @@
-import Network, { IPatch, ITransitionData, PatchType } from '../network/network'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../network/json/joint'
+import Network, {
+  GraphNetwork,
+  IPatch as IBasePatch,
+  ITransitionData,
+  PatchType
+} from '../network/network'
 import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../network/json'
+// import { JSONSnapshot } from '../network/json'
+import { GraphDiffer } from './differ'
 import WritableStream = NodeJS.WritableStream
 
 // TODO try to export all required symbols used by the mixins
@@ -9,6 +14,10 @@ export enum Granularity {
   STATES,
   TRANSITIONS,
   STEPS
+}
+
+export interface IPatch extends IBasePatch {
+  id?: string | number
 }
 
 export { Network, Logger }
@@ -20,6 +29,8 @@ export interface IOptions {
   stream?: WritableStream
 }
 
+export type IGraphJson = any
+
 export const options_defaults = {
   granularity: Granularity.STEPS
 }
@@ -27,9 +38,8 @@ export const options_defaults = {
 export type Constructor<T = Logger> = new (...args: any[]) => T
 
 export default class Logger extends EventEmitter {
-  json: NetworkJson
-  differ: JsonDiffFactory
-  full_sync: INetworkJson
+  differ: GraphDiffer
+  full_sync: IGraphJson
   patches: IPatch[] = []
   summary_fn?: (network: Network) => string
   options: IOptions = {}
@@ -45,8 +55,7 @@ export default class Logger extends EventEmitter {
   constructor(public network: Network, options: IOptions = null) {
     super()
     this.options = { ...options_defaults, ...options }
-    this.json = new NetworkJson(network)
-    this.differ = new JsonDiffFactory(this.json)
+    this.differ = new GraphDiffer(this.network)
 
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
@@ -67,10 +76,10 @@ export default class Logger extends EventEmitter {
         case t.STATE_CHANGED:
         case t.TRANSITION_START:
           // accept state changes only from the outer transition
-          return this.network.machines_during_transition.size == 1
+          return this.network.machines_during_transition.length == 1
         case t.TRANSITION_END:
           // accept state changes only from the outer transition
-          return this.network.machines_during_transition.size == 0
+          return this.network.machines_during_transition.length == 0
       }
     } else if (
       granularity == Granularity.TRANSITIONS &&
@@ -100,9 +109,13 @@ export default class Logger extends EventEmitter {
   }
 
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
-    if (!this.checkGranularity(type)) return
+    if (!this.checkGranularity(type)) {
+      return
+    }
     const patch = this.createPatch(machine_id, type, data)
-    if (!patch) return
+    if (!patch) {
+      return
+    }
     patch.id = this.patches.length
     // TODO remove this along with the /mixins/fs.ts
     this.patches.push(patch)
@@ -140,6 +153,5 @@ export default class Logger extends EventEmitter {
     return patch
   }
 
-  async dispose() {
-  }
+  async dispose() {}
 }

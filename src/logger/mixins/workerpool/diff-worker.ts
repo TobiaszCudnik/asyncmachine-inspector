@@ -4,7 +4,7 @@ import * as util from 'util'
 import {
   JsonDiffFactory,
   TLink,
-  TMachine,
+  JointMachineNode,
   TState
 } from '../../../network/json/joint'
 import * as redis from 'redis'
@@ -32,7 +32,7 @@ const network = {
 // @ts-ignore
 const differ = new JsonDiffFactory(network)
 
-function versionedID(node: TMachine | TLink | TState) {
+function versionedID(node: JointMachineNode | TLink | TState) {
   return `${node.id}:${node.version}`
 }
 
@@ -65,7 +65,7 @@ async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
       console.error('missing', ids[index])
       continue
     }
-    const node: TMachine | TLink | TState = JSON.parse(node_json)
+    const node: JointMachineNode | TLink | TState = JSON.parse(node_json)
     const vid = versionedID(node)
     if (json_ids.includes(vid)) {
       json.cells.push(node)

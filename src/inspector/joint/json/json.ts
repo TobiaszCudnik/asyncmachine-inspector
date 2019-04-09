@@ -1,17 +1,24 @@
 // TODO should be in /src/network/joint.ts
 import {
-  NetworkJsonFactory as NetworkJsonFactoryBase,
-  JsonDiffFactory as JsonDiffFactoryBase,
+  JointJsonFactory as JsonJsonFactoryBase,
+  JointDiffFactory as JointDiffFactoryBase,
   TJSONIndex
-} from '../json'
-import AsyncMachine, { TransitionStepTypes } from 'asyncmachine'
+} from './differ'
 import * as _ from 'underscore'
-import { QueueRowFields, MutationTypes } from 'asyncmachine/types'
-import { Node as GraphNode, NODE_LINK_TYPE } from '../network'
+import {
+  QueueRowFields,
+  MutationTypes,
+  TransitionStepTypes
+} from 'asyncmachine/types'
+import {
+  MachineNode as NetworkMachineNode,
+  Node as GraphNode,
+  NODE_LINK_TYPE
+} from '../../../network/network'
 
-export class NetworkJsonFactory extends NetworkJsonFactoryBase<
+export class NetworkJsonFactory extends JointJsonFactory<
   INetworkJson,
-  TMachine,
+  JointMachineNode,
   TState,
   TLink
 > {
@@ -28,6 +35,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
   ): Node | null {
     // TODO turn on once change detection works well
     return null
+    // @ts-ignore
     if (prev_json && !this.changed_ids.has(id) && index[id]) {
       // @ts-ignore
       return prev_json.cells[index[id]]
@@ -46,14 +54,14 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     // this.network.emit('node-change', node.id, index)
   }
 
-  addMachineNode(node: TMachine) {
+  addMachineNode(node: JointMachineNode) {
     return this.json.cells.push(node) - 1
   }
 
   addStateNode(node: TState) {
     const index = this.json.cells.push(node) - 1
 
-    let machine = <TMachine>this.getNodeById(node.parent)
+    let machine = <JointMachineNode>this.getNodeById(node.parent)
     if (!machine.embeds.includes(node.id)) {
       machine.embeds.push(node.id)
       this.onNodeChange(this.json_index[machine.id], true)
@@ -67,25 +75,30 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
 
   // TODO number of listeners
   createMachineNode(
-    machine: AsyncMachine<any, any, any>,
+    machine: NetworkMachineNode,
     prev_json: INetworkJson,
     index: TJSONIndex
-  ): TMachine {
-    const machine_id = machine.id(true)
+  ): JointMachineNode {
+    const id = machine.id
     // check cache
     const prev_version =
-      prev_json &&
-      index[machine_id] &&
-      prev_json.cells[index[machine_id]].version
+      prev_json && index[id] && prev_json.cells[index[id]].version
+
+    // @ts-ignore
+    const clock = machine.ticks
+    // @ts-ignore
+    const events: { length: number }[] = machine._events
+    const is_touched =
+      this.network.machines_during_transition.findIndex(m => m.id == id) > -1
 
     return {
       version: prev_version || 0,
       type: 'uml.State',
-      name: machine.id(),
-      id: machine_id,
+      name: machine.id,
+      id: machine.id,
       embeds: [],
       z: 1,
-      is_touched: this.network.machines_during_transition.has(machine_id),
+      is_touched,
       queue: machine.queue().map(r => ({
         machine: (r[QueueRowFields.TARGET] || machine).id(true),
         states: r[QueueRowFields.STATES],
@@ -93,12 +106,12 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         auto: r[QueueRowFields.AUTO]
       })),
       processing_queue: Boolean(machine.queue().length),
-      listeners: Object.values(machine._events || {})
+      listeners: Object.values(events || {})
         .map(e => e.length || 1)
         .reduce((count, num) => {
           return (count || 0) + num
         }, 0),
-      ticks: Object.values(machine.clock_).reduce((r, n) => r + n)
+      ticks: Object.values(clock).reduce((r, n) => r + n)
     }
   }
 
@@ -124,7 +137,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
       is_set: node.is_set,
       is_auto: node.is_auto,
       is_multi: node.is_multi,
-      step_style: node.step_style,
+      step_style: node.step_style
       // TODO turn on for caching
       // clock: node.clock
     }
@@ -138,6 +151,9 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
     index: TJSONIndex
   ): TLink {
     const id = this.createLinkID(from, to, relation)
+    const link = this.network.links.find(
+      l => l.from_id === from.id && l.to_id === to.id
+    )
     // check cache
     const prev_version =
       prev_json && index[id] && prev_json.cells[index[id]].version
@@ -165,7 +181,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
         }
       ],
       z: 2,
-      is_touched: this.network.isLinkTouched(from, to, relation)
+      is_touched: link.is_touched
     }
   }
 
@@ -197,7 +213,7 @@ export class NetworkJsonFactory extends NetworkJsonFactoryBase<
 }
 
 export default NetworkJsonFactory
-export class JsonDiffFactory extends JsonDiffFactoryBase<
+export class JsonDiffFactory extends JointDiffFactory<
   NetworkJsonFactory,
   INetworkJson
 > {}
@@ -208,7 +224,7 @@ export type MachineId = string
 export type MachineStateId = string
 export type StateName = string
 
-export type TMachine = {
+export type JointMachineNode = {
   version: number
   type: 'uml.State'
   name: string
@@ -289,12 +305,13 @@ export type TLink = {
     height: number
   }
   is_touched?: boolean
+  relation: NODE_LINK_TYPE
 }
 
-export type JsonNode = TMachine | TState | TLink
+export type JsonNode = JointMachineNode | TState | TLink
 
 export interface INetworkJson {
-  cells: Array<TState | TLink | TMachine>
+  cells: Array<TState | TLink | JointMachineNode>
 }
 
-export type TCell = TState | TLink | TMachine
+export type TCell = TState | TLink | JointMachineNode

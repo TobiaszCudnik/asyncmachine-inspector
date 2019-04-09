@@ -1,5 +1,4 @@
 import {
-  StateRelations,
   StateStructFields,
   Transition,
   TransitionStepFields,
@@ -18,16 +17,10 @@ import * as uuid from 'uuid/v4'
 import * as assert from 'assert/'
 import * as EventEmitter from 'eventemitter3'
 import { IDelta } from 'jsondiffpatch'
-
-type TEdge = {
-  minLen: number
-  width: number
-  height: number
-  points: number[][]
-}
+import { IEdge } from 'cinea-graphlib'
 
 export type MachinesMap = Map<TAsyncMachine, string>
-export type NodeGraph = Graph<Node | MachineNode, TLink, {}>
+export type NodeGraph = Graph<Node | MachineNode, LinkNode, {}, NODE_LINK_TYPE>
 
 // TODO rename to UIPatch, move to /src/network/json
 export interface IPatch {
@@ -57,6 +50,7 @@ export interface ILogEntry {
   level: number
 }
 
+// move to JSON
 export enum PatchType {
   STATE_CHANGED, // 0
   MACHINE_ADDED,
@@ -68,6 +62,12 @@ export enum PatchType {
   MACHINE_REMOVED,
   QUEUE_CHANGED,
   PIPE_REMOVED
+}
+
+export enum NODE_TYPE {
+  MACHINE,
+  STATE,
+  LINK
 }
 
 export enum NODE_LINK_TYPE {
@@ -89,11 +89,30 @@ export enum RELATION_TO_LINK_TYPE {
   after = NODE_LINK_TYPE.AFTER
 }
 
-export type TLink = NODE_LINK_TYPE
+export interface GraphNode {
+  type: NODE_TYPE
+}
 
-export class Node {
+export class LinkNode implements GraphNode {
+  readonly type = NODE_TYPE.LINK
+  link_type: NODE_LINK_TYPE
+  is_touched = false
+  to_id: string
+  from_id: string
+
+  constructor(link_type: NODE_LINK_TYPE, from_id: string, to_id: string) {
+    this.link_type = link_type
+    this.from_id = from_id
+    this.to_id = to_id
+    this.link_type = link_type
+  }
+}
+
+export class Node implements GraphNode {
+  readonly type = NODE_TYPE.STATE
   name: string
   machine: TAsyncMachine
+  machine_node: MachineNode
   machine_id: string
   /**
    * Bit mask with all the step types for this state during the current
@@ -138,47 +157,57 @@ export class Node {
     return this.machine.clock_[this.name]
   }
 
-  constructor(name: string, machine: TAsyncMachine, machine_id: string) {
+  constructor(name: string, machine: MachineNode) {
     this.name = name
-    this.machine = machine
-    this.machine_id = machine_id
+    this.machine = machine.machine
+    this.machine_id = machine.id
+    this.machine_node = machine
   }
 }
 
-export class MachineNode {
+export class MachineNode implements GraphNode {
+  readonly type = NODE_TYPE.MACHINE
   machine: TAsyncMachine
 
   get id(): string {
     return this.machine.id(true)
   }
-  get nane(): string {
+  get name(): string {
     return this.machine.id()
   }
   get during_transition(): boolean {
     return this.machine.duringTransition()
   }
   get queue(): any {
+    // TODO ID
+    // @ts-ignore
+    const id = QueueRowFields.ID
     // TODO cache
     return this.machine.queue().map(r => ({
       machine: (r[QueueRowFields.TARGET] || this.machine).id(true),
       states: r[QueueRowFields.STATES],
       type: r[QueueRowFields.STATE_CHANGE_TYPE],
       auto: r[QueueRowFields.AUTO],
-      id: r[QueueRowFields.ID]
+      id: r[id]
     }))
   }
   get processing_queue(): boolean {
     return Boolean(this.machine.queue().length)
   }
   get listeners(): number {
-    return Object.values(this.machine._events || {})
-      .map(e => e.length || 1)
-      .reduce((count, num) => {
-        return (count || 0) + num
-      }, 0)
+    return (
+      // @ts-ignore
+      Object.values(this.machine._events || {})
+        // @ts-ignore
+        .map(e => e.length || 1)
+        .reduce((count, num) => {
+          return (count || 0) + num
+        }, 0)
+    )
   }
   get ticks(): number {
     // TODO expose as a property in AsyncMachine
+    // @ts-ignore
     return Object.values(this.machine.clock_).reduce((r, n) => r + n, 0)
   }
 
@@ -190,16 +219,65 @@ export class MachineNode {
 /**
  * Base class for representing the network graph which is able to be
  * un-serialized from and operate on pure JSON.
+ *
  * Needed for jsondiff-based syncs across workers.
+ *
+ * Instances:
+ * - server (logger)
+ * - client (UI inspector)
  */
 export class GraphNetwork extends EventEmitter {
   id: string
   graph: NodeGraph
+  // buffer of logs since the last sync
   logs: ILogEntry[] = []
-  // TODO drop Map and Set
-  protected transition_links = new Map<Node, Set<Node>>()
-  // TODO drop Set
-  machines_during_transition: Set<string> = new Set()
+  // overrides for machines during transition
+  machines_during_transition_manual: string[] = []
+
+  // TODO move graph, use json
+  get nodes(): (Node | MachineNode)[] {
+    return Object.values(
+      // @ts-ignore
+      this.graph._nodes
+    )
+  }
+
+  // TODO move graph, use json
+  get links(): LinkNode[] {
+    return Object.values(
+      // @ts-ignore
+      this.graph._edgeLabels
+    )
+  }
+
+  // TODO move graph, use json
+  get linksByType(): IEdge[] {
+    return Object.values(
+      // @ts-ignore
+      this.graph._edgeObjs
+    )
+  }
+
+  // TODO move graph, use json
+  get states(): Node[] {
+    return this.nodes.filter(node => node.type === NODE_TYPE.STATE) as Node[]
+  }
+
+  // TODO move graph, use json
+  get machine_nodes(): MachineNode[] {
+    return this.nodes.filter(
+      node => node.type === NODE_TYPE.MACHINE
+    ) as MachineNode[]
+  }
+
+  // TODO move graph, use json
+  get machines_during_transition(): MachineNode[] {
+    const real = this.machine_nodes.filter(node => node.during_transition)
+    const manual = this.machines_during_transition_manual.map(
+      id => this.graph.node(id) as MachineNode
+    )
+    return [...real, ...manual]
+  }
 
   constructor() {
     super()
@@ -210,33 +288,9 @@ export class GraphNetwork extends EventEmitter {
    * Returns the type of the connection between 2 passed nodes. Only one
    * connection is supported.
    */
-  getLinkType(source: Node, target: Node): NODE_LINK_TYPE {
-    // TODO get from the graph
-    // if (source.machine_id !== target.machine_id) {
-    //   const relation = source.relations(target)[0]
-    //   // @ts-ignore
-    //   return RELATION_TO_LINK_TYPE[relation]
-    // } else {
-    //   for (let pipe of source.machine.piped[source.name]) {
-    //     if (pipe.machine != target.machine || pipe.state != target.name)
-    //       continue
-    //
-    //     // TODO figure out how to mark all the
-    //     // PipeFlags permutations
-    //     // if (!pipe.flags) {
-    //     return NODE_LINK_TYPE.PIPE
-    //     // } else if (
-    //     //   pipe.flags & PipeFlags.INVERT &&
-    //     //   pipe.flags & PipeFlags.NEGOTIATION
-    //     // ) {
-    //     //   return NODE_LINK_TYPE.PIPE_INVERTED_NEGOTIATION
-    //     // } else if (pipe.flags & PipeFlags.NEGOTIATION) {
-    //     //   return NODE_LINK_TYPE.PIPE_NEGOTIATION
-    //     // } else if (pipe.flags & PipeFlags.INVERT) {
-    //     //   return NODE_LINK_TYPE.PIPE_INVERTED
-    //     // }
-    //   }
-    // }
+  getLinkType(source: Node, target: Node): NODE_LINK_TYPE | null {
+    const edges = this.graph.outEdges(source.id, target.id)
+    return edges.length ? edges[0].link_type : null
   }
 
   protected updateStepStyle(node: Node, type: TransitionStepTypes) {
@@ -252,18 +306,22 @@ export class GraphNetwork extends EventEmitter {
   }
 
   // TODO move as a getter to the Link class
+  // TODO create the Link class
   createLinkID(from, to, relation: NODE_LINK_TYPE) {
     return `${from.id}::${to.id}::${relation}`
   }
 
-  // TODO use the graph's method
   getNodeByName(name: string, machine_id: string): Node {
-    for (let node of this.graph.set) {
-      if (node.name === name && node.machine_id === machine_id) {
+    for (let node of this.graph.nodes().map(id => this.graph.node(id))) {
+      if (
+        node.type === NODE_TYPE.STATE &&
+        node.name === name &&
+        node.machine_id === machine_id
+      ) {
         return node
       }
     }
-    throw new Error(`Node not found ${name} from '${machine_id}'`)
+    throw new Error(`Node not found '${name}' from '${machine_id}'`)
   }
 
   getNodeByStruct(state: IStateStruct): Node | null {
@@ -275,17 +333,19 @@ export class GraphNetwork extends EventEmitter {
 }
 
 /**
- * TODO extract fields and json-only methods to BaseNetwork
+ * Network class is responsible for syncing machines with their graph
+ * representation. It has full access to the observed machines. It's used by
+ * the logger module.
+ *
+ * Instances:
+ * - server (logger)
+ *
  * TODO detect ID collisions
  */
 export default class Network extends GraphNetwork {
   machines: MachinesMap
   machine_ids: { [index: string]: TAsyncMachine }
   transition_origin: TAsyncMachine
-
-  get states() {
-    return [...this.graph.set]
-  }
 
   constructor(machines?: TAsyncMachine[]) {
     super()
@@ -341,12 +401,12 @@ export default class Network extends GraphNetwork {
     // TODO this.emit('change', PatchType.PIPE_REMOVED, machine_id)
   }
 
-  isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
-    // TODO handle the relation param
-    return (
-      this.transition_links.has(from) && this.transition_links.get(from).has(to)
-    )
-  }
+  // isLinkTouched(from: Node, to: Node, relation: NODE_LINK_TYPE): boolean {
+  //   // TODO handle the relation param
+  //   return (
+  //     this.transition_links.has(from) && this.transition_links.get(from).has(to)
+  //   )
+  // }
 
   private bindToMachine(machine: TAsyncMachine) {
     // bind to the state change
@@ -377,7 +437,6 @@ export default class Network extends GraphNetwork {
       if (!this.transition_origin) {
         this.transition_origin = machine
       }
-      this.machines_during_transition.add(machine_id)
       const transition_data: ITransitionData = {
         machine_id: transition.machine.id(true),
         queue_machine_id: transition.source_machine.id(true),
@@ -394,32 +453,24 @@ export default class Network extends GraphNetwork {
       )
     })
     machine.on('transition-end', (transition: Transition) => {
-      let touched = {}
       // TODO match both the machine and the transition (for lock based cancellation)
       if (this.transition_origin === machine) {
         // if the first transition ended, cleanup everything
         this.transition_origin = null
         // TODO outer transition happens to finish BEFORE the inner ones
-        this.machines_during_transition.clear()
-        this.transition_links.clear()
-        // TODO potentially skips other queue sources (from nested transitions)
-        const source_machine = transition.source_machine.id(true)
-        if (!touched[source_machine]) touched[source_machine] = []
-        for (let node of this.graph.values()) {
-          if (!node.step_style) continue
-          if (!touched[node.machine_id]) touched[node.machine_id] = []
-          touched[node.machine_id].push(node.name)
-          node.step_style = null
+        //  honor parent transition ID?
+        // manually clear touch flags for all the edges
+        for (const edge of this.graph.edges()) {
+          this.graph.edge(edge).is_touched = false
         }
+        // TODO potentially skips other queue sources (from nested transitions)
       }
-      // TODO try to build this data on the client
       const transition_data: ITransitionData = {
         machine_id: transition.machine.id(true),
         queue_machine_id: transition.source_machine.id(true),
         states: transition.requested_states,
         auto: transition.auto,
-        type: transition.type,
-        touched: touched
+        type: transition.type
       }
       this.emit('change', PatchType.TRANSITION_END, machine_id, transition_data)
     })
@@ -462,14 +513,14 @@ export default class Network extends GraphNetwork {
         }
         // stay a little bit ahead of time here, for better styling
         else {
-          this.machines_during_transition.add(node.machine_id)
+          // TODO
+          this.machines_during_transition_manual.push(node.machine_id)
         }
 
         // mark the link as touched
-        // TODO create tmp links for active_transitions between states
-        if (!this.transition_links.get(source_node))
-          this.transition_links.set(source_node, new Set<Node>())
-        this.transition_links.get(source_node).add(node)
+        const edge = this.graph.outEdges(source_node.id, node.id)
+        // TODO check if not null
+        edge[0].is_touched = true
         const link_type = this.getLinkType(source_node, node)
         changed_nodes.add(this.createLinkID(source_node, node, link_type))
       }
@@ -489,8 +540,8 @@ export default class Network extends GraphNetwork {
     let new_nodes = []
     let machine = this.machine_ids[machine_id]
     for (let name of names) {
-      let node = new Node(name, machine, machine_id)
-      this.graph.add(node)
+      let node = new Node(name, this.nodes[machine.id()])
+      this.graph.setNode(node.id, node)
       new_nodes.push(node)
     }
 
@@ -502,15 +553,22 @@ export default class Network extends GraphNetwork {
   }
 
   private getRelationsFromNode(node: Node, machine_id: string) {
-    // TODO limit to 'requires' and 'drops' ?
     let machine = this.machine_ids[machine_id]
     let state = node.state
     assert(state)
-    for (let relation of machine.getRelationsOf(node.name)) {
-      for (let target_name of state[relation]) {
-        let target = this.getNodeByName(target_name, machine_id)
+    for (const relation of machine.getRelationsOf(node.name)) {
+      const link_type = RELATION_TO_LINK_TYPE[
+        relation.toString()
+      ] as NODE_LINK_TYPE
+      for (const target_name of state[relation]) {
+        const target = this.getNodeByName(target_name, machine_id)
         assert(target)
-        this.graph.link(node, target)
+        const edge = {
+          v: node.id,
+          w: target.id,
+          name: link_type.toString()
+        }
+        this.graph.setEdge(edge, new LinkNode(link_type, node.id, target.id))
       }
     }
   }
@@ -524,17 +582,31 @@ export default class Network extends GraphNetwork {
           this.machines.get(machine)
         )
         const target_machine = this.machines.get(target.machine)
-        if (!target_machine) continue
+        if (!target_machine) {
+          continue
+        }
         let target_state = this.getNodeByName(
           target.state,
           this.machines.get(target.machine)
         )
-        if (!target_state) continue
+        if (!target_state) {
+          continue
+        }
         // TODO from(source_state).has(target_state)
         // @ts-ignore
-        if (!this.graph.linked(source_state).has(target_state)) {
-          this.graph.link(source_state, target_state)
-          linked.push([source_state.full_name, target_state.full_name])
+        const hasEdge = this.graph.hasEdge(
+          source_state.id,
+          target_state.id,
+          NODE_LINK_TYPE.PIPE
+        )
+        if (!hasEdge) {
+          this.graph.setEdge(
+            source_state.id,
+            target_state.id,
+            new LinkNode(NODE_LINK_TYPE.PIPE, source_state.id, target_state.id),
+            NODE_LINK_TYPE.PIPE
+          )
+          linked.push([source_state.id, target_state.id])
         }
       }
     }

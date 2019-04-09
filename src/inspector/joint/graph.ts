@@ -1,7 +1,7 @@
 import {
   INetworkJson,
   TState,
-  TMachine,
+  JointMachineNode,
   TLink,
   TCell
 } from '../../network/json/joint'

@@ -13,7 +13,7 @@ import {
   TCell,
   TState,
   TLink,
-  TMachine
+  JointMachineNode
 } from '../../network/json/joint'
 import { PositionsMap } from '../settings'
 import { isProd } from '../utils'
@@ -46,6 +46,7 @@ export type TGraphData = {
   height: number
   hash: string
   is_dirty?: boolean
+  marginx?: number
 }
 
 export type TClusterData = {
@@ -55,10 +56,12 @@ export type TClusterData = {
 }
 
 // TODO update the definitions
-export type TDagreGraph = Graph<TNode, TEdge, TGraphData>
-export type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData>
+export type TDagreGraph = Graph<TNode, TEdge, TGraphData, void>
+export type TClusterGraph = Graph<TNode, TClusterEdge, TClusterData, void>
 
-function cloneGraph<T, L, GL>(graph: Graph<T, L, GL>): Graph<T, L, GL> {
+function cloneGraph<T, L, GL, Name>(
+  graph: Graph<T, L, GL, Name>
+): Graph<T, L, GL, Name> {
   return deepcopy(graph, function(target) {
     if (target.constructor === Graph) return new Graph()
   })
@@ -161,10 +164,13 @@ export default class GraphLayout {
     return dirty
   }
 
-  graphToLayoutData(graph: Graph<any, any, any>): Object {
+  graphToLayoutData(graph: Graph<any, any, any, any>): Object {
     return {
+      // @ts-ignore
       _nodes: graph._nodes,
+      // @ts-ignore
       _edgeLabels: graph._edgeLabels,
+      // @ts-ignore
       _label: graph._label
     }
   }
@@ -180,6 +186,7 @@ export default class GraphLayout {
       // TODO use a symbol?
       ret[name || ' '] = this.graphToLayoutData(graph)
     }
+    // @ts-ignore
     ret._clusters = this.graphToLayoutData(this.clusters)
     return ret
   }
@@ -216,8 +223,8 @@ export default class GraphLayout {
     for (let cell of data.cells) {
       cells.set(cell.id, cell)
       // new cluster
-      if ((cell as TMachine).embeds && !subgraphs.get(cell.id)) {
-        cell = cell as TMachine
+      if ((cell as JointMachineNode).embeds && !subgraphs.get(cell.id)) {
+        cell = cell as JointMachineNode
         subgraphs.set(cell.id, new Graph({
           directed: true,
           multigraph: true
@@ -274,6 +281,7 @@ export default class GraphLayout {
             clusters.graph().is_dirty = true
             clusters.setEdge(edge, {
               cells: new Set<string>(),
+              // TODO
               minLen: cell.minLen || 1,
               points: []
             })
@@ -291,6 +299,7 @@ export default class GraphLayout {
             graph.graph().is_dirty = true
             graph.setEdge(edge, {
               points: [],
+              // TODO
               minLen: cell.minLen || 1
             })
           }
@@ -426,8 +435,8 @@ export default class GraphLayout {
       // }
       let position = { x: 0, y: 0 }
       let size = { width: 0, height: 0 }
-      if ((cell as TMachine).embeds) {
-        cell = cell as TMachine
+      if ((cell as JointMachineNode).embeds) {
+        cell = cell as JointMachineNode
         const node = this.clusters._nodes[cell.id]
         // restore the position from the settings
         if (this.options.positions[cell.id]) {
@@ -465,6 +474,7 @@ export default class GraphLayout {
           target_id,
           this.removeParentIds(cell.id)
         )
+        // TODO
         cell.vertices = edge.points
       }
 
@@ -489,6 +499,7 @@ export default class GraphLayout {
           delete cell.position
         } else if (
           is_state &&
+          // TODO
           this.source_graph.getCell(cell.parent).get('fixed-position')
         ) {
           delete cell.position

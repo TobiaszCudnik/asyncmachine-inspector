@@ -8,7 +8,8 @@
         "jsx": "react",
         "moduleResolution": "node",
         "outDir": "build",
-        "declaration": true
+        "declaration": true,
+        "skipLibCheck": true
 //        "declarationDir": "./"
     },
     "include": [

@@ -1,14 +1,13 @@
 import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
 import Network, {
+  GraphNetwork,
   IPatch,
+  MachineNode as NetworkMachineNode,
   Node as GraphNode,
   NODE_LINK_TYPE,
-  PatchType,
   RELATION_TO_LINK_TYPE
-} from './network'
-import { PipeFlags } from 'asyncmachine'
-import { TAsyncMachine } from 'asyncmachine/types'
+} from '../../../network/network'
 // TODO shouldnt point to a layout-specific type
 import { INetworkJson } from './json/joint'
 
@@ -26,13 +25,13 @@ export type TJSONIndex = { [index: string]: number }
 /**
  * Produce JSON from a Network instance, ready to be consumed by the UI layer.
  */
-export abstract class NetworkJsonFactory<
+export abstract class JointJsonFactory<
   Json,
   Machine extends { id: string },
   State extends { id: string },
   Link extends { id: string }
 > implements INetworkJsonFactory<Json> {
-  network: Network
+  network: GraphNetwork
   // list of created machine nodes
   parsed_machine_ids: Set<string>
 
@@ -117,10 +116,14 @@ export abstract class NetworkJsonFactory<
 
     // process nodes
     // TODO ideally go through this.changed_ids only
-    this.network.graph.forEach(node => {
+    this.network.states.map(node => {
       this.parseNode(node, prev_json, index)
     })
-    this.network.graph.traverseAll((from, to) => {
+    this.network.links.map(link => {
+      const from = this.network.nodes.find(
+        n => n.id === link.from_id
+      ) as GraphNode
+      const to = this.network.nodes.find(n => n.id === link.to_id) as GraphNode
       this.parseLink(from, to, prev_json, index)
     })
 
@@ -137,8 +140,12 @@ export abstract class NetworkJsonFactory<
 
   abstract onNodeChange(index: number, skip_increment?: boolean)
 
-  parseMachine(machine: TAsyncMachine, prev_json: Json, index: TJSONIndex) {
-    const machine_id = machine.id(true)
+  parseMachine(
+    machine: NetworkMachineNode,
+    prev_json: Json,
+    index: TJSONIndex
+  ) {
+    const machine_id = machine.id
     let machine_node = this.getCachedNode<Machine>(machine_id, prev_json, index)
     if (machine_node) {
       const node_index = this.addMachineNode(machine_node)
@@ -152,7 +159,7 @@ export abstract class NetworkJsonFactory<
   }
 
   parseNode(graph_node: GraphNode, prev_json: Json, index: TJSONIndex) {
-    const machine = graph_node.machine
+    const machine = graph_node.machine_node
 
     if (!this.parsed_machine_ids.has(graph_node.machine_id)) {
       this.parseMachine(machine, prev_json, index)
@@ -182,7 +189,9 @@ export abstract class NetworkJsonFactory<
     // state relations
     if (from.machine_id == to.machine_id) {
       // TODO read from the graph
-      let relations = from.relations(to)
+      const relations = this.network.linksByType
+        .filter(link => link.v === from.id && link.w === to.id)
+        .map(link => link.name)
       for (let relation of relations) {
         let relation_type = RELATION_TO_LINK_TYPE[relation]
         assert(relation_type !== undefined)
@@ -273,7 +282,11 @@ export abstract class NetworkJsonFactory<
   abstract addStateNode(node: State)
   abstract addLinkNode(node: Link)
 
-  abstract createMachineNode(machine: TAsyncMachine, prev_json, index): Machine
+  abstract createMachineNode(
+    machine: NetworkMachineNode,
+    prev_json,
+    index
+  ): Machine
   abstract createStateNode(node: GraphNode, prev_json, index): State
   abstract createLinkNode(
     from: GraphNode,
@@ -292,7 +305,7 @@ export abstract class NetworkJsonFactory<
 /**
  * TODO make it a stream
  */
-export abstract class JsonDiffFactory<
+export abstract class JointDiffFactory<
   T extends INetworkJsonFactory<Json>,
   Json
 > {
