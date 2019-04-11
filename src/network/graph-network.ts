@@ -262,7 +262,7 @@ export class GraphNetwork extends EventEmitter {
 
   constructor() {
     super()
-    this.graph = new Graph()
+    this.graph = new Graph({ compound: true, directed: true, multigraph: true })
   }
 
   /**

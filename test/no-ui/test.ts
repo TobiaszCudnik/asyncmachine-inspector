@@ -1,4 +1,3 @@
-debugger
 import 'source-map-support/register'
 import AsyncMachine, { machine } from 'asyncmachine'
 import * as jsondiffpatch from 'jsondiffpatch'
@@ -11,6 +10,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import MachineNetwork from '../../src/network/machine-network'
 import { GraphNetworkDiffer } from '../../src/network/graph-network-differ'
+import Logger from '../../src/logger/logger'
 
 // describe("Single machine graph", function() {
 
@@ -125,7 +125,10 @@ describe('Network', function() {
   describe('json factory', () => {
     var json
     before(() => {
-      this.differ = new GraphNetworkDiffer(stateGraph, new Logger())
+      this.differ = new GraphNetworkDiffer(
+        stateGraph,
+        new Logger(stateGraph.network)
+      )
       json = this.differ.generateJson()
     })
 
@@ -142,7 +145,10 @@ describe('Network', function() {
   describe('diffs factory', function() {
     var json2
     before(function() {
-      let differ = new GraphNetworkDiffer(stateGraph, new Logger)
+      let differ = new GraphNetworkDiffer(
+        stateGraph,
+        new Logger(stateGraph.network)
+      )
 
       differ.generatePatch()
       var prev = differ.previous_json

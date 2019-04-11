@@ -1,12 +1,11 @@
-import Network, {
-  GraphNetwork,
-  IPatch as IBasePatch,
-  ITransitionData,
-  PatchType
-} from '../network/network'
+import { ITransitionData, PatchType } from '../network/graph-network'
 import * as EventEmitter from 'eventemitter3'
 // import { JSONSnapshot } from '../network/json'
-import { GraphDiffer } from './differ'
+import {
+  GraphNetworkDiffer,
+  IPatch as IBasePatch
+} from '../network/graph-network-differ'
+import MachineNetwork from '../network/machine-network'
 import WritableStream = NodeJS.WritableStream
 
 // TODO try to export all required symbols used by the mixins
@@ -20,9 +19,9 @@ export interface IPatch extends IBasePatch {
   id?: string | number
 }
 
-export { Network, Logger }
+export { MachineNetwork, Logger }
 export interface IOptions {
-  summary_fn?: (network: Network) => string
+  summary_fn?: (network: MachineNetwork) => string
   workers?: number
   granularity?: Granularity
   url?: string
@@ -38,10 +37,10 @@ export const options_defaults = {
 export type Constructor<T = Logger> = new (...args: any[]) => T
 
 export default class Logger extends EventEmitter {
-  differ: GraphDiffer
+  differ: GraphNetworkDiffer
   full_sync: IGraphJson
   patches: IPatch[] = []
-  summary_fn?: (network: Network) => string
+  summary_fn?: (network: MachineNetwork) => string
   options: IOptions = {}
   granularity = this.options.granularity || Granularity.STEPS
 
@@ -52,10 +51,10 @@ export default class Logger extends EventEmitter {
     }
   }
 
-  constructor(public network: Network, options: IOptions = null) {
+  constructor(public network: MachineNetwork, options: IOptions = null) {
     super()
     this.options = { ...options_defaults, ...options }
-    this.differ = new GraphDiffer(this.network)
+    this.differ = new GraphNetworkDiffer(this.network)
 
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
@@ -97,7 +96,7 @@ export default class Logger extends EventEmitter {
       this.generateFullSync()
     }
 
-    this.json.network.on('change', (type, machine_id, data) =>
+    this.differ.network.on('change', (type, machine_id, data) =>
       this.onGraphChange(type, machine_id, data)
     )
   }
