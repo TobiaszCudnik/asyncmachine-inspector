@@ -10,7 +10,7 @@ import { ITransitionStep } from 'asyncmachine/types'
 import {
   GraphNetwork,
   ITransitionData,
-  LinkNode,
+  LinkNode, MachineNode,
   Node,
   NODE_LINK_TYPE,
   PatchType,
@@ -49,9 +49,11 @@ export default class MachineNetwork extends GraphNetwork {
   // TODO remove from BaseNetwork
   addMachine(machine: TAsyncMachine) {
     assert(machine.id(), 'Machine ID required')
+    console.log('machine', machine)
     const id = machine.id(true)
     if (this.machine_ids[id]) return
     this.machines.set(machine, id)
+    this.graph.setNode(machine.id(true), new MachineNode(machine))
     this.machine_ids[id] = machine
     this.statesToNodes(machine.states_all, id)
     this.bindToMachine(machine)
@@ -226,8 +228,11 @@ export default class MachineNetwork extends GraphNetwork {
     // scan states
     let new_nodes = []
     let machine = this.machine_ids[machine_id]
+    console.log(machine_id)
+    console.log(this.nodes)
+    console.log(this.machine_nodes)
     for (let name of names) {
-      let node = new Node(name, this.nodes[machine.id()])
+      let node = new Node(name, this.graph.node(machine.id()))
       this.graph.setNode(node.id, node)
       new_nodes.push(node)
     }

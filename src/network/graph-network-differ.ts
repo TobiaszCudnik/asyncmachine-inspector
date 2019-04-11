@@ -9,6 +9,7 @@ import {
 } from './graph-network'
 import * as deepCopy from 'deepcopy'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
+import Logger from "../logger/logger";
 
 export interface IPatch {
   diff: Delta
@@ -22,13 +23,16 @@ export interface IPatch {
  */
 export class GraphNetworkDiffer {
   network: GraphNetwork
+  logger: Logger
   diffpatcher: DiffPatcher
   // TODO rename to json
   previous_json: any
 
-  constructor(network) {
+  constructor(network: GraphNetwork, logger: Logger) {
     assert(network)
+    assert(logger)
     this.network = network
+    this.logger = logger
     this.diffpatcher = new DiffPatcher({
       objectHash: this.objectHash()
     })
@@ -58,6 +62,8 @@ export class GraphNetworkDiffer {
       }
       ret[key] = graph[key]
     }
+    // TODO possibly avoid cloning by using the prototype chain
+    //  (for each property)
     this.previous_json = deepCopy(ret)
     return this.previous_json
   }

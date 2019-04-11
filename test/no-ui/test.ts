@@ -1,25 +1,26 @@
 import 'source-map-support/register'
-import { factory } from 'asyncmachine'
+import AsyncMachine, { machine } from 'asyncmachine'
 import * as jsondiffpatch from 'jsondiffpatch'
 import { expect } from 'chai'
 import * as assert from 'assert'
-import Network from '../../src/network'
-import GraphJson, {
-    JsonDiffFactory
-} from '../../src/ui/cola-network'
+// import GraphJson, {
+//     JsonDiffFactory
+// } from '../../src/ui/cola-network'
 import * as fs from 'fs'
 import * as path from 'path'
+import MachineNetwork from '../../src/network/machine-network'
+import { GraphNetworkDiffer } from '../../src/network/graph-network-differ'
 
 // describe("Single machine graph", function() {
 
 //   beforeEach( function() {
-//     this.machine = new factory(['A', 'B', 'C', 'D'])
-//     this.machine.A = {requires: ['B']}
-//     this.machine.C = {blocks: ['B']}
-//     this.machine.D = {requires: ['C']}
+//     machine = new factory(['A', 'B', 'C', 'D'])
+//     machine.A = {requires: ['B']}
+//     machine.C = {blocks: ['B']}
+//     machine.D = {requires: ['C']}
 
 //     this.stateGraph = new Network
-//     this.stateGraph.addMachine(this.machine)
+//     this.stateGraph.addMachine(machine)
 //   })
 
 //   it('should get all states as nodes', function() {
@@ -39,101 +40,140 @@ import * as path from 'path'
 //   })
 // })
 
-describe("Network", function() {
+describe('Network', function() {
+  var stateGraph
+  let machine1: AsyncMachine<any, any, any>
+  let machine2: AsyncMachine<any, any, any>
+  let machine3: AsyncMachine<any, any, any>
+  let machine4: AsyncMachine<any, any, any>
+  let machine5: AsyncMachine<any, any, any>
 
-    var stateGraph;
+  before(function() {
+    machine1 = machine(['A', 'B', 'C', 'D'])
+    debugger
+    machine1.id('machine1')
+    // @ts-ignore
+    machine1.C = { blocks: ['B'] }
+    // @ts-ignore
+    machine1.A = { requires: ['B'] }
+    // @ts-ignore
+    machine1.D = { requires: ['C'] }
 
-    before( function() {
-        this.machine1 = factory(['A', 'B', 'C', 'D'])
-        this.machine1.debug_prefix = 'machine1'
-        this.machine1.C = {blocks: ['B']}
-        this.machine1.A = {requires: ['B']}
-        this.machine1.D = {requires: ['C']}
+    machine2 = machine(['E', 'F', 'G'])
+    machine2.id('machine2')
+    // @ts-ignore
+    machine2.E = { blocks: ['F'] }
 
-        this.machine2 = factory(['E', 'F', 'G'])
-        this.machine2.debug_prefix = 'machine2'
-        this.machine2.E = {blocks: ['F']}
+    machine3 = machine(['E', 'F'])
+    machine3.id('machine3')
+    // @ts-ignore
+    machine3.E = { blocks: ['F'] }
 
-        this.machine3 = factory(['E', 'F'])
-        this.machine3.debug_prefix = 'machine3'
-        this.machine3.E = {blocks: ['F']}
+    machine4 = machine(['E', 'F'])
+    machine4.id('machine4')
+    // @ts-ignore
+    machine4.E = { blocks: ['F'] }
 
-        this.machine4 = factory(['E', 'F'])
-        this.machine4.debug_prefix = 'machine4'
-        this.machine4.E = {blocks: ['F']}
+    machine5 = machine(['E', 'F'])
+    machine5.id('machine5')
+    // @ts-ignore
+    machine5.E = { blocks: ['F'] }
 
-        this.machine5 = factory(['E', 'F'])
-        this.machine5.debug_prefix = 'machine5'
-        this.machine5.E = {blocks: ['F']}
+    machine1.log('[1]', 2)
+    //window.foo = machine1
 
-        this.machine1.pipe('A', this.machine2, 'E')
-        this.machine2.pipe('E', this.machine1, 'B')
-        this.machine2.pipe('F', this.machine1, 'B')
-        this.machine2.pipe('E', this.machine3, 'F')
-        this.machine2.pipe('G', this.machine4, 'F')
-        this.machine5.pipe('F', this.machine3, 'E')
+    stateGraph = new MachineNetwork()
+    stateGraph.addMachine(machine1)
+    stateGraph.addMachine(machine2)
+    stateGraph.addMachine(machine3)
+    stateGraph.addMachine(machine4)
+    stateGraph.addMachine(machine5)
 
-        this.machine1.debug('[1]', 2)
-        //window.foo = this.machine1
+    machine1.pipe(
+      'A',
+      machine2,
+      'E'
+    )
+    machine2.pipe(
+      'E',
+      machine1,
+      'B'
+    )
+    machine2.pipe(
+      'F',
+      machine1,
+      'B'
+    )
+    machine2.pipe(
+      'E',
+      machine3,
+      'F'
+    )
+    machine2.pipe(
+      'G',
+      machine4,
+      'F'
+    )
+    machine5.pipe(
+      'F',
+      machine3,
+      'E'
+    )
+  })
 
-        stateGraph = new Network
-        stateGraph.addMachine(this.machine1)
-        stateGraph.addMachine(this.machine2)
-        stateGraph.addMachine(this.machine3)
-        stateGraph.addMachine(this.machine4)
-        stateGraph.addMachine(this.machine5)
+  describe('json factory', () => {
+    var json
+    before(() => {
+      this.differ = new GraphNetworkDiffer(stateGraph, new Logger())
+      json = this.differ.generateJson()
     })
 
-    describe('json factory', () => {
-        var json;
-        before(() => {
-            this.jsonGenerator = new GraphJson(stateGraph)
-            json = this.jsonGenerator.generateJson();
-        })
-        
-        it('should produce json', () => {
-            // console.log(JSON.stringify(json))
-            expect(json).to.eql(JSON.parse(
-                fs.readFileSync('test/fixtures/1.json').toString()))
-        })
-        
-        it('should support cross-machine connections')
-    })
-    
-    describe('diffs factory', function() {
-        var json2;
-        before(function() {
-            let jsonGenerator = new GraphJson(stateGraph)
-            var differ = new JsonDiffFactory(jsonGenerator)
-            
-            differ.generateJson()
-            var prev = differ.previous_json
-            assert(differ.previous_json)
-            // console.log(differ.previous_json)
-            
-            this.machine1.add('C')
-            this.machine2.pipe('E', this.machine1, 'C')
-            
-            this.diff = differ.generateDiff()
-            // console.log(differ.previous_json)
-            // expect(prev).to.eql(differ.previous_json)
-        })
-        
-        it('should produce diffs', function() {
-            let expected_diff = 
-                {nodes:{ '3': { is_set: [ false, true ] }, _t: 'a' }}
-            expect(this.diff).to.eql(expected_diff)
-        })
+    it('should produce json', () => {
+      // console.log(JSON.stringify(json))
+      expect(json).to.eql(
+        JSON.parse(fs.readFileSync('test/fixtures/1.json').toString())
+      )
     })
 
-    //describe('ui', function() {
-    //    it('should render', function() {
-    //      var ui = new Ui(this.stateGraph)
-    //      ui.render()
-    //    })
-    //
-    //    afterEach(function() {
-    //
-    //    })
-    //})
+    it('should support cross-machine connections')
+  })
+
+  describe('diffs factory', function() {
+    var json2
+    before(function() {
+      let differ = new GraphNetworkDiffer(stateGraph, new Logger)
+
+      differ.generatePatch()
+      var prev = differ.previous_json
+      assert(differ.previous_json)
+      // console.log(differ.previous_json)
+
+      machine1.add('C')
+      machine2.pipe(
+        'E',
+        machine1,
+        'C'
+      )
+
+      this.diff = differ.generatePatch()
+      // console.log(differ.previous_json)
+      // expect(prev).to.eql(differ.previous_json)
+    })
+
+    it('should produce diffs', function() {
+      let expected_diff = { nodes: { '3': { is_set: [false, true] }, _t: 'a' } }
+      expect(this.diff).to.eql(expected_diff)
+    })
+  })
+
+  //describe('ui', function() {
+  //    it('should render', function() {
+  //      var ui = new Ui(this.stateGraph)
+  //      ui.render()
+  //    })
+  //
+  //    afterEach(function() {
+  //
+  //    })
+  //})
 })
