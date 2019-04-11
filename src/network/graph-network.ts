@@ -107,6 +107,7 @@ export class Node implements GraphNode {
    * Get the original state definition.
    */
   get state() {
+    console.log('state', this.machine.states_all)
     return this.machine.states_all.find(s => s.name === this.name)
   }
   /**

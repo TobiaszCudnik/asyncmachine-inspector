@@ -1,3 +1,4 @@
+debugger
 import 'source-map-support/register'
 import AsyncMachine, { machine } from 'asyncmachine'
 import * as jsondiffpatch from 'jsondiffpatch'

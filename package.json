@@ -67,7 +67,7 @@
     "lodash": "^4.17.4",
     "material-ui": "^0.17.4",
     "md5": "^2.2.1",
-    "mocha": "^2.2.5",
+    "mocha": "^6.1.2",
     "moment": "latest",
     "random-number": "0.0.7",
     "raw-loader": "^0.5.1",

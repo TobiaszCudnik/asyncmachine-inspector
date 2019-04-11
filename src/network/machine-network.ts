@@ -225,6 +225,7 @@ export default class MachineNetwork extends GraphNetwork {
   }
 
   private statesToNodes(names: string[], machine_id: string) {
+    // assert(names)
     // scan states
     let new_nodes = []
     let machine = this.machine_ids[machine_id]
@@ -246,15 +247,17 @@ export default class MachineNetwork extends GraphNetwork {
 
   private getRelationsFromNode(node: Node, machine_id: string) {
     let machine = this.machine_ids[machine_id]
+    debugger
+    console.log('getRelationsFromNode', node)
     let state = node.state
-    assert(state)
+    // assert(state)
     for (const relation of machine.getRelationsOf(node.name)) {
       const link_type = RELATION_TO_LINK_TYPE[
         relation.toString()
       ] as NODE_LINK_TYPE
       for (const target_name of state[relation]) {
         const target = this.getNodeByName(target_name, machine_id)
-        assert(target)
+        // assert(target)
         const edge = {
           v: node.id,
           w: target.id,
