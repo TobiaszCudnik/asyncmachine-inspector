@@ -1,16 +1,13 @@
 import 'source-map-support/register'
 import AsyncMachine, { machine } from 'asyncmachine'
-import * as jsondiffpatch from 'jsondiffpatch'
 import { expect } from 'chai'
 import * as assert from 'assert'
 // import GraphJson, {
 //     JsonDiffFactory
 // } from '../../src/ui/cola-network'
 import * as fs from 'fs'
-import * as path from 'path'
 import MachineNetwork from '../../src/network/machine-network'
 import { GraphNetworkDiffer } from '../../src/network/graph-network-differ'
-import Logger from '../../src/logger/logger'
 
 // describe("Single machine graph", function() {
 
@@ -42,7 +39,7 @@ import Logger from '../../src/logger/logger'
 // })
 
 describe('Network', function() {
-  var stateGraph
+  let machine_network: MachineNetwork
   let machine1: AsyncMachine<any, any, any>
   let machine2: AsyncMachine<any, any, any>
   let machine3: AsyncMachine<any, any, any>
@@ -50,8 +47,8 @@ describe('Network', function() {
   let machine5: AsyncMachine<any, any, any>
 
   before(function() {
+    // TODO switch to events
     machine1 = machine(['A', 'B', 'C', 'D'])
-    debugger
     machine1.id('machine1')
     // @ts-ignore
     machine1.C = { blocks: ['B'] }
@@ -80,15 +77,15 @@ describe('Network', function() {
     // @ts-ignore
     machine5.E = { blocks: ['F'] }
 
-    machine1.log('[1]', 2)
+    // machine1.log('[1]', 2)
     //window.foo = machine1
 
-    stateGraph = new MachineNetwork()
-    stateGraph.addMachine(machine1)
-    stateGraph.addMachine(machine2)
-    stateGraph.addMachine(machine3)
-    stateGraph.addMachine(machine4)
-    stateGraph.addMachine(machine5)
+    machine_network = new MachineNetwork()
+    machine_network.addMachine(machine1)
+    machine_network.addMachine(machine2)
+    machine_network.addMachine(machine3)
+    machine_network.addMachine(machine4)
+    machine_network.addMachine(machine5)
 
     machine1.pipe(
       'A',
@@ -122,38 +119,37 @@ describe('Network', function() {
     )
   })
 
-  describe('json factory', () => {
+  describe('graph json', () => {
     var json
     before(() => {
-      this.differ = new GraphNetworkDiffer(
-        stateGraph,
-        new Logger(stateGraph.network)
-      )
-      json = this.differ.generateJson()
+      this.differ = new GraphNetworkDiffer(machine_network)
+      json = this.differ.generateGraphJSON()
     })
 
     it('should produce json', () => {
-      // console.log(JSON.stringify(json))
+      // console.dir(json, {depth: 2})
+      // console.log(
+      //   JSON.stringify(
+      //     json,
+      //     null,
+      //     4
+      //   )
+      // )
       expect(json).to.eql(
-        JSON.parse(fs.readFileSync('test/fixtures/1.json').toString())
+        JSON.parse(fs.readFileSync('test/fixtures/graph-json.json').toString())
       )
     })
 
     it('should support cross-machine connections')
   })
 
-  describe('diffs factory', function() {
-    var json2
+  describe('graph patches', function() {
+    let diff
     before(function() {
-      let differ = new GraphNetworkDiffer(
-        stateGraph,
-        new Logger(stateGraph.network)
-      )
+      let differ = new GraphNetworkDiffer(machine_network)
 
-      differ.generatePatch()
-      var prev = differ.previous_json
+      differ.generateGraphJSON()
       assert(differ.previous_json)
-      // console.log(differ.previous_json)
 
       machine1.add('C')
       machine2.pipe(
@@ -162,14 +158,71 @@ describe('Network', function() {
         'C'
       )
 
-      this.diff = differ.generatePatch()
-      // console.log(differ.previous_json)
-      // expect(prev).to.eql(differ.previous_json)
+      diff = differ.generateGraphPatch()
     })
 
     it('should produce diffs', function() {
-      let expected_diff = { nodes: { '3': { is_set: [false, true] }, _t: 'a' } }
-      expect(this.diff).to.eql(expected_diff)
+      let expected_diff = {
+        _in: {
+          'machine1:C': {
+            'machine2:E\u0001machine1:C\u00014': [
+              {
+                v: 'machine2:E',
+                w: 'machine1:C',
+                name: '4'
+              }
+            ]
+          }
+        },
+        _preds: {
+          'machine1:C': {
+            'machine2:E': [1]
+          }
+        },
+        _out: {
+          'machine2:E': {
+            'machine2:E\u0001machine1:C\u00014': [
+              {
+                v: 'machine2:E',
+                w: 'machine1:C',
+                name: '4'
+              }
+            ]
+          }
+        },
+        _sucs: {
+          'machine2:E': {
+            'machine1:C': [1]
+          }
+        },
+        _edgeObjs: {
+          'machine2:E\u0001machine1:C\u00014': [
+            {
+              v: 'machine2:E',
+              w: 'machine1:C',
+              name: '4'
+            }
+          ]
+        },
+        _edgeCount: [6, 7],
+        _nodes: {
+          'machine1:C': {
+            step_style: [null, 88]
+          }
+        },
+        _edgeLabels: {
+          'machine2:E\u0001machine1:C\u00014': [
+            {
+              type: 2,
+              is_touched: false,
+              link_type: 4,
+              from_id: 'machine2:E',
+              to_id: 'machine1:C'
+            }
+          ]
+        }
+      }
+      expect(diff).to.eql(expected_diff)
     })
   })
 

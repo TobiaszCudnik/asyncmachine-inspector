@@ -4,8 +4,7 @@
         "outDir": null,
         "sourceMap": true,
         "target": "es6",
-        "module": "commonjs",
-        "lib": ["es7", "dom"]
+        "module": "commonjs"
     }, 
     "include": [
         "../typings/index.d.ts",

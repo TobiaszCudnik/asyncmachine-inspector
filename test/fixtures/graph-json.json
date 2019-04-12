@@ -1,0 +1,480 @@
+{
+  "_isDirected": true,
+  "_isMultigraph": true,
+  "_isCompound": true,
+  "_parent": {
+    "machine1": "\u0000",
+    "machine1:Exception": "machine1",
+    "machine1:A": "machine1",
+    "machine1:B": "machine1",
+    "machine1:C": "machine1",
+    "machine1:D": "machine1",
+    "machine2": "\u0000",
+    "machine2:Exception": "machine2",
+    "machine2:E": "machine2",
+    "machine2:F": "machine2",
+    "machine2:G": "machine2",
+    "machine3": "\u0000",
+    "machine3:Exception": "machine3",
+    "machine3:E": "machine3",
+    "machine3:F": "machine3",
+    "machine4": "\u0000",
+    "machine4:Exception": "machine4",
+    "machine4:E": "machine4",
+    "machine4:F": "machine4",
+    "machine5": "\u0000",
+    "machine5:Exception": "machine5",
+    "machine5:E": "machine5",
+    "machine5:F": "machine5"
+  },
+  "_children": {
+    "\u0000": {
+      "machine1": true,
+      "machine2": true,
+      "machine3": true,
+      "machine4": true,
+      "machine5": true
+    },
+    "machine1": {
+      "machine1:Exception": true,
+      "machine1:A": true,
+      "machine1:B": true,
+      "machine1:C": true,
+      "machine1:D": true
+    },
+    "machine1:Exception": {},
+    "machine1:A": {},
+    "machine1:B": {},
+    "machine1:C": {},
+    "machine1:D": {},
+    "machine2": {
+      "machine2:Exception": true,
+      "machine2:E": true,
+      "machine2:F": true,
+      "machine2:G": true
+    },
+    "machine2:Exception": {},
+    "machine2:E": {},
+    "machine2:F": {},
+    "machine2:G": {},
+    "machine3": {
+      "machine3:Exception": true,
+      "machine3:E": true,
+      "machine3:F": true
+    },
+    "machine3:Exception": {},
+    "machine3:E": {},
+    "machine3:F": {},
+    "machine4": {
+      "machine4:Exception": true,
+      "machine4:E": true,
+      "machine4:F": true
+    },
+    "machine4:Exception": {},
+    "machine4:E": {},
+    "machine4:F": {},
+    "machine5": {
+      "machine5:Exception": true,
+      "machine5:E": true,
+      "machine5:F": true
+    },
+    "machine5:Exception": {},
+    "machine5:E": {},
+    "machine5:F": {}
+  },
+  "_in": {
+    "machine1": {},
+    "machine1:Exception": {},
+    "machine1:A": {},
+    "machine1:B": {
+      "machine2:E\u0001machine1:B\u00014": {
+        "v": "machine2:E",
+        "w": "machine1:B",
+        "name": "4"
+      },
+      "machine2:F\u0001machine1:B\u00014": {
+        "v": "machine2:F",
+        "w": "machine1:B",
+        "name": "4"
+      }
+    },
+    "machine1:C": {},
+    "machine1:D": {},
+    "machine2": {},
+    "machine2:Exception": {},
+    "machine2:E": {
+      "machine1:A\u0001machine2:E\u00014": {
+        "v": "machine1:A",
+        "w": "machine2:E",
+        "name": "4"
+      }
+    },
+    "machine2:F": {},
+    "machine2:G": {},
+    "machine3": {},
+    "machine3:Exception": {},
+    "machine3:E": {
+      "machine5:F\u0001machine3:E\u00014": {
+        "v": "machine5:F",
+        "w": "machine3:E",
+        "name": "4"
+      }
+    },
+    "machine3:F": {
+      "machine2:E\u0001machine3:F\u00014": {
+        "v": "machine2:E",
+        "w": "machine3:F",
+        "name": "4"
+      }
+    },
+    "machine4": {},
+    "machine4:Exception": {},
+    "machine4:E": {},
+    "machine4:F": {
+      "machine2:G\u0001machine4:F\u00014": {
+        "v": "machine2:G",
+        "w": "machine4:F",
+        "name": "4"
+      }
+    },
+    "machine5": {},
+    "machine5:Exception": {},
+    "machine5:E": {},
+    "machine5:F": {}
+  },
+  "_preds": {
+    "machine1": {},
+    "machine1:Exception": {},
+    "machine1:A": {},
+    "machine1:B": {
+      "machine2:E": 1,
+      "machine2:F": 1
+    },
+    "machine1:C": {},
+    "machine1:D": {},
+    "machine2": {},
+    "machine2:Exception": {},
+    "machine2:E": {
+      "machine1:A": 1
+    },
+    "machine2:F": {},
+    "machine2:G": {},
+    "machine3": {},
+    "machine3:Exception": {},
+    "machine3:E": {
+      "machine5:F": 1
+    },
+    "machine3:F": {
+      "machine2:E": 1
+    },
+    "machine4": {},
+    "machine4:Exception": {},
+    "machine4:E": {},
+    "machine4:F": {
+      "machine2:G": 1
+    },
+    "machine5": {},
+    "machine5:Exception": {},
+    "machine5:E": {},
+    "machine5:F": {}
+  },
+  "_out": {
+    "machine1": {},
+    "machine1:Exception": {},
+    "machine1:A": {
+      "machine1:A\u0001machine2:E\u00014": {
+        "v": "machine1:A",
+        "w": "machine2:E",
+        "name": "4"
+      }
+    },
+    "machine1:B": {},
+    "machine1:C": {},
+    "machine1:D": {},
+    "machine2": {},
+    "machine2:Exception": {},
+    "machine2:E": {
+      "machine2:E\u0001machine1:B\u00014": {
+        "v": "machine2:E",
+        "w": "machine1:B",
+        "name": "4"
+      },
+      "machine2:E\u0001machine3:F\u00014": {
+        "v": "machine2:E",
+        "w": "machine3:F",
+        "name": "4"
+      }
+    },
+    "machine2:F": {
+      "machine2:F\u0001machine1:B\u00014": {
+        "v": "machine2:F",
+        "w": "machine1:B",
+        "name": "4"
+      }
+    },
+    "machine2:G": {
+      "machine2:G\u0001machine4:F\u00014": {
+        "v": "machine2:G",
+        "w": "machine4:F",
+        "name": "4"
+      }
+    },
+    "machine3": {},
+    "machine3:Exception": {},
+    "machine3:E": {},
+    "machine3:F": {},
+    "machine4": {},
+    "machine4:Exception": {},
+    "machine4:E": {},
+    "machine4:F": {},
+    "machine5": {},
+    "machine5:Exception": {},
+    "machine5:E": {},
+    "machine5:F": {
+      "machine5:F\u0001machine3:E\u00014": {
+        "v": "machine5:F",
+        "w": "machine3:E",
+        "name": "4"
+      }
+    }
+  },
+  "_sucs": {
+    "machine1": {},
+    "machine1:Exception": {},
+    "machine1:A": {
+      "machine2:E": 1
+    },
+    "machine1:B": {},
+    "machine1:C": {},
+    "machine1:D": {},
+    "machine2": {},
+    "machine2:Exception": {},
+    "machine2:E": {
+      "machine1:B": 1,
+      "machine3:F": 1
+    },
+    "machine2:F": {
+      "machine1:B": 1
+    },
+    "machine2:G": {
+      "machine4:F": 1
+    },
+    "machine3": {},
+    "machine3:Exception": {},
+    "machine3:E": {},
+    "machine3:F": {},
+    "machine4": {},
+    "machine4:Exception": {},
+    "machine4:E": {},
+    "machine4:F": {},
+    "machine5": {},
+    "machine5:Exception": {},
+    "machine5:E": {},
+    "machine5:F": {
+      "machine3:E": 1
+    }
+  },
+  "_edgeObjs": {
+    "machine1:A\u0001machine2:E\u00014": {
+      "v": "machine1:A",
+      "w": "machine2:E",
+      "name": "4"
+    },
+    "machine2:E\u0001machine1:B\u00014": {
+      "v": "machine2:E",
+      "w": "machine1:B",
+      "name": "4"
+    },
+    "machine2:F\u0001machine1:B\u00014": {
+      "v": "machine2:F",
+      "w": "machine1:B",
+      "name": "4"
+    },
+    "machine2:E\u0001machine3:F\u00014": {
+      "v": "machine2:E",
+      "w": "machine3:F",
+      "name": "4"
+    },
+    "machine2:G\u0001machine4:F\u00014": {
+      "v": "machine2:G",
+      "w": "machine4:F",
+      "name": "4"
+    },
+    "machine5:F\u0001machine3:E\u00014": {
+      "v": "machine5:F",
+      "w": "machine3:E",
+      "name": "4"
+    }
+  },
+  "_nodeCount": 23,
+  "_edgeCount": 6,
+  "_nodes": {
+    "machine1": {
+      "type": 0
+    },
+    "machine1:Exception": {
+      "type": 1,
+      "step_style": null,
+      "name": "Exception",
+      "machine_id": "machine1"
+    },
+    "machine1:A": {
+      "type": 1,
+      "step_style": null,
+      "name": "A",
+      "machine_id": "machine1"
+    },
+    "machine1:B": {
+      "type": 1,
+      "step_style": 80,
+      "name": "B",
+      "machine_id": "machine1"
+    },
+    "machine1:C": {
+      "type": 1,
+      "step_style": null,
+      "name": "C",
+      "machine_id": "machine1"
+    },
+    "machine1:D": {
+      "type": 1,
+      "step_style": null,
+      "name": "D",
+      "machine_id": "machine1"
+    },
+    "machine2": {
+      "type": 0
+    },
+    "machine2:Exception": {
+      "type": 1,
+      "step_style": null,
+      "name": "Exception",
+      "machine_id": "machine2"
+    },
+    "machine2:E": {
+      "type": 1,
+      "step_style": 80,
+      "name": "E",
+      "machine_id": "machine2"
+    },
+    "machine2:F": {
+      "type": 1,
+      "step_style": null,
+      "name": "F",
+      "machine_id": "machine2"
+    },
+    "machine2:G": {
+      "type": 1,
+      "step_style": null,
+      "name": "G",
+      "machine_id": "machine2"
+    },
+    "machine3": {
+      "type": 0
+    },
+    "machine3:Exception": {
+      "type": 1,
+      "step_style": null,
+      "name": "Exception",
+      "machine_id": "machine3"
+    },
+    "machine3:E": {
+      "type": 1,
+      "step_style": 80,
+      "name": "E",
+      "machine_id": "machine3"
+    },
+    "machine3:F": {
+      "type": 1,
+      "step_style": 80,
+      "name": "F",
+      "machine_id": "machine3"
+    },
+    "machine4": {
+      "type": 0
+    },
+    "machine4:Exception": {
+      "type": 1,
+      "step_style": null,
+      "name": "Exception",
+      "machine_id": "machine4"
+    },
+    "machine4:E": {
+      "type": 1,
+      "step_style": null,
+      "name": "E",
+      "machine_id": "machine4"
+    },
+    "machine4:F": {
+      "type": 1,
+      "step_style": 80,
+      "name": "F",
+      "machine_id": "machine4"
+    },
+    "machine5": {
+      "type": 0
+    },
+    "machine5:Exception": {
+      "type": 1,
+      "step_style": null,
+      "name": "Exception",
+      "machine_id": "machine5"
+    },
+    "machine5:E": {
+      "type": 1,
+      "step_style": null,
+      "name": "E",
+      "machine_id": "machine5"
+    },
+    "machine5:F": {
+      "type": 1,
+      "step_style": null,
+      "name": "F",
+      "machine_id": "machine5"
+    }
+  },
+  "_edgeLabels": {
+    "machine1:A\u0001machine2:E\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine1:A",
+      "to_id": "machine2:E"
+    },
+    "machine2:E\u0001machine1:B\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine2:E",
+      "to_id": "machine1:B"
+    },
+    "machine2:F\u0001machine1:B\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine2:F",
+      "to_id": "machine1:B"
+    },
+    "machine2:E\u0001machine3:F\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine2:E",
+      "to_id": "machine3:F"
+    },
+    "machine2:G\u0001machine4:F\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine2:G",
+      "to_id": "machine4:F"
+    },
+    "machine5:F\u0001machine3:E\u00014": {
+      "type": 2,
+      "is_touched": false,
+      "link_type": 4,
+      "from_id": "machine5:F",
+      "to_id": "machine3:E"
+    }
+  }
+}

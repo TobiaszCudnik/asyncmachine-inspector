@@ -8,6 +8,8 @@ export interface LoggerSocket extends SocketIO.Socket {
 export default function createServer(snapshot = null) {
   const server = io()
 
+  // TODO ?
+  // @ts-ignore
   server.set('origins', '*:*')
 
   // LOGGER ENDPOINT

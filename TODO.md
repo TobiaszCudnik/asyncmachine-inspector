@@ -1,5 +1,9 @@
 # TODO
 
+- update mocha tests to jest
+  - enable debugging for tests
+- put back the disabled tests
+
 #### json-worker
 - remove Map and Set
   - network

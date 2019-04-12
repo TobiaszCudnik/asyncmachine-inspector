@@ -1,12 +1,10 @@
-import { ITransitionData, PatchType } from '../network/graph-network'
+import { ILogEntry, ITransitionData, PatchType } from '../network/graph-network'
 import * as EventEmitter from 'eventemitter3'
 // import { JSONSnapshot } from '../network/json'
-import {
-  GraphNetworkDiffer,
-  IPatch as IBasePatch
-} from '../network/graph-network-differ'
+import { GraphNetworkDiffer } from '../network/graph-network-differ'
 import MachineNetwork from '../network/machine-network'
 import WritableStream = NodeJS.WritableStream
+import { Delta } from 'jsondiffpatch'
 
 // TODO try to export all required symbols used by the mixins
 export enum Granularity {
@@ -15,8 +13,14 @@ export enum Granularity {
   STEPS
 }
 
-export interface IPatch extends IBasePatch {
+export interface IPatch {
   id?: string | number
+  type: PatchType
+  machine_id: string
+  diff: Delta
+  logs?: ILogEntry[]
+  data?: ITransitionData
+  summary?: string
 }
 
 export { MachineNetwork, Logger }
@@ -44,7 +48,9 @@ export default class Logger extends EventEmitter {
   options: IOptions = {}
   granularity = this.options.granularity || Granularity.STEPS
 
-  get snapshot(): JSONSnapshot {
+  // TODO
+  // get snapshot(): JSONSnapshot {
+  get snapshot() {
     return {
       full_sync: this.full_sync,
       patches: this.patches
@@ -102,7 +108,7 @@ export default class Logger extends EventEmitter {
   }
 
   generateFullSync() {
-    this.differ.generateJson()
+    this.differ.generateGraphJSON()
     this.full_sync = this.differ.previous_json
     this.emit('full-sync', this.full_sync)
   }
@@ -122,8 +128,7 @@ export default class Logger extends EventEmitter {
   }
 
   createPatch(machine_id, type, data?): IPatch | null {
-    const diff = this.differ.generateDiff()
-    // only transition data is useful for the patches
+    const diff = this.differ.generateGraphPatch()
     const is_transaction = [
       PatchType.TRANSITION_START,
       PatchType.TRANSITION_END
@@ -141,11 +146,12 @@ export default class Logger extends EventEmitter {
       machine_id,
       logs: [...this.network.logs]
     }
+    // only transition data is useful for the patches
     if (is_transaction && data) {
       patch.data = data
     }
     if (this.summary_fn) {
-      // TODO use jsdiff
+      // TODO use jsondiff
       patch.summary = this.summary_fn(this.network)
     }
     this.network.logs = []
