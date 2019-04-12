@@ -1,40 +1,28 @@
-import * as jsondiffpatch from 'jsondiffpatch'
 import * as assert from 'assert/'
-import {
-  GraphNetwork,
-  ILogEntry,
-  ITransitionData,
-  Node as GraphNode,
-  NodeGraph
-} from './graph-network'
+import { GraphNetwork, Node as GraphNode, NodeGraph } from './graph-network'
 import * as deepCopy from 'deepcopy'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
-import Logger from "../logger/logger";
 
-export interface IPatch {
-  diff: Delta
-  logs?: ILogEntry[]
-  data?: ITransitionData
-  summary?: string
-}
+// TODO specify the fields
+export type GraphJSON = Partial<NodeGraph>
 
 /**
  * TODO make it a stream
  */
 export class GraphNetworkDiffer {
   network: GraphNetwork
-  logger: Logger
   diffpatcher: DiffPatcher
-  // TODO rename to json
-  previous_json: any
+  previous_json: GraphJSON
 
-  constructor(network: GraphNetwork, logger: Logger) {
+  constructor(network: GraphNetwork) {
     assert(network)
-    assert(logger)
     this.network = network
-    this.logger = logger
     this.diffpatcher = new DiffPatcher({
       objectHash: this.objectHash()
+      // propertyFilter(name) {
+      //   // skip machine instances
+      //   return ['machine', 'machine'].includes(name)
+      // }
     })
   }
 
@@ -48,27 +36,50 @@ export class GraphNetworkDiffer {
   }
 
   /**
-   * Generates a json represention of the graph, ready for diffing.
+   * Generates a json representation of the graph, ready for diffing.
    *
-   * TODO narrow down Partial to fields only
+   * TODO skip the caches and rebuild them on import
+   * TODO move to the graph class
    */
-  generateGraphJSON(): Partial<NodeGraph> {
+  generateGraphJSON(): GraphJSON {
     const graph = this.network.graph
-    const ret: Partial<NodeGraph> = {}
+    let ret: GraphJSON = {}
     // get all the private fields (`_foo`), besides functions
     for (const key of Object.keys(graph)) {
-      if (key[0] !== '_' || typeof graph[key] === 'function') {
+      if (
+        // only private fields
+        key[0] !== '_' ||
+        // skip [undefined] for tests
+        key === '_label' ||
+        // skip _nodes (clone manually)
+        key === '_nodes' ||
+        // skip _nodes (clone manually)
+        key === '_edgeLabels' ||
+        // skip functions
+        typeof graph[key] === 'function'
+      ) {
         continue
       }
       ret[key] = graph[key]
     }
-    // TODO possibly avoid cloning by using the prototype chain
-    //  (for each property)
-    this.previous_json = deepCopy(ret)
+    ret = deepCopy(ret)
+    // clone nodes
+    ret._nodes = {}
+    for (const key of Object.keys(graph._nodes)) {
+      // @ts-ignore
+      ret._nodes[key] = graph._nodes[key].export()
+    }
+    // clone _edgeLabels
+    ret._edgeLabels = {}
+    for (const key of Object.keys(graph._edgeLabels)) {
+      // @ts-ignore
+      ret._edgeLabels[key] = graph._edgeLabels[key].export()
+    }
+    this.previous_json = ret
     return this.previous_json
   }
 
-  generateGraphDiff(base_json?: Delta) {
+  generateGraphPatch(base_json?: GraphJSON): Delta {
     base_json = base_json || this.previous_json
 
     assert(base_json, 'Base JSON required to create a diff')
@@ -77,17 +88,6 @@ export class GraphNetworkDiffer {
 
     // generate the diff
     return this.diffpatcher.diff(base_json, this.previous_json)
-  }
-
-  generatePatch(): IPatch {
-    const logs = this.network.logs
-    this.network.logs = []
-    return {
-      diff: this.generateGraphDiff(),
-      logs,
-      // TODO get the summary from the logger
-      summary: 'TODO'
-    }
   }
 }
 

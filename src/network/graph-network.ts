@@ -8,8 +8,15 @@ import {
 import { Graph } from 'graphlib'
 import * as EventEmitter from 'eventemitter3'
 import { IEdge } from 'cinea-graphlib'
+import * as deepCopy from 'deepcopy'
 
 export type NodeGraph = Graph<Node | MachineNode, LinkNode, {}, NODE_LINK_TYPE>
+
+export interface ILogEntry {
+  id: string
+  msg: string
+  level: number
+}
 
 export interface ITransitionData {
   type: MutationTypes
@@ -20,13 +27,6 @@ export interface ITransitionData {
   touched?: { [machine_id: string]: string[] }
 }
 
-export interface ILogEntry {
-  id: string
-  msg: string
-  level: number
-}
-
-// move to JSON
 export enum PatchType {
   STATE_CHANGED, // 0
   MACHINE_ADDED,
@@ -65,11 +65,26 @@ export enum RELATION_TO_LINK_TYPE {
   after = NODE_LINK_TYPE.AFTER
 }
 
-export interface GraphNode {
+export class GraphNode {
   type: NODE_TYPE
+  skip_fields = ['machine', 'machine_node']
+  clone_fields = []
+
+  export(): Object {
+    const ret = {}
+    for (const key of Object.keys(this)) {
+      if (['skip_fields', 'clone_fields', ...this.skip_fields].includes(key)) {
+        continue
+      }
+      ret[key] = this.clone_fields.includes(key)
+        ? deepCopy(this[key])
+        : this[key]
+    }
+    return ret
+  }
 }
 
-export class LinkNode implements GraphNode {
+export class LinkNode extends GraphNode {
   readonly type = NODE_TYPE.LINK
   link_type: NODE_LINK_TYPE
   is_touched = false
@@ -81,6 +96,7 @@ export class LinkNode implements GraphNode {
   }
 
   constructor(link_type: NODE_LINK_TYPE, from_id: string, to_id: string) {
+    super()
     this.link_type = link_type
     this.from_id = from_id
     this.to_id = to_id
@@ -88,10 +104,12 @@ export class LinkNode implements GraphNode {
   }
 }
 
-export class Node implements GraphNode {
+export class Node extends GraphNode {
   readonly type = NODE_TYPE.STATE
   name: string
+  // TODO skip in export
   machine: TAsyncMachine
+  // TODO skip in export
   machine_node: MachineNode
   machine_id: string
   /**
@@ -107,7 +125,6 @@ export class Node implements GraphNode {
    * Get the original state definition.
    */
   get state() {
-    console.log('state', this.machine.states_all)
     return this.machine.states_all.find(s => s.name === this.name)
   }
   /**
@@ -139,6 +156,7 @@ export class Node implements GraphNode {
   }
 
   constructor(name: string, machine: MachineNode) {
+    super()
     this.name = name
     this.machine = machine.machine
     this.machine_id = machine.id
@@ -146,7 +164,7 @@ export class Node implements GraphNode {
   }
 }
 
-export class MachineNode implements GraphNode {
+export class MachineNode extends GraphNode {
   readonly type = NODE_TYPE.MACHINE
   machine: TAsyncMachine
 
@@ -193,6 +211,7 @@ export class MachineNode implements GraphNode {
   }
 
   constructor(machine: TAsyncMachine) {
+    super()
     this.machine = machine
   }
 }
