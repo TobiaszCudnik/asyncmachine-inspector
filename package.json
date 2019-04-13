@@ -31,6 +31,7 @@
   "main": "dist/am_logger-file.umd.js",
   "browser": "dist/am_inspector.umd.js",
   "dependencies": {
+    "@types/mocha": "^5.2.6",
     "@types/socket.io-client": "^1.4.32",
     "assert": "^1.4.1",
     "asyncmachine": "^3.4.0",

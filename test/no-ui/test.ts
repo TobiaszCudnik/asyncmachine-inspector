@@ -9,37 +9,41 @@ import * as fs from 'fs'
 import MachineNetwork from '../../src/network/machine-network'
 import { GraphNetworkDiffer } from '../../src/network/graph-network-differ'
 
-// describe("Single machine graph", function() {
+describe('Single machine graph', function() {
+  let machine1: AsyncMachine<any, any, any>
+  let network: MachineNetwork
 
-//   beforeEach( function() {
-//     machine = new factory(['A', 'B', 'C', 'D'])
-//     machine.A = {requires: ['B']}
-//     machine.C = {blocks: ['B']}
-//     machine.D = {requires: ['C']}
+  beforeEach(function() {
+    machine1 = machine(['A', 'B', 'C', 'D'])
+    // @ts-ignore
+    machine1.A = { requires: ['B'] }
+    // @ts-ignore
+    machine1.B = {}
+    // @ts-ignore
+    machine1.C = { blocks: ['B'] }
+    // @ts-ignore
+    machine1.D = { requires: ['C'] }
 
-//     this.stateGraph = new Network
-//     this.stateGraph.addMachine(machine)
-//   })
+    network = new MachineNetwork()
+    network.addMachine(machine1)
+  })
 
-//   it('should get all states as nodes', function() {
-//     expect(this.stateGraph.graph.nodes().length).to.be.eql(5)
-//   })
+  it('should get all states as nodes', function() {
+    expect(network.graph.nodes().length).to.be.eql(6)
+  })
 
-//   it('should get all relations as edges', function() {
-//     var nodes = this.stateGraph.nodes
-//     let edges = _.map(this.stateGraph.graph.edges(), edge => {
-//       return `${nodes[edge.v].name} ${nodes[edge.w].name}`
-//     })
-//     expect(edges).to.eql([
-//       'A B',
-//       'C B',
-//       'D C'
-//     ])
-//   })
-// })
+  it('should get all relations as edges', function() {
+    const nodes = network.nodes
+    console.log(network.graph)
+    const edges = network.links.map(link => {
+      return `${nodes[link.from_id].name} ${nodes[link.to_id].name}`
+    })
+    expect(edges).to.eql(['A B', 'C B', 'D C'])
+  })
+})
 
 describe('Network', function() {
-  let machine_network: MachineNetwork
+  let network: MachineNetwork
   let machine1: AsyncMachine<any, any, any>
   let machine2: AsyncMachine<any, any, any>
   let machine3: AsyncMachine<any, any, any>
@@ -77,15 +81,12 @@ describe('Network', function() {
     // @ts-ignore
     machine5.E = { blocks: ['F'] }
 
-    // machine1.log('[1]', 2)
-    //window.foo = machine1
-
-    machine_network = new MachineNetwork()
-    machine_network.addMachine(machine1)
-    machine_network.addMachine(machine2)
-    machine_network.addMachine(machine3)
-    machine_network.addMachine(machine4)
-    machine_network.addMachine(machine5)
+    network = new MachineNetwork()
+    network.addMachine(machine1)
+    network.addMachine(machine2)
+    network.addMachine(machine3)
+    network.addMachine(machine4)
+    network.addMachine(machine5)
 
     machine1.pipe(
       'A',
@@ -120,10 +121,10 @@ describe('Network', function() {
   })
 
   describe('graph json', () => {
-    var json
+    let json
     before(() => {
-      this.differ = new GraphNetworkDiffer(machine_network)
-      json = this.differ.generateGraphJSON()
+      const differ = new GraphNetworkDiffer(network)
+      json = differ.generateGraphJSON()
     })
 
     it('should produce json', () => {
@@ -146,7 +147,7 @@ describe('Network', function() {
   describe('graph patches', function() {
     let diff
     before(function() {
-      let differ = new GraphNetworkDiffer(machine_network)
+      let differ = new GraphNetworkDiffer(network)
 
       differ.generateGraphJSON()
       assert(differ.previous_json)
@@ -225,15 +226,4 @@ describe('Network', function() {
       expect(diff).to.eql(expected_diff)
     })
   })
-
-  //describe('ui', function() {
-  //    it('should render', function() {
-  //      var ui = new Ui(this.stateGraph)
-  //      ui.render()
-  //    })
-  //
-  //    afterEach(function() {
-  //
-  //    })
-  //})
 })

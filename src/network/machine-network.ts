@@ -49,11 +49,11 @@ export default class MachineNetwork extends GraphNetwork {
 
   // TODO remove from BaseNetwork
   addMachine(machine: TAsyncMachine) {
-    assert(machine.id(), 'Machine ID required')
     const id = machine.id(true)
+    assert(id, 'Machine ID required')
     if (this.machine_ids[id]) return
     this.machines.set(machine, id)
-    this.graph.setNode(machine.id(true), new MachineNode(machine))
+    this.graph.setNode(id, new MachineNode(machine))
     this.machine_ids[id] = machine
     this.statesToNodes(machine.states_all, id)
     this.bindToMachine(machine)
@@ -225,16 +225,17 @@ export default class MachineNetwork extends GraphNetwork {
   }
 
   private statesToNodes(names: string[], machine_id: string) {
-    // assert(names)
+    assert(names)
     // scan states
     let new_nodes = []
     let machine = this.machine_ids[machine_id]
-    for (let name of names) {
-      const machine_node = this.graph.node(machine.id()) as MachineNode
+    for (const name of names) {
+      const machine_node = this.graph.node(machine.id(true)) as MachineNode
+      assert(machine_node, 'machine node missing')
       const node = new Node(name, machine_node)
 
       this.graph.setNode(node.id, node)
-      this.graph.setParent(node.id, machine.id())
+      this.graph.setParent(node.id, machine.id(true))
 
       new_nodes.push(node)
     }
