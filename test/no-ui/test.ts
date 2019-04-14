@@ -14,15 +14,12 @@ describe('Single machine graph', function() {
   let network: MachineNetwork
 
   beforeEach(function() {
-    machine1 = machine(['A', 'B', 'C', 'D'])
-    // @ts-ignore
-    machine1.A = { requires: ['B'] }
-    // @ts-ignore
-    machine1.B = {}
-    // @ts-ignore
-    machine1.C = { blocks: ['B'] }
-    // @ts-ignore
-    machine1.D = { requires: ['C'] }
+    machine1 = machine({
+      A: { require: ['B'] },
+      B: {},
+      C: { drop: ['B'] },
+      D: { require: ['C'] }
+    })
 
     network = new MachineNetwork()
     network.addMachine(machine1)
@@ -32,11 +29,11 @@ describe('Single machine graph', function() {
     expect(network.graph.nodes().length).to.be.eql(6)
   })
 
-  it('should get all relations as edges', function() {
+  it.only('should get all relations as edges', function() {
     const nodes = network.nodes
-    console.log(network.graph)
+    // console.log(network.graph)
     const edges = network.links.map(link => {
-      return `${nodes[link.from_id].name} ${nodes[link.to_id].name}`
+      return `${link.from_name} ${link.to_name}`
     })
     expect(edges).to.eql(['A B', 'C B', 'D C'])
   })
@@ -52,34 +49,38 @@ describe('Network', function() {
 
   before(function() {
     // TODO switch to events
-    machine1 = machine(['A', 'B', 'C', 'D'])
+    machine1 = machine({
+      A: { require: ['B'] },
+      B: {},
+      C: { drop: ['B'] },
+      D: { require: ['C'] }
+    })
     machine1.id('machine1')
-    // @ts-ignore
-    machine1.C = { blocks: ['B'] }
-    // @ts-ignore
-    machine1.A = { requires: ['B'] }
-    // @ts-ignore
-    machine1.D = { requires: ['C'] }
 
-    machine2 = machine(['E', 'F', 'G'])
+    machine2 = machine({
+      E: { drop: ['F'] },
+      F: {},
+      G: {}
+    })
     machine2.id('machine2')
-    // @ts-ignore
-    machine2.E = { blocks: ['F'] }
 
-    machine3 = machine(['E', 'F'])
+    machine3 = machine({
+      E: { drop: ['F'] },
+      F: {}
+    })
     machine3.id('machine3')
-    // @ts-ignore
-    machine3.E = { blocks: ['F'] }
 
-    machine4 = machine(['E', 'F'])
+    machine4 = machine({
+      E: { drop: ['F'] },
+      F: {}
+    })
     machine4.id('machine4')
-    // @ts-ignore
-    machine4.E = { blocks: ['F'] }
 
-    machine5 = machine(['E', 'F'])
+    machine5 = machine({
+      E: {},
+      F: { drop: ['F'] }
+    })
     machine5.id('machine5')
-    // @ts-ignore
-    machine5.E = { blocks: ['F'] }
 
     network = new MachineNetwork()
     network.addMachine(machine1)

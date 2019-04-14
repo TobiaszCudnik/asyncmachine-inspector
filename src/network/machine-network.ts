@@ -12,7 +12,7 @@ import {
   ITransitionData,
   LinkNode,
   MachineNode,
-  Node,
+  StateNode,
   NODE_LINK_TYPE,
   PatchType,
   RELATION_TO_LINK_TYPE
@@ -232,7 +232,7 @@ export default class MachineNetwork extends GraphNetwork {
     for (const name of names) {
       const machine_node = this.graph.node(machine.id(true)) as MachineNode
       assert(machine_node, 'machine node missing')
-      const node = new Node(name, machine_node)
+      const node = new StateNode(name, machine_node)
 
       this.graph.setNode(node.id, node)
       this.graph.setParent(node.id, machine.id(true))
@@ -247,17 +247,17 @@ export default class MachineNetwork extends GraphNetwork {
     }
   }
 
-  private getRelationsFromNode(node: Node, machine_id: string) {
+  private getRelationsFromNode(node: StateNode, machine_id: string) {
     let machine = this.machine_ids[machine_id]
     let state = node.state
-    // assert(state)
+    assert(state)
     for (const relation of machine.getRelationsOf(node.name)) {
       const link_type = RELATION_TO_LINK_TYPE[
         relation.toString()
       ] as NODE_LINK_TYPE
       for (const target_name of state[relation]) {
         const target = this.getNodeByName(target_name, machine_id)
-        // assert(target)
+        assert(target)
         const edge = {
           v: node.id,
           w: target.id,

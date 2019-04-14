@@ -1,5 +1,5 @@
 import * as assert from 'assert/'
-import { GraphNetwork, Node as GraphNode, NodeGraph } from './graph-network'
+import { GraphNetwork, GraphNode, NodeGraph } from './graph-network'
 import * as deepCopy from 'deepcopy'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
 

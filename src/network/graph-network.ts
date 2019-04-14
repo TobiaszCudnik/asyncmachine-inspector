@@ -8,9 +8,15 @@ import {
 import { Graph } from 'graphlib'
 import * as EventEmitter from 'eventemitter3'
 import { IEdge } from 'cinea-graphlib'
+import * as assert from 'assert/'
 import * as deepCopy from 'deepcopy'
 
-export type NodeGraph = Graph<Node | MachineNode, LinkNode, {}, NODE_LINK_TYPE>
+export type NodeGraph = Graph<
+  StateNode | MachineNode,
+  LinkNode,
+  {},
+  NODE_LINK_TYPE
+>
 
 export interface ILogEntry {
   id: string
@@ -66,6 +72,7 @@ export enum RELATION_TO_LINK_TYPE {
 }
 
 export class GraphNode {
+  id: string
   type: NODE_TYPE
   skip_fields = ['machine', 'machine_node']
   clone_fields = []
@@ -95,6 +102,14 @@ export class LinkNode extends GraphNode {
     return this.to_id + '::' + this.from_id + '::' + this.type
   }
 
+  get from_name() {
+    return this.from_id.split(':')[1]
+  }
+
+  get to_name() {
+    return this.to_id.split(':')[1]
+  }
+
   constructor(link_type: NODE_LINK_TYPE, from_id: string, to_id: string) {
     super()
     this.link_type = link_type
@@ -104,7 +119,7 @@ export class LinkNode extends GraphNode {
   }
 }
 
-export class Node extends GraphNode {
+export class StateNode extends GraphNode {
   readonly type = NODE_TYPE.STATE
   name: string
   // TODO skip in export
@@ -119,13 +134,13 @@ export class Node extends GraphNode {
   step_style: TransitionStepTypes | null = null
 
   get id() {
-    return `${this.machine_id}:${this.name.replace(/[^\w]/g, '-')}`
+    return `${this.machine_id}:${this.name}`
   }
   /**
    * Get the original state definition.
    */
   get state() {
-    return this.machine.states_all.find(s => s.name === this.name)
+    return this.machine.get(this.name)
   }
   /**
    * Is the state currently set?
@@ -157,6 +172,8 @@ export class Node extends GraphNode {
 
   constructor(name: string, machine: MachineNode) {
     super()
+    assert(name)
+    assert(machine)
     this.name = name
     this.machine = machine.machine
     this.machine_id = machine.id
@@ -235,7 +252,7 @@ export class GraphNetwork extends EventEmitter {
   machines_during_transition_manual: string[] = []
 
   // TODO move graph, use json
-  get nodes(): (Node | MachineNode)[] {
+  get nodes(): (StateNode | MachineNode)[] {
     return Object.values(
       // @ts-ignore
       this.graph._nodes
@@ -259,8 +276,10 @@ export class GraphNetwork extends EventEmitter {
   }
 
   // TODO move graph, use json
-  get states(): Node[] {
-    return this.nodes.filter(node => node.type === NODE_TYPE.STATE) as Node[]
+  get states(): StateNode[] {
+    return this.nodes.filter(
+      node => node.type === NODE_TYPE.STATE
+    ) as StateNode[]
   }
 
   // TODO move graph, use json
@@ -288,12 +307,12 @@ export class GraphNetwork extends EventEmitter {
    * Returns the type of the connection between 2 passed nodes. Only one
    * connection is supported.
    */
-  getLinkType(source: Node, target: Node): NODE_LINK_TYPE | null {
+  getLinkType(source: StateNode, target: StateNode): NODE_LINK_TYPE | null {
     const edges = this.graph.outEdges(source.id, target.id)
     return edges.length ? edges[0].link_type : null
   }
 
-  protected updateStepStyle(node: Node, type: TransitionStepTypes) {
+  protected updateStepStyle(node: StateNode, type: TransitionStepTypes) {
     // add this step type to the bit mask
     node.step_style |= type
     let types = TransitionStepTypes
@@ -311,7 +330,7 @@ export class GraphNetwork extends EventEmitter {
     return `${from.id}::${to.id}::${relation}`
   }
 
-  getNodeByName(name: string, machine_id: string): Node {
+  getNodeByName(name: string, machine_id: string): StateNode {
     for (let node of this.graph.nodes().map(id => this.graph.node(id))) {
       if (
         node.type === NODE_TYPE.STATE &&
@@ -324,7 +343,7 @@ export class GraphNetwork extends EventEmitter {
     throw new Error(`Node not found '${name}' from '${machine_id}'`)
   }
 
-  getNodeByStruct(state: IStateStruct): Node | null {
+  getNodeByStruct(state: IStateStruct): StateNode | null {
     return this.getNodeByName(
       state[StateStructFields.STATE_NAME],
       state[StateStructFields.MACHINE_ID]
