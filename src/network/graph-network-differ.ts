@@ -1,6 +1,5 @@
 import * as assert from 'assert/'
 import { GraphNetwork, GraphNode, NodeGraph } from './graph-network'
-import * as deepCopy from 'deepcopy'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
 
 // TODO specify the fields
@@ -43,26 +42,8 @@ export class GraphNetworkDiffer {
    */
   generateGraphJSON(): GraphJSON {
     const graph = this.network.graph
-    let ret: GraphJSON = {}
-    // get all the private fields (`_foo`), besides functions
-    for (const key of Object.keys(graph)) {
-      if (
-        // only private fields
-        key[0] !== '_' ||
-        // skip [undefined] for tests
-        key === '_label' ||
-        // skip _nodes (clone manually)
-        key === '_nodes' ||
-        // skip _nodes (clone manually)
-        key === '_edgeLabels' ||
-        // skip functions
-        typeof graph[key] === 'function'
-      ) {
-        continue
-      }
-      ret[key] = graph[key]
-    }
-    ret = deepCopy(ret)
+    const ret: GraphJSON = {}
+
     // clone nodes
     ret._nodes = {}
     for (const key of Object.keys(graph._nodes)) {
@@ -75,8 +56,9 @@ export class GraphNetworkDiffer {
       // @ts-ignore
       ret._edgeLabels[key] = graph._edgeLabels[key].export()
     }
+
     this.previous_json = ret
-    return this.previous_json
+    return ret
   }
 
   generateGraphPatch(base_json?: GraphJSON): Delta {

@@ -162,9 +162,6 @@ export class StateNode extends GraphNode {
     // TODO use json, not a method
     return this.machine.states_all.find(r => r.name === this.name).auto
   }
-  get full_name(): string {
-    return `${this.machine_id}:${this.name}`
-  }
   get clock(): number {
     // @ts-ignore
     return this.machine.clock_[this.name]
@@ -348,5 +345,10 @@ export class GraphNetwork extends EventEmitter {
       state[StateStructFields.STATE_NAME],
       state[StateStructFields.MACHINE_ID]
     )
+  }
+
+  import() {
+    // TODO import the json to the graph class
+    //  rebuild the indexes (use the graph methods?)
   }
 }

@@ -56,9 +56,9 @@ declare module 'cinea-graphlib' {
     hasEdge(v: string, w: any, name?: EdgeName): boolean
     hasEdge(v: IEdge): boolean
     removeEdge(v: string, w: any, name?: EdgeName): this
-    inEdges(v: string, u?: string): Edge[]
-    outEdges(v: string, w?: string): Edge[]
-    nodeEdges(v: string, w?: string): Edge[]
+    inEdges(v: string, u?: string): IEdge[]
+    outEdges(v: string, w?: string): IEdge[]
+    nodeEdges(v: string, w?: string): IEdge[]
   }
 }
 

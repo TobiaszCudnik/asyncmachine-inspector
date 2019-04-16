@@ -112,7 +112,7 @@ export default class MachineNetwork extends GraphNetwork {
         ...difference(states_before, machine.is()),
         ...difference(machine.is(), states_before)
       ].map(id => {
-        return this.getNodeByName(id, machine_id).full_name
+        return this.getNodeByName(id, machine_id).id
       })
       this.emit('change', PatchType.STATE_CHANGED, machine_id, changed_ids)
     })
@@ -188,14 +188,14 @@ export default class MachineNetwork extends GraphNetwork {
       let type = step[fields.TYPE]
 
       let node = this.getNodeByStruct(step[fields.STATE])
-      changed_nodes.add(node.full_name)
+      changed_nodes.add(node.id)
       this.updateStepStyle(node, type)
 
       if (step[fields.SOURCE_STATE]) {
         // TODO handle the "Any" state
         let source_node = this.getNodeByStruct(step[fields.SOURCE_STATE])
         if (type != types.PIPE) {
-          changed_nodes.add(source_node.full_name) // TODO id?
+          changed_nodes.add(source_node.id) // TODO id?
           // dont mark the source node as piped, as it already has
           // styles
           this.updateStepStyle(source_node, type)
@@ -208,8 +208,13 @@ export default class MachineNetwork extends GraphNetwork {
 
         // mark the link as touched
         const edge = this.graph.outEdges(source_node.id, node.id)
+        if (!edge[0]) {
+          // TODO missing edge
+          continue
+        }
+        const edgeData = this.graph.edge(edge[0])
         // TODO check if not null
-        edge[0].is_touched = true
+        edgeData.is_touched = true
         const link_type = this.getLinkType(source_node, node)
         changed_nodes.add(this.createLinkID(source_node, node, link_type))
       }
