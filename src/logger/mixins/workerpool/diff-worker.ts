@@ -15,35 +15,41 @@ sub.on('message', function(channel, msg) {
   }
 })
 
-const network = {
-  json: null,
-  generateGraphJSON() {
-    return this.json
-  }
-}
 // @ts-ignore
-const differ = new GraphNetworkDiffer(network)
+const differ = new GraphNetworkDiffer({})
 
 function disposeNode(index: string) {
   delete cache[index]
 }
 
+async function getJSON(index: number) {
+  return new Promise(async resolve => {
+    if (cache[index]) {
+      resolve(cache[index])
+    } else {
+      await db.get(index.toString(), (err, json) => {
+        // save the cache
+        cache[index] = json
+        // resolve
+        resolve(json)
+      })
+    }
+  })
+}
+
 async function createDiff(index: number) {
+  // console.log('worker diff req', index)
   const [prev, current] = await Promise.all([
     // prev
-    new Promise(async resolve => {
-      if (cache[index - 1]) {
-        return resolve(cache[index - 1])
-      }
-      resolve(await db.get((index - 1).toString()))
-    }),
+    getJSON(index - 1),
     // current
-    db.get((index - 1).toString())
+    getJSON(index)
   ])
-
-  differ.previous_json = prev
-  network.json = current
-  return differ.generateGraphPatch()
+  const patch = differ.diffpatcher.diff(prev, current)
+  // console.log('worker diff', patch)
+  // console.log('worker diff ready', index)
+  // TODO try to save directly to the stream and bypass the main thread
+  return patch
 }
 
 // create a worker and register functions

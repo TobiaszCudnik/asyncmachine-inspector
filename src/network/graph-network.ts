@@ -286,13 +286,8 @@ export class GraphNetwork extends EventEmitter {
     ) as MachineNode[]
   }
 
-  // TODO remove
   get machines_during_transition(): MachineNode[] {
-    const real = this.machine_nodes.filter(node => node.during_transition)
-    const manual = this.machines_during_transition_manual.map(
-      id => this.graph.node(id) as MachineNode
-    )
-    return [...real, ...manual]
+    return this.machine_nodes.filter(node => node.during_transition)
   }
 
   constructor() {

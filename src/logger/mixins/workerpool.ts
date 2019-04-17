@@ -11,6 +11,8 @@ import * as redis from 'redis'
 import { RedisClient } from 'redis'
 import { promisify } from 'util'
 import { Delta } from 'jsondiffpatch'
+import * as assert from 'assert'
+import { Semaphore } from 'await-semaphore'
 
 export { WorkerPoolMixin }
 
@@ -28,10 +30,11 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       [index: string]: {
         db_ready: boolean
         diff_ready: boolean
-        sent: boolean
         patch?: IPatch
       }
     } = {}
+    // TODO base on the number of workers *5
+    semaphore = new Semaphore(3 * 5)
 
     constructor(...args: any[]) {
       super(...args)
@@ -40,10 +43,11 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
     }
 
     async dbSet(index: string | number, value: string) {
+      assert(typeof value === 'string')
       this.indexes[index] = {
         db_ready: false,
-        diff_ready: false,
-        sent: false
+        // theres no diff for the initial sync
+        diff_ready: index.toString() === '0'
       }
       await promisify(this.db.set).call(this.db, index.toString(), value)
       this.indexes[index].db_ready = true
@@ -53,7 +57,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
     generateFullSync() {
       super.generateFullSync()
       // save the initial sync to the DB
-      this.dbSet(0, this.full_sync)
+      this.dbSet(0, JSON.stringify(this.full_sync))
     }
 
     /**
@@ -69,16 +73,20 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       }
 
       this.patches_counter++
-      const json = JSON.stringify(this.differ.generateGraphJSON())
+      let json = JSON.stringify(this.differ.generateGraphJSON())
       const index = this.patches_counter
       const logs = [...this.network.logs]
       this.network.logs = []
 
       // save the json
+      // console.log('save json', index)
       await this.dbSet(index, json)
+      // dispose
+      json = null
 
       // wait for the prev json to finish being written to the DB
       if (!this.indexes[index - 1].db_ready) {
+        // console.log('wait for diff', index - 1)
         await new Promise(resolve => {
           this.on('db-ready', (ready_index: string) => {
             if (ready_index === (index - 1).toString()) {
@@ -88,11 +96,25 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
         })
       }
       // both json (prev and current) are in the DB, ask the worker to diff them
-      const diff: Delta = await this.pool.exec('createDiff', index)
+      // console.log('request diff', index)
+      let diff: Delta
+      const release = await this.semaphore.acquire()
+      try {
+        // console.log('mainthread diff req', index)
+        diff = await this.pool.exec('createDiff', [index])
+        // console.log('mainthread diff', diff)
+        // console.log('mainthread diff ready', index)
+      } catch (e) {
+        // TODO handle exceptions and re-send the requests
+        //  support process.exit
+        console.error('worker error')
+        release()
+      }
       this.indexes[index].diff_ready = true
 
       // skip when there's nothing to send
       if (type == PatchType.TRANSITION_STEP && !diff && !logs.length) {
+        release()
         return null
       }
 
@@ -114,17 +136,22 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
       this.indexes[index].patch = patch
       this.flushOrderedBuffer(index)
+      release()
     }
 
     /**
      * Emits an list of ordered events containing patches.
      */
     flushOrderedBuffer(index: number) {
-      // console.log('try - flushOrderedBuffer', pos)
+      if (index % 1000 === 0) {
+        console.log('TRY flushOrderedBuffer', index)
+        console.log(this.stats())
+      }
       let should_send = false
+
       for (let i = this.last_sent_index + 1; i <= index; i++) {
         if (!this.indexes[i].diff_ready) {
-          // console.log('not ready yet', i, this.sent_index[i].missing_ids)
+          // console.log('missing diff', i)
           should_send = false
           break
         }
@@ -133,28 +160,49 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       if (!should_send) {
         return
       }
+
+      // emit patches in order
       for (let i = this.last_sent_index + 1; i <= index; i++) {
-        const patch = this.indexes[i - 1].patch
-        // sometimes patches are null, skip them in that case
-        if (!patch) {
+        // skip the base json
+        if (i === 0) {
           continue
         }
-        this.emit('diff-sync', patch, i - 1)
-        // mark as sent
-        this.indexes[i - 1].sent = true
+        const patch = this.indexes[i - 1].patch
+        // sometimes patches are null, skip them in that case
+        if (patch) {
+          this.emit('diff-sync', patch)
+        }
+        // dispose
+        this.disposeIndex(i - 1)
       }
-      // delete old entries
-      for (let i = this.last_sent_index; this.indexes[i]; i--) {
-        // remove from the DB
-        this.db.del(i.toString())
-        // remove from workers cache
-        // TODO dispose directly via worker's interface?
-        this.db.publish('ami-logger-cache', i.toString())
-        // remove from local cache
-        delete this.indexes[i]
-      }
+
       this.last_sent_index = index
-      // console.log('flushOrderedBuffer', pos)
+      if (index % 1000 === 0) {
+        console.log('flushOrderedBuffer', index)
+        console.log(this.stats())
+      }
+    }
+
+    disposeIndex(index: number) {
+      // remove from the DB
+      this.db.del(index.toString())
+      // remove from workers cache
+      // TODO dispose directly via worker's interface?
+      this.db.publish('ami-logger-cache', index.toString())
+      // remove from local cache
+      delete this.indexes[index]
+    }
+
+    stats() {
+      const indexes = Object.values(this.indexes)
+      const keys = Object.keys(this.indexes)
+      return {
+        last_sent_index: this.last_sent_index,
+        active: indexes.length,
+        'no diff': indexes.filter(i => !i.diff_ready).length,
+        'no db': indexes.filter(i => !i.db_ready).length,
+        last_index: keys[keys.length - 1]
+      }
     }
 
     async dispose() {
