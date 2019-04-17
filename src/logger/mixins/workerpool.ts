@@ -1,118 +1,103 @@
 /**
  * This mixin spreads diff computations across a workerpool with shared memory
- * and local per node caching. To achieve this, the node change detection needs
- * to function well, which is currently not the case, thus using this mixin
- * brings performance down, instead of boosting it.
+ * through redis.
  *
- * See /src/network/json/joint.ts - getCachedNode() method
+ * TODO use SharedArrayBuffer, support chrome
  */
 import * as workerpool from 'workerpool'
-import * as randomID from 'simple-random-id'
-import { Semaphore } from 'await-semaphore'
-import { IOptions, Logger, Granularity, Constructor } from '../logger'
-import Network, {
-  IPatch,
-  ITransitionData,
-  PatchType
-} from '../../network/network'
-import NetworkJson, { JsonDiffFactory, INetworkJson } from '../../network/json/joint'
-import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../network/json'
+import { IPatch, LoggerConstructor } from '../logger'
+import { ITransitionData, PatchType } from '../../network/graph-network'
 import * as redis from 'redis'
+import { RedisClient } from 'redis'
+import { promisify } from 'util'
+import { Delta } from 'jsondiffpatch'
 
 export { WorkerPoolMixin }
 
-function removeArrayEl(arr, val) {
-  arr.splice(arr.indexOf(val), 1)
-}
-
-const db = redis.createClient()
-export default function WorkerPoolMixin<TBase extends Constructor>(
+export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
   Base: TBase
 ) {
+  /**
+   * Sub class of a passed Logger constructor.
+   */
   return class extends Base {
-    last_end = -1
+    db: RedisClient
+    last_sent_index = -1
     pool = workerpool.pool(__dirname + '/workerpool/diff-worker.js')
-    sent_index: {
-      id: string
-      status: boolean
-      version_ids: string[][]
-      missing_ids?: string[]
-    }[] = []
-    redis_index = []
+    indexes: {
+      [index: string]: {
+        db_ready: boolean
+        diff_ready: boolean
+        sent: boolean
+        patch?: IPatch
+      }
+    } = {}
 
     constructor(...args: any[]) {
       super(...args)
-      const during_save = []
-      this.network.on('node-change', (id: string, index: number) => {
-        // TODO jointjs related code
-        const node = this.json.json.cells[index]
-        const vid = `${id}:${node.version}`
-        // console.log(`save ${vid}`)
-        // TODO make it race safe - finish all sets before generating the patch
-        if (during_save.includes(vid) || this.redis_index.includes(vid)) {
-          return
-        }
-        during_save.push(vid)
-        db.set(vid, JSON.stringify(node), () => {
-          removeArrayEl(during_save, vid)
-          this.redis_index.push(vid)
-          this.emit('node-change-saved', vid)
-        })
-      })
+      // TODO pass a DB name?
+      this.db = redis.createClient()
     }
 
+    async dbSet(index: string | number, value: string) {
+      this.indexes[index] = {
+        db_ready: false,
+        diff_ready: false,
+        sent: false
+      }
+      await promisify(this.db.set).call(this.db, index.toString(), value)
+      this.indexes[index].db_ready = true
+      this.emit('db-ready', index)
+    }
+
+    generateFullSync() {
+      super.generateFullSync()
+      // save the initial sync to the DB
+      this.dbSet(0, this.full_sync)
+    }
+
+    /**
+     * TODO Share as much logic with the super class as possible.
+     */
     async onGraphChange(
       type: PatchType,
       machine_id: string,
       data?: ITransitionData
     ) {
-      if (!this.checkGranularity(type)) return
+      if (!this.checkGranularity(type)) {
+        return
+      }
 
-      const prev_ids = this.differ.previous_json.cells.map(
-        node => `${node.id}:${node.version}`
-      )
-      let cells = this.differ.generateJson().cells
-      const json_ids = cells.map(node => `${node.id}:${node.version}`)
-      const json_ids_struct = cells.map(node => [
-        node.id,
-        node.version.toString()
-      ])
-
-      const id = randomID()
-      const pos =
-        this.sent_index.push({
-          id,
-          status: false,
-          version_ids: json_ids_struct,
-          missing_ids: null
-        }) - 1
+      this.patches_counter++
+      const json = JSON.stringify(this.differ.generateGraphJSON())
+      const index = this.patches_counter
       const logs = [...this.network.logs]
       this.network.logs = []
 
-      // all the required IDs should be asserted before calling the worker
-      // console.log('WAIT', id, this.redis_index.length)
-      await new Promise(resolve => {
-        this.sent_index.missing_ids = json_ids.filter(
-          id => !this.redis_index.includes(id)
-        )
-        const missing_ids = this.sent_index.missing_ids
-        const listener = vid => {
-          if (missing_ids.includes(vid)) {
-            removeArrayEl(missing_ids, vid)
-          }
-          if (missing_ids.length == 0) {
-            this.removeListener('node-change-saved', listener)
-            resolve()
-          }
-        }
-        this.on('node-change-saved', listener)
-      })
-      // console.log('START', id, this.redis_index.length)
-      const diff = await this.pool.exec('createDiff', [prev_ids, json_ids])
-      // console.log('DONE', this.redis_index.length)
-      // console.timeEnd(id)
-      let packet: IPatch = {
+      // save the json
+      await this.dbSet(index, json)
+
+      // wait for the prev json to finish being written to the DB
+      if (!this.indexes[index - 1].db_ready) {
+        await new Promise(resolve => {
+          this.on('db-ready', (ready_index: string) => {
+            if (ready_index === (index - 1).toString()) {
+              resolve()
+            }
+          })
+        })
+      }
+      // both json (prev and current) are in the DB, ask the worker to diff them
+      const diff: Delta = await this.pool.exec('createDiff', index)
+      this.indexes[index].diff_ready = true
+
+      // skip when there's nothing to send
+      if (type == PatchType.TRANSITION_STEP && !diff && !logs.length) {
+        return null
+      }
+
+      let patch: IPatch = {
+        id: index,
         logs,
         diff,
         type,
@@ -122,53 +107,63 @@ export default function WorkerPoolMixin<TBase extends Constructor>(
         PatchType.TRANSITION_START,
         PatchType.TRANSITION_END
       ].includes(type)
+
       if (is_transaction && data) {
-        packet.data = data
+        patch.data = data
       }
-      this.sent_index[pos].status = true
-      this.patches[pos] = packet
-      this.flushOrderedBuffer(pos)
+
+      this.indexes[index].patch = patch
+      this.flushOrderedBuffer(index)
     }
 
-    flushOrderedBuffer(pos) {
+    /**
+     * Emits an list of ordered events containing patches.
+     */
+    flushOrderedBuffer(index: number) {
       // console.log('try - flushOrderedBuffer', pos)
-      let send = 1
-      let i
-      for (i = this.last_end + 1; i <= pos; i++) {
-        if (!this.sent_index[i].status) {
+      let should_send = false
+      for (let i = this.last_sent_index + 1; i <= index; i++) {
+        if (!this.indexes[i].diff_ready) {
           // console.log('not ready yet', i, this.sent_index[i].missing_ids)
-          send = 0
+          should_send = false
           break
         }
-        send = 1
+        should_send = true
       }
-      if (!send) return
-      let flushed = 0
-      for (i = this.last_end + 1; i <= pos; i++) {
-        if (!this.patches[i - 1]) continue
-        this.emit('diff-sync', this.patches[i - 1], i - 1)
-        flushed++
-        // dispose all IDs older than than the ones used to create
-        // the patch which just got flushed
-        for (const [id, ver] of this.sent_index[i - 1].version_ids) {
-          if (ver < 2) continue
-          const vid = `${id}:${ver - 1}`
-          if (!this.redis_index.includes(vid)) continue
-          // broadcast to all the workers
-          db.publish('ami-logger-cache', vid)
-          // remove from memory
-          removeArrayEl(this.redis_index, vid)
-          db.del(vid)
+      if (!should_send) {
+        return
+      }
+      for (let i = this.last_sent_index + 1; i <= index; i++) {
+        const patch = this.indexes[i - 1].patch
+        // sometimes patches are null, skip them in that case
+        if (!patch) {
+          continue
         }
-        delete this.sent_index[i - 1]
+        this.emit('diff-sync', patch, i - 1)
+        // mark as sent
+        this.indexes[i - 1].sent = true
       }
-      this.last_end = pos
+      // delete old entries
+      for (let i = this.last_sent_index; this.indexes[i]; i--) {
+        // remove from the DB
+        this.db.del(i.toString())
+        // remove from workers cache
+        // TODO dispose directly via worker's interface?
+        this.db.publish('ami-logger-cache', i.toString())
+        // remove from local cache
+        delete this.indexes[i]
+      }
+      this.last_sent_index = index
       // console.log('flushOrderedBuffer', pos)
     }
 
     async dispose() {
       super.dispose()
-      db.publish('ami-logger', 'exit')
+      this.db.publish('ami-logger', 'exit')
+    }
+
+    createPatch(): IPatch | null {
+      throw new Error('Patches should be created by diff workers')
     }
   }
 }

@@ -1,9 +1,21 @@
 import * as assert from 'assert/'
-import { GraphNetwork, GraphNode, NodeGraph } from './graph-network'
+import {
+  GraphNetwork,
+  GraphNode,
+  LinkNode,
+  MachineNode,
+  StateNode
+} from './graph-network'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
 
 // TODO specify the fields
-export type GraphJSON = Partial<NodeGraph>
+export interface IGraphJSON {
+  nodes: {
+    // TODO define the exported type in graph-network.ts
+    [id: string]: Exclude<MachineNode | StateNode, 'machine_node' | 'machine'>
+  }
+  links: { [id: string]: LinkNode[] }
+}
 
 /**
  * TODO make it a stream
@@ -11,17 +23,13 @@ export type GraphJSON = Partial<NodeGraph>
 export class GraphNetworkDiffer {
   network: GraphNetwork
   diffpatcher: DiffPatcher
-  previous_json: GraphJSON
+  previous_json: IGraphJSON
 
   constructor(network: GraphNetwork) {
     assert(network)
     this.network = network
     this.diffpatcher = new DiffPatcher({
       objectHash: this.objectHash()
-      // propertyFilter(name) {
-      //   // skip machine instances
-      //   return ['machine', 'machine'].includes(name)
-      // }
     })
   }
 
@@ -40,28 +48,32 @@ export class GraphNetworkDiffer {
    * TODO skip the caches and rebuild them on import
    * TODO move to the graph class
    */
-  generateGraphJSON(): GraphJSON {
+  generateGraphJSON(): IGraphJSON {
     const graph = this.network.graph
-    const ret: GraphJSON = {}
+    const nodes = {}
+    const links = {}
 
     // clone nodes
-    ret._nodes = {}
     for (const key of Object.keys(graph._nodes)) {
       // @ts-ignore
-      ret._nodes[key] = graph._nodes[key].export()
+      nodes[key] = graph._nodes[key].export()
     }
     // clone _edgeLabels
-    ret._edgeLabels = {}
     for (const key of Object.keys(graph._edgeLabels)) {
       // @ts-ignore
-      ret._edgeLabels[key] = graph._edgeLabels[key].export()
+      links[key] = graph._edgeLabels[key].export()
+    }
+
+    const ret: IGraphJSON = {
+      nodes,
+      links
     }
 
     this.previous_json = ret
     return ret
   }
 
-  generateGraphPatch(base_json?: GraphJSON): Delta {
+  generateGraphPatch(base_json?: IGraphJSON): Delta {
     base_json = base_json || this.previous_json
 
     assert(base_json, 'Base JSON required to create a diff')

@@ -48,7 +48,6 @@ describe('Network', function() {
   let machine5: AsyncMachine<any, any, any>
 
   before(function() {
-    // TODO switch to events
     machine1 = machine({
       A: { require: ['B'] },
       B: {},

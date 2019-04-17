@@ -1,14 +1,6 @@
 import * as workerpool from 'workerpool'
-import * as fs from 'fs'
-import * as util from 'util'
-import {
-  JsonDiffFactory,
-  TLink,
-  JointMachineNode,
-  TState
-} from '../../../network/json/joint'
 import * as redis from 'redis'
-import { chain, sortBy } from 'lodash'
+import { GraphNetworkDiffer } from '../../../network/graph-network-differ'
 
 const cache = {}
 const db = redis.createClient()
@@ -25,89 +17,36 @@ sub.on('message', function(channel, msg) {
 
 const network = {
   json: null,
-  generateJson() {
+  generateGraphJSON() {
     return this.json
   }
 }
 // @ts-ignore
-const differ = new JsonDiffFactory(network)
+const differ = new GraphNetworkDiffer(network)
 
-function versionedID(node: JointMachineNode | TLink | TState) {
-  return `${node.id}:${node.version}`
+function disposeNode(index: string) {
+  delete cache[index]
 }
 
-function disposeNode(vid: string) {
-  delete cache[vid]
-}
-
-async function createDiff(prev_ids: string[], json_ids: string[], pos: number) {
-  // get only unique IDs
-  const ids = chain(prev_ids.filter(vid => !cache[vid]))
-    .concat(json_ids.filter(vid => !cache[vid]))
-    .uniq()
-    .value()
-  let multi = db.multi()
-  for (const id of ids) {
-    multi = multi.get(id)
-  }
-  // TODO <any> bc of wrong typing
-  const results: string[] = <any>await new Promise((resolve, reject) => {
-    multi.exec((err, results) => {
-      if (err) reject(err)
-      resolve(results)
-    })
-  })
-  // build both jsons
-  const json = { cells: [] }
-  const prev = { cells: [] }
-  for (let [index, node_json] of results.entries()) {
-    if (!node_json) {
-      console.error('missing', ids[index])
-      continue
-    }
-    const node: JointMachineNode | TLink | TState = JSON.parse(node_json)
-    const vid = versionedID(node)
-    if (json_ids.includes(vid)) {
-      json.cells.push(node)
-    }
-    if (prev_ids.includes(vid)) {
-      prev.cells.push(node)
-    }
-    // cache the parsed JSON
-    cache[vid] = node
-  }
-  // read the missing IDs from cache
-  for (const vid of prev_ids) {
-    if (!prev.cells.includes(vid)) {
-      prev.cells.push(cache[vid])
-    }
-  }
-  for (const vid of json_ids) {
-    if (!json.cells.includes(vid)) {
-      json.cells.push(cache[vid])
-    }
-  }
-  // sort both jsons like the ID list
-  json.cells.sort(
-    (a, b) =>
-      json_ids.indexOf(versionedID(a)) < json_ids.indexOf(versionedID(b))
-        ? -1
-        : 1
-  )
-  prev.cells.sort(
-    (a, b) =>
-      prev_ids.indexOf(versionedID(a)) < prev_ids.indexOf(versionedID(b))
-        ? -1
-        : 1
-  )
+async function createDiff(index: number) {
+  const [prev, current] = await Promise.all([
+    // prev
+    new Promise(async resolve => {
+      if (cache[index - 1]) {
+        return resolve(cache[index - 1])
+      }
+      resolve(await db.get((index - 1).toString()))
+    }),
+    // current
+    db.get((index - 1).toString())
+  ])
 
   differ.previous_json = prev
-  network.json = json
-  return differ.generateDiff()
+  network.json = current
+  return differ.generateGraphPatch()
 }
 
 // create a worker and register functions
 workerpool.worker({
-  createDiff,
-  disposeNode
+  createDiff
 })

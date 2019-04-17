@@ -300,15 +300,6 @@ export class GraphNetwork extends EventEmitter {
     this.graph = new Graph({ compound: true, directed: true, multigraph: true })
   }
 
-  /**
-   * Returns the type of the connection between 2 passed nodes. Only one
-   * connection is supported.
-   */
-  getLinkType(source: StateNode, target: StateNode): NODE_LINK_TYPE | null {
-    const edges = this.graph.outEdges(source.id, target.id)
-    return edges.length ? edges[0].link_type : null
-  }
-
   protected updateStepStyle(node: StateNode, type: TransitionStepTypes) {
     // add this step type to the bit mask
     node.step_style |= type

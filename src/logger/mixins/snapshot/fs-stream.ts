@@ -1,23 +1,15 @@
-import * as fs from 'fs'
-import { Constructor, Granularity, IOptions } from '../../logger'
-import Network, {
-  IPatch,
-  ITransitionData,
-  PatchType
-} from '../../../network/network'
-import NetworkJson, {
-  JsonDiffFactory,
-  INetworkJson
-} from '../../../network/json/joint'
-import * as EventEmitter from 'eventemitter3'
-import { JSONSnapshot } from '../../../network/json'
-import WritableStream = NodeJS.WritableStream
+import { IPatch, LoggerConstructor } from '../../logger'
+import { IGraphJSON } from '../../../network/graph-network-differ'
 import * as assert from 'assert/'
 import { promisify } from 'util'
+// import { JSONSnapshot } from '../../../network/json'
+import WritableStream = NodeJS.WritableStream
 
 export { FileFSStreamMixin }
 
-export default function FileFSStreamMixin<TBase extends Constructor>(Base: TBase) {
+export default function FileFSStreamMixin<TBase extends LoggerConstructor>(
+  Base: TBase
+) {
   return class extends Base {
     stream: WritableStream
 
@@ -27,20 +19,18 @@ export default function FileFSStreamMixin<TBase extends Constructor>(Base: TBase
 
       this.stream = this.options.stream
 
-      this.on('full-sync', (full_sync: INetworkJson) => {
+      this.on('full-sync', (full_sync: IGraphJSON) => {
         // push a partial JSON to the stream
         const json = JSON.stringify(full_sync)
         this.stream.write(`{"full_sync": ${json}, "patches": [`)
       })
       let first_patch_sent = false
-      this.on('diff-sync', (patch: IPatch, index: number) => {
+      this.on('diff-sync', (patch: IPatch) => {
         // push a single patch and a separator to the stream
         let prefix = ''
         if (first_patch_sent) {
           prefix = ','
         }
-        // GC old patches after they got flushed to the stream
-        delete this.patches[index]
         let json
         try {
           json = JSON.stringify(patch)

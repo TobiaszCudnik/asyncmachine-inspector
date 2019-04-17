@@ -1,6 +1,5 @@
 import { ILogEntry, ITransitionData, PatchType } from '../network/graph-network'
 import * as EventEmitter from 'eventemitter3'
-// import { JSONSnapshot } from '../network/json'
 import { GraphNetworkDiffer } from '../network/graph-network-differ'
 import MachineNetwork from '../network/machine-network'
 import WritableStream = NodeJS.WritableStream
@@ -38,24 +37,20 @@ export const options_defaults = {
   granularity: Granularity.STEPS
 }
 
-export type Constructor<T = Logger> = new (...args: any[]) => T
+export type LoggerConstructor<T = Logger> = new (...args: any[]) => T
 
+/**
+ * Base logger class. Can be extended using mixins (@see /src/logger/mixins).
+ *
+ * TODO type events
+ */
 export default class Logger extends EventEmitter {
   differ: GraphNetworkDiffer
-  full_sync: IGraphJson
-  patches: IPatch[] = []
+  full_sync: IGraphJson | null
+  patches_counter = 0
   summary_fn?: (network: MachineNetwork) => string
   options: IOptions = {}
   granularity = this.options.granularity || Granularity.STEPS
-
-  // TODO
-  // get snapshot(): JSONSnapshot {
-  get snapshot() {
-    return {
-      full_sync: this.full_sync,
-      patches: this.patches
-    }
-  }
 
   constructor(public network: MachineNetwork, options: IOptions = null) {
     super()
@@ -113,7 +108,13 @@ export default class Logger extends EventEmitter {
     this.emit('full-sync', this.full_sync)
   }
 
+  /**
+   * Base logger implementation generates a diff on every graph change.
+   *
+   * This can be overriden in mixings (@see /src/logger/mixins).
+   */
   onGraphChange(type: PatchType, machine_id: string, data?: ITransitionData) {
+    // skip if granularity level is higher then the one set in options.
     if (!this.checkGranularity(type)) {
       return
     }
@@ -121,18 +122,26 @@ export default class Logger extends EventEmitter {
     if (!patch) {
       return
     }
-    patch.id = this.patches.length
-    // TODO remove this along with the /mixins/fs.ts
-    this.patches.push(patch)
-    this.emit('diff-sync', patch, this.patches.length - 1)
+    patch.id = this.patches_counter
+    this.emit('diff-sync', patch, patch.id)
   }
 
-  createPatch(machine_id, type, data?): IPatch | null {
+  /**
+   * Create a patch ready to be consumed by the inspector component.
+   */
+  createPatch(
+    machine_id: string,
+    type: PatchType,
+    data?: ITransitionData
+  ): IPatch | null {
     const diff = this.differ.generateGraphPatch()
+
     const is_transaction = [
       PatchType.TRANSITION_START,
       PatchType.TRANSITION_END
     ].includes(type)
+
+    // skip when there's nothing to send
     if (
       type == PatchType.TRANSITION_STEP &&
       !diff &&
@@ -140,21 +149,27 @@ export default class Logger extends EventEmitter {
     ) {
       return null
     }
+
     let patch: IPatch = {
       diff,
       type,
       machine_id,
       logs: [...this.network.logs]
     }
+
     // only transition data is useful for the patches
     if (is_transaction && data) {
       patch.data = data
     }
+    // support the summary function
     if (this.summary_fn) {
       // TODO use jsondiff
       patch.summary = this.summary_fn(this.network)
     }
+    // clear the logs and bump the counter
     this.network.logs = []
+    this.patches_counter++
+
     return patch
   }
 

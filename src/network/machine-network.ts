@@ -212,11 +212,10 @@ export default class MachineNetwork extends GraphNetwork {
           // TODO missing edge
           continue
         }
-        const edgeData = this.graph.edge(edge[0])
+        const linkNode = this.graph.edge(edge[0])
         // TODO check if not null
-        edgeData.is_touched = true
-        const link_type = this.getLinkType(source_node, node)
-        changed_nodes.add(this.createLinkID(source_node, node, link_type))
+        linkNode.is_touched = true
+        changed_nodes.add(this.createLinkID(source_node, node, linkNode.link_type))
       }
     }
 
