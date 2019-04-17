@@ -1,16 +1,18 @@
 import * as workerpool from 'workerpool'
 import * as redis from 'redis'
 import { GraphNetworkDiffer } from '../../../network/graph-network-differ'
+import { promisify } from 'util'
+import * as assert from "assert";
 
-const cache = {}
 const db = redis.createClient()
 const sub = redis.createClient()
-sub.subscribe('ami-logger-cache')
-sub.subscribe('ami-logger')
+
+console.log('worker start')
+
+sub.subscribe('ami-logger-exit')
+
 sub.on('message', function(channel, msg) {
-  if (channel == 'ami-logger-cache') {
-    disposeNode(msg)
-  } else if (channel == 'ami-logger-cache' && msg == 'exit') {
+  if (channel == 'ami-logger-exit') {
     process.exit()
   }
 })
@@ -18,41 +20,41 @@ sub.on('message', function(channel, msg) {
 // @ts-ignore
 const differ = new GraphNetworkDiffer({})
 
-function disposeNode(index: string) {
-  delete cache[index]
+async function get(index: number) {
+  return await Promise.all([
+    promisify(db.get).call(db, index - 1),
+    promisify(db.get).call(db, index)
+  ])
 }
 
-async function getJSON(index: number) {
-  return new Promise(async resolve => {
-    if (cache[index]) {
-      resolve(cache[index])
-    } else {
-      await db.get(index.toString(), (err, json) => {
-        // save the cache
-        cache[index] = json
-        // resolve
-        resolve(json)
-      })
-    }
-  })
-}
-
+// TODO write directly to the file stream
+//  sync via redis
+//  dont send back the data at all
+//  accept the whole patch in a separate redis cell
 async function createDiff(index: number) {
   // console.log('worker diff req', index)
-  const [prev, current] = await Promise.all([
-    // prev
-    getJSON(index - 1),
-    // current
-    getJSON(index)
-  ])
-  const patch = differ.diffpatcher.diff(prev, current)
+  // get both versions
+  const [prev, current] = await get(index)
+  // create the diff
+  const diff = differ.diffpatcher.diff(prev, current)
+  // load the patch data
+  const patch = JSON.parse(await promisify(db.get).call(db, index + '-patch'))
+  assert(patch, `no patch ${index}`)
+  // update the patch JSON
+  patch.diff = diff
+  await promisify(db.set).call(db, index + '-patch', JSON.stringify(patch))
+  // set as ready
+  await promisify(db.set).call(db, index + '-ready', true)
+  // request a write
+  db.publish('ami-logger-write', index.toString())
   // console.log('worker diff', patch)
   // console.log('worker diff ready', index)
-  // TODO try to save directly to the stream and bypass the main thread
-  return patch
 }
 
 // create a worker and register functions
 workerpool.worker({
+  start: () => {
+    setInterval(() => {}, 1000)
+  },
   createDiff
 })

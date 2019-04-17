@@ -75,9 +75,11 @@ export default class Logger extends EventEmitter {
           return false
         case t.STATE_CHANGED:
         case t.TRANSITION_START:
+          // TODO doesnt work ?
           // accept state changes only from the outer transition
           return this.network.machines_during_transition.length == 1
         case t.TRANSITION_END:
+          // TODO doesnt work ?
           // accept state changes only from the outer transition
           return this.network.machines_during_transition.length == 0
       }
