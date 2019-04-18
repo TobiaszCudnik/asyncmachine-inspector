@@ -2,7 +2,7 @@ import * as workerpool from 'workerpool'
 import * as redis from 'redis'
 import { GraphNetworkDiffer } from '../../../network/graph-network-differ'
 import { promisify } from 'util'
-import * as assert from "assert";
+import * as assert from 'assert'
 
 const db = redis.createClient()
 const sub = redis.createClient()
@@ -35,19 +35,27 @@ async function createDiff(index: number) {
   // console.log('worker diff req', index)
   // get both versions
   const [prev, current] = await get(index)
+  assert(prev, 'no graph json in redis')
+  assert(current, 'no graph json in redis')
   // create the diff
   const diff = differ.diffpatcher.diff(JSON.parse(prev), JSON.parse(current))
   // load the patch data
+  // TODO avoid parsing
   const patch = JSON.parse(await promisify(db.get).call(db, index + '-patch'))
   assert(patch, `no patch ${index}`)
   // update the patch JSON
   patch.diff = diff
   const data = JSON.stringify(patch)
-  await promisify(db.set).call(db, index + '-patch', data)
+  await promisify(db.set).call(db, index + '-patch-diff', data)
+  // console.log('patch saved', index, data.length)
   // set as ready
   await promisify(db.set).call(db, index + '-ready', true)
+  // console.log('ready saved', index)
   // request a write
   db.publish('ami-logger-write', index.toString())
+  if (index % 1000 === 0) {
+    // console.log('AFTER createDiff', index)
+  }
   // console.log('worker diff', patch)
   // console.log('worker diff ready', index)
 }
