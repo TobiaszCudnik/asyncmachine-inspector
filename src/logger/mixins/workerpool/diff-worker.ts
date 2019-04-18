@@ -36,13 +36,14 @@ async function createDiff(index: number) {
   // get both versions
   const [prev, current] = await get(index)
   // create the diff
-  const diff = differ.diffpatcher.diff(prev, current)
+  const diff = differ.diffpatcher.diff(JSON.parse(prev), JSON.parse(current))
   // load the patch data
   const patch = JSON.parse(await promisify(db.get).call(db, index + '-patch'))
   assert(patch, `no patch ${index}`)
   // update the patch JSON
   patch.diff = diff
-  await promisify(db.set).call(db, index + '-patch', JSON.stringify(patch))
+  const data = JSON.stringify(patch)
+  await promisify(db.set).call(db, index + '-patch', data)
   // set as ready
   await promisify(db.set).call(db, index + '-ready', true)
   // request a write

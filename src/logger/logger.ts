@@ -60,6 +60,9 @@ export default class Logger extends EventEmitter {
     if (this.options.summary_fn) {
       this.summary_fn = this.options.summary_fn
     }
+
+    // process.on('SIGINT', this.dispose.bind(this))
+    // process.on('exit', this.dispose.bind(this))
   }
 
   checkGranularity(type: PatchType): boolean {

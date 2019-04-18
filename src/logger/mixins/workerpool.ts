@@ -4,7 +4,6 @@
  *
  * TODO use SharedArrayBuffer, support chrome
  */
-import * as workerpool from 'workerpool'
 import { IPatch, LoggerConstructor } from '../logger'
 import { ITransitionData, PatchType } from '../../network/graph-network'
 import * as redis from 'redis'
@@ -13,6 +12,7 @@ import { promisify } from 'util'
 import * as assert from 'assert'
 import { Semaphore } from 'await-semaphore'
 import { Worker } from 'worker_threads'
+import * as delay from 'delay'
 
 export { WorkerPoolMixin }
 
@@ -35,7 +35,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
     } = {}
     // TODO base on the number of workers *5
     semaphore = new Semaphore(3 * 5)
-    dispatcher
+    dispatcher: Worker
 
     constructor(...args: any[]) {
       super(...args)
@@ -91,6 +91,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       }
 
       this.patches_counter++
+      // TODO optimize stringify
       let json = JSON.stringify(this.differ.generateGraphJSON())
       const index = this.patches_counter
       const logs = [...this.network.logs]
@@ -112,7 +113,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       patch = null
 
       if (index % 100 === 0) {
-        console.log('req', index)
+        // console.log('req', index)
       }
 
       this.db.publish('ami-logger-index', index.toString())
@@ -132,7 +133,9 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
     async dispose() {
       super.dispose()
+      console.log('dispose workerpool')
       this.db.publish('ami-logger-exit', '')
+      await delay(500)
     }
 
     createPatch(): IPatch | null {
