@@ -13,7 +13,10 @@ process.on('exit', exit)
 
 console.log('dispatcher start')
 
-const pool = workerpool.pool(__dirname + '/diff-worker.js')
+const pool = workerpool.pool(__dirname + '/diff-worker.js', {
+  minWorkers: 3,
+  nodeWorker: 'auto'
+})
 
 console.log('pool started')
 

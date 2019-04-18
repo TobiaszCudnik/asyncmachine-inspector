@@ -74,8 +74,9 @@ export enum RELATION_TO_LINK_TYPE {
 export class GraphNode {
   id: string
   type: NODE_TYPE
-  skip_fields = ['machine', 'machine_node']
+  skip_fields = ['machine', 'machine_node', 'cache']
   clone_fields = []
+  cache = null
 
   export(): Object {
     const ret = {}
@@ -88,6 +89,9 @@ export class GraphNode {
         : this[key]
     }
     return ret
+  }
+  clean_cache() {
+    this.cache = null
   }
 }
 
@@ -167,6 +171,8 @@ export class StateNode extends GraphNode {
     return this.machine.clock_[this.name]
   }
 
+  was_set = false
+
   constructor(name: string, machine: MachineNode) {
     super()
     assert(name)
@@ -175,6 +181,16 @@ export class StateNode extends GraphNode {
     this.machine = machine.machine
     this.machine_id = machine.id
     this.machine_node = machine
+    this.was_set = this.machine.is(name)
+
+    this.machine.on('tick', () => {
+      if (!this.was_set && this.machine.is(this.name)) {
+        this.clean_cache()
+      } else if (this.was_set && this.machine.not(this.name)) {
+        this.clean_cache()
+      }
+      this.was_set = this.machine.is(this.name)
+    })
   }
 }
 
@@ -305,6 +321,8 @@ export class GraphNetwork extends EventEmitter {
       node.step_style ^= types.NO_SET
     else if (type == types.NO_SET && node.step_style & types.SET)
       node.step_style ^= types.SET
+    // clear the cache
+    node.cache = null
   }
 
   // TODO move as a getter to the Link class

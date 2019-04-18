@@ -17,6 +17,9 @@ export interface IGraphJSON {
   links: { [id: string]: LinkNode[] }
 }
 
+let caches = 0
+let misses = 0
+
 /**
  * TODO make it a stream
  */
@@ -48,20 +51,79 @@ export class GraphNetworkDiffer {
    * TODO skip the caches and rebuild them on import
    * TODO move to the graph class
    */
-  generateGraphJSON(): IGraphJSON {
+  generateGraphJSON(stringify?: false): IGraphJSON
+  generateGraphJSON(stringify?: true): string
+  generateGraphJSON(stringify = false): IGraphJSON | string {
     const graph = this.network.graph
     const nodes = {}
     const links = {}
-
+    let json = '{"nodes":{'
+    let first = true
     // clone nodes
     for (const key of Object.keys(graph._nodes)) {
       // @ts-ignore
-      nodes[key] = graph._nodes[key].export()
+      const graph_node = graph._nodes[key]
+      if (stringify) {
+        if (!first) {
+          json += ','
+        }
+        if (graph_node.cache) {
+          json += graph_node.cache
+          caches++
+        } else {
+          const node_json =
+            '"' + key + '"' + ': ' + JSON.stringify(graph_node.export())
+          json += node_json
+          if (graph_node instanceof StateNode) {
+            graph_node.cache = node_json
+          }
+          misses++
+        }
+        first = false
+      } else {
+        nodes[key] = graph_node.export()
+      }
     }
+    first = true
+    json += '},"links":{'
     // clone _edgeLabels
     for (const key of Object.keys(graph._edgeLabels)) {
       // @ts-ignore
-      links[key] = graph._edgeLabels[key].export()
+      const graph_node = graph._edgeLabels[key]
+      if (stringify) {
+        if (!first) {
+          json += ','
+        }
+        if (graph_node.cache) {
+          json += graph_node.cache
+          caches++
+        } else {
+          const node_json = `${JSON.stringify(key)}: ${JSON.stringify(
+            graph_node.export()
+          )}`
+          json += node_json
+          graph_node.cache = node_json
+          misses++
+        }
+        first = false
+      } else {
+        links[key] = graph_node.export()
+      }
+    }
+    if (misses % 1000 === 0 || caches % 1000 === 0) {
+      console.log('caches', caches, misses)
+    }
+    json += '}}'
+    // if (json.length > 1000) {
+    //   console.dir(json)
+    //   process.exit()
+    // }
+    try {
+      JSON.parse(json)
+    } catch (e) {
+      console.error('parse error', e)
+      console.log(json)
+      process.exit()
     }
 
     const ret: IGraphJSON = {
@@ -70,7 +132,7 @@ export class GraphNetworkDiffer {
     }
 
     this.previous_json = ret
-    return ret
+    return stringify ? json : ret
   }
 
   generateGraphPatch(base_json?: IGraphJSON): Delta {

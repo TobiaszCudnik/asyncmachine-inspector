@@ -92,14 +92,13 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
       this.patches_counter++
       // TODO optimize stringify
-      let json = JSON.stringify(this.differ.generateGraphJSON())
+      let json = this.differ.generateGraphJSON(true)
       const index = this.patches_counter
       const logs = [...this.network.logs]
       this.network.logs = []
 
       let patch: IPatch = {
         id: index,
-        diff: null,
         logs,
         type,
         machine_id
@@ -109,6 +108,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       // console.log('save json', index)
       await this.dbSet(index, json, patch)
       // dispose
+      this.differ.previous_json = null
       json = null
       patch = null
 

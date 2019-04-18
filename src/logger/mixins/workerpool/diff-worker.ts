@@ -38,7 +38,22 @@ async function createDiff(index: number) {
   assert(prev, 'no graph json in redis')
   assert(current, 'no graph json in redis')
   // create the diff
-  const diff = differ.diffpatcher.diff(JSON.parse(prev), JSON.parse(current))
+  let diff, prev2, current2
+  try {
+    prev2 = JSON.parse(prev)
+  } catch (e) {
+    console.error('json prev failed', e)
+    // console.log(prev)
+    process.exit()
+  }
+  try {
+    current2 = JSON.parse(current)
+  } catch (e) {
+    console.error('json current failed', e)
+    // console.log(current)
+    process.exit()
+  }
+  diff = differ.diffpatcher.diff(prev2, current2)
   // load the patch data
   // TODO avoid parsing
   const patch = JSON.parse(await promisify(db.get).call(db, index + '-patch'))
@@ -54,7 +69,7 @@ async function createDiff(index: number) {
   // request a write
   db.publish('ami-logger-write', index.toString())
   if (index % 1000 === 0) {
-    // console.log('AFTER createDiff', index)
+    console.log('AFTER createDiff', index)
   }
   // console.log('worker diff', patch)
   // console.log('worker diff ready', index)

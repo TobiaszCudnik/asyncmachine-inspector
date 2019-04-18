@@ -13,10 +13,10 @@ export enum Granularity {
 }
 
 export interface IPatch {
-  id?: string | number
+  id: string | number
   type: PatchType
   machine_id: string
-  diff: Delta
+  diff?: Delta
   logs?: ILogEntry[]
   data?: ITransitionData
   summary?: string
