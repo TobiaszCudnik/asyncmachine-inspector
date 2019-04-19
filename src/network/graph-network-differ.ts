@@ -7,6 +7,7 @@ import {
   StateNode
 } from './graph-network'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
+import * as EventEmitter from 'eventemitter3'
 
 // TODO specify the fields
 export interface IGraphJSON {
@@ -19,16 +20,18 @@ export interface IGraphJSON {
 
 let caches = 0
 let misses = 0
+const last_index = {}
 
 /**
  * TODO make it a stream
  */
-export class GraphNetworkDiffer {
+export class GraphNetworkDiffer extends EventEmitter {
   network: GraphNetwork
   diffpatcher: DiffPatcher
   previous_json: IGraphJSON
 
   constructor(network: GraphNetwork) {
+    super()
     assert(network)
     this.network = network
     this.diffpatcher = new DiffPatcher({
@@ -45,86 +48,88 @@ export class GraphNetworkDiffer {
     }
   }
 
+  last_cache_id = 0
+
   /**
    * Generates a json representation of the graph, ready for diffing.
    *
    * TODO skip the caches and rebuild them on import
    * TODO move to the graph class
    */
-  generateGraphJSON(stringify?: false): IGraphJSON
-  generateGraphJSON(stringify?: true): string
-  generateGraphJSON(stringify = false): IGraphJSON | string {
+  generateGraphJSON(stringify?: false, index?: undefined): IGraphJSON
+  // @ts-ignore
+  generateGraphJSON(
+    stringify?: true,
+    index?: number
+  ): [Function[], [number, number][], string]
+  // @ts-ignore
+  generateGraphJSON(
+    stringify = false,
+    index: number = undefined
+  ): IGraphJSON | Promise<string> {
     const graph = this.network.graph
     const nodes = {}
     const links = {}
-    let json = '{"nodes":{'
+    let json = '{"nodes":['
     let first = true
+    const to_delete: string[] = []
+    const to_save = {}
+    const run_node = (key, source, target) => {
+      const graph_node = source[key]
+      if (stringify) {
+        if (!first) {
+          json += ','
+        }
+        const cache_index = graph_node.cache
+          ? graph_node.cache_version
+          : this.last_cache_id
+        json += cache_index
+        if (graph_node.cache) {
+          caches++
+        } else {
+          graph_node.cache = true
+          to_save[this.last_cache_id] = JSON.stringify(graph_node.export())
+          to_delete.push(graph_node.cache_version)
+          graph_node.cache_version = this.last_cache_id
+          // inc
+          misses++
+          this.last_cache_id++
+        }
+        first = false
+      } else {
+        target[key] = graph_node.export()
+      }
+    }
+    this.emit('json-cache', to_save, to_delete)
+    // TODO delete nodes missing from the last run
     // clone nodes
     for (const key of Object.keys(graph._nodes)) {
-      // @ts-ignore
-      const graph_node = graph._nodes[key]
-      if (stringify) {
-        if (!first) {
-          json += ','
-        }
-        if (graph_node.cache) {
-          json += graph_node.cache
-          caches++
-        } else {
-          const node_json =
-            '"' + key + '"' + ': ' + JSON.stringify(graph_node.export())
-          json += node_json
-          if (graph_node instanceof StateNode) {
-            graph_node.cache = node_json
-          }
-          misses++
-        }
-        first = false
-      } else {
-        nodes[key] = graph_node.export()
-      }
+      run_node(key, graph._nodes, nodes)
     }
     first = true
-    json += '},"links":{'
+    json += '],"links":['
     // clone _edgeLabels
     for (const key of Object.keys(graph._edgeLabels)) {
-      // @ts-ignore
-      const graph_node = graph._edgeLabels[key]
-      if (stringify) {
-        if (!first) {
-          json += ','
-        }
-        if (graph_node.cache) {
-          json += graph_node.cache
-          caches++
-        } else {
-          const node_json = `${JSON.stringify(key)}: ${JSON.stringify(
-            graph_node.export()
-          )}`
-          json += node_json
-          graph_node.cache = node_json
-          misses++
-        }
-        first = false
-      } else {
-        links[key] = graph_node.export()
-      }
+      run_node(key, graph._edgeLabels, links)
     }
-    if (misses % 1000 === 0 || caches % 1000 === 0) {
+    json += ']}'
+
+    // ----- DEBUG
+
+    if (misses % 10000 === 0 || caches % 10000 === 0) {
       console.log('caches', caches, misses)
     }
-    json += '}}'
     // if (json.length > 1000) {
     //   console.dir(json)
     //   process.exit()
     // }
-    try {
-      JSON.parse(json)
-    } catch (e) {
-      console.error('parse error', e)
-      console.log(json)
-      process.exit()
-    }
+    // try {
+    //   JSON.parse(json)
+    // } catch (e) {
+    //   console.error('parse error', e)
+    //   console.log(json)
+    //   process.exit()
+    // }
 
     const ret: IGraphJSON = {
       nodes,
@@ -132,7 +137,8 @@ export class GraphNetworkDiffer {
     }
 
     this.previous_json = ret
-    return stringify ? json : ret
+    // @ts-ignore
+    return stringify ? [to_save, to_delete, json] : ret
   }
 
   generateGraphPatch(base_json?: IGraphJSON): Delta {

@@ -3,6 +3,7 @@ import * as redis from 'redis'
 import { promisify } from 'util'
 import * as fs from 'fs'
 import * as now from 'performance-now'
+import { isMainThread } from 'worker_threads'
 
 const db = redis.createClient()
 const sub = redis.createClient()
@@ -11,11 +12,11 @@ const stream = fs.createWriteStream('logs/snapshot.json')
 process.on('SIGINT', exit)
 process.on('exit', exit)
 
-console.log('dispatcher start')
+console.log('dispatcher start', isMainThread)
 
 const pool = workerpool.pool(__dirname + '/diff-worker.js', {
   minWorkers: 3,
-  nodeWorker: 'auto'
+  nodeWorker: 'thread'
 })
 
 console.log('pool started')
@@ -34,6 +35,7 @@ sub.on('message', async function(channel, msg) {
   } else if (channel === 'ami-logger-index') {
     pool.exec('createDiff', [parseInt(msg, 10)])
   } else if (channel === 'ami-logger-write') {
+    // TODO move to a dedicated worker
     highest_index = Math.max(highest_index, parseInt(msg, 10))
     if (!writting) {
       writting = true
@@ -42,6 +44,10 @@ sub.on('message', async function(channel, msg) {
     }
   }
 })
+
+async function get(key) {
+  return promisify(db.get).call(db, key)
+}
 
 /**
  * Emits an list of ordered events containing patches.
@@ -62,7 +68,10 @@ async function write() {
       break
     }
     // console.log('patch read', lowest_index)
-    let patch = await promisify(db.get).call(db, lowest_index + '-patch-diff')
+    let [patch, to_delete] = await Promise.all([
+      get(lowest_index + '-patch-diff'),
+      get(lowest_index + '-delete')
+    ])
 
     // json start
     if (lowest_index === 0) {
@@ -82,11 +91,10 @@ async function write() {
     }
     // console.log('patch write', lowest_index, patch.length)
 
-    // TODO dont wait? stream directly from redis
     // await promisify(stream.write).call(stream, patch)
     stream.write(patch)
     // stream.uncork()
-    disposeIndex(lowest_index)
+    disposeIndex(lowest_index, JSON.parse(to_delete))
     // console.log('disposeIndex', index)
     lowest_index++
 
@@ -105,12 +113,22 @@ async function exit() {
 }
 
 // dispose completed node
-function disposeIndex(index: number) {
+function disposeIndex(index: number, to_delete: string[] = []) {
+  if (index % 1000 === 0) {
+    console.log('dispose', index)
+  }
   // remove from the DB
   db.del(index + '-patch')
   db.del(index + '-patch-diff')
   db.del(index + '-ready')
+  db.del(index + '-delete')
   db.del((index - 1).toString())
+  if (to_delete) {
+    for (const id of to_delete) {
+      db.del(id)
+    }
+  }
+  this.db.publish('ami-logger-dispose', index.toString())
 }
 
 // create a worker and register functions
