@@ -69,6 +69,7 @@ async function write() {
     }
     // console.log('patch read', lowest_index)
     let [patch, to_delete] = await Promise.all([
+      // TODO merge with `patch`?
       get(lowest_index + '-patch-diff'),
       get(lowest_index + '-delete')
     ])

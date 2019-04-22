@@ -74,18 +74,18 @@ export enum RELATION_TO_LINK_TYPE {
 export class GraphNode {
   id: string
   type: NODE_TYPE
-  skip_fields = ['machine', 'machine_node', 'cache']
+  skip_fields = ['machine', 'machine_node', 'cache', 'prev_cache']
   clone_fields = []
   cache = null
 
-  export(): Object {
+  export(copy = false): Object {
     const ret = {}
     for (const key of Object.keys(this)) {
       if (['skip_fields', 'clone_fields', ...this.skip_fields].includes(key)) {
         continue
       }
       ret[key] = this.clone_fields.includes(key)
-        ? deepCopy(this[key])
+        ? copy ? deepCopy(this[key]) : this[key]
         : this[key]
     }
     return ret

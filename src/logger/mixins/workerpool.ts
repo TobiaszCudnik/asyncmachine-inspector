@@ -33,8 +33,8 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
         patch?: IPatch
       }
     } = {}
-    // TODO base on the number of workers *5
-    semaphore = new Semaphore(3 * 5)
+    // TODO move to dispatcher and throttle
+    // semaphore = new Semaphore(3 * 5)
     dispatcher: Worker
 
     constructor(...args: any[]) {
@@ -42,40 +42,34 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       // TODO pass a DB name?
       this.db = redis.createClient()
 
-      this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
+      // TODO check why not in htop
+      // this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
 
       // this.pool.exec('start')
       // this.pool.exec('start')
       // this.pool.exec('start')
     }
 
-    async dbSet(index: string | number, value: string, patch: IPatch) {
-      assert(typeof value === 'string')
-      const i = index.toString()
-      this.indexes[index] = {
-        db_ready: false,
-        // theres no diff for the initial sync
-        diff_ready: i === '0'
-      }
+    async dbSet(key: string | number, value: string) {
+      return await promisify(this.db.set).call(this.db, key.toString(), value)
+    }
+
+    async saveNode(index: string | number, json, patch: IPatch) {
       await Promise.all([
-        promisify(this.db.set).call(this.db, i, value),
-        promisify(this.db.set).call(
-          this.db,
-          i + '-patch',
-          JSON.stringify(patch)
-        ),
-        promisify(this.db.set).call(this.db, i + '-ready', '1')
+        this.dbSet(index, json),
+        this.dbSet(index + '-patch', JSON.stringify(patch)),
+        // this blocks the workers from parsing this node
+        this.dbSet(index + '-ready', '1')
       ])
-      // console.log('dbset', index)
-      // this.indexes[index].db_ready = true
-      // this.emit('db-ready', index)
-      // this.db.publish('ami-logger-index', i)
+      // if (parseInt(index, 10) % 1000 === 0) {
+      //   console.log('dbset', index)
+      // }
     }
 
     generateFullSync() {
       super.generateFullSync()
       // save the initial sync to the DB
-      this.dbSet('0', JSON.stringify(this.full_sync), null)
+      this.saveNode('0', JSON.stringify(this.full_sync), null)
     }
 
     /**
@@ -91,11 +85,34 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       }
 
       this.patches_counter++
-      // TODO optimize stringify
-      let json = this.differ.generateGraphJSON(true)
       const index = this.patches_counter
       const logs = [...this.network.logs]
       this.network.logs = []
+
+      // TODO batch cache_nodes
+      // this.differ.on('cache-node', cache_node)
+      // console.log('json start', index)
+      let [to_save, to_delete, json] = await this.differ.generateGraphJSON(true)
+      // console.log('json.length', index, json.length)
+      if (json.length > 5000) {
+        console.log(json)
+        process.exit()
+      }
+      // TODO jump to the next tick?
+      // TODO barch by 50
+      // TODO dispose after Promises dispatched
+      // save the cache
+      const promises = Object.keys(to_save).map(data => {
+        return new Promise((resolve, reject) => {
+          this.db.set(data[0], data[1], err => {
+            return err ? reject('err ' + err) : resolve()
+          })
+        })
+      })
+      if (to_delete) {
+        promises.push(this.dbSet(index + '-delete', JSON.stringify(to_delete)))
+      }
+      // console.log('saved', index)
 
       let patch: IPatch = {
         id: index,
@@ -104,31 +121,24 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
         machine_id
       }
 
+      // console.log(json)
       // save the json
-      // console.log('save json', index)
-      await this.dbSet(index, json, patch)
-      // dispose
+      // console.log('json.length', json.length)
+      promises.push(this.saveNode(index, json, patch))
+      // dispose TODO new ones
       this.differ.previous_json = null
       json = null
       patch = null
 
-      if (index % 100 === 0) {
-        // console.log('req', index)
-      }
+      // wait for everything to save
+      await Promise.all(promises)
 
+      // if (index % 1000 === 0) {
+      //   console.log('req', index)
+      // }
+
+      // TODO throttle with a tail
       this.db.publish('ami-logger-index', index.toString())
-    }
-
-    stats() {
-      const indexes = Object.values(this.indexes)
-      const keys = Object.keys(this.indexes)
-      return {
-        last_sent_index: this.last_sent_index,
-        active: indexes.length,
-        'no diff': indexes.filter(i => !i.diff_ready).length,
-        'no db': indexes.filter(i => !i.db_ready).length,
-        last_index: keys[keys.length - 1]
-      }
     }
 
     async dispose() {

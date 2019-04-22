@@ -8,6 +8,9 @@ import {
 } from './graph-network'
 import { Delta, DiffPatcher } from 'jsondiffpatch'
 import * as EventEmitter from 'eventemitter3'
+import { difference } from 'lodash'
+
+const DIFF_CACHE = false
 
 // TODO specify the fields
 export interface IGraphJSON {
@@ -20,7 +23,6 @@ export interface IGraphJSON {
 
 let caches = 0
 let misses = 0
-const last_index = {}
 
 /**
  * TODO make it a stream
@@ -49,6 +51,7 @@ export class GraphNetworkDiffer extends EventEmitter {
   }
 
   last_cache_id = 0
+  last_ids = { nodes: [], links: [] }
 
   /**
    * Generates a json representation of the graph, ready for diffing.
@@ -58,66 +61,59 @@ export class GraphNetworkDiffer extends EventEmitter {
    */
   generateGraphJSON(stringify?: false, index?: undefined): IGraphJSON
   // @ts-ignore
-  generateGraphJSON(
-    stringify?: true,
-    index?: number
-  ): [Function[], [number, number][], string]
+  generateGraphJSON(stringify?: true): [[number, string][], number[], string]
   // @ts-ignore
-  generateGraphJSON(
-    stringify = false,
-    index: number = undefined
-  ): IGraphJSON | Promise<string> {
+  generateGraphJSON(stringify = false): IGraphJSON | Promise<string> {
     const graph = this.network.graph
-    const nodes = {}
-    const links = {}
-    let json = '{"nodes":['
-    let first = true
+
+    // reset last IDs
+    const last_ids = this.last_ids
+    this.last_ids = { nodes: [], links: [] }
+
+    // start the json
+    let json = '{"nodes":'
+
+    // store the cache changes
     const to_delete: string[] = []
-    const to_save = {}
-    const run_node = (key, source, target) => {
-      const graph_node = source[key]
-      if (stringify) {
-        if (!first) {
-          json += ','
-        }
-        const cache_index = graph_node.cache
-          ? graph_node.cache_version
-          : this.last_cache_id
-        json += cache_index
-        if (graph_node.cache) {
-          caches++
-        } else {
-          graph_node.cache = true
-          to_save[this.last_cache_id] = JSON.stringify(graph_node.export())
-          to_delete.push(graph_node.cache_version)
-          graph_node.cache_version = this.last_cache_id
-          // inc
-          misses++
-          this.last_cache_id++
-        }
-        first = false
-      } else {
-        target[key] = graph_node.export()
-      }
-    }
-    this.emit('json-cache', to_save, to_delete)
-    // TODO delete nodes missing from the last run
+    const to_save = { add: [], remove: [] }
+
     // clone nodes
-    for (const key of Object.keys(graph._nodes)) {
-      run_node(key, graph._nodes, nodes)
-    }
-    first = true
-    json += '],"links":['
-    // clone _edgeLabels
-    for (const key of Object.keys(graph._edgeLabels)) {
-      run_node(key, graph._edgeLabels, links)
-    }
-    json += ']}'
+    const [json_nodes, ids_nodes] = this.processList(
+      to_save,
+      to_delete,
+      graph._nodes,
+      last_ids.nodes
+    )
+    json += json_nodes
+    // store last ids
+    this.last_ids.nodes = ids_nodes
+
+    // clone links (_edgeLabels)
+    json += `, "links": `
+    const [json_links, ids_links] = this.processList(
+      to_save,
+      to_delete,
+      graph._edgeLabels,
+      last_ids.links
+    )
+    json += json_links
+    // store last ids
+    this.last_ids.links = ids_links
+
+    // end json
+    json += '}'
+
+    // emit cache to redis
+    this.emit('json-cache', to_save, to_delete)
 
     // ----- DEBUG
 
-    if (misses % 10000 === 0 || caches % 10000 === 0) {
-      console.log('caches', caches, misses)
+    if (misses && misses % 1000 === 0) {
+      // console.log('misses', caches, misses)
+    }
+
+    if (caches && caches % 1000 === 0) {
+      // console.log('caches', caches, misses)
     }
     // if (json.length > 1000) {
     //   console.dir(json)
@@ -132,13 +128,74 @@ export class GraphNetworkDiffer extends EventEmitter {
     // }
 
     const ret: IGraphJSON = {
-      nodes,
-      links
+      // nodes,
+      // links
     }
 
     this.previous_json = ret
     // @ts-ignore
     return stringify ? [to_save, to_delete, json] : ret
+  }
+
+  processList(
+    to_save,
+    to_delete,
+    source: {},
+    prev_cache_indexes: string[]
+  ): [string, number[]] {
+    let first = true
+    let json = '{"add": ['
+    const to_add = []
+    const cache_indexes = []
+    for (const id of Object.keys(source)) {
+      const graph_node = source[id]
+      const cache_index = graph_node.cache
+        ? graph_node.cache_version
+        : this.last_cache_id
+      cache_indexes.push(cache_index)
+
+      // check if was in prev cache list
+      if (prev_cache_indexes.includes(cache_index)) {
+        caches++
+        continue
+      }
+
+      to_add.push(cache_index)
+
+      // store the cache
+      graph_node.cache = true
+      const node_cache = DIFF_CACHE
+        ? graph_node.export(true)
+        : JSON.stringify(graph_node.export())
+      to_save.add.push(
+        this.last_cache_id,
+        // TODO bench creating a patch here
+        DIFF_CACHE && graph_node.prev_cache
+          ? JSON.stringify(
+              this.diffpatcher.diff(node_cache, graph_node.prev_cache)
+            )
+          : node_cache
+      )
+      if (DIFF_CACHE) {
+        graph_node.prev_cache = node_cache
+      }
+      to_delete.push(graph_node.cache_version)
+      graph_node.cache_version = this.last_cache_id
+
+      // inc
+      misses++
+      this.last_cache_id++
+      first = false
+    }
+
+    json += write_ranges(to_add)
+
+    const to_remove = difference(cache_indexes, prev_cache_indexes)
+    to_delete.push(...to_remove)
+
+    json += `], "remove": [${write_ranges(to_remove)}]}`
+
+    return [json, cache_indexes]
   }
 
   generateGraphPatch(base_json?: IGraphJSON): Delta {
@@ -151,6 +208,36 @@ export class GraphNetworkDiffer extends EventEmitter {
     // generate the diff
     return this.diffpatcher.diff(base_json, this.previous_json)
   }
+}
+
+function write_ranges(list: number[]) {
+  let json = ''
+  let first = true
+  let range_start = 0
+  let last_id = 0
+  function endRange() {
+    if (first) {
+      json += ','
+    }
+    first = false
+    if (last_id - range_start > 1) {
+      json += `"${range_start}-${last_id}"`
+    } else {
+      json += `${range_start}, ${last_id}`
+    }
+  }
+  for (const id of list) {
+    if (id === last_id + 1) {
+      last_id = id
+      break
+    }
+    last_id = id
+    endRange()
+    range_start = id
+  }
+  endRange()
+
+  return json
 }
 
 export enum OBJECT_TYPE {
