@@ -71,28 +71,78 @@ export enum RELATION_TO_LINK_TYPE {
   after = NODE_LINK_TYPE.AFTER
 }
 
+// GRAPH NODE
+
+export enum GraphNodeFieldsImmutale {
+  ID,
+  TYPE
+}
+
+export enum GraphNodeFields {}
+
+const numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
 export class GraphNode {
   id: string
   type: NODE_TYPE
-  skip_fields = ['machine', 'machine_node', 'cache', 'prev_cache']
   clone_fields = []
   cache = null
+  prev_cache = false
 
-  export(copy = false): Object {
+  exportDiff(): Object {
     const ret = {}
-    for (const key of Object.keys(this)) {
-      if (['skip_fields', 'clone_fields', ...this.skip_fields].includes(key)) {
-        continue
-      }
-      ret[key] = this.clone_fields.includes(key)
-        ? copy ? deepCopy(this[key]) : this[key]
-        : this[key]
+    this.createDiff(ret, GraphNodeFields, GraphNodeFieldsImmutale)
+    return ret
+  }
+
+  // last = {}
+
+  createDiff(ret: {}, mutable, immutable, shift = 0): Object {
+    for (const field of Object.keys(mutable)) {
+      if (numbers.includes(field['0'])) continue
+
+      // encode the field by the enum
+      ret[mutable[field] + shift] = this[field.toLocaleLowerCase()]
+    }
+    if (this.prev_cache) {
+      return ret
+    }
+    for (const field of Object.keys(immutable)) {
+      if (numbers.includes(field['0'])) continue
+
+      const index = immutable[field] + shift + 10
+      // encode the field by the enum
+      const value = this[field.toLocaleLowerCase()]
+
+      // if (this.last[index] === value) {
+      //   // no change
+      //   continue
+      // }
+
+      // save
+      ret[index] = value
+      // this.last[index] = value
     }
     return ret
   }
-  clean_cache() {
+
+  cleanCache() {
     this.cache = null
   }
+}
+
+// LINK NODE
+
+export enum LinkNodeFieldsImmutable {
+  LINK_TYPE,
+  TO_ID,
+  FROM_ID,
+  TO_NAME,
+  FROM_NAME
+}
+
+export enum LinkNodeFields {
+  IS_TOUCHED
 }
 
 export class LinkNode extends GraphNode {
@@ -121,6 +171,27 @@ export class LinkNode extends GraphNode {
     this.to_id = to_id
     this.link_type = link_type
   }
+
+  was_touched = false
+
+  exportDiff(): Object {
+    const ret = super.exportDiff()
+    this.createDiff(ret, LinkNodeFields, LinkNodeFieldsImmutable, 10)
+    return ret
+  }
+}
+
+// STATE NODE
+
+export enum StateNodeFieldsImmutable {
+  NAME,
+  MACHINE_ID
+}
+
+export enum StateNodeFields {
+  STEP_STYLE,
+  IS_SET,
+  CLOCK
 }
 
 export class StateNode extends GraphNode {
@@ -142,6 +213,8 @@ export class StateNode extends GraphNode {
   }
   /**
    * Get the original state definition.
+   *
+   * TODO dont export
    */
   get state() {
     return this.machine.get(this.name)
@@ -185,13 +258,32 @@ export class StateNode extends GraphNode {
 
     this.machine.on('tick', () => {
       if (!this.was_set && this.machine.is(this.name)) {
-        this.clean_cache()
+        this.cleanCache()
       } else if (this.was_set && this.machine.not(this.name)) {
-        this.clean_cache()
+        this.cleanCache()
       }
       this.was_set = this.machine.is(this.name)
     })
   }
+
+  exportDiff(): Object {
+    const ret = super.exportDiff()
+    this.createDiff(ret, StateNodeFields, StateNodeFieldsImmutable, 10)
+    return ret
+  }
+}
+
+// MACHINE NODE
+
+export enum MachineNodeFieldsImmutable {}
+
+export enum MachineNodeFields {
+  // TODO enable
+  // QUEUE,
+  LISTENERS,
+  PROCESSING_Q1UEUE,
+  TICKS,
+  DURING_TRANSITION
 }
 
 export class MachineNode extends GraphNode {
@@ -207,17 +299,16 @@ export class MachineNode extends GraphNode {
   get during_transition(): boolean {
     return this.machine.duringTransition()
   }
+
   get queue(): any {
-    // TODO ID
-    // @ts-ignore
-    const id = QueueRowFields.ID
-    // TODO cache
+    // TODO return enum-indexed object
     return this.machine.queue().map(r => ({
       machine: (r[QueueRowFields.TARGET] || this.machine).id(true),
       states: r[QueueRowFields.STATES],
       type: r[QueueRowFields.STATE_CHANGE_TYPE],
       auto: r[QueueRowFields.AUTO],
-      id: r[id]
+      // TODO npm link
+      id: r[QueueRowFields.ID]
     }))
   }
   get processing_queue(): boolean {
@@ -243,6 +334,12 @@ export class MachineNode extends GraphNode {
   constructor(machine: TAsyncMachine) {
     super()
     this.machine = machine
+  }
+
+  exportDiff(): Object {
+    const ret = super.exportDiff()
+    this.createDiff(ret, MachineNodeFields, MachineNodeFieldsImmutable, 10)
+    return ret
   }
 }
 

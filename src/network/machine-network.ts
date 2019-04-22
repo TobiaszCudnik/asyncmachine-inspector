@@ -152,7 +152,7 @@ export default class MachineNetwork extends GraphNetwork {
         for (const edge of this.graph.edges()) {
           // TODO setter
           this.graph.edge(edge).is_touched = false
-          this.graph.edge(edge).clean_cache()
+          this.graph.edge(edge).cleanCache()
         }
         // TODO potentially skips other queue sources (from nested transitions)
       }
@@ -217,7 +217,7 @@ export default class MachineNetwork extends GraphNetwork {
         const linkNode = this.graph.edge(edge[0])
         // TODO check if not null
         linkNode.is_touched = true
-        linkNode.clean_cache()
+        linkNode.cleanCache()
         changed_nodes.add(this.createLinkID(source_node, node, linkNode.link_type))
       }
     }

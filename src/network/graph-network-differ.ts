@@ -10,15 +10,15 @@ import { Delta, DiffPatcher } from 'jsondiffpatch'
 import * as EventEmitter from 'eventemitter3'
 import { difference } from 'lodash'
 
-const DIFF_CACHE = false
+const DIFF_CACHE = true
 
 // TODO specify the fields
 export interface IGraphJSON {
-  nodes: {
-    // TODO define the exported type in graph-network.ts
-    [id: string]: Exclude<MachineNode | StateNode, 'machine_node' | 'machine'>
-  }
-  links: { [id: string]: LinkNode[] }
+  // nodes: {
+  //   // TODO define the exported type in graph-network.ts
+  //   [id: string]: Exclude<MachineNode | StateNode, 'machine_node' | 'machine'>
+  // }
+  // links: { [id: string]: LinkNode[] }
 }
 
 let caches = 0
@@ -160,24 +160,27 @@ export class GraphNetworkDiffer extends EventEmitter {
         continue
       }
 
-      to_add.push(cache_index)
-
       // store the cache
       graph_node.cache = true
       const node_cache = DIFF_CACHE
-        ? graph_node.export(true)
-        : JSON.stringify(graph_node.export())
-      to_save.add.push(
-        this.last_cache_id,
-        // TODO bench creating a patch here
-        DIFF_CACHE && graph_node.prev_cache
-          ? JSON.stringify(
-              this.diffpatcher.diff(node_cache, graph_node.prev_cache)
-            )
-          : node_cache
-      )
+        ? graph_node.exportDiff()
+        : graph_node.export()
+
+      // if (!Object.keys(node_cache).length) {
+      //   console.log('node skipped')
+      //   continue
+      // }
+
+      to_add.push(cache_index)
+      const node_cache_json = JSON.stringify(node_cache)
+      // console.log(
+      //   'node_cache_json.length',
+      //   node_cache_json.length,
+      //   node_cache_json
+      // )
+      to_save.add.push(this.last_cache_id, node_cache_json)
       if (DIFF_CACHE) {
-        graph_node.prev_cache = node_cache
+        graph_node.prev_cache = true
       }
       to_delete.push(graph_node.cache_version)
       graph_node.cache_version = this.last_cache_id
