@@ -89,7 +89,7 @@ export class GraphNode {
   cache = null
   prev_cache = false
 
-  exportDiff(): Object {
+  export(): Object {
     const ret = {}
     this.createDiff(ret, GraphNodeFields, GraphNodeFieldsImmutale)
     return ret
@@ -174,8 +174,8 @@ export class LinkNode extends GraphNode {
 
   was_touched = false
 
-  exportDiff(): Object {
-    const ret = super.exportDiff()
+  export(): Object {
+    const ret = super.export()
     this.createDiff(ret, LinkNodeFields, LinkNodeFieldsImmutable, 10)
     return ret
   }
@@ -266,8 +266,8 @@ export class StateNode extends GraphNode {
     })
   }
 
-  exportDiff(): Object {
-    const ret = super.exportDiff()
+  export(): Object {
+    const ret = super.export()
     this.createDiff(ret, StateNodeFields, StateNodeFieldsImmutable, 10)
     return ret
   }
@@ -336,8 +336,8 @@ export class MachineNode extends GraphNode {
     this.machine = machine
   }
 
-  exportDiff(): Object {
-    const ret = super.exportDiff()
+  export(): Object {
+    const ret = super.export()
     this.createDiff(ret, MachineNodeFields, MachineNodeFieldsImmutable, 10)
     return ret
   }

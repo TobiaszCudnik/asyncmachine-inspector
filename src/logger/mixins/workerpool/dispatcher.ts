@@ -2,6 +2,7 @@ import * as workerpool from 'workerpool'
 import * as redis from 'redis'
 import { promisify } from 'util'
 import * as fs from 'fs'
+// @ts-ignore
 import * as now from 'performance-now'
 import { isMainThread } from 'worker_threads'
 
@@ -16,6 +17,7 @@ console.log('dispatcher start', isMainThread)
 
 const pool = workerpool.pool(__dirname + '/diff-worker.js', {
   minWorkers: 3,
+  // @ts-ignore
   nodeWorker: 'thread'
 })
 
@@ -23,25 +25,41 @@ console.log('pool started')
 
 sub.subscribe('ami-logger-exit')
 sub.subscribe('ami-logger-index')
+sub.subscribe('ami-logger-index-worker')
 sub.subscribe('ami-logger-write')
 
 let writting = false
 let time = now()
 let lowest_index = 0
 let highest_index = 0
+const workers = {}
+let last_diff_index = -1
 sub.on('message', async function(channel, msg) {
-  if (channel == 'ami-logger-exit') {
-    exit()
-  } else if (channel === 'ami-logger-index') {
-    pool.exec('createDiff', [parseInt(msg, 10)])
-  } else if (channel === 'ami-logger-write') {
-    // TODO move to a dedicated worker
-    highest_index = Math.max(highest_index, parseInt(msg, 10))
-    if (!writting) {
-      writting = true
-      await write()
-      writting = false
+  try {
+    if (channel == 'ami-logger-exit') {
+      exit()
+    } else if (channel === 'ami-logger-index-worker') {
+      // update the index for this worker
+      const data = JSON.parse(msg)
+      console.log('ami-logger-index-worker', data)
+      workers[data.worker_id] = data.index
+      // try to parse
+      const lowest_workers = Math.min(...(Object.values(workers) as number[]))
+      for (let i = last_diff_index; i <= lowest_workers; i++) {
+        pool.exec('createDiff', [i])
+      }
+      last_diff_index = lowest_workers
+    } else if (channel === 'ami-logger-write') {
+      // TODO move to a dedicated worker
+      highest_index = Math.max(highest_index, parseInt(msg, 10))
+      if (!writting) {
+        writting = true
+        await write()
+        writting = false
+      }
     }
+  } catch (e) {
+    console.error('worker dispatcher error', e)
   }
 })
 

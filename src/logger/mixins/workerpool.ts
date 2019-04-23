@@ -44,32 +44,56 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
       // TODO check why not in htop
       // this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
-
-      // this.pool.exec('start')
-      // this.pool.exec('start')
-      // this.pool.exec('start')
     }
 
     async dbSet(key: string | number, value: string) {
       return await promisify(this.db.set).call(this.db, key.toString(), value)
     }
 
+    empty_indexes = 0
     async saveNode(index: string | number, json, patch: IPatch) {
+      // DEBUG
+      if (
+        json ===
+        '{"nodes":{"add": [], "remove": []}, "links": {"add": [], "remove": []}}'
+      ) {
+        this.empty_indexes++
+        if (this.empty_indexes && this.empty_indexes % 1000 === 0) {
+          console.log('empty_indexes', this.empty_indexes)
+        }
+        // TODO avoid empty indexes
+        json = ''
+      }
+
       await Promise.all([
-        this.dbSet(index, json),
-        this.dbSet(index + '-patch', JSON.stringify(patch)),
+        json && this.dbSet(index + '-index', json) || null,
+        patch && this.dbSet(index + '-patch', JSON.stringify(patch)) || null,
         // this blocks the workers from parsing this node
         this.dbSet(index + '-ready', '1')
       ])
+
+      // DEBUG
       // if (parseInt(index, 10) % 1000 === 0) {
       //   console.log('dbset', index)
       // }
     }
 
-    generateFullSync() {
-      super.generateFullSync()
+    async generateFullSync() {
+      const [to_save, _, json] = this.differ.generateGraphDiff()
+
+      // save the diff parts
+      const promises = to_save.map(async data => {
+        // console.log('saving cache', data)
+        await this.dbSet('cache-' + data[0], data[1])
+      })
+
       // save the initial sync to the DB
-      this.saveNode('0', JSON.stringify(this.full_sync), null)
+      const save = this.saveNode('0', json, null)
+
+      // wait for all to complete
+      await Promise.all([...promises, save])
+      // emit
+      this.db.publish('ami-logger-index', '0')
     }
 
     /**
@@ -92,7 +116,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       // TODO batch cache_nodes
       // this.differ.on('cache-node', cache_node)
       // console.log('json start', index)
-      let [to_save, to_delete, json] = await this.differ.generateGraphJSON(true)
+      let [to_save, to_delete, json] = await this.differ.generateGraphDiff()
       // console.log('json.length', index, json.length)
       if (json.length > 5000) {
         console.log(json)
@@ -102,12 +126,8 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       // TODO barch by 50
       // TODO dispose after Promises dispatched
       // save the cache
-      const promises = Object.keys(to_save).map(data => {
-        return new Promise((resolve, reject) => {
-          this.db.set(data[0], data[1], err => {
-            return err ? reject('err ' + err) : resolve()
-          })
-        })
+      const promises = to_save.map(async data => {
+        await this.dbSet('cache-' + data[0], data[1])
       })
       if (to_delete) {
         promises.push(this.dbSet(index + '-delete', JSON.stringify(to_delete)))
