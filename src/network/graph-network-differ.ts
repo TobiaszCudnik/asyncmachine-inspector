@@ -10,8 +10,6 @@ import { Delta, DiffPatcher } from 'jsondiffpatch'
 import * as EventEmitter from 'eventemitter3'
 import { difference } from 'lodash'
 
-const DIFF_CACHE = true
-
 // TODO specify the fields
 export interface IGraphJSON {
   // nodes: {
@@ -31,6 +29,8 @@ export class GraphNetworkDiffer extends EventEmitter {
   network: GraphNetwork
   diffpatcher: DiffPatcher
   previous_json: IGraphJSON
+  next_cache_id = 1
+  last_ids = { nodes: [], links: [] }
 
   constructor(network: GraphNetwork) {
     super()
@@ -49,9 +49,6 @@ export class GraphNetworkDiffer extends EventEmitter {
       return node.id
     }
   }
-
-  last_cache_id = 1
-  last_ids = { nodes: [], links: [] }
 
   /**
    * Generates a json represention of the graph, ready for diffing.
@@ -105,6 +102,10 @@ export class GraphNetworkDiffer extends EventEmitter {
     json += json_nodes
     // store last ids
     this.last_ids.nodes = ids_nodes
+    // console.log('cache_indexes', json_nodes, ids_nodes)
+    // if (this.next_cache_id > 100) {
+    //   process.exit()
+    // }
 
     // clone links (_edgeLabels)
     json += `, "links": `
@@ -147,7 +148,7 @@ export class GraphNetworkDiffer extends EventEmitter {
   }
 
   processList(
-    to_save: [number | null, string][],
+    to_save: [number, string][],
     to_delete,
     source: {},
     prev_cache_indexes: string[]
@@ -157,10 +158,10 @@ export class GraphNetworkDiffer extends EventEmitter {
     const to_add = []
     const cache_indexes = []
     for (const id of Object.keys(source)) {
-      const graph_node = source[id]
+      const graph_node: GraphNode = source[id]
       const cache_index = graph_node.cache
         ? graph_node.cache_version
-        : this.last_cache_id
+        : this.next_cache_id
       cache_indexes.push(cache_index)
 
       // check if was in prev cache list
@@ -178,6 +179,7 @@ export class GraphNetworkDiffer extends EventEmitter {
       // }
 
       to_add.push(cache_index)
+      // TODO cache stringify in the node itself
       const node_cache_json = JSON.stringify(node_cache)
       // console.log(
       //   'node_cache_json.length',
@@ -186,21 +188,21 @@ export class GraphNetworkDiffer extends EventEmitter {
       // )
       to_save.push([
         cache_index,
-        '[' + graph_node.cache_version + ', ' + node_cache_json + ']'
+        node_cache_json
       ])
-      if (DIFF_CACHE) {
-        graph_node.prev_cache = true
-      }
       to_delete.push(graph_node.cache_version)
-      graph_node.cache_version = this.last_cache_id
+      graph_node.cache_version = this.next_cache_id
 
       // inc
       misses++
-      this.last_cache_id++
+      this.next_cache_id++
       first = false
     }
 
+    // console.log('before ranges', to_add)
+
     json += writeRanges(to_add)
+    // console.log('after ranges', json)
 
     const to_remove = difference(prev_cache_indexes, cache_indexes)
     to_delete.push(...to_remove)

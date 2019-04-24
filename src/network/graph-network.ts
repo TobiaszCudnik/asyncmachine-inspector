@@ -73,12 +73,30 @@ export enum RELATION_TO_LINK_TYPE {
 
 // GRAPH NODE
 
-export enum GraphNodeFieldsImmutale {
+export enum Fields {
+  // common
   ID,
-  TYPE
+  TYPE,
+  // state
+  NAME,
+  MACHINE_ID,
+  STEP_STYLE,
+  IS_SET,
+  // machine
+  CLOCK,
+  QUEUE,
+  LISTENERS,
+  PROCESSING_QUEUE,
+  TICKS,
+  DURING_TRANSITION,
+  // link node
+  LINK_TYPE,
+  TO_ID,
+  FROM_ID,
+  TO_NAME,
+  FROM_NAME,
+  IS_TOUCHED
 }
-
-export enum GraphNodeFields {}
 
 const numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -88,41 +106,19 @@ export class GraphNode {
   clone_fields = []
   cache = null
   prev_cache = false
+  cache_version = null
+  fields = []
 
   export(): Object {
     const ret = {}
-    this.createDiff(ret, GraphNodeFields, GraphNodeFieldsImmutale)
-    return ret
-  }
 
-  // last = {}
-
-  createDiff(ret: {}, mutable, immutable, shift = 0): Object {
-    for (const field of Object.keys(mutable)) {
+    for (const field of this.fields) {
       if (numbers.includes(field['0'])) continue
 
       // encode the field by the enum
-      ret[mutable[field] + shift] = this[field.toLocaleLowerCase()]
+      ret[field] = this[Fields[field].toLocaleLowerCase()]
     }
-    if (this.prev_cache) {
-      return ret
-    }
-    for (const field of Object.keys(immutable)) {
-      if (numbers.includes(field['0'])) continue
 
-      const index = immutable[field] + shift + 10
-      // encode the field by the enum
-      const value = this[field.toLocaleLowerCase()]
-
-      // if (this.last[index] === value) {
-      //   // no change
-      //   continue
-      // }
-
-      // save
-      ret[index] = value
-      // this.last[index] = value
-    }
     return ret
   }
 
@@ -133,24 +129,26 @@ export class GraphNode {
 
 // LINK NODE
 
-export enum LinkNodeFieldsImmutable {
-  LINK_TYPE,
-  TO_ID,
-  FROM_ID,
-  TO_NAME,
-  FROM_NAME
-}
-
-export enum LinkNodeFields {
-  IS_TOUCHED
-}
-
 export class LinkNode extends GraphNode {
   readonly type = NODE_TYPE.LINK
   link_type: NODE_LINK_TYPE
   is_touched = false
   to_id: string
   from_id: string
+
+  // TODO
+  was_touched = false
+
+  fields = [
+    Fields.ID,
+    Fields.TYPE,
+    Fields.LINK_TYPE,
+    Fields.TO_ID,
+    Fields.FROM_ID,
+    Fields.TO_NAME,
+    Fields.FROM_NAME,
+    Fields.IS_TOUCHED
+  ]
 
   get id() {
     return this.to_id + '::' + this.from_id + '::' + this.type
@@ -171,27 +169,6 @@ export class LinkNode extends GraphNode {
     this.to_id = to_id
     this.link_type = link_type
   }
-
-  was_touched = false
-
-  export(): Object {
-    const ret = super.export()
-    this.createDiff(ret, LinkNodeFields, LinkNodeFieldsImmutable, 10)
-    return ret
-  }
-}
-
-// STATE NODE
-
-export enum StateNodeFieldsImmutable {
-  NAME,
-  MACHINE_ID
-}
-
-export enum StateNodeFields {
-  STEP_STYLE,
-  IS_SET,
-  CLOCK
 }
 
 export class StateNode extends GraphNode {
@@ -207,6 +184,15 @@ export class StateNode extends GraphNode {
    * transition.
    */
   step_style: TransitionStepTypes | null = null
+
+  fields = [
+    Fields.ID,
+    Fields.TYPE,
+    Fields.NAME,
+    Fields.MACHINE_ID,
+    Fields.STEP_STYLE,
+    Fields.IS_SET
+  ]
 
   get id() {
     return `${this.machine_id}:${this.name}`
@@ -265,30 +251,22 @@ export class StateNode extends GraphNode {
       this.was_set = this.machine.is(this.name)
     })
   }
-
-  export(): Object {
-    const ret = super.export()
-    this.createDiff(ret, StateNodeFields, StateNodeFieldsImmutable, 10)
-    return ret
-  }
-}
-
-// MACHINE NODE
-
-export enum MachineNodeFieldsImmutable {}
-
-export enum MachineNodeFields {
-  // TODO enable
-  // QUEUE,
-  LISTENERS,
-  PROCESSING_Q1UEUE,
-  TICKS,
-  DURING_TRANSITION
 }
 
 export class MachineNode extends GraphNode {
   readonly type = NODE_TYPE.MACHINE
   machine: TAsyncMachine
+
+  fields = [
+    Fields.ID,
+    Fields.TYPE,
+    // TODO enable
+    // Fields.QUEUE,
+    Fields.LISTENERS,
+    Fields.PROCESSING_QUEUE,
+    Fields.TICKS,
+    Fields.DURING_TRANSITION
+  ]
 
   get id(): string {
     return this.machine.id(true)
@@ -300,8 +278,8 @@ export class MachineNode extends GraphNode {
     return this.machine.duringTransition()
   }
 
+  // TODO enable & return enum-indexed object
   get queue(): any {
-    // TODO return enum-indexed object
     return this.machine.queue().map(r => ({
       machine: (r[QueueRowFields.TARGET] || this.machine).id(true),
       states: r[QueueRowFields.STATES],
@@ -334,12 +312,6 @@ export class MachineNode extends GraphNode {
   constructor(machine: TAsyncMachine) {
     super()
     this.machine = machine
-  }
-
-  export(): Object {
-    const ret = super.export()
-    this.createDiff(ret, MachineNodeFields, MachineNodeFieldsImmutable, 10)
-    return ret
   }
 }
 

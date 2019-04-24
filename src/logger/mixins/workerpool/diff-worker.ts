@@ -4,6 +4,8 @@ import { GraphNetworkDiffer } from '../../../network/graph-network-differ'
 import { promisify } from 'util'
 import * as assert from 'assert'
 import * as uuid from 'simple-random-id'
+import { Fields } from '../../../network/graph-network'
+import * as range from 'array-range'
 
 const db = redis.createClient()
 const sub = redis.createClient()
@@ -13,10 +15,10 @@ const jsons = {}
 // keeps index diffs
 const diffs = {}
 let parsing_json = false
-let last_index = -1
+let last_unparsed_index = 0
 let last_requested_index = -1
 
-console.log('worker start')
+console.log('worker start', worker_id)
 
 sub.subscribe('ami-logger-exit')
 sub.subscribe('ami-logger-index')
@@ -34,7 +36,7 @@ sub.on('message', function(channel: string, msg: string) {
       // TODO await and request the last_requested_index again
     } else if (channel == 'ami-logger-dispose') {
       console.log('dispose', msg)
-      delete cache[msg]
+      delete local_cache[msg]
     } else if (channel == 'ami-logger-dispose-json') {
       delete jsons[msg]
       delete diffs[msg]
@@ -46,7 +48,7 @@ sub.on('message', function(channel: string, msg: string) {
 
 // @ts-ignore
 const differ = new GraphNetworkDiffer({})
-const cache = {}
+const local_cache = {}
 
 async function get(key) {
   return promisify(db.get).call(db, key)
@@ -75,6 +77,7 @@ async function createDiff(index: number) {
   differ.previous_json = null
 
   // inject into the text patch and save
+  console.log('patch', index, patch)
   patch = patch.slice(0, -1) + `,"diff": ${JSON.stringify(diff)}}`
   await set(index + '-patch-diff', patch)
   // console.log('patch saved', index, data.length)
@@ -99,40 +102,42 @@ async function loadJSON(index) {
   if (parsing_json) {
     return
   }
+  console.log('loadJSON', index, last_unparsed_index)
   parsing_json = true
-  const promises = []
-  // load indexes
-  for (let i = Math.max(last_index, 0); i <= index; i++) {
-    promises.push(
-      get(i + '-index').then(patch => {
-        diffs[i] = (patch && JSON.parse(patch)) || null
-      })
-    )
-  }
+  // load index diffs
+  const promises = range(last_unparsed_index, index + 1).map(async i => {
+    // console.log(`get(${i} + '-index')`)
+    const patch = await get(i + '-index')
+    diffs[i] = (patch && JSON.parse(patch)) || null
+  })
   await Promise.all(promises)
   promises.length = 0
   // parse indexes & load cache chunks
-  for (let i = Math.max(last_index, 0); i <= index; i++) {
+  for (let i = last_unparsed_index; i <= index; i++) {
     const diff = diffs[i]
     const prev_json = jsons[i - 1] || { nodes: [], links: [] }
     if (!diff) {
+      // console.log('NO diff', i)
       // empty (index) diff
       // TODO mark as no-change to avoid jsondiffing
       jsons[i] = prev_json
       continue
     }
-    console.log('diff', diff)
+    // console.log('diff', i, diff)
     const load_nodes = mergeList(i, prev_json.nodes, diff.nodes)
     const load_links = mergeList(i, prev_json.link, diff.links)
     // series
     const [nodes, links] = await Promise.all([load_nodes, load_links])
     // set the final json
     jsons[i] = { nodes, links }
-    console.log('jsons[i]', i, jsons[i])
+    // console.log(`jsons[${i}]`, i, jsons[i])
   }
-  last_index = index
+  last_unparsed_index = index + 1
+  console.log('last_index', last_unparsed_index)
   assert(jsons[index], 'final json missing')
+  // inform the dispatcher that this worker is ready
   db.publish('ami-logger-index-worker', JSON.stringify({ worker_id, index }))
+  // release the mutex
   parsing_json = false
 }
 
@@ -158,79 +163,90 @@ async function mergeList(index: number, prev: {}[], list: ListDiff) {
       const to = parseInt(range[1], 10)
 
       for (let i = from; i <= to; i++) {
-        remove_ids.push(cache[i].id)
+        const cache_entry = getLocalCache(i)
+        remove_ids.push(cache_entry.id)
       }
     } else {
-      try {
-        // number
-        remove_ids.push(cache[id].id)
-      } catch (e) {
-        console.log('no cache', id, cache)
-      }
+      const cache_entry = getLocalCache(id)
+      remove_ids.push(cache_entry.id)
     }
   }
   // remove from the copy of the prev json
   for (const id of remove_ids) {
     delete ret[id]
   }
+  // console.log('list.add', index, list.add)
   // add the new IDs
   await Promise.all(
     list.add.map(async id => {
       if (typeof id === 'string') {
         // index range (eg 100-250)
 
-        const range = id.split('-')
-        const from = parseInt(range[0], 10)
-        const to = parseInt(range[1], 10)
-        const promises = []
+        const split = id.split('-')
+        const from = parseInt(split[0], 10)
+        const to = parseInt(split[1], 10)
+        const array = range(from, to + 1) as number[]
+        const promises = array.map(async i => {
+          const full = await getDBCache(i)
+          ret[full.id] = full
+        })
+        // console.log('await Promise.all(promises)', promises.length)
 
-        for (let i = from; i <= to; i++) {
-          promises.push(async () => {
-            const full = await getCacheEntry(i)
-            ret[full.id] = full
-          })
-        }
         await Promise.all(promises)
-      } else if (cache[id]) {
+      } else if (local_cache[id]) {
         // cache
 
-        ret[cache[id].id] = cache[id]
+        const cache_entry = getLocalCache(id)
+        ret[cache_entry.id] = cache_entry
       } else {
         // no cache
 
-        const full = await getCacheEntry(id as number)
+        const full = await getDBCache(id as number)
         ret[full.id] = full
-        cache[id] = full
+        local_cache[id] = full
       }
     })
   )
+  // console.log('ret', index)
   return ret
 }
 
+function getLocalCache(id) {
+  assert(local_cache[id], `Local cache ${id} missing`)
+  return local_cache[id]
+}
+
+const str_number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
 // TODO multi get
-async function getCacheEntry(id: number): Promise<{ id: string }> {
-  let ret = { id: '' }
-  const json = JSON.parse(await get('cache-' + id))
-  console.log(id, json)
-  assert(json, `cache ${id} not found`)
-  console.log('cache ok', id)
-  // diff
-  const [last_cache_id, new_cache] = json
-  // TODO request cache[last_cache_id] if not available
-  if (last_cache_id && !cache[last_cache_id]) {
-    // TODO this isnt guaranteed to be available?
-    console.log('chunk missing', last_cache_id, id)
-    await getCacheEntry(last_cache_id)
+async function getDBCache(id: number): Promise<{ id: string }> {
+  // console.log('getCacheEntry', id)
+  assert(id, `id required (got '${id}')`)
+  const ret = {}
+  const json = await get('cache-' + id)
+  if (!json) {
+    console.log('missing cache', id)
+    process.exit()
   }
+  let data
+  try {
+    data = JSON.parse(json)
+  } catch (e) {
+    console.error('cache json error', id, e, typeof json, json)
+    process.exit()
+  }
+  // decode enums to field names
+  for (const field of Object.keys(Fields)) {
+    if (str_number.includes(field[0])) continue
+    const index = Fields[field]
+    if (typeof data[index] === 'undefined') continue
+    ret[field.toLowerCase()] = data[index]
+  }
+  assert(ret, 'cache entry empty')
   // merge
-  if (last_cache_id) {
-    cache[id] = { ...cache[last_cache_id], ...new_cache }
-  } else {
-    cache[id] = new_cache
-  }
-  ret = cache[id]
+  local_cache[id] = ret
   // delete cache[last_cache_id]
-  return ret
+  return local_cache[id]
 }
 
 // create a worker and register functions

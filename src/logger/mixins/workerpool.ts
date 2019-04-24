@@ -9,8 +9,6 @@ import { ITransitionData, PatchType } from '../../network/graph-network'
 import * as redis from 'redis'
 import { RedisClient } from 'redis'
 import { promisify } from 'util'
-import * as assert from 'assert'
-import { Semaphore } from 'await-semaphore'
 import { Worker } from 'worker_threads'
 import * as delay from 'delay'
 
@@ -43,7 +41,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       this.db = redis.createClient()
 
       // TODO check why not in htop
-      // this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
+      this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
     }
 
     async dbSet(key: string | number, value: string) {
@@ -66,8 +64,8 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       }
 
       await Promise.all([
-        json && this.dbSet(index + '-index', json) || null,
-        patch && this.dbSet(index + '-patch', JSON.stringify(patch)) || null,
+        this.dbSet(index + '-index', json || ''),
+        this.dbSet(index + '-patch', JSON.stringify(patch) || ''),
         // this blocks the workers from parsing this node
         this.dbSet(index + '-ready', '1')
       ])

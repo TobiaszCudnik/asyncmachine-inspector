@@ -35,6 +35,7 @@
     "@types/node": "^11.13.5",
     "@types/socket.io-client": "^1.4.32",
     "@types/workerpool": "^2.3.0",
+    "array-range": "^1.0.1",
     "assert": "^1.4.1",
     "asyncmachine": "^3.4.0",
     "await-semaphore": "^0.1.3",
