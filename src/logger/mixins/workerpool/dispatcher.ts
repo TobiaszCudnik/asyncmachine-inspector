@@ -15,7 +15,7 @@ const stream = fs.createWriteStream('logs/snapshot.json')
 process.on('SIGINT', exit)
 process.on('exit', exit)
 
-const INDEX_WINDOW_AMOUNT = 200
+const INDEX_WINDOW_AMOUNT = 1000
 const INDEX_THROTTLE_MS = 100
 
 console.log('dispatcher start', isMainThread)
@@ -79,7 +79,7 @@ sub.on('message', async function(channel, msg) {
 function publishWorkerIndex(index: number) {
   const lowest_workers = getLowestWorkerIndex()
   const requested_index = Math.min(lowest_workers + INDEX_WINDOW_AMOUNT, index)
-  console.log('ami-logger-index-worker', requested_index.toString())
+  // console.log('ami-logger-index-worker', requested_index.toString())
   db.publish('ami-logger-index-worker', requested_index.toString())
 }
 const publishWorkerIndexThrottled = throttle(
@@ -157,10 +157,10 @@ async function write() {
     // console.log('disposeIndex', index)
     lowest_index++
 
-    if (lowest_index % 1000 === 0) {
-      console.log('AFTER flushOrderedBuffer', lowest_index, now() - time)
-      time = now()
-    }
+    // if (lowest_index % 1000 === 0) {
+    //   console.log('AFTER flushOrderedBuffer', lowest_index, now() - time)
+    //   time = now()
+    // }
   }
 }
 

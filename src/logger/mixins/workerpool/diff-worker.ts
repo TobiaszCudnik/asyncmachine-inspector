@@ -31,10 +31,10 @@ sub.on('message', function(channel: string, msg: string) {
     if (channel == 'ami-logger-exit') {
       process.exit()
     } else if (channel == 'ami-logger-index-worker') {
-      // TODO assert prev indexes has also already been saved (track emits)
+      // process jsons up till the provided index
+      console.log(printStats())
       last_requested_index = parseInt(msg, 10)
       loadJSON(last_requested_index)
-      // TODO await and request the last_requested_index again
     } else if (channel == 'ami-logger-dispose') {
       // if (parseInt(msg, 10) % 1000 === 0) {
       //   console.log('worker dispose', worker_id, msg)
@@ -49,6 +49,17 @@ sub.on('message', function(channel: string, msg: string) {
     console.error('worker differ error', e)
   }
 })
+
+function printStats() {
+  return {
+    last_requested_index,
+    last_unparsed_index,
+    'local_cache.length': Object.keys(local_cache).length,
+    'diffs.length': Object.keys(diffs).length,
+    'jsons.length': Object.keys(jsons).length,
+    worker_id
+  }
+}
 
 // @ts-ignore
 const differ = new GraphNetworkDiffer({})
@@ -88,7 +99,7 @@ async function createDiff(index: number) {
   //   jsons[index - 1],
   //   jsons[index]
   // )
-  assert(jsons[index - 1], `prev json missing ${index-1} ${worker_id}`)
+  assert(jsons[index - 1], `prev json missing ${index - 1} ${worker_id}`)
   assert(jsons[index], `current json missing ${index} ${worker_id}`)
   const diff = differ.diffpatcher.diff(jsons[index - 1], jsons[index])
 
@@ -97,7 +108,7 @@ async function createDiff(index: number) {
   if (diff) {
     if (Array.isArray(diff)) {
       console.log('array diff', index)
-      console.log('prev', jsons[index-1])
+      console.log('prev', jsons[index - 1])
       console.log('curr', jsons[index])
       process.exit()
     }
