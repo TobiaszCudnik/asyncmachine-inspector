@@ -74,7 +74,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
         this.dbSet(index + '-index', json || ''),
         this.dbSet(index + '-patch', JSON.stringify(patch) || ''),
         // this blocks the workers from parsing this node
-        this.dbSet(index + '-ready', '1')
+        this.dbSet(index + '-ready', index === '0' ? '1' : '')
       ])
 
       // DEBUG
@@ -135,15 +135,21 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
         await this.dbSet('cache-' + data[0], data[1])
       })
       if (to_delete) {
-        promises.push(this.dbSet(index + '-delete', JSON.stringify(to_delete)))
+        // save as higher index to delay disposing
+        promises.push(
+          this.dbSet(index + 1 + '-delete', JSON.stringify(to_delete))
+        )
       }
       // console.log('saved', index)
 
       let patch: IPatch = {
         id: index,
-        logs,
         type,
         machine_id
+      }
+
+      if (logs.length) {
+        patch.logs = logs
       }
 
       // console.log(json)
@@ -165,7 +171,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       this.db.publish('ami-logger-index', index)
 
       // if (index % 1000 === 0) {
-      //   console.log('req', index)
+        console.log('req', index)
       // }
     }
 

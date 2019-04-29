@@ -21,7 +21,8 @@ let last_requested_index = -1
 console.log('worker start', worker_id)
 
 sub.subscribe('ami-logger-exit')
-sub.subscribe('ami-logger-index')
+sub.subscribe('ami-logger-index-worker')
+// sub.subscribe('ami-logger-json')
 sub.subscribe('ami-logger-dispose')
 sub.subscribe('ami-logger-dispose-json')
 
@@ -29,7 +30,7 @@ sub.on('message', function(channel: string, msg: string) {
   try {
     if (channel == 'ami-logger-exit') {
       process.exit()
-    } else if (channel == 'ami-logger-index') {
+    } else if (channel == 'ami-logger-index-worker') {
       // TODO assert prev indexes has also already been saved (track emits)
       last_requested_index = parseInt(msg, 10)
       loadJSON(last_requested_index)
@@ -40,6 +41,7 @@ sub.on('message', function(channel: string, msg: string) {
       // }
       delete local_cache[msg]
     } else if (channel == 'ami-logger-dispose-json') {
+      // console.log('dispose json', msg, worker_id)
       delete jsons[msg]
       delete diffs[msg]
     }
@@ -61,6 +63,10 @@ async function set(key, value) {
   return promisify(db.set).call(db, key, value)
 }
 
+async function publish(channel, msg) {
+  return promisify(db.publish).call(db, channel, msg)
+}
+
 // async function fetch_versions(index: number) {
 //   return await Promise.all([get(index - 1 + '-index'), get(index + '-index')])
 // }
@@ -70,18 +76,31 @@ async function set(key, value) {
 //  dont send back the data at all
 //  accept the whole patch in a separate redis cell
 async function createDiff(index: number) {
-  // console.log('worker diff req', index)
+  // console.log('createDiff', index, worker_id)
   let patch = await get(index + '-patch')
   assert(patch, `patch ${index} missing in redis`)
 
   // create the actual diff
   // TODO dont jsondiff when an index diff is empty
+  // console.log(
+  //   'diff',
+  //   index,
+  //   jsons[index - 1],
+  //   jsons[index]
+  // )
+  assert(jsons[index - 1], `prev json missing ${index-1} ${worker_id}`)
+  assert(jsons[index], `current json missing ${index} ${worker_id}`)
   const diff = differ.diffpatcher.diff(jsons[index - 1], jsons[index])
-  differ.previous_json = null
 
   // inject into the text patch and save
   // console.log('patch', index, patch)
   if (diff) {
+    if (Array.isArray(diff)) {
+      console.log('array diff', index)
+      console.log('prev', jsons[index-1])
+      console.log('curr', jsons[index])
+      process.exit()
+    }
     patch = patch.slice(0, -1) + `,"diff": ${JSON.stringify(diff)}}`
   }
   // save as a different field
@@ -89,12 +108,13 @@ async function createDiff(index: number) {
   // console.log('patch saved', index, data.length)
 
   // set as ready
-  await set(index + '-ready', true)
+  await set(index + '-ready', '1')
   // console.log('ready saved', index)
 
   // request a write
   // TODO throttle
-  db.publish('ami-logger-write', index.toString())
+  await publish('ami-logger-write', index.toString())
+  // console.log('SEND ami-logger-write', index, worker_id)
 
   // DEBUG
   // if (index % 1000 === 0) {
@@ -131,7 +151,7 @@ async function loadJSON(index) {
     }
     // console.log('diff', i, diff)
     const load_nodes = mergeList(i, prev_json.nodes, diff.nodes)
-    const load_links = mergeList(i, prev_json.link, diff.links)
+    const load_links = mergeList(i, prev_json.links, diff.links)
     // series
     const [nodes, links] = await Promise.all([load_nodes, load_links])
     // set the final json
@@ -140,13 +160,13 @@ async function loadJSON(index) {
     if (i === 0) {
       await set('full-sync', JSON.stringify(jsons[0]))
     }
-    // console.log(`jsons[${i}]`, i, jsons[i])
+    // console.log(`jsons[${i}]`, Object.keys(jsons[i].nodes).length, worker_id)
   }
   last_unparsed_index = index + 1
   // console.log('last_index', last_unparsed_index)
   assert(jsons[index], 'final json missing')
   // inform the dispatcher that this worker is ready
-  db.publish('ami-logger-index-worker', JSON.stringify({ worker_id, index }))
+  db.publish('ami-logger-json', JSON.stringify({ worker_id, index }))
   // release the mutex
   parsing_json = false
 }
@@ -197,7 +217,7 @@ async function mergeList(index: number, prev: {}[], list: ListDiff) {
         const to = parseInt(split[1], 10)
         const array = range(from, to + 1) as number[]
         const promises = array.map(async i => {
-          const full = await getDBCache(i)
+          const full = local_cache[id] ? getLocalCache(id) : await getDBCache(i)
           ret[full.id] = full
         })
         // console.log('await Promise.all(promises)', promises.length)
