@@ -64,7 +64,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       ) {
         this.empty_indexes++
         if (this.empty_indexes && this.empty_indexes % 1000 === 0) {
-          console.log('empty_indexes', this.empty_indexes)
+          // console.log('empty_indexes', this.empty_indexes)
         }
         // TODO avoid empty indexes
         json = ''
@@ -165,7 +165,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       this.db.publish('ami-logger-index', index)
 
       // if (index % 1000 === 0) {
-        console.log('req', index)
+      //   console.log('req', index)
       // }
     }
 

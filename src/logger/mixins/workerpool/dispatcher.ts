@@ -82,9 +82,9 @@ async function write() {
   // get the lowest index
   // console.log('write', index)
 
-  if (lowest_index % 100 === 0) {
-    // console.log('TRY flushOrderedBuffer', lowest_index)
-  }
+  // if (lowest_index % 100 === 0) {
+  //   console.log('TRY flushOrderedBuffer', lowest_index)
+  // }
 
   // write whatever is ready
   while (true) {
@@ -93,41 +93,45 @@ async function write() {
     if (lowest_index === highest_index || !ready || ready === 'null') {
       break
     }
-    // console.log('patch read', lowest_index)
-    let [patch, to_delete] = await Promise.all([
-      get(lowest_index + '-patch-diff'),
-      get(lowest_index + '-delete')
-    ])
 
-    // json start
+    let patch, to_delete
+
     if (lowest_index === 0) {
-      patch = `{"full_sync": ${await promisify(db.get).call(
-        db,
-        '0'
-      )}, "patches": [`
-    }
+      // FULL SYNC
+      const json = await get('full-sync')
+      patch = `{"full_sync": ${json}, "patches": [`
+    } else {
+      // DIFF SYNC
+      // console.log('patch read', lowest_index)
+      const patch_delete = await Promise.all([
+        get(lowest_index + '-patch-diff'),
+        get(lowest_index + '-delete')
+      ])
+      patch = patch_delete[0]
+      to_delete = patch_delete[1]
 
-    if (patch === null) {
-      break
+      if (patch === null) {
+        break
+      }
     }
 
     // delimiter
     if (lowest_index > 1) {
-      patch = ',' + patch
+      stream.write(',')
     }
     // console.log('patch write', lowest_index, patch.length)
 
     // await promisify(stream.write).call(stream, patch)
     stream.write(patch)
     // stream.uncork()
-    disposeIndex(lowest_index, JSON.parse(to_delete))
+    disposeIndex(lowest_index, to_delete ? JSON.parse(to_delete) : null)
     // console.log('disposeIndex', index)
     lowest_index++
 
-    if (lowest_index % 1000 === 0) {
-      console.log('AFTER flushOrderedBuffer', lowest_index, now() - time)
-      time = now()
-    }
+    // if (lowest_index % 1000 === 0) {
+    //   console.log('AFTER flushOrderedBuffer', lowest_index, now() - time)
+    //   time = now()
+    // }
   }
 }
 
@@ -140,9 +144,9 @@ async function exit() {
 
 // dispose completed node
 function disposeIndex(index: number, to_delete: string[] = []) {
-  if (index % 1000 === 0) {
-    console.log('dispose', index)
-  }
+  // if (index % 1000 === 0) {
+    // console.log('dispose', index)
+  // }
   // remove from the DB
   db.del(index + '-patch')
   db.del(index + '-patch-diff')

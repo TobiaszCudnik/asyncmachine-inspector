@@ -95,9 +95,9 @@ async function createDiff(index: number) {
   db.publish('ami-logger-write', index.toString())
 
   // DEBUG
-  if (index % 1000 === 0) {
-    console.log('AFTER createDiff', index)
-  }
+  // if (index % 1000 === 0) {
+  //   console.log('AFTER createDiff', index)
+  // }
   // console.log('worker diff', patch)
   // console.log('worker diff ready', index)
 }
@@ -134,10 +134,14 @@ async function loadJSON(index) {
     const [nodes, links] = await Promise.all([load_nodes, load_links])
     // set the final json
     jsons[i] = { nodes, links }
+    // save the first json as initial full-sync
+    if (i === 0) {
+      await set('full-sync', JSON.stringify(jsons[0]))
+    }
     // console.log(`jsons[${i}]`, i, jsons[i])
   }
   last_unparsed_index = index + 1
-  console.log('last_index', last_unparsed_index)
+  // console.log('last_index', last_unparsed_index)
   assert(jsons[index], 'final json missing')
   // inform the dispatcher that this worker is ready
   db.publish('ami-logger-index-worker', JSON.stringify({ worker_id, index }))
