@@ -52,11 +52,6 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
     async dbSet(index: string | number, value: string, patch: IPatch) {
       assert(typeof value === 'string')
       const i = index.toString()
-      this.indexes[index] = {
-        db_ready: false,
-        // theres no diff for the initial sync
-        diff_ready: i === '0'
-      }
       await Promise.all([
         promisify(this.db.set).call(this.db, i, value),
         promisify(this.db.set).call(
@@ -64,7 +59,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
           i + '-patch',
           JSON.stringify(patch)
         ),
-        promisify(this.db.set).call(this.db, i + '-ready', '1')
+        promisify(this.db.set).call(this.db, i + '-ready', i === '0' ? '1' : '')
       ])
       // console.log('dbset', index)
       // this.indexes[index].db_ready = true

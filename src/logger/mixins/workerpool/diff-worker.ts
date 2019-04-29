@@ -66,7 +66,7 @@ async function createDiff(index: number) {
   await promisify(db.set).call(db, index + '-patch-diff', data)
   // console.log('patch saved', index, data.length)
   // set as ready
-  await promisify(db.set).call(db, index + '-ready', true)
+  await promisify(db.set).call(db, index + '-ready', '1')
   // console.log('ready saved', index)
   // request a write
   db.publish('ami-logger-write', index.toString())
