@@ -186,11 +186,10 @@ export class GraphNetworkDiffer extends EventEmitter {
       //   node_cache_json.length,
       //   node_cache_json
       // )
-      to_save.push([
-        cache_index,
-        node_cache_json
-      ])
-      to_delete.push(graph_node.cache_version)
+      to_save.push([cache_index, node_cache_json])
+      if (graph_node.cache_version) {
+        to_delete.push(graph_node.cache_version)
+      }
       graph_node.cache_version = this.next_cache_id
 
       // inc

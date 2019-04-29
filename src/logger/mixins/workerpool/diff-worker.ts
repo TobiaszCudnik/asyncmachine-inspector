@@ -35,7 +35,9 @@ sub.on('message', function(channel: string, msg: string) {
       loadJSON(last_requested_index)
       // TODO await and request the last_requested_index again
     } else if (channel == 'ami-logger-dispose') {
-      console.log('dispose', msg)
+      // if (parseInt(msg, 10) % 1000 === 0) {
+      //   console.log('worker dispose', worker_id, msg)
+      // }
       delete local_cache[msg]
     } else if (channel == 'ami-logger-dispose-json') {
       delete jsons[msg]
@@ -70,6 +72,7 @@ async function set(key, value) {
 async function createDiff(index: number) {
   // console.log('worker diff req', index)
   let patch = await get(index + '-patch')
+  assert(patch, `patch ${index} missing in redis`)
 
   // create the actual diff
   // TODO dont jsondiff when an index diff is empty
@@ -77,8 +80,9 @@ async function createDiff(index: number) {
   differ.previous_json = null
 
   // inject into the text patch and save
-  console.log('patch', index, patch)
+  // console.log('patch', index, patch)
   patch = patch.slice(0, -1) + `,"diff": ${JSON.stringify(diff)}}`
+  // save as a different field
   await set(index + '-patch-diff', patch)
   // console.log('patch saved', index, data.length)
 
@@ -102,7 +106,7 @@ async function loadJSON(index) {
   if (parsing_json) {
     return
   }
-  console.log('loadJSON', index, last_unparsed_index)
+  // console.log('loadJSON', index, last_unparsed_index)
   parsing_json = true
   // load index diffs
   const promises = range(last_unparsed_index, index + 1).map(async i => {

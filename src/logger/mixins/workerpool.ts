@@ -11,6 +11,7 @@ import { RedisClient } from 'redis'
 import { promisify } from 'util'
 import { Worker } from 'worker_threads'
 import * as delay from 'delay'
+import { throttle } from 'underscore'
 
 export { WorkerPoolMixin }
 
@@ -34,6 +35,7 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
     // TODO move to dispatcher and throttle
     // semaphore = new Semaphore(3 * 5)
     dispatcher: Worker
+    publishIndexThrottled: (index: string) => void
 
     constructor(...args: any[]) {
       super(...args)
@@ -42,6 +44,11 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
       // TODO check why not in htop
       this.dispatcher = new Worker(__dirname + '/workerpool/dispatcher.js')
+      this.publishIndexThrottled = throttle(
+        this.publishIndex.bind(this),
+        1000,
+        { leading: true, trailing: true }
+      )
     }
 
     async dbSet(key: string | number, value: string) {
@@ -151,12 +158,15 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
       // wait for everything to save
       await Promise.all(promises)
 
-      // if (index % 1000 === 0) {
-      //   console.log('req', index)
-      // }
+      this.publishIndexThrottled(index.toString())
+    }
 
-      // TODO throttle with a tail
-      this.db.publish('ami-logger-index', index.toString())
+    protected publishIndex(index: string) {
+      this.db.publish('ami-logger-index', index)
+
+      // if (index % 1000 === 0) {
+        console.log('req', index)
+      // }
     }
 
     async dispose() {

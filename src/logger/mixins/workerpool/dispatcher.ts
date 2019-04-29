@@ -5,6 +5,7 @@ import * as fs from 'fs'
 // @ts-ignore
 import * as now from 'performance-now'
 import { isMainThread } from 'worker_threads'
+import * as os from 'os'
 
 const db = redis.createClient()
 const sub = redis.createClient()
@@ -15,9 +16,11 @@ process.on('exit', exit)
 
 console.log('dispatcher start', isMainThread)
 
+const num_workers = os.cpus().length - 1
+
 const pool = workerpool.pool(__dirname + '/diff-worker.js', {
-  minWorkers: 3,
-  // minWorkers: 1,
+  minWorkers: num_workers,
+  maxWorkers: num_workers,
   // @ts-ignore
   nodeWorker: 'thread'
 })
@@ -40,16 +43,20 @@ sub.on('message', async function(channel, msg) {
     if (channel == 'ami-logger-exit') {
       exit()
     } else if (channel === 'ami-logger-index-worker') {
-      // // update the index for this worker
-      // const data = JSON.parse(msg)
-      // console.log('ami-logger-index-worker', data)
-      // workers[data.worker_id] = data.index
-      // // try to parse
-      // const lowest_workers = Math.min(...(Object.values(workers) as number[]))
-      // for (let i = Math.min(last_diff_index, 1); i <= lowest_workers; i++) {
-      //   pool.exec('createDiff', [i])
-      // }
-      // last_diff_index = lowest_workers
+      // update the index for this worker
+      const data = JSON.parse(msg)
+      workers[data.worker_id] = data.index
+      // check if all workers have been initted
+      if (Object.keys(workers).length < num_workers) {
+        return
+      }
+      // try to parse
+      const lowest_workers = Math.min(...(Object.values(workers) as number[]))
+      // TODO throttle
+      for (let i = Math.max(last_diff_index, 1); i <= lowest_workers; i++) {
+        pool.exec('createDiff', [i])
+      }
+      last_diff_index = lowest_workers
     } else if (channel === 'ami-logger-write') {
       // TODO move to a dedicated worker
       highest_index = Math.max(highest_index, parseInt(msg, 10))
@@ -82,13 +89,12 @@ async function write() {
   // write whatever is ready
   while (true) {
     const ready = await promisify(db.get).call(db, lowest_index + '-ready')
-    // console.log('ready', index, ready)
+    // console.log('ready', lowest_index, ready)
     if (lowest_index === highest_index || !ready || ready === 'null') {
       break
     }
     // console.log('patch read', lowest_index)
     let [patch, to_delete] = await Promise.all([
-      // TODO merge with `patch`?
       get(lowest_index + '-patch-diff'),
       get(lowest_index + '-delete')
     ])
@@ -143,12 +149,15 @@ function disposeIndex(index: number, to_delete: string[] = []) {
   db.del(index + '-ready')
   db.del(index + '-delete')
   db.del((index - 1).toString())
+  // dispose all the node caches, in all workers
   if (to_delete) {
     for (const id of to_delete) {
       db.del(id)
+      db.publish('ami-logger-dispose', id)
     }
   }
-  this.db.publish('ami-logger-dispose', index.toString())
+  // dispose the index from redis
+  db.publish('ami-logger-dispose-json', index.toString())
 }
 
 // create a worker and register functions
