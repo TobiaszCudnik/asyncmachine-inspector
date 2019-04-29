@@ -81,7 +81,9 @@ async function createDiff(index: number) {
 
   // inject into the text patch and save
   // console.log('patch', index, patch)
-  patch = patch.slice(0, -1) + `,"diff": ${JSON.stringify(diff)}}`
+  if (diff) {
+    patch = patch.slice(0, -1) + `,"diff": ${JSON.stringify(diff)}}`
+  }
   // save as a different field
   await set(index + '-patch-diff', patch)
   // console.log('patch saved', index, data.length)
