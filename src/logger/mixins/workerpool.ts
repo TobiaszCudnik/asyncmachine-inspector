@@ -99,9 +99,12 @@ export default function WorkerPoolMixin<TBase extends LoggerConstructor>(
 
       let patch: IPatch = {
         id: index,
-        logs,
         type,
         machine_id
+      }
+
+      if (logs.length) {
+        patch.logs = logs
       }
 
       // save the json

@@ -59,7 +59,9 @@ async function createDiff(index: number) {
   const patch = JSON.parse(await promisify(db.get).call(db, index + '-patch'))
   assert(patch, `no patch ${index}`)
   // update the patch JSON
-  patch.diff = diff
+  if (diff) {
+    patch.diff = diff
+  }
   const data = JSON.stringify(patch)
   await promisify(db.set).call(db, index + '-patch-diff', data)
   // console.log('patch saved', index, data.length)
