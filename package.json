@@ -49,7 +49,7 @@
     "workerpool": "^2.3.0"
   },
   "devDependencies": {
-    "acorn": "^4.0.3",
+    "acorn": "^7.1.1",
     "awesome-typescript-loader": "^3.2.3",
     "chai": "^3.0.0",
     "chai-xml": "^0.3.0",
