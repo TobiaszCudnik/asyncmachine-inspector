@@ -1,6 +1,6 @@
 # AsyncMachine Inspector
 
-Inspector and a debugger for [AsyncMachine](https://github.com/TobiaszCudnik/asyncmachine).
+Visual inspector for [AsyncMachine](https://github.com/TobiaszCudnik/asyncmachine).
 
 [![Preview](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.png)](http://tobiaszcudnik.github.io/asyncmachine-inspector/sample.mp4)
 
