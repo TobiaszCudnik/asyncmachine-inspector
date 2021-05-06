@@ -12,7 +12,7 @@
   "dependencies": {
     "delay": "^2.0.0",
     "random-int": "^1.0.0",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.21",
     "asyncmachine-inspector": "^0.3.9",
     "asyncmachine": "^3.2.3",
     "webpack": "^3.10.0",
